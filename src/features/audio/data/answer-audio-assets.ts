@@ -1,5 +1,7 @@
 import type { AudioSource } from "expo-audio";
 
+import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
+
 import sdAvailability from "../../../../assets/audio/system-design/sd-availability.mp3";
 import sdBlobStorage from "../../../../assets/audio/system-design/sd-blob-storage.mp3";
 import sdCapTheorem from "../../../../assets/audio/system-design/sd-cap-theorem.mp3";
@@ -21,7 +23,7 @@ import systemDesignCache from "../../../../assets/audio/system-design/system-des
 import systemDesignConsistency from "../../../../assets/audio/system-design/system-design-consistency.mp3";
 import systemDesignQueue from "../../../../assets/audio/system-design/system-design-queue.mp3";
 
-export const answerAudioAssets: Readonly<Record<string, AudioSource>> = {
+const answerAudioAssetsBySeedKey: Readonly<Record<string, AudioSource>> = {
   "sd-availability": sdAvailability,
   "sd-blob-storage": sdBlobStorage,
   "sd-cap-theorem": sdCapTheorem,
@@ -43,3 +45,13 @@ export const answerAudioAssets: Readonly<Record<string, AudioSource>> = {
   "system-design-consistency": systemDesignConsistency,
   "system-design-queue": systemDesignQueue,
 };
+
+export const answerAudioAssets: Readonly<Record<string, AudioSource>> = Object.entries(
+  answerAudioAssetsBySeedKey
+).reduce<Record<string, AudioSource>>((assets, [seedKey, source]) => {
+  const flashcardId = flashcardIdBySeedKey[seedKey];
+  if (flashcardId) {
+    assets[flashcardId] = source;
+  }
+  return assets;
+}, {});

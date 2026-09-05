@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const DeckIdSchema = z.compile(
-  z.enum(["javascript", "web", "computer-science", "react", "system-design", "databases"])
-);
+import { UuidSchema } from "@/shared/domain/uuid";
+
+export const DeckIdSchema = UuidSchema;
 export type DeckId = z.infer<typeof DeckIdSchema>;
 
 export const DeckFieldsSchema = z.compile(

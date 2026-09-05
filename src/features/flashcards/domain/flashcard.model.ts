@@ -1,9 +1,12 @@
 import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
+import { UuidSchema, type Uuid } from "@/shared/domain/uuid";
 import { z } from "zod";
+
+export const FlashcardIdSchema = UuidSchema;
 
 export const FlashcardFieldsSchema = z.compile(
   z.object({
-    id: z.string(),
+    id: FlashcardIdSchema,
     deckId: DeckIdSchema,
     question: z.string(),
     answer: z.string(),
@@ -13,8 +16,10 @@ export const FlashcardFieldsSchema = z.compile(
 );
 export type FlashcardFields = Readonly<z.infer<typeof FlashcardFieldsSchema>>;
 
+export type FlashcardId = Uuid;
+
 export class Flashcard {
-  public readonly id: string;
+  public readonly id: FlashcardId;
   public readonly deckId: DeckId;
   public readonly question: string;
   public readonly answer: string;

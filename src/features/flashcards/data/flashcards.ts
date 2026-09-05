@@ -1,8 +1,10 @@
 import type { FlashcardFields } from "@/features/flashcards/domain/flashcard.model";
+import { deckIdBySeedKey } from "@/features/decks/data/decks";
+import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
 
 const POC_TIMESTAMP = "2026-09-04T00:00:00.000Z";
 
-export const flashcardSeedData: FlashcardFields[] = [
+const flashcardSeedSource = [
   {
     id: "closure",
     deckId: "javascript",
@@ -1072,3 +1074,17 @@ export const flashcardSeedData: FlashcardFields[] = [
     updatedAt: POC_TIMESTAMP,
   },
 ];
+
+export const flashcardSeedData: FlashcardFields[] = flashcardSeedSource.map((flashcard) => ({
+  ...flashcard,
+  deckId: getRequiredSeedId(deckIdBySeedKey, flashcard.deckId),
+  id: getRequiredSeedId(flashcardIdBySeedKey, flashcard.id),
+}));
+
+function getRequiredSeedId<T>(ids: Readonly<Record<string, T>>, seedKey: string): T {
+  const id = ids[seedKey];
+  if (id === undefined) {
+    throw new Error(`Missing generated ID for seed key ${seedKey}`);
+  }
+  return id;
+}

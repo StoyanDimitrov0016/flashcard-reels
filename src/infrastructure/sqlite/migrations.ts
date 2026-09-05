@@ -1,6 +1,9 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 
-const DATABASE_VERSION = 1;
+import { deckIdBySeedKey } from "@/features/decks/data/decks";
+import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
+
+const DATABASE_VERSION = 2;
 
 const INITIAL_SCHEMA = `
   CREATE TABLE IF NOT EXISTS decks (
@@ -54,6 +57,43 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
     if (currentVersion === 0) {
       await database.execAsync(INITIAL_SCHEMA);
     }
+    if (currentVersion === 1) {
+      await migrateCatalogIds(database);
+    }
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
+}
+
+async function migrateCatalogIds(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync("PRAGMA defer_foreign_keys = ON;");
+
+  await Promise.all(
+    Object.entries(flashcardIdBySeedKey).map(([seedKey, id]) =>
+      database.runAsync(
+        "UPDATE flashcard_reviews SET flashcard_id = ? WHERE flashcard_id = ?",
+        id,
+        seedKey
+      )
+    )
+  );
+  await Promise.all(
+    Object.entries(flashcardIdBySeedKey).map(([seedKey, id]) =>
+      database.runAsync("UPDATE flashcards SET id = ? WHERE id = ?", id, seedKey)
+    )
+  );
+  await Promise.all(
+    Object.entries(deckIdBySeedKey).map(([seedKey, id]) =>
+      database.runAsync("UPDATE deck_appearances SET deck_id = ? WHERE deck_id = ?", id, seedKey)
+    )
+  );
+  await Promise.all(
+    Object.entries(deckIdBySeedKey).map(([seedKey, id]) =>
+      database.runAsync("UPDATE flashcards SET deck_id = ? WHERE deck_id = ?", id, seedKey)
+    )
+  );
+  await Promise.all(
+    Object.entries(deckIdBySeedKey).map(([seedKey, id]) =>
+      database.runAsync("UPDATE decks SET id = ? WHERE id = ?", id, seedKey)
+    )
+  );
 }

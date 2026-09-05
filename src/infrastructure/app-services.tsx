@@ -10,8 +10,8 @@ import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
 import { SQLiteReviewRepository } from "@/features/study/infrastructure/sqlite-review.repository";
 import { StudyService } from "@/features/study/services/study.service";
-import { RandomIdGenerator } from "@/infrastructure/random-id-generator";
 import { SystemClock } from "@/infrastructure/system-clock";
+import { UuidGenerator } from "@/infrastructure/uuid-generator";
 
 type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
@@ -32,7 +32,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const flashcardRepository = new SQLiteFlashcardRepository(database);
     const reviewRepository = new SQLiteReviewRepository(database);
     const clock = new SystemClock();
-    const idGenerator = new RandomIdGenerator();
+    const idGenerator = new UuidGenerator();
 
     return {
       answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
