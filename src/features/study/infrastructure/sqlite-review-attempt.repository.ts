@@ -16,6 +16,7 @@ const ReviewAttemptRowSchema = z.compile(
     id: z.string(),
     reel_position: z.number().int().nonnegative(),
     rating: RecallLevelSchema.nullable(),
+    study_session_id: z.string(),
     updated_at: z.string(),
   })
 );
@@ -31,9 +32,10 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
   async create(attempt: FlashcardReviewAttempt): Promise<void> {
     await this.database.runAsync(
       `INSERT INTO flashcard_review_attempts
-        (id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       attempt.id,
+      attempt.studySessionId,
       attempt.flashcardId,
       attempt.reelPosition,
       attempt.rating,
@@ -64,7 +66,7 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
 
   async findById(attemptId: string): Promise<FlashcardReviewAttempt | null> {
     const row = await this.database.getFirstAsync<unknown>(
-      `SELECT id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
+      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
        FROM flashcard_review_attempts
        WHERE id = ?`,
       attemptId
@@ -74,7 +76,7 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
 
   async listUnfinalizedBeforeReelPosition(reelPosition: number): Promise<FlashcardReviewAttempt[]> {
     const rows = await this.database.getAllAsync<unknown>(
-      `SELECT id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
+      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
        FROM flashcard_review_attempts
        WHERE finalized_at IS NULL AND reel_position < ?
        ORDER BY reel_position, created_at, id`,
@@ -91,6 +93,7 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
       id: row.id,
       reelPosition: row.reel_position,
       rating: row.rating,
+      studySessionId: row.study_session_id,
       updatedAt: row.updated_at,
     });
   }

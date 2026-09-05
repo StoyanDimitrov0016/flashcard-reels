@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { deckIdBySeedKey } from "@/features/decks/data/decks";
 import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
 
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 const INITIAL_SCHEMA = `
   CREATE TABLE IF NOT EXISTS decks (
@@ -42,17 +42,38 @@ const INITIAL_SCHEMA = `
   CREATE INDEX IF NOT EXISTS flashcards_deck_id_idx ON flashcards (deck_id);
   CREATE INDEX IF NOT EXISTS reviews_flashcard_id_idx ON flashcard_reviews (flashcard_id);
 
+  CREATE TABLE IF NOT EXISTS study_sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    mode TEXT NOT NULL CHECK (mode IN ('mixed', 'focused')),
+    deck_id TEXT,
+    current_position INTEGER NOT NULL CHECK (current_position >= 0),
+    created_at TEXT NOT NULL,
+    completed_at TEXT,
+    CHECK (
+      (mode = 'mixed' AND deck_id IS NULL) OR
+      (mode = 'focused' AND deck_id IS NOT NULL)
+    ),
+    FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS study_sessions_completed_at_idx
+    ON study_sessions (completed_at);
+
   CREATE TABLE IF NOT EXISTS flashcard_review_attempts (
     id TEXT PRIMARY KEY NOT NULL,
+    study_session_id TEXT NOT NULL,
     flashcard_id TEXT NOT NULL,
     reel_position INTEGER NOT NULL,
     rating TEXT CHECK (rating IS NULL OR rating IN ('again', 'hard', 'good', 'easy')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     finalized_at TEXT,
+    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
     FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
   );
 
+  CREATE INDEX IF NOT EXISTS review_attempts_study_session_id_idx
+    ON flashcard_review_attempts (study_session_id);
   CREATE INDEX IF NOT EXISTS review_attempts_flashcard_id_idx
     ON flashcard_review_attempts (flashcard_id);
 `;
@@ -74,8 +95,104 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
     if (currentVersion === 1) {
       await migrateCatalogIds(database);
     }
+    if (currentVersion > 0 && currentVersion < 3) {
+      await migrateStudySessions(database);
+    }
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
+}
+
+async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync("PRAGMA defer_foreign_keys = ON;");
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS study_sessions (
+      id TEXT PRIMARY KEY NOT NULL,
+      mode TEXT NOT NULL CHECK (mode IN ('mixed', 'focused')),
+      deck_id TEXT,
+      current_position INTEGER NOT NULL CHECK (current_position >= 0),
+      created_at TEXT NOT NULL,
+      completed_at TEXT,
+      CHECK (
+        (mode = 'mixed' AND deck_id IS NULL) OR
+        (mode = 'focused' AND deck_id IS NOT NULL)
+      ),
+      FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS study_sessions_completed_at_idx
+      ON study_sessions (completed_at);
+  `);
+
+  const attemptsTable = await database.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_review_attempts'"
+  );
+  if (!attemptsTable) {
+    await database.execAsync(`
+      CREATE TABLE flashcard_review_attempts (
+        id TEXT PRIMARY KEY NOT NULL,
+        study_session_id TEXT NOT NULL,
+        flashcard_id TEXT NOT NULL,
+        reel_position INTEGER NOT NULL,
+        rating TEXT CHECK (rating IS NULL OR rating IN ('again', 'hard', 'good', 'easy')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        finalized_at TEXT,
+        FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+        FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS review_attempts_study_session_id_idx
+        ON flashcard_review_attempts (study_session_id);
+      CREATE INDEX IF NOT EXISTS review_attempts_flashcard_id_idx
+        ON flashcard_review_attempts (flashcard_id);
+    `);
+    return;
+  }
+
+  const columns = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(flashcard_review_attempts)"
+  );
+  if (columns.some((column) => column.name === "study_session_id")) {
+    return;
+  }
+
+  const legacySessionId = "00000000-0000-4000-8000-000000000000";
+  const legacyAttempt = await database.getFirstAsync<{ created_at: string }>(
+    "SELECT created_at FROM flashcard_review_attempts ORDER BY created_at, id LIMIT 1"
+  );
+  if (legacyAttempt) {
+    await database.runAsync(
+      `INSERT OR IGNORE INTO study_sessions
+        (id, mode, deck_id, current_position, created_at, completed_at)
+       VALUES (?, 'mixed', NULL, 0, ?, ?)`,
+      legacySessionId,
+      legacyAttempt.created_at,
+      legacyAttempt.created_at
+    );
+  }
+
+  await database.execAsync(`
+    CREATE TABLE flashcard_review_attempts_new (
+      id TEXT PRIMARY KEY NOT NULL,
+      study_session_id TEXT NOT NULL,
+      flashcard_id TEXT NOT NULL,
+      reel_position INTEGER NOT NULL,
+      rating TEXT CHECK (rating IS NULL OR rating IN ('again', 'hard', 'good', 'easy')),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      finalized_at TEXT,
+      FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+      FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
+    );
+    INSERT INTO flashcard_review_attempts_new
+      (id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at)
+    SELECT id, '${legacySessionId}', flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
+    FROM flashcard_review_attempts;
+    DROP TABLE flashcard_review_attempts;
+    ALTER TABLE flashcard_review_attempts_new RENAME TO flashcard_review_attempts;
+    CREATE INDEX IF NOT EXISTS review_attempts_study_session_id_idx
+      ON flashcard_review_attempts (study_session_id);
+    CREATE INDEX IF NOT EXISTS review_attempts_flashcard_id_idx
+      ON flashcard_review_attempts (flashcard_id);
+  `);
 }
 
 async function migrateCatalogIds(database: SQLiteDatabase): Promise<void> {

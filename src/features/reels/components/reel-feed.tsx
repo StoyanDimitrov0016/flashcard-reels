@@ -11,9 +11,13 @@ import { useReelViewport } from "@/features/reels/hooks/use-reel-viewport";
 import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
 
-type ReelFeedProps = Readonly<{ cards: Flashcard[]; showMainFeedLink?: boolean }>;
+type ReelFeedProps = Readonly<{
+  cards: Flashcard[];
+  showMainFeedLink?: boolean;
+  studySessionId: string;
+}>;
 
-export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
+export function ReelFeed({ cards, showMainFeedLink = false, studySessionId }: ReelFeedProps) {
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
   const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
@@ -45,11 +49,13 @@ export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
       return existingStart;
     }
 
-    const start = studyService.startAttempt(cardId, reelPosition).then((attemptId) => {
-      setAttemptId(reelPosition, attemptId);
-      void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
-      return attemptId;
-    });
+    const start = studyService
+      .startAttempt(cardId, reelPosition, studySessionId)
+      .then((attemptId) => {
+        setAttemptId(reelPosition, attemptId);
+        void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+        return attemptId;
+      });
     startingAttemptPromises.current.set(reelPosition, start);
     void start.finally(() => startingAttemptPromises.current.delete(reelPosition));
     return start;
@@ -65,19 +71,25 @@ export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
       return undefined;
     }
 
-    const start = studyService.startAttempt(activeCard.id, activeIndex).then((attemptId) => {
-      setAttemptId(activeIndex, attemptId);
-      void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
-      return attemptId;
-    });
+    const start = studyService
+      .startAttempt(activeCard.id, activeIndex, studySessionId)
+      .then((attemptId) => {
+        setAttemptId(activeIndex, attemptId);
+        void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+        return attemptId;
+      });
     startingAttemptPromises.current.set(activeIndex, start);
     void start.finally(() => startingAttemptPromises.current.delete(activeIndex));
     return undefined;
-  }, [activeCard, activeIndex, attemptIds, setAttemptId, studyService]);
+  }, [activeCard, activeIndex, attemptIds, setAttemptId, studyService, studySessionId]);
 
   useEffect(() => {
     void studyService.finalizeAttemptsOutsideEditableWindow(activeIndex);
   }, [activeIndex, studyService]);
+
+  useEffect(() => {
+    void studyService.updateSessionPosition(studySessionId, activeIndex);
+  }, [activeIndex, studySessionId, studyService]);
 
   const getItemLayout = (_data: ArrayLike<Flashcard> | null | undefined, index: number) => ({
     index,

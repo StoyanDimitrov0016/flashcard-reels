@@ -9,6 +9,7 @@ export const FlashcardReviewAttemptFieldsSchema = z.compile(
   z.object({
     id: z.string(),
     flashcardId: z.string(),
+    studySessionId: z.string(),
     reelPosition: z.number().int().nonnegative(),
     rating: RecallLevelSchema.nullable(),
     createdAt: z.string(),
@@ -23,6 +24,7 @@ export type FlashcardReviewAttemptFields = Readonly<
 export class FlashcardReviewAttempt {
   public readonly id: string;
   public readonly flashcardId: string;
+  public readonly studySessionId: string;
   public readonly reelPosition: number;
   public readonly rating: RecallLevel | null;
   public readonly createdAt: string;
@@ -32,6 +34,7 @@ export class FlashcardReviewAttempt {
   constructor(fields: FlashcardReviewAttemptFields) {
     this.id = fields.id;
     this.flashcardId = fields.flashcardId;
+    this.studySessionId = fields.studySessionId;
     this.reelPosition = fields.reelPosition;
     this.rating = fields.rating;
     this.createdAt = fields.createdAt;

@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
+import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
 import { EmptySession } from "@/features/reels/components/empty-session";
@@ -23,17 +24,32 @@ function LoadingState() {
 type ReadyForYouFeedProps = Readonly<{ cards: Flashcard[] }>;
 
 function ReadyForYouFeed({ cards }: ReadyForYouFeedProps) {
-  const preparedCards = usePreparedReelFeed(cards);
+  const preparedFeed = usePreparedReelFeed(cards, "mixed", null);
+  if (!preparedFeed) {
+    return <LoadingState />;
+  }
 
-  return <ReelFeed cards={preparedCards} />;
+  return <ReelFeed cards={preparedFeed.cards} studySessionId={preparedFeed.studySessionId} />;
 }
 
-type ReadySessionFeedContentProps = Readonly<{ cards: Flashcard[] }>;
+type ReadySessionFeedContentProps = Readonly<{
+  cards: Flashcard[];
+  deckId: DeckId;
+}>;
 
-function ReadySessionFeedContent({ cards }: ReadySessionFeedContentProps) {
-  const preparedCards = usePreparedReelFeed(cards);
+function ReadySessionFeedContent({ cards, deckId }: ReadySessionFeedContentProps) {
+  const preparedFeed = usePreparedReelFeed(cards, "focused", deckId);
+  if (!preparedFeed) {
+    return <LoadingState />;
+  }
 
-  return <ReelFeed cards={preparedCards} showMainFeedLink />;
+  return (
+    <ReelFeed
+      cards={preparedFeed.cards}
+      showMainFeedLink
+      studySessionId={preparedFeed.studySessionId}
+    />
+  );
 }
 
 function ReadySessionFeed({
@@ -45,7 +61,7 @@ function ReadySessionFeed({
     return <LoadingState />;
   }
 
-  return <ReadySessionFeedContent cards={cards} />;
+  return <ReadySessionFeedContent cards={cards} deckId={session.deckId} />;
 }
 
 function SessionFeed({ onChooseDeck, session }: SessionFeedProps) {
