@@ -10,7 +10,7 @@ export const StudySessionRecurrenceFieldsSchema = z.compile(
     id: z.string(),
     sourceAttemptId: z.string(),
     studySessionId: z.string(),
-    targetPosition: z.number().int().nonnegative(),
+    targetReelPosition: z.number().int().nonnegative(),
   })
 );
 export type StudySessionRecurrenceFields = Readonly<
@@ -22,7 +22,7 @@ export class StudySessionRecurrence {
   public readonly studySessionId: string;
   public readonly flashcardId: string;
   public readonly sourceAttemptId: string;
-  public readonly targetPosition: number;
+  public readonly targetReelPosition: number;
   public readonly createdAt: string;
   public readonly consumedAt: string | null;
 
@@ -33,6 +33,6 @@ export class StudySessionRecurrence {
     this.id = fields.id;
     this.sourceAttemptId = fields.sourceAttemptId;
     this.studySessionId = fields.studySessionId;
-    this.targetPosition = fields.targetPosition;
+    this.targetReelPosition = fields.targetReelPosition;
   }
 }

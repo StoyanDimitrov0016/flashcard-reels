@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export function useRecallSession() {
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());

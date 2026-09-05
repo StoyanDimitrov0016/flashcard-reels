@@ -7,7 +7,7 @@ import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/s
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { runMigrations } from "@/infrastructure/sqlite/migrations";
+import { initializeSchema } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   OTHER_DECK_ID,
@@ -26,7 +26,7 @@ describe("SQLite study persistence", () => {
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
-    await runMigrations(database);
+    await initializeSchema(database);
     await database.runAsync(
       "INSERT INTO decks (id, title, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
       TEST_DECK_ID,
@@ -86,19 +86,19 @@ describe("SQLite study persistence", () => {
       new StudySessionItem({
         flashcardId: makeFlashcard(1).id,
         id: testId(211),
-        position: 2,
+        baseFeedPosition: 2,
         studySessionId: session.id,
       }),
       new StudySessionItem({
         flashcardId: makeFlashcard(1).id,
         id: testId(212),
-        position: 0,
+        baseFeedPosition: 0,
         studySessionId: session.id,
       }),
     ]);
 
     const stored = await items.listBySessionId(session.id);
-    expect(stored.map((item) => [item.position, item.flashcardId])).toEqual([
+    expect(stored.map((item) => [item.baseFeedPosition, item.flashcardId])).toEqual([
       [0, makeFlashcard(1).id],
       [2, makeFlashcard(1).id],
     ]);
@@ -107,7 +107,7 @@ describe("SQLite study persistence", () => {
         new StudySessionItem({
           flashcardId: makeFlashcard(2).id,
           id: testId(213),
-          position: 2,
+          baseFeedPosition: 2,
           studySessionId: session.id,
         }),
       ])
@@ -123,13 +123,13 @@ describe("SQLite study persistence", () => {
         new StudySessionItem({
           flashcardId: makeFlashcard(1).id,
           id: testId(221),
-          position: 0,
+          baseFeedPosition: 0,
           studySessionId: session.id,
         }),
         new StudySessionItem({
           flashcardId: makeFlashcard(2).id,
           id: testId(222),
-          position: 0,
+          baseFeedPosition: 0,
           studySessionId: session.id,
         }),
       ])
@@ -151,6 +151,32 @@ describe("SQLite study persistence", () => {
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
     await attempts.create(attempt);
+    await expect(
+      attempts.create(
+        new FlashcardReviewAttempt({
+          createdAt: attempt.createdAt,
+          finalizedAt: null,
+          flashcardId: attempt.flashcardId,
+          id: testId(232),
+          rating: null,
+          reelPosition: attempt.reelPosition,
+          studySessionId: attempt.studySessionId,
+          updatedAt: attempt.updatedAt,
+        })
+      )
+    ).rejects.toThrow();
+    await attempts.create(
+      new FlashcardReviewAttempt({
+        createdAt: attempt.createdAt,
+        finalizedAt: null,
+        flashcardId: attempt.flashcardId,
+        id: testId(233),
+        rating: null,
+        reelPosition: 1,
+        studySessionId: attempt.studySessionId,
+        updatedAt: attempt.updatedAt,
+      })
+    );
     await attempts.finalize(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
 
     expect(await attempts.updateRating(attempt.id, "good", "2026-01-01T00:02:00.000Z")).toBe(false);
@@ -189,7 +215,7 @@ describe("SQLite study persistence", () => {
       id: testId(242),
       sourceAttemptId: attempt.id,
       studySessionId: session.id,
-      targetPosition: 8,
+      targetReelPosition: 8,
     });
     await recurrences.create(recurrence);
 
@@ -202,7 +228,7 @@ describe("SQLite study persistence", () => {
           id: testId(243),
           sourceAttemptId: recurrence.sourceAttemptId,
           studySessionId: recurrence.studySessionId,
-          targetPosition: 9,
+          targetReelPosition: 9,
         })
       )
     ).rejects.toThrow();
@@ -215,7 +241,7 @@ describe("SQLite study persistence", () => {
           id: testId(244),
           sourceAttemptId: secondAttempt.id,
           studySessionId: recurrence.studySessionId,
-          targetPosition: recurrence.targetPosition,
+          targetReelPosition: recurrence.targetReelPosition,
         })
       )
     ).rejects.toThrow();
@@ -229,7 +255,7 @@ describe("SQLite study persistence", () => {
         id: testId(246),
         sourceAttemptId: secondAttempt.id,
         studySessionId: recurrence.studySessionId,
-        targetPosition: recurrence.targetPosition,
+        targetReelPosition: recurrence.targetReelPosition,
       })
     );
     expect(await recurrences.listBySessionId(session.id)).toHaveLength(2);
@@ -268,7 +294,7 @@ describe("SQLite study persistence", () => {
       id: testId(250),
       sourceAttemptId: firstAttempt.id,
       studySessionId: session.id,
-      targetPosition: 8,
+      targetReelPosition: 8,
     });
     const secondRecurrence = new StudySessionRecurrence({
       consumedAt: null,
@@ -277,13 +303,15 @@ describe("SQLite study persistence", () => {
       id: testId(251),
       sourceAttemptId: secondAttempt.id,
       studySessionId: session.id,
-      targetPosition: 8,
+      targetReelPosition: 8,
     });
 
-    expect((await recurrences.schedulePending(firstRecurrence, 8)).targetPosition).toBe(8);
-    expect((await recurrences.schedulePending(secondRecurrence, 8)).targetPosition).toBe(9);
+    expect((await recurrences.schedulePending(firstRecurrence, 8)).targetReelPosition).toBe(8);
+    expect((await recurrences.schedulePending(secondRecurrence, 8)).targetReelPosition).toBe(9);
     expect(
-      (await recurrences.listBySessionId(session.id)).map((recurrence) => recurrence.targetPosition)
+      (await recurrences.listBySessionId(session.id)).map(
+        (recurrence) => recurrence.targetReelPosition
+      )
     ).toEqual([8, 9]);
   });
 
@@ -297,7 +325,7 @@ describe("SQLite study persistence", () => {
           id: testId(250),
           sourceAttemptId: testId(251),
           studySessionId: testId(252),
-          targetPosition: 1,
+          targetReelPosition: 1,
         })
       )
     ).rejects.toThrow();
@@ -321,7 +349,7 @@ describe("SQLite study persistence", () => {
       new StudySessionItem({
         flashcardId: attempt.flashcardId,
         id: testId(262),
-        position: 0,
+        baseFeedPosition: 0,
         studySessionId: session.id,
       }),
     ]);
@@ -333,7 +361,7 @@ describe("SQLite study persistence", () => {
         id: testId(263),
         sourceAttemptId: attempt.id,
         studySessionId: session.id,
-        targetPosition: 8,
+        targetReelPosition: 8,
       })
     );
 
@@ -344,13 +372,33 @@ describe("SQLite study persistence", () => {
     expect(await recurrences.listBySessionId(session.id)).toEqual([]);
   });
 
-  it("runs the current migration set in order and creates the recurrence table", async () => {
+  it("initializes only the canonical schema from an empty database", async () => {
     const version = await database.getFirstAsync("PRAGMA user_version");
-    const table = await database.getFirstAsync(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'study_session_recurrences'"
+    const tables = await database.getAllAsync(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+    );
+    const legacyTable = await database.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_reviews'"
     );
 
-    expect(version).toEqual({ user_version: 5 });
-    expect(table).toEqual({ name: "study_session_recurrences" });
+    expect(version).toEqual({ user_version: 1 });
+    expect(tables).toEqual([
+      { name: "deck_appearances" },
+      { name: "decks" },
+      { name: "flashcard_review_attempts" },
+      { name: "flashcards" },
+      { name: "study_session_items" },
+      { name: "study_session_recurrences" },
+      { name: "study_sessions" },
+    ]);
+    expect(legacyTable).toBeNull();
+  });
+
+  it("rejects a historical local schema instead of running compatibility migrations", async () => {
+    await database.execAsync("PRAGMA user_version = 5");
+
+    await expect(initializeSchema(database)).rejects.toThrow(
+      "Unsupported database schema version 5; reset the local database"
+    );
   });
 });

@@ -9,7 +9,7 @@ import type { Deck } from "@/features/decks/domain/deck.model";
 import { RecallControls } from "@/features/reels/components/recall-controls";
 import { ReelHeader } from "@/features/reels/components/reel-header";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 

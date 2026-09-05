@@ -14,12 +14,12 @@ const StudySessionRecurrenceRowSchema = z.compile(
     id: z.string(),
     source_attempt_id: z.string(),
     study_session_id: z.string(),
-    target_position: z.number().int().nonnegative(),
+    target_reel_position: z.number().int().nonnegative(),
   })
 );
 type StudySessionRecurrenceRow = z.infer<typeof StudySessionRecurrenceRowSchema>;
 const StudySessionRecurrenceTargetRowSchema = z.compile(
-  z.object({ target_position: z.number().int().nonnegative() })
+  z.object({ target_reel_position: z.number().int().nonnegative() })
 );
 
 export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecurrenceRepository {
@@ -39,38 +39,24 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
   async create(recurrence: StudySessionRecurrence): Promise<void> {
     await this.database.runAsync(
       `INSERT INTO study_session_recurrences
-        (id, study_session_id, flashcard_id, source_attempt_id, target_position, created_at, consumed_at)
+        (id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       recurrence.id,
       recurrence.studySessionId,
       recurrence.flashcardId,
       recurrence.sourceAttemptId,
-      recurrence.targetPosition,
+      recurrence.targetReelPosition,
       recurrence.createdAt,
       recurrence.consumedAt
     );
   }
 
-  async findPendingBySourceAttemptId(
-    sourceAttemptId: string
-  ): Promise<StudySessionRecurrence | null> {
-    const row = await this.database.getFirstAsync(
-      `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_position, created_at, consumed_at
-       FROM study_session_recurrences
-       WHERE source_attempt_id = ? AND consumed_at IS NULL
-       ORDER BY created_at DESC, id DESC
-       LIMIT 1`,
-      sourceAttemptId
-    );
-    return row ? this.toModel(StudySessionRecurrenceRowSchema.parse(row)) : null;
-  }
-
   async listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]> {
     const rows = await this.database.getAllAsync(
-      `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_position, created_at, consumed_at
+      `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at
        FROM study_session_recurrences
        WHERE study_session_id = ?
-       ORDER BY target_position, created_at, id`,
+       ORDER BY target_reel_position, created_at, id`,
       studySessionId
     );
     return rows.map((row) => this.toModel(StudySessionRecurrenceRowSchema.parse(row)));
@@ -87,7 +73,7 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
 
   async schedulePending(
     recurrence: StudySessionRecurrence,
-    proposedTargetPosition: number
+    proposedTargetReelPosition: number
   ): Promise<StudySessionRecurrence> {
     let scheduled: StudySessionRecurrence | null = null;
 
@@ -98,7 +84,7 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
       );
 
       const existingRow = await this.database.getFirstAsync(
-        `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_position, created_at, consumed_at
+        `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at
          FROM study_session_recurrences
          WHERE source_attempt_id = ? AND consumed_at IS NULL
          ORDER BY created_at DESC, id DESC
@@ -109,21 +95,26 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
         ? this.toModel(StudySessionRecurrenceRowSchema.parse(existingRow))
         : null;
       const occupiedRows = await this.database.getAllAsync(
-        `SELECT target_position
+        `SELECT target_reel_position
          FROM study_session_recurrences
          WHERE study_session_id = ? AND consumed_at IS NULL AND source_attempt_id <> ?`,
         recurrence.studySessionId,
         recurrence.sourceAttemptId
       );
-      const occupiedPositions = new Set(
-        occupiedRows.map((row) => StudySessionRecurrenceTargetRowSchema.parse(row).target_position)
+      const occupiedReelPositions = new Set(
+        occupiedRows.map(
+          (row) => StudySessionRecurrenceTargetRowSchema.parse(row).target_reel_position
+        )
       );
-      const targetPosition = findNextFreeRecurrenceSlot(proposedTargetPosition, occupiedPositions);
+      const targetReelPosition = findNextFreeRecurrenceSlot(
+        proposedTargetReelPosition,
+        occupiedReelPositions
+      );
 
       if (existing) {
         await this.database.runAsync(
-          "UPDATE study_session_recurrences SET target_position = ? WHERE id = ? AND consumed_at IS NULL",
-          targetPosition,
+          "UPDATE study_session_recurrences SET target_reel_position = ? WHERE id = ? AND consumed_at IS NULL",
+          targetReelPosition,
           existing.id
         );
         scheduled = new StudySessionRecurrence({
@@ -133,18 +124,18 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
           id: existing.id,
           sourceAttemptId: existing.sourceAttemptId,
           studySessionId: existing.studySessionId,
-          targetPosition,
+          targetReelPosition,
         });
       } else {
         await this.database.runAsync(
           `INSERT INTO study_session_recurrences
-            (id, study_session_id, flashcard_id, source_attempt_id, target_position, created_at, consumed_at)
+            (id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           recurrence.id,
           recurrence.studySessionId,
           recurrence.flashcardId,
           recurrence.sourceAttemptId,
-          targetPosition,
+          targetReelPosition,
           recurrence.createdAt,
           recurrence.consumedAt
         );
@@ -155,7 +146,7 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
           id: recurrence.id,
           sourceAttemptId: recurrence.sourceAttemptId,
           studySessionId: recurrence.studySessionId,
-          targetPosition,
+          targetReelPosition,
         });
       }
     });
@@ -166,15 +157,6 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
     return scheduled;
   }
 
-  async updateTargetPosition(recurrenceId: string, targetPosition: number): Promise<boolean> {
-    const result = await this.database.runAsync(
-      "UPDATE study_session_recurrences SET target_position = ? WHERE id = ? AND consumed_at IS NULL",
-      targetPosition,
-      recurrenceId
-    );
-    return result.changes > 0;
-  }
-
   private toModel(row: StudySessionRecurrenceRow): StudySessionRecurrence {
     return new StudySessionRecurrence({
       consumedAt: row.consumed_at,
@@ -183,7 +165,7 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
       id: row.id,
       sourceAttemptId: row.source_attempt_id,
       studySessionId: row.study_session_id,
-      targetPosition: row.target_position,
+      targetReelPosition: row.target_reel_position,
     });
   }
 }

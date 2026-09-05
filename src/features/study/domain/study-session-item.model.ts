@@ -6,7 +6,7 @@ export const StudySessionItemFieldsSchema = z.compile(
   z.object({
     flashcardId: FlashcardIdSchema,
     id: z.string(),
-    position: z.number().int().nonnegative(),
+    baseFeedPosition: z.number().int().nonnegative(),
     studySessionId: z.string(),
   })
 );
@@ -16,12 +16,12 @@ export class StudySessionItem {
   public readonly id: string;
   public readonly studySessionId: string;
   public readonly flashcardId: FlashcardId;
-  public readonly position: number;
+  public readonly baseFeedPosition: number;
 
   constructor(fields: StudySessionItemFields) {
     this.flashcardId = fields.flashcardId;
     this.id = fields.id;
-    this.position = fields.position;
+    this.baseFeedPosition = fields.baseFeedPosition;
     this.studySessionId = fields.studySessionId;
   }
 }

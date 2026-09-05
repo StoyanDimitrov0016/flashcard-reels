@@ -1,9 +1,6 @@
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import {
-  RecallLevelSchema,
-  type RecallLevel,
-} from "@/features/study/domain/flashcard-review.model";
+import { RecallLevelSchema, type RecallLevel } from "@/features/study/domain/recall-level";
 import { z } from "zod";
 import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
 

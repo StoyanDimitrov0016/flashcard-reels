@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  RecallLevelSchema,
-  type RecallLevel,
-} from "@/features/study/domain/flashcard-review.model";
+import { RecallLevelSchema, type RecallLevel } from "@/features/study/domain/recall-level";
 
 export const FlashcardReviewAttemptFieldsSchema = z.compile(
   z.object({

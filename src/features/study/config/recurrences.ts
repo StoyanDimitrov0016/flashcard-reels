@@ -1,4 +1,4 @@
-import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export type RandomSource = () => number;
 
@@ -16,7 +16,7 @@ export const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<
 };
 
 export function calculateRecurrenceTarget(
-  sourcePosition: number,
+  sourceReelPosition: number,
   rating: RecallLevel,
   random: RandomSource = Math.random
 ): number | null {
@@ -29,28 +29,17 @@ export function calculateRecurrenceTarget(
   const jitter =
     configuration.jitterMinimum +
     Math.floor(Math.min(0.999999999, Math.max(0, random())) * jitterRange);
-  const targetPosition = sourcePosition + configuration.baseDistance + jitter;
-  return Math.max(sourcePosition + 1, targetPosition);
-}
-
-export function findNextFreeRecurrencePosition(
-  proposedPosition: number,
-  sourcePosition: number,
-  occupiedPositions: ReadonlySet<number>
-): number {
-  return findNextFreeRecurrenceSlot(
-    Math.max(sourcePosition + 1, proposedPosition),
-    occupiedPositions
-  );
+  const targetReelPosition = sourceReelPosition + configuration.baseDistance + jitter;
+  return Math.max(sourceReelPosition + 1, targetReelPosition);
 }
 
 export function findNextFreeRecurrenceSlot(
-  proposedPosition: number,
-  occupiedPositions: ReadonlySet<number>
+  proposedTargetReelPosition: number,
+  occupiedReelPositions: ReadonlySet<number>
 ): number {
-  let targetPosition = proposedPosition;
-  while (occupiedPositions.has(targetPosition)) {
-    targetPosition += 1;
+  let targetReelPosition = proposedTargetReelPosition;
+  while (occupiedReelPositions.has(targetReelPosition)) {
+    targetReelPosition += 1;
   }
-  return targetPosition;
+  return targetReelPosition;
 }

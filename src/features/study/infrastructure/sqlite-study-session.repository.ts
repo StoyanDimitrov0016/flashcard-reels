@@ -13,7 +13,7 @@ const StudySessionRowSchema = z.compile(
   z.object({
     completed_at: z.string().nullable(),
     created_at: z.string(),
-    current_position: z.number().int().nonnegative(),
+    current_reel_position: z.number().int().nonnegative(),
     deck_id: DeckIdSchema.nullable(),
     id: z.string(),
     mode: StudySessionScopeSchema,
@@ -47,12 +47,12 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
   async create(session: StudySession): Promise<void> {
     await this.database.runAsync(
       `INSERT INTO study_sessions
-        (id, mode, deck_id, current_position, created_at, completed_at)
+        (id, mode, deck_id, current_reel_position, created_at, completed_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
       session.id,
       session.scope,
       session.deckId,
-      session.currentPosition,
+      session.currentReelPosition,
       session.createdAt,
       session.completedAt
     );
@@ -62,7 +62,7 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
     const row =
       deckId === null
         ? await this.database.getFirstAsync(
-            `SELECT id, mode, deck_id, current_position, created_at, completed_at
+            `SELECT id, mode, deck_id, current_reel_position, created_at, completed_at
              FROM study_sessions
              WHERE mode = ? AND deck_id IS NULL AND completed_at IS NULL
              ORDER BY created_at DESC, id DESC
@@ -70,7 +70,7 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
             scope
           )
         : await this.database.getFirstAsync(
-            `SELECT id, mode, deck_id, current_position, created_at, completed_at
+            `SELECT id, mode, deck_id, current_reel_position, created_at, completed_at
              FROM study_sessions
              WHERE mode = ? AND deck_id = ? AND completed_at IS NULL
              ORDER BY created_at DESC, id DESC
@@ -81,10 +81,13 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
     return row ? this.toModel(StudySessionRowSchema.parse(row)) : null;
   }
 
-  async updateCurrentPosition(sessionId: string, currentPosition: number): Promise<boolean> {
+  async updateCurrentReelPosition(
+    sessionId: string,
+    currentReelPosition: number
+  ): Promise<boolean> {
     const result = await this.database.runAsync(
-      "UPDATE study_sessions SET current_position = ? WHERE id = ? AND completed_at IS NULL",
-      currentPosition,
+      "UPDATE study_sessions SET current_reel_position = ? WHERE id = ? AND completed_at IS NULL",
+      currentReelPosition,
       sessionId
     );
     return result.changes > 0;
@@ -94,7 +97,7 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
     return new StudySession({
       completedAt: row.completed_at,
       createdAt: row.created_at,
-      currentPosition: row.current_position,
+      currentReelPosition: row.current_reel_position,
       deckId: row.deck_id,
       id: row.id,
       scope: row.mode,

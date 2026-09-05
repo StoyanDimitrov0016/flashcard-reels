@@ -15,10 +15,10 @@ describe("study session behavior", () => {
   it("keeps Mixed and Focused sessions active independently", async () => {
     const harness = createStudyHarness();
     const feedService = new ReelFeedService(harness.service, () => 0);
-    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const cards = Array.from({ length: 10 }, (_, index) => makeFlashcard(index + 1));
 
     const mixed = await feedService.prepareFeed(cards, "mixed", null, false);
-    await harness.service.updateSessionPosition(mixed.studySessionId, 2);
+    await harness.service.updateSessionReelPosition(mixed.studySessionId, 2);
     const focused = await feedService.prepareFeed(cards, "focused", first(cards).deckId, false);
 
     expect(harness.sessions.all()).toEqual(
@@ -34,7 +34,7 @@ describe("study session behavior", () => {
 
     const resumedMixed = await feedService.prepareFeed(cards, "mixed", null, false);
     expect(resumedMixed.studySessionId).toBe(mixed.studySessionId);
-    expect(resumedMixed.currentPosition).toBe(2);
+    expect(resumedMixed.currentReelPosition).toBe(2);
     expect(resumedMixed.cards.map((card) => card.id)).toEqual(mixed.cards.map((card) => card.id));
   });
 
@@ -105,7 +105,7 @@ describe("study session behavior", () => {
   it("preserves the stable base sequence when a recurrence is scheduled", async () => {
     const harness = createStudyHarness(() => 0.5);
     const feedService = new ReelFeedService(harness.service, () => 0);
-    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const cards = Array.from({ length: 10 }, (_, index) => makeFlashcard(index + 1));
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const sourceCard = first(feed.baseCards);
 
@@ -113,9 +113,63 @@ describe("study session behavior", () => {
     await harness.service.rateAttempt(attemptId, "again");
 
     expect(
-      (await harness.service.listSessionItems(feed.studySessionId)).map((item) => item.position)
-    ).toEqual([0, 1, 2]);
+      (await harness.service.listSessionItems(feed.studySessionId)).map(
+        (item) => item.baseFeedPosition
+      )
+    ).toEqual(Array.from({ length: 10 }, (_, index) => index));
     const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
     expect(occurrences.cards.filter((card) => card.id === sourceCard.id)).toHaveLength(2);
+  });
+
+  it("renders multiple recurrences at their exact reel positions without target drift", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = Array.from({ length: 12 }, (_, index) => makeFlashcard(index + 1));
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const firstBaseCard = feed.baseCards[0];
+    const secondBaseCard = feed.baseCards[1];
+    if (!firstBaseCard || !secondBaseCard) {
+      throw new Error("Expected two base feed cards");
+    }
+
+    const firstAttemptId = await harness.service.startAttempt(
+      firstBaseCard.id,
+      0,
+      feed.studySessionId
+    );
+    const secondAttemptId = await harness.service.startAttempt(
+      secondBaseCard.id,
+      1,
+      feed.studySessionId
+    );
+    await harness.service.rateAttempt(firstAttemptId, "again");
+    await harness.service.rateAttempt(secondAttemptId, "again");
+
+    const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
+    expect(occurrences.cards[8]?.id).toBe(firstBaseCard.id);
+    expect(occurrences.cards[9]?.id).toBe(secondBaseCard.id);
+    expect(occurrences.recurrenceIds.get(8)).toBeDefined();
+    expect(occurrences.recurrenceIds.get(9)).toBeDefined();
+  });
+
+  it("does not render a recurrence beyond finite base-feed material before its target", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const sourceCard = feed.baseCards[0];
+    if (!sourceCard) {
+      throw new Error("Expected a base feed card");
+    }
+
+    const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
+    await harness.service.rateAttempt(attemptId, "again");
+
+    const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
+    expect(occurrences.cards).toHaveLength(cards.length);
+    expect(occurrences.recurrenceIds.size).toBe(0);
+    expect((await harness.service.listSessionRecurrences(feed.studySessionId))[0]?.consumedAt).toBe(
+      null
+    );
   });
 });

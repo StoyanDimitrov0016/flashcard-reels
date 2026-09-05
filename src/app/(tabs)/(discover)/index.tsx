@@ -37,7 +37,7 @@ function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
     <ReelFeed
       baseCards={preparedFeed.baseCards}
       cards={preparedFeed.cards}
-      initialPosition={preparedFeed.currentPosition}
+      initialReelPosition={preparedFeed.currentReelPosition}
       key={preparedFeed.studySessionId}
       recurrenceIds={preparedFeed.recurrenceIds}
       studySessionId={preparedFeed.studySessionId}
@@ -73,7 +73,7 @@ function ReadyFocusedFeedContent({
     <ReelFeed
       baseCards={preparedFeed.baseCards}
       cards={preparedFeed.cards}
-      initialPosition={preparedFeed.currentPosition}
+      initialReelPosition={preparedFeed.currentReelPosition}
       key={preparedFeed.studySessionId}
       recurrenceIds={preparedFeed.recurrenceIds}
       showMainFeedLink

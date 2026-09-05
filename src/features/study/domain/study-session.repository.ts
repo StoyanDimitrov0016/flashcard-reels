@@ -6,5 +6,5 @@ export interface StudySessionRepository {
   complete(sessionId: string, completedAt: string): Promise<void>;
   create(session: StudySession): Promise<void>;
   findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null>;
-  updateCurrentPosition(sessionId: string, currentPosition: number): Promise<boolean>;
+  updateCurrentReelPosition(sessionId: string, currentReelPosition: number): Promise<boolean>;
 }

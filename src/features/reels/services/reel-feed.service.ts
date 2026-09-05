@@ -13,7 +13,7 @@ export type PreparedReelOccurrences = Readonly<{
 export type PreparedReelFeed = Readonly<{
   baseCards: Flashcard[];
   cards: Flashcard[];
-  currentPosition: number;
+  currentReelPosition: number;
   recurrenceIds: ReadonlyMap<number, string>;
   studySessionId: string;
 }>;
@@ -51,7 +51,7 @@ export class ReelFeedService {
       return {
         baseCards: preparedCards,
         ...occurrences,
-        currentPosition: openedSession.session.currentPosition,
+        currentReelPosition: openedSession.session.currentReelPosition,
         studySessionId: openedSession.session.id,
       };
     }
@@ -69,7 +69,7 @@ export class ReelFeedService {
     return {
       baseCards: resumedCards,
       ...occurrences,
-      currentPosition: openedSession.session.currentPosition,
+      currentReelPosition: openedSession.session.currentReelPosition,
       studySessionId: openedSession.session.id,
     };
   }
@@ -93,79 +93,48 @@ export class ReelFeedService {
     baseCards: readonly Flashcard[],
     recurrences: readonly StudySessionRecurrence[]
   ): PreparedReelOccurrences {
-    type RecurrenceOccurrence = Readonly<{
-      card: Flashcard;
-      recurrence: StudySessionRecurrence;
-    }>;
-    type FeedOccurrence = Readonly<{
-      card: Flashcard;
-      recurrence: StudySessionRecurrence | null;
-      sortPosition: number;
-    }>;
-
     const cardsById = new Map(baseCards.map((card) => [card.id, card] as const));
-    const recurrenceOccurrences = recurrences.reduce<RecurrenceOccurrence[]>(
-      (sorted, recurrence) => {
+    const recurrencesByReelPosition = new Map<number, StudySessionRecurrence>();
+    for (const recurrence of recurrences) {
+      if (recurrence.consumedAt !== null) {
+        continue;
+      }
+      if (recurrencesByReelPosition.has(recurrence.targetReelPosition)) {
+        throw new Error(
+          `Duplicate pending recurrence reel position ${recurrence.targetReelPosition}`
+        );
+      }
+      recurrencesByReelPosition.set(recurrence.targetReelPosition, recurrence);
+    }
+
+    const cards: Flashcard[] = [];
+    const recurrenceIds = new Map<number, string>();
+    let baseFeedPosition = 0;
+    let reelPosition = 0;
+
+    while (baseFeedPosition < baseCards.length || recurrencesByReelPosition.has(reelPosition)) {
+      const recurrence = recurrencesByReelPosition.get(reelPosition);
+      if (recurrence) {
         const card = cardsById.get(recurrence.flashcardId);
         if (!card) {
-          return sorted;
+          throw new Error(`Missing flashcard ${recurrence.flashcardId} for recurrence`);
         }
-        return this.insertSorted(
-          sorted,
-          { card, recurrence },
-          (left, right) =>
-            left.recurrence.targetPosition - right.recurrence.targetPosition ||
-            left.recurrence.createdAt.localeCompare(right.recurrence.createdAt) ||
-            left.recurrence.id.localeCompare(right.recurrence.id)
-        );
-      },
-      []
-    );
-    const occurrences = [
-      ...baseCards.map<FeedOccurrence>((card, sortPosition) => ({
-        card,
-        recurrence: null,
-        sortPosition,
-      })),
-      ...recurrenceOccurrences.map<FeedOccurrence>(({ card, recurrence }) => ({
-        card,
-        recurrence,
-        sortPosition: recurrence.targetPosition,
-      })),
-    ].reduce<FeedOccurrence[]>(
-      (sorted, occurrence) =>
-        this.insertSorted(
-          sorted,
-          occurrence,
-          (left, right) =>
-            left.sortPosition - right.sortPosition ||
-            (left.recurrence ? -1 : 0) - (right.recurrence ? -1 : 0) ||
-            (left.recurrence?.createdAt ?? "").localeCompare(right.recurrence?.createdAt ?? "") ||
-            (left.recurrence?.id ?? "").localeCompare(right.recurrence?.id ?? "")
-        ),
-      []
-    );
-
-    const recurrenceIds = new Map<number, string>();
-    const cards = occurrences.map((occurrence, position) => {
-      if (occurrence.recurrence) {
-        recurrenceIds.set(position, occurrence.recurrence.id);
+        cards.push(card);
+        recurrenceIds.set(reelPosition, recurrence.id);
+      } else {
+        const card = baseCards[baseFeedPosition];
+        if (!card) {
+          break;
+        }
+        cards.push(card);
+        baseFeedPosition += 1;
       }
-      return occurrence.card;
-    });
-    return { cards, recurrenceIds };
-  }
-
-  private insertSorted<T>(
-    items: readonly T[],
-    item: T,
-    compare: (left: T, right: T) => number
-  ): T[] {
-    const index = items.findIndex((current) => compare(item, current) < 0);
-    if (index < 0) {
-      return [...items, item];
+      reelPosition += 1;
     }
-    return [...items.slice(0, index), item, ...items.slice(index)];
+
+    // A target beyond the available base material remains pending but is not rendered. This
+    // keeps the feed finite and never moves a recurrence earlier than its persisted target.
+    return { cards, recurrenceIds };
   }
 
   private shuffle(cards: readonly Flashcard[]): Flashcard[] {

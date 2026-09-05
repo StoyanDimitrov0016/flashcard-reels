@@ -15,7 +15,7 @@ import { palette } from "@/shared/presentation/palette";
 type ReelFeedProps = Readonly<{
   baseCards: Flashcard[];
   cards: Flashcard[];
-  initialPosition: number;
+  initialReelPosition: number;
   recurrenceIds: ReadonlyMap<number, string>;
   showMainFeedLink?: boolean;
   studySessionId: string;
@@ -24,7 +24,7 @@ type ReelFeedProps = Readonly<{
 export function ReelFeed({
   baseCards,
   cards,
-  initialPosition,
+  initialReelPosition,
   recurrenceIds,
   showMainFeedLink = false,
   studySessionId,
@@ -37,7 +37,7 @@ export function ReelFeed({
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
   const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
-    initialPosition,
+    initialReelPosition,
     itemCount: displayCards.length,
     itemHeight: height,
   });
@@ -111,7 +111,7 @@ export function ReelFeed({
   }, [activeIndex, studySessionId, studyService]);
 
   useEffect(() => {
-    void studyService.updateSessionPosition(studySessionId, activeIndex);
+    void studyService.updateSessionReelPosition(studySessionId, activeIndex);
   }, [activeIndex, studySessionId, studyService]);
 
   useEffect(() => {

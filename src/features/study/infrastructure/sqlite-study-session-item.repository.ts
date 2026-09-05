@@ -9,7 +9,7 @@ const StudySessionItemRowSchema = z.compile(
   z.object({
     flashcard_id: FlashcardIdSchema,
     id: z.string(),
-    position: z.number().int().nonnegative(),
+    base_feed_position: z.number().int().nonnegative(),
     study_session_id: z.string(),
   })
 );
@@ -42,10 +42,10 @@ export class SQLiteStudySessionItemRepository implements StudySessionItemReposit
             item.id,
             item.studySessionId,
             item.flashcardId,
-            item.position,
+            item.baseFeedPosition,
           ]);
           return this.database.runAsync(
-            `INSERT INTO study_session_items (id, study_session_id, flashcard_id, position)
+            `INSERT INTO study_session_items (id, study_session_id, flashcard_id, base_feed_position)
            VALUES ${placeholders}`,
             ...values
           );
@@ -56,10 +56,10 @@ export class SQLiteStudySessionItemRepository implements StudySessionItemReposit
 
   async listBySessionId(studySessionId: string): Promise<StudySessionItem[]> {
     const rows = await this.database.getAllAsync(
-      `SELECT id, study_session_id, flashcard_id, position
+      `SELECT id, study_session_id, flashcard_id, base_feed_position
        FROM study_session_items
        WHERE study_session_id = ?
-       ORDER BY position, id`,
+       ORDER BY base_feed_position, id`,
       studySessionId
     );
     return rows.map((row) => this.toModel(StudySessionItemRowSchema.parse(row)));
@@ -69,7 +69,7 @@ export class SQLiteStudySessionItemRepository implements StudySessionItemReposit
     return new StudySessionItem({
       flashcardId: row.flashcard_id,
       id: row.id,
-      position: row.position,
+      baseFeedPosition: row.base_feed_position,
       studySessionId: row.study_session_id,
     });
   }

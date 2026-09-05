@@ -1,5 +1,5 @@
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export interface ReviewAttemptRepository {
   create(attempt: FlashcardReviewAttempt): Promise<void>;

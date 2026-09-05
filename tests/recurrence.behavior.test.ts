@@ -47,8 +47,8 @@ describe("intra-session recurrence behavior", () => {
     if (!againConfig) {
       throw new Error("Missing Again recurrence configuration");
     }
-    expect(recurrence.targetPosition).toBe(10 + againConfig.baseDistance - 2);
-    expect(recurrence.targetPosition).toBeGreaterThan(10);
+    expect(recurrence.targetReelPosition).toBe(10 + againConfig.baseDistance - 2);
+    expect(recurrence.targetReelPosition).toBeGreaterThan(10);
   });
 
   it("Hard schedules after the source using the configured distance and jitter", async () => {
@@ -63,8 +63,8 @@ describe("intra-session recurrence behavior", () => {
     if (!hardConfig) {
       throw new Error("Missing Hard recurrence configuration");
     }
-    expect(recurrence.targetPosition).toBe(10 + hardConfig.baseDistance + 4);
-    expect(recurrence.targetPosition).toBeGreaterThan(10);
+    expect(recurrence.targetReelPosition).toBe(10 + hardConfig.baseDistance + 4);
+    expect(recurrence.targetReelPosition).toBeGreaterThan(10);
   });
 
   it.each(["good", "easy"] as const)("%s does not retain a pending recurrence", async (rating) => {
@@ -111,7 +111,7 @@ describe("intra-session recurrence behavior", () => {
 
     expect(second).toHaveLength(1);
     expect(only(second).id).toBe(only(initialRecurrences).id);
-    expect(only(second).targetPosition).toBe(20);
+    expect(only(second).targetReelPosition).toBe(20);
   });
 
   it("changing Hard to Again replaces the pending recurrence", async () => {
@@ -127,7 +127,7 @@ describe("intra-session recurrence behavior", () => {
 
     expect(second).toHaveLength(1);
     expect(only(second).id).toBe(only(initialRecurrences).id);
-    expect(only(second).targetPosition).toBe(6);
+    expect(only(second).targetReelPosition).toBe(6);
   });
 
   it("repeated identical ratings do not create duplicate pending recurrences", async () => {
@@ -154,7 +154,7 @@ describe("intra-session recurrence behavior", () => {
 
     expect(
       (await harness.service.listSessionRecurrences(session.id)).map(
-        (recurrence) => recurrence.targetPosition
+        (recurrence) => recurrence.targetReelPosition
       )
     ).toEqual([8, 9, 10]);
   });
@@ -169,7 +169,12 @@ describe("intra-session recurrence behavior", () => {
 
     const stored = only(await harness.service.listSessionRecurrences(session.id));
     expect(stored.consumedAt).not.toBeNull();
-    expect(await harness.recurrences.findPendingBySourceAttemptId(attemptId)).toBeNull();
+    expect(
+      (await harness.service.listSessionRecurrences(session.id)).filter(
+        (pendingRecurrence) =>
+          pendingRecurrence.sourceAttemptId === attemptId && pendingRecurrence.consumedAt === null
+      )
+    ).toHaveLength(0);
   });
 
   it("creates a separate attempt for a repeated occurrence position", async () => {

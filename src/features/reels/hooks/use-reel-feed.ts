@@ -2,14 +2,14 @@ import { useRef, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 
 type UseReelFeedParameters = Readonly<{
-  initialPosition: number;
+  initialReelPosition: number;
   itemHeight: number;
   itemCount: number;
 }>;
 
-export function useReelFeed({ initialPosition, itemCount, itemHeight }: UseReelFeedParameters) {
+export function useReelFeed({ initialReelPosition, itemCount, itemHeight }: UseReelFeedParameters) {
   const normalizedInitialPosition =
-    itemCount === 0 ? 0 : Math.min(itemCount - 1, Math.max(0, initialPosition));
+    itemCount === 0 ? 0 : Math.min(itemCount - 1, Math.max(0, initialReelPosition));
   const [activeIndex, setActiveIndex] = useState(normalizedInitialPosition);
   const activeIndexReference = useRef(normalizedInitialPosition);
 

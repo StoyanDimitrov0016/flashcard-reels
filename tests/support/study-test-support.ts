@@ -1,5 +1,5 @@
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
@@ -36,12 +36,12 @@ export function makeSession(
   id: string,
   scope: "mixed" | "focused",
   deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
-  currentPosition = 0
+  currentReelPosition = 0
 ): StudySession {
   return new StudySession({
     completedAt: null,
     createdAt: "2026-01-01T00:00:00.000Z",
-    currentPosition,
+    currentReelPosition,
     deckId,
     id,
     scope,
@@ -71,7 +71,14 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
   private readonly attempts = new Map<string, FlashcardReviewAttempt>();
 
   async create(attempt: FlashcardReviewAttempt): Promise<void> {
-    if (this.attempts.has(attempt.id)) {
+    if (
+      this.attempts.has(attempt.id) ||
+      [...this.attempts.values()].some(
+        (current) =>
+          current.studySessionId === attempt.studySessionId &&
+          current.reelPosition === attempt.reelPosition
+      )
+    ) {
       throw new Error(`Duplicate attempt ${attempt.id}`);
     }
     this.attempts.set(attempt.id, attempt);
@@ -165,7 +172,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           new StudySession({
             completedAt,
             createdAt: session.createdAt,
-            currentPosition: session.currentPosition,
+            currentReelPosition: session.currentReelPosition,
             deckId: session.deckId,
             id: session.id,
             scope: session.scope,
@@ -183,7 +190,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         new StudySession({
           completedAt,
           createdAt: session.createdAt,
-          currentPosition: session.currentPosition,
+          currentReelPosition: session.currentReelPosition,
           deckId: session.deckId,
           id: session.id,
           scope: session.scope,
@@ -214,7 +221,10 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
     );
   }
 
-  async updateCurrentPosition(sessionId: string, currentPosition: number): Promise<boolean> {
+  async updateCurrentReelPosition(
+    sessionId: string,
+    currentReelPosition: number
+  ): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session || session.completedAt !== null) {
       return false;
@@ -224,7 +234,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       new StudySession({
         completedAt: session.completedAt,
         createdAt: session.createdAt,
-        currentPosition,
+        currentReelPosition,
         deckId: session.deckId,
         id: session.id,
         scope: session.scope,
@@ -244,14 +254,14 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
   async createMany(items: readonly StudySessionItem[]): Promise<void> {
     const keys = new Set<string>();
     for (const item of items) {
-      const key = `${item.studySessionId}:${item.position}`;
+      const key = `${item.studySessionId}:base-${item.baseFeedPosition}`;
       if (
         keys.has(key) ||
         [...this.items.values()].some(
-          (current) => `${current.studySessionId}:${current.position}` === key
+          (current) => `${current.studySessionId}:${current.baseFeedPosition}` === key
         )
       ) {
-        throw new Error(`Duplicate session item position ${key}`);
+        throw new Error(`Duplicate base feed position ${key}`);
       }
       keys.add(key);
     }
@@ -263,7 +273,7 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
   async listBySessionId(studySessionId: string): Promise<StudySessionItem[]> {
     return ordered(
       [...this.items.values()].filter((item) => item.studySessionId === studySessionId),
-      (left, right) => left.position - right.position
+      (left, right) => left.baseFeedPosition - right.baseFeedPosition
     );
   }
 }
@@ -284,23 +294,13 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
     this.recurrences.set(recurrence.id, recurrence);
   }
 
-  async findPendingBySourceAttemptId(
-    sourceAttemptId: string
-  ): Promise<StudySessionRecurrence | null> {
-    return (
-      [...this.recurrences.values()].find(
-        (recurrence) =>
-          recurrence.sourceAttemptId === sourceAttemptId && recurrence.consumedAt === null
-      ) ?? null
-    );
-  }
-
   async listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]> {
     return ordered(
       [...this.recurrences.values()].filter(
         (recurrence) => recurrence.studySessionId === studySessionId
       ),
-      (left, right) => left.targetPosition - right.targetPosition || left.id.localeCompare(right.id)
+      (left, right) =>
+        left.targetReelPosition - right.targetReelPosition || left.id.localeCompare(right.id)
     );
   }
 
@@ -318,7 +318,7 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
         id: recurrence.id,
         sourceAttemptId: recurrence.sourceAttemptId,
         studySessionId: recurrence.studySessionId,
-        targetPosition: recurrence.targetPosition,
+        targetReelPosition: recurrence.targetReelPosition,
       })
     );
     return true;
@@ -326,21 +326,33 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
 
   async schedulePending(
     recurrence: StudySessionRecurrence,
-    proposedTargetPosition: number
+    proposedTargetReelPosition: number
   ): Promise<StudySessionRecurrence> {
-    const existing = await this.findPendingBySourceAttemptId(recurrence.sourceAttemptId);
-    const occupiedPositions = new Set(
+    const existing = [...this.recurrences.values()].find(
+      (current) =>
+        current.sourceAttemptId === recurrence.sourceAttemptId && current.consumedAt === null
+    );
+    const occupiedReelPositions = new Set(
       (await this.listBySessionId(recurrence.studySessionId))
         .filter((current) => current.consumedAt === null && current.id !== existing?.id)
-        .map((current) => current.targetPosition)
+        .map((current) => current.targetReelPosition)
     );
-    const targetPosition = findNextFreeRecurrenceSlot(proposedTargetPosition, occupiedPositions);
+    const targetReelPosition = findNextFreeRecurrenceSlot(
+      proposedTargetReelPosition,
+      occupiedReelPositions
+    );
     if (existing) {
-      await this.updateTargetPosition(existing.id, targetPosition);
-      const updated = this.recurrences.get(existing.id);
-      if (!updated) {
-        throw new Error("Could not update pending recurrence");
-      }
+      const updated = new StudySessionRecurrence({
+        consumedAt: existing.consumedAt,
+        createdAt: existing.createdAt,
+        flashcardId: existing.flashcardId,
+        id: existing.id,
+        sourceAttemptId: existing.sourceAttemptId,
+        studySessionId: existing.studySessionId,
+        targetReelPosition,
+      });
+      this.assertPendingConstraints(updated, existing.id);
+      this.recurrences.set(existing.id, updated);
       return updated;
     }
     const scheduled = new StudySessionRecurrence({
@@ -350,29 +362,10 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
       id: recurrence.id,
       sourceAttemptId: recurrence.sourceAttemptId,
       studySessionId: recurrence.studySessionId,
-      targetPosition,
+      targetReelPosition,
     });
     await this.create(scheduled);
     return scheduled;
-  }
-
-  async updateTargetPosition(recurrenceId: string, targetPosition: number): Promise<boolean> {
-    const recurrence = this.recurrences.get(recurrenceId);
-    if (!recurrence || recurrence.consumedAt !== null) {
-      return false;
-    }
-    const updated = new StudySessionRecurrence({
-      consumedAt: recurrence.consumedAt,
-      createdAt: recurrence.createdAt,
-      flashcardId: recurrence.flashcardId,
-      id: recurrence.id,
-      sourceAttemptId: recurrence.sourceAttemptId,
-      studySessionId: recurrence.studySessionId,
-      targetPosition,
-    });
-    this.assertPendingConstraints(updated, recurrenceId);
-    this.recurrences.set(recurrenceId, updated);
-    return true;
   }
 
   all(): StudySessionRecurrence[] {
@@ -395,9 +388,9 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
       }
       if (
         current.studySessionId === recurrence.studySessionId &&
-        current.targetPosition === recurrence.targetPosition
+        current.targetReelPosition === recurrence.targetReelPosition
       ) {
-        throw new Error("Duplicate pending target position");
+        throw new Error("Duplicate pending target reel position");
       }
     }
   }

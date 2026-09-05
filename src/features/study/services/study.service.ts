@@ -1,4 +1,4 @@
-import { type RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
@@ -68,7 +68,7 @@ export class StudyService {
     const session = new StudySession({
       completedAt: null,
       createdAt,
-      currentPosition: 0,
+      currentReelPosition: 0,
       deckId,
       id: this.idGenerator.generate(),
       scope,
@@ -83,11 +83,11 @@ export class StudyService {
 
   async createSessionItems(sessionId: string, cards: readonly Flashcard[]): Promise<void> {
     const items = cards.map(
-      (card, position) =>
+      (card, baseFeedPosition) =>
         new StudySessionItem({
           flashcardId: card.id,
           id: this.idGenerator.generate(),
-          position,
+          baseFeedPosition,
           studySessionId: sessionId,
         })
     );
@@ -102,8 +102,11 @@ export class StudyService {
     return this.studySessionRecurrenceRepository.listBySessionId(sessionId);
   }
 
-  async updateSessionPosition(sessionId: string, currentPosition: number): Promise<boolean> {
-    return this.studySessionRepository.updateCurrentPosition(sessionId, currentPosition);
+  async updateSessionReelPosition(
+    sessionId: string,
+    currentReelPosition: number
+  ): Promise<boolean> {
+    return this.studySessionRepository.updateCurrentReelPosition(sessionId, currentReelPosition);
   }
 
   async startAttempt(
@@ -149,8 +152,12 @@ export class StudyService {
       return true;
     }
 
-    const proposedPosition = calculateRecurrenceTarget(attempt.reelPosition, rating, this.random);
-    if (proposedPosition === null) {
+    const proposedTargetReelPosition = calculateRecurrenceTarget(
+      attempt.reelPosition,
+      rating,
+      this.random
+    );
+    if (proposedTargetReelPosition === null) {
       await this.studySessionRecurrenceRepository.cancelPendingBySourceAttemptId(attemptId);
       return true;
     }
@@ -163,9 +170,9 @@ export class StudyService {
         id: this.idGenerator.generate(),
         sourceAttemptId: attempt.id,
         studySessionId: attempt.studySessionId,
-        targetPosition: proposedPosition,
+        targetReelPosition: proposedTargetReelPosition,
       }),
-      proposedPosition
+      proposedTargetReelPosition
     );
     return true;
   }
