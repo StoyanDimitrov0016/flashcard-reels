@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { deckIdBySeedKey } from "@/features/decks/data/decks";
 import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
 
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 
 const INITIAL_SCHEMA = `
   CREATE TABLE IF NOT EXISTS decks (
@@ -59,6 +59,19 @@ const INITIAL_SCHEMA = `
   CREATE INDEX IF NOT EXISTS study_sessions_completed_at_idx
     ON study_sessions (completed_at);
 
+  CREATE TABLE IF NOT EXISTS study_session_items (
+    id TEXT PRIMARY KEY NOT NULL,
+    study_session_id TEXT NOT NULL,
+    flashcard_id TEXT NOT NULL,
+    position INTEGER NOT NULL CHECK (position >= 0),
+    UNIQUE (study_session_id, position),
+    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS study_session_items_flashcard_id_idx
+    ON study_session_items (flashcard_id);
+
   CREATE TABLE IF NOT EXISTS flashcard_review_attempts (
     id TEXT PRIMARY KEY NOT NULL,
     study_session_id TEXT NOT NULL,
@@ -98,8 +111,27 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
     if (currentVersion > 0 && currentVersion < 3) {
       await migrateStudySessions(database);
     }
+    if (currentVersion > 0 && currentVersion < 4) {
+      await migrateStudySessionItems(database);
+    }
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
+}
+
+async function migrateStudySessionItems(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS study_session_items (
+      id TEXT PRIMARY KEY NOT NULL,
+      study_session_id TEXT NOT NULL,
+      flashcard_id TEXT NOT NULL,
+      position INTEGER NOT NULL CHECK (position >= 0),
+      UNIQUE (study_session_id, position),
+      FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+      FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS study_session_items_flashcard_id_idx
+      ON study_session_items (flashcard_id);
+  `);
 }
 
 async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {

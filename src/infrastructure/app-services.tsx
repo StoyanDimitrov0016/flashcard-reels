@@ -9,6 +9,7 @@ import { DeckService } from "@/features/decks/services/deck.service";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { StudyService } from "@/features/study/services/study.service";
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
@@ -34,21 +35,24 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const deckAppearanceRepository = new SQLiteDeckAppearanceRepository(database);
     const flashcardRepository = new SQLiteFlashcardRepository(database);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(database);
+    const studySessionItemRepository = new SQLiteStudySessionItemRepository(database);
     const studySessionRepository = new SQLiteStudySessionRepository(database);
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
+    const studyService = new StudyService(
+      reviewAttemptRepository,
+      studySessionRepository,
+      studySessionItemRepository,
+      clock,
+      idGenerator
+    );
 
     return {
       answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
       deckService: new DeckService(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardService(flashcardRepository),
-      reelFeedService: new ReelFeedService(),
-      studyService: new StudyService(
-        reviewAttemptRepository,
-        studySessionRepository,
-        clock,
-        idGenerator
-      ),
+      reelFeedService: new ReelFeedService(studyService),
+      studyService,
     };
   });
 

@@ -2,14 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { PreparedReelFeed } from "@/features/reels/services/reel-feed.service";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import { useAppServices } from "@/infrastructure/app-services";
-
-export type PreparedReelFeed = Readonly<{
-  cards: Flashcard[];
-  currentPosition: number;
-  studySessionId: string;
-}>;
 
 type PreparationState = Readonly<{
   error: Error | null;
@@ -32,7 +27,7 @@ export function usePreparedReelFeed(
   replaceExistingSession: boolean,
   onSessionStarted?: () => void
 ): PreparedReelFeed | null {
-  const { reelFeedService, studyService } = useAppServices();
+  const { reelFeedService } = useAppServices();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
 
@@ -47,14 +42,12 @@ export function usePreparedReelFeed(
       previousRequest.scope === scope
         ? previousRequest.promise
         : (() => {
-            const preparedCards = reelFeedService.createFeed(cards);
-            const nextPromise = studyService
-              .openSession(scope, deckId, replaceExistingSession)
-              .then((session) => ({
-                cards: preparedCards,
-                currentPosition: session.currentPosition,
-                studySessionId: session.id,
-              }));
+            const nextPromise = reelFeedService.prepareFeed(
+              cards,
+              scope,
+              deckId,
+              replaceExistingSession
+            );
             requestReference.current = { cards, deckId, promise: nextPromise, scope };
             void nextPromise.then(() => {
               onSessionStarted?.();
@@ -80,15 +73,7 @@ export function usePreparedReelFeed(
     return () => {
       active = false;
     };
-  }, [
-    cards,
-    deckId,
-    onSessionStarted,
-    reelFeedService,
-    replaceExistingSession,
-    scope,
-    studyService,
-  ]);
+  }, [cards, deckId, onSessionStarted, reelFeedService, replaceExistingSession, scope]);
 
   if (state.error) {
     throw state.error;

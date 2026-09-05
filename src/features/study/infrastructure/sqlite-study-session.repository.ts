@@ -36,6 +36,14 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
     );
   }
 
+  async complete(sessionId: string, completedAt: string): Promise<void> {
+    await this.database.runAsync(
+      "UPDATE study_sessions SET completed_at = ? WHERE id = ? AND completed_at IS NULL",
+      completedAt,
+      sessionId
+    );
+  }
+
   async create(session: StudySession): Promise<void> {
     await this.database.runAsync(
       `INSERT INTO study_sessions

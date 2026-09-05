@@ -2,26 +2,37 @@ import { type RecallLevel } from "@/features/study/domain/flashcard-review.model
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
+
+export type OpenStudySession = Readonly<{
+  created: boolean;
+  session: StudySession;
+}>;
 
 export class StudyService {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly studySessionRepository: StudySessionRepository;
+  private readonly studySessionItemRepository: StudySessionItemRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
     studySessionRepository: StudySessionRepository,
+    studySessionItemRepository: StudySessionItemRepository,
     clock: Clock,
     idGenerator: IdGenerator
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRepository = studySessionRepository;
+    this.studySessionItemRepository = studySessionItemRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
   }
@@ -30,7 +41,7 @@ export class StudyService {
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExisting: boolean
-  ): Promise<StudySession> {
+  ): Promise<OpenStudySession> {
     if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
       throw new Error("Study session scope and deck must agree");
     }
@@ -42,7 +53,7 @@ export class StudyService {
 
     const activeSession = await this.studySessionRepository.findActive(scope, deckId);
     if (activeSession) {
-      return activeSession;
+      return { created: false, session: activeSession };
     }
 
     const session = new StudySession({
@@ -54,7 +65,28 @@ export class StudyService {
       scope,
     });
     await this.studySessionRepository.create(session);
-    return session;
+    return { created: true, session };
+  }
+
+  async completeSession(sessionId: string): Promise<void> {
+    await this.studySessionRepository.complete(sessionId, this.clock.now());
+  }
+
+  async createSessionItems(sessionId: string, cards: readonly Flashcard[]): Promise<void> {
+    const items = cards.map(
+      (card, position) =>
+        new StudySessionItem({
+          flashcardId: card.id,
+          id: this.idGenerator.generate(),
+          position,
+          studySessionId: sessionId,
+        })
+    );
+    await this.studySessionItemRepository.createMany(items);
+  }
+
+  async listSessionItems(sessionId: string): Promise<StudySessionItem[]> {
+    return this.studySessionItemRepository.listBySessionId(sessionId);
   }
 
   async updateSessionPosition(sessionId: string, currentPosition: number): Promise<boolean> {
