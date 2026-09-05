@@ -10,6 +10,7 @@ import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { StudyService } from "@/features/study/services/study.service";
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
@@ -36,6 +37,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const flashcardRepository = new SQLiteFlashcardRepository(database);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(database);
     const studySessionItemRepository = new SQLiteStudySessionItemRepository(database);
+    const studySessionRecurrenceRepository = new SQLiteStudySessionRecurrenceRepository(database);
     const studySessionRepository = new SQLiteStudySessionRepository(database);
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
@@ -43,6 +45,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       reviewAttemptRepository,
       studySessionRepository,
       studySessionItemRepository,
+      studySessionRecurrenceRepository,
       clock,
       idGenerator
     );

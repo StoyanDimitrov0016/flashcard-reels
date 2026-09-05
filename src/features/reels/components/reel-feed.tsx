@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
 import { useDeckAppearances } from "@/features/decks/hooks/use-deck-appearances";
@@ -8,36 +8,46 @@ import { ReelCard } from "@/features/reels/components/reel-card";
 import { useRecallSession } from "@/features/reels/hooks/use-recall-session";
 import { useReelFeed } from "@/features/reels/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/hooks/use-reel-viewport";
+import type { PreparedReelOccurrences } from "@/features/reels/services/reel-feed.service";
 import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
 
 type ReelFeedProps = Readonly<{
+  baseCards: Flashcard[];
   cards: Flashcard[];
   initialPosition: number;
+  recurrenceIds: ReadonlyMap<number, string>;
   showMainFeedLink?: boolean;
   studySessionId: string;
 }>;
 
 export function ReelFeed({
+  baseCards,
   cards,
   initialPosition,
+  recurrenceIds,
   showMainFeedLink = false,
   studySessionId,
 }: ReelFeedProps) {
+  const [occurrences, setOccurrences] = useState<PreparedReelOccurrences>(() => ({
+    cards,
+    recurrenceIds,
+  }));
+  const displayCards = occurrences.cards;
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
   const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
     initialPosition,
-    itemCount: cards.length,
+    itemCount: displayCards.length,
     itemHeight: height,
   });
-  const { attemptIds, rateCard, recallLevels, revealedCardIds, setAttemptId, toggleCard } =
+  const { attemptIds, rateCard, recallLevels, revealedPositions, setAttemptId, toggleCard } =
     useRecallSession();
-  const { answerAudioService, studyService } = useAppServices();
+  const { answerAudioService, reelFeedService, studyService } = useAppServices();
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const activeIndexReference = useRef(activeIndex);
-  const activeCard = cards[activeIndex];
-  const deckIds = [...new Set(cards.map((card) => card.deckId))];
+  const activeCard = displayCards[activeIndex];
+  const deckIds = [...new Set(displayCards.map((card) => card.deckId))];
   const { appearances } = useDeckAppearances(deckIds);
   const { decks } = useDecks(deckIds);
 
@@ -98,6 +108,13 @@ export function ReelFeed({
     void studyService.updateSessionPosition(studySessionId, activeIndex);
   }, [activeIndex, studySessionId, studyService]);
 
+  useEffect(() => {
+    const recurrenceId = occurrences.recurrenceIds.get(activeIndex);
+    if (recurrenceId) {
+      void studyService.consumeRecurrence(recurrenceId);
+    }
+  }, [activeIndex, occurrences.recurrenceIds, studyService]);
+
   const getItemLayout = (_data: ArrayLike<Flashcard> | null | undefined, index: number) => ({
     index,
     length: height,
@@ -119,20 +136,24 @@ export function ReelFeed({
         height={height}
         index={index}
         isActive={index === activeIndex}
-        onFlip={() => toggleCard(item.id)}
+        onFlip={() => toggleCard(index)}
         onRate={(level) => {
           void startAttemptForReel(index, item.id)
             .then((attemptId) => studyService.rateAttempt(attemptId, level))
             .then((updated) => {
               if (updated) {
-                rateCard(item.id, level);
+                rateCard(index, level);
+                return reelFeedService
+                  .refreshOccurrences(baseCards, studySessionId)
+                  .then(setOccurrences);
               }
+              return undefined;
             });
         }}
-        recallLevel={recallLevels.get(item.id) ?? null}
-        revealed={revealedCardIds.has(item.id)}
+        recallLevel={recallLevels.get(index) ?? null}
+        revealed={revealedPositions.has(index)}
         showMainFeedLink={showMainFeedLink}
-        total={cards.length}
+        total={displayCards.length}
         width={width}
       />
     );
@@ -142,12 +163,12 @@ export function ReelFeed({
     <View onLayout={handleLayout} style={styles.feed}>
       {height > 0 && width > 0 && (
         <FlatList
-          data={cards}
+          data={displayCards}
           decelerationRate="fast"
-          extraData={{ activeIndex, recallLevels, revealedCardIds }}
+          extraData={{ activeIndex, recallLevels, revealedPositions }}
           getItemLayout={getItemLayout}
-          initialScrollIndex={cards.length > 0 ? activeIndex : undefined}
-          keyExtractor={(card) => card.id}
+          initialScrollIndex={displayCards.length > 0 ? activeIndex : undefined}
+          keyExtractor={(card, index) => `${card.id}-${index}`}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
           renderItem={renderItem}

@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 import { deckIdBySeedKey } from "@/features/decks/data/decks";
 import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
 
-const DATABASE_VERSION = 4;
+const DATABASE_VERSION = 5;
 
 const INITIAL_SCHEMA = `
   CREATE TABLE IF NOT EXISTS decks (
@@ -89,6 +89,30 @@ const INITIAL_SCHEMA = `
     ON flashcard_review_attempts (study_session_id);
   CREATE INDEX IF NOT EXISTS review_attempts_flashcard_id_idx
     ON flashcard_review_attempts (flashcard_id);
+
+  CREATE TABLE IF NOT EXISTS study_session_recurrences (
+    id TEXT PRIMARY KEY NOT NULL,
+    study_session_id TEXT NOT NULL,
+    flashcard_id TEXT NOT NULL,
+    source_attempt_id TEXT NOT NULL,
+    target_position INTEGER NOT NULL CHECK (target_position >= 0),
+    created_at TEXT NOT NULL,
+    consumed_at TEXT,
+    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE,
+    FOREIGN KEY (source_attempt_id) REFERENCES flashcard_review_attempts (id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS study_session_recurrences_session_id_idx
+    ON study_session_recurrences (study_session_id, target_position);
+  CREATE INDEX IF NOT EXISTS study_session_recurrences_source_attempt_id_idx
+    ON study_session_recurrences (source_attempt_id);
+  CREATE UNIQUE INDEX IF NOT EXISTS study_session_recurrences_pending_target_idx
+    ON study_session_recurrences (study_session_id, target_position)
+    WHERE consumed_at IS NULL;
+  CREATE UNIQUE INDEX IF NOT EXISTS study_session_recurrences_pending_source_attempt_idx
+    ON study_session_recurrences (source_attempt_id)
+    WHERE consumed_at IS NULL;
 `;
 
 export async function runMigrations(database: SQLiteDatabase): Promise<void> {
@@ -114,8 +138,38 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
     if (currentVersion > 0 && currentVersion < 4) {
       await migrateStudySessionItems(database);
     }
+    if (currentVersion > 0 && currentVersion < 5) {
+      await migrateStudySessionRecurrences(database);
+    }
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
+}
+
+async function migrateStudySessionRecurrences(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS study_session_recurrences (
+      id TEXT PRIMARY KEY NOT NULL,
+      study_session_id TEXT NOT NULL,
+      flashcard_id TEXT NOT NULL,
+      source_attempt_id TEXT NOT NULL,
+      target_position INTEGER NOT NULL CHECK (target_position >= 0),
+      created_at TEXT NOT NULL,
+      consumed_at TEXT,
+      FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
+      FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE,
+      FOREIGN KEY (source_attempt_id) REFERENCES flashcard_review_attempts (id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS study_session_recurrences_session_id_idx
+      ON study_session_recurrences (study_session_id, target_position);
+    CREATE INDEX IF NOT EXISTS study_session_recurrences_source_attempt_id_idx
+      ON study_session_recurrences (source_attempt_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS study_session_recurrences_pending_target_idx
+      ON study_session_recurrences (study_session_id, target_position)
+      WHERE consumed_at IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS study_session_recurrences_pending_source_attempt_idx
+      ON study_session_recurrences (source_attempt_id)
+      WHERE consumed_at IS NULL;
+  `);
 }
 
 async function migrateStudySessionItems(database: SQLiteDatabase): Promise<void> {

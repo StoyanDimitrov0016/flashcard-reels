@@ -35,8 +35,11 @@ function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
 
   return (
     <ReelFeed
+      baseCards={preparedFeed.baseCards}
       cards={preparedFeed.cards}
       initialPosition={preparedFeed.currentPosition}
+      key={preparedFeed.studySessionId}
+      recurrenceIds={preparedFeed.recurrenceIds}
       studySessionId={preparedFeed.studySessionId}
     />
   );
@@ -68,8 +71,11 @@ function ReadyFocusedFeedContent({
 
   return (
     <ReelFeed
+      baseCards={preparedFeed.baseCards}
       cards={preparedFeed.cards}
       initialPosition={preparedFeed.currentPosition}
+      key={preparedFeed.studySessionId}
+      recurrenceIds={preparedFeed.recurrenceIds}
       showMainFeedLink
       studySessionId={preparedFeed.studySessionId}
     />

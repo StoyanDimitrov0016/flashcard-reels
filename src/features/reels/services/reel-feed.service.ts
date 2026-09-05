@@ -1,11 +1,19 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudyService } from "@/features/study/services/study.service";
 
+export type PreparedReelOccurrences = Readonly<{
+  cards: Flashcard[];
+  recurrenceIds: ReadonlyMap<number, string>;
+}>;
+
 export type PreparedReelFeed = Readonly<{
+  baseCards: Flashcard[];
   cards: Flashcard[];
   currentPosition: number;
+  recurrenceIds: ReadonlyMap<number, string>;
   studySessionId: string;
 }>;
 
@@ -36,8 +44,10 @@ export class ReelFeedService {
     if (openedSession.created) {
       const preparedCards = this.shuffle(cards);
       await this.studyService.createSessionItems(openedSession.session.id, preparedCards);
+      const occurrences = await this.loadOccurrences(preparedCards, openedSession.session.id);
       return {
-        cards: preparedCards,
+        baseCards: preparedCards,
+        ...occurrences,
         currentPosition: openedSession.session.currentPosition,
         studySessionId: openedSession.session.id,
       };
@@ -52,11 +62,107 @@ export class ReelFeedService {
       return card;
     });
 
+    const occurrences = await this.loadOccurrences(resumedCards, openedSession.session.id);
     return {
-      cards: resumedCards,
+      baseCards: resumedCards,
+      ...occurrences,
       currentPosition: openedSession.session.currentPosition,
       studySessionId: openedSession.session.id,
     };
+  }
+
+  async refreshOccurrences(
+    baseCards: readonly Flashcard[],
+    studySessionId: string
+  ): Promise<PreparedReelOccurrences> {
+    return this.loadOccurrences(baseCards, studySessionId);
+  }
+
+  private async loadOccurrences(
+    baseCards: readonly Flashcard[],
+    studySessionId: string
+  ): Promise<PreparedReelOccurrences> {
+    const recurrences = await this.studyService.listSessionRecurrences(studySessionId);
+    return this.mergeRecurrences(baseCards, recurrences);
+  }
+
+  private mergeRecurrences(
+    baseCards: readonly Flashcard[],
+    recurrences: readonly StudySessionRecurrence[]
+  ): PreparedReelOccurrences {
+    type RecurrenceOccurrence = Readonly<{
+      card: Flashcard;
+      recurrence: StudySessionRecurrence;
+    }>;
+    type FeedOccurrence = Readonly<{
+      card: Flashcard;
+      recurrence: StudySessionRecurrence | null;
+      sortPosition: number;
+    }>;
+
+    const cardsById = new Map(baseCards.map((card) => [card.id, card] as const));
+    const recurrenceOccurrences = recurrences.reduce<RecurrenceOccurrence[]>(
+      (sorted, recurrence) => {
+        const card = cardsById.get(recurrence.flashcardId);
+        if (!card) {
+          return sorted;
+        }
+        return this.insertSorted(
+          sorted,
+          { card, recurrence },
+          (left, right) =>
+            left.recurrence.targetPosition - right.recurrence.targetPosition ||
+            left.recurrence.createdAt.localeCompare(right.recurrence.createdAt) ||
+            left.recurrence.id.localeCompare(right.recurrence.id)
+        );
+      },
+      []
+    );
+    const occurrences = [
+      ...baseCards.map<FeedOccurrence>((card, sortPosition) => ({
+        card,
+        recurrence: null,
+        sortPosition,
+      })),
+      ...recurrenceOccurrences.map<FeedOccurrence>(({ card, recurrence }) => ({
+        card,
+        recurrence,
+        sortPosition: recurrence.targetPosition,
+      })),
+    ].reduce<FeedOccurrence[]>(
+      (sorted, occurrence) =>
+        this.insertSorted(
+          sorted,
+          occurrence,
+          (left, right) =>
+            left.sortPosition - right.sortPosition ||
+            (left.recurrence ? -1 : 0) - (right.recurrence ? -1 : 0) ||
+            (left.recurrence?.createdAt ?? "").localeCompare(right.recurrence?.createdAt ?? "") ||
+            (left.recurrence?.id ?? "").localeCompare(right.recurrence?.id ?? "")
+        ),
+      []
+    );
+
+    const recurrenceIds = new Map<number, string>();
+    const cards = occurrences.map((occurrence, position) => {
+      if (occurrence.recurrence) {
+        recurrenceIds.set(position, occurrence.recurrence.id);
+      }
+      return occurrence.card;
+    });
+    return { cards, recurrenceIds };
+  }
+
+  private insertSorted<T>(
+    items: readonly T[],
+    item: T,
+    compare: (left: T, right: T) => number
+  ): T[] {
+    const index = items.findIndex((current) => compare(item, current) < 0);
+    if (index < 0) {
+      return [...items, item];
+    }
+    return [...items.slice(0, index), item, ...items.slice(index)];
   }
 
   private shuffle(cards: readonly Flashcard[]): Flashcard[] {

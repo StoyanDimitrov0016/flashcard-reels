@@ -4,32 +4,39 @@ import type { RecallLevel } from "@/features/study/domain/flashcard-review.model
 
 export function useRecallSession() {
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
-  const [revealedCardIds, setRevealedCardIds] = useState<ReadonlySet<string>>(() => new Set());
-  const [recallLevels, setRecallLevels] = useState<ReadonlyMap<string, RecallLevel>>(
+  const [revealedPositions, setRevealedPositions] = useState<ReadonlySet<number>>(() => new Set());
+  const [recallLevels, setRecallLevels] = useState<ReadonlyMap<number, RecallLevel>>(
     () => new Map()
   );
 
-  const toggleCard = (cardId: string) => {
-    setRevealedCardIds((currentIds) => {
-      const nextIds = new Set(currentIds);
+  const toggleCard = (reelPosition: number) => {
+    setRevealedPositions((currentPositions) => {
+      const nextPositions = new Set(currentPositions);
 
-      if (nextIds.has(cardId)) {
-        nextIds.delete(cardId);
+      if (nextPositions.has(reelPosition)) {
+        nextPositions.delete(reelPosition);
       } else {
-        nextIds.add(cardId);
+        nextPositions.add(reelPosition);
       }
 
-      return nextIds;
+      return nextPositions;
     });
   };
 
-  const rateCard = (cardId: string, level: RecallLevel) => {
-    setRecallLevels((currentLevels) => new Map(currentLevels).set(cardId, level));
+  const rateCard = (reelPosition: number, level: RecallLevel) => {
+    setRecallLevels((currentLevels) => new Map(currentLevels).set(reelPosition, level));
   };
 
   const setAttemptId = (reelPosition: number, attemptId: string) => {
     setAttemptIds((currentAttemptIds) => new Map(currentAttemptIds).set(reelPosition, attemptId));
   };
 
-  return { attemptIds, rateCard, recallLevels, revealedCardIds, setAttemptId, toggleCard };
+  return {
+    attemptIds,
+    rateCard,
+    recallLevels,
+    revealedPositions,
+    setAttemptId,
+    toggleCard,
+  };
 }
