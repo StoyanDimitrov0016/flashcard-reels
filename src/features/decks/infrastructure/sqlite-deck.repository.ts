@@ -1,89 +1,67 @@
-import type { SQLiteDatabase } from "expo-sqlite";
+import { asc, eq, inArray } from "drizzle-orm";
 
-import {
-  Deck as DeckModel,
-  DeckIdSchema,
-  type Deck,
-  type DeckId,
-} from "@/features/decks/domain/deck.model";
+import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
-import { z } from "zod";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import { decks } from "@/infrastructure/sqlite/schema";
 
-const DeckRowSchema = z.compile(
-  z.object({
-    created_at: z.string(),
-    description: z.string(),
-    id: DeckIdSchema,
-    title: z.string(),
-    updated_at: z.string(),
-  })
-);
-type DeckRow = z.infer<typeof DeckRowSchema>;
+export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepository {
+  private readonly database: DrizzleDatabase<TRunResult>;
 
-export class SQLiteDeckRepository implements DeckRepository {
-  private readonly database: SQLiteDatabase;
-
-  constructor(database: SQLiteDatabase) {
+  constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
   async findById(id: DeckId): Promise<Deck | null> {
-    const row = await this.database.getFirstAsync<unknown>(
-      "SELECT id, title, description, created_at, updated_at FROM decks WHERE id = ?",
-      id
-    );
-    if (!row) {
-      return null;
-    }
-    return this.toModel(DeckRowSchema.parse(row));
+    const rows = await this.database.select().from(decks).where(eq(decks.id, id)).limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
   }
 
   async findByIds(ids: readonly DeckId[]): Promise<Deck[]> {
     if (ids.length === 0) {
       return [];
     }
-
-    const placeholders = ids.map(() => "?").join(", ");
-    const rows = await this.database.getAllAsync<unknown>(
-      `SELECT id, title, description, created_at, updated_at
-       FROM decks
-       WHERE id IN (${placeholders})
-       ORDER BY title, id`,
-      ...ids
-    );
-    return rows.map((row) => this.toModel(DeckRowSchema.parse(row)));
+    const rows = await this.database
+      .select()
+      .from(decks)
+      .where(inArray(decks.id, ids))
+      .orderBy(asc(decks.title), asc(decks.id));
+    return rows.map((row) => this.toModel(row));
   }
 
   async list(): Promise<Deck[]> {
-    const rows = await this.database.getAllAsync<unknown>(
-      "SELECT id, title, description, created_at, updated_at FROM decks ORDER BY title"
-    );
-    return rows.map((row) => this.toModel(DeckRowSchema.parse(row)));
+    const rows = await this.database.select().from(decks).orderBy(asc(decks.title), asc(decks.id));
+    return rows.map((row) => this.toModel(row));
   }
 
   async save(deck: Deck): Promise<void> {
-    await this.database.runAsync(
-      `INSERT INTO decks (id, title, description, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET
-         title = excluded.title,
-         description = excluded.description,
-         updated_at = excluded.updated_at`,
-      deck.id,
-      deck.title,
-      deck.description,
-      deck.createdAt,
-      deck.updatedAt
-    );
+    await this.database
+      .insert(decks)
+      .values({
+        createdAt: deck.createdAt,
+        description: deck.description,
+        id: deck.id,
+        title: deck.title,
+        updatedAt: deck.updatedAt,
+      })
+      .onConflictDoUpdate({
+        target: decks.id,
+        set: {
+          description: deck.description,
+          title: deck.title,
+          updatedAt: deck.updatedAt,
+        },
+      });
   }
 
-  private toModel(row: DeckRow): Deck {
+  private toModel(row: typeof decks.$inferSelect): Deck {
     return new DeckModel({
       description: row.description,
       id: row.id,
       title: row.title,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 }

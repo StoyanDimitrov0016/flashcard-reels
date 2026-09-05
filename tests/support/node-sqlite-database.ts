@@ -1,57 +1,50 @@
-import { DatabaseSync } from "node:sqlite";
-import type { SQLiteBindValue, SQLiteRunResult } from "expo-sqlite";
+import Database from "better-sqlite3";
+import { readFileSync } from "node:fs";
+import { fileURLToPath, URL } from "node:url";
+import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
+
+export type TestDatabase = BetterSQLite3Database<DatabaseSchema>;
 
 type NodeSqliteValue = null | number | bigint | string | NodeJS.ArrayBufferView;
 
-export class NodeSqliteDatabase implements SQLiteDatabaseLike {
-  private readonly database = new DatabaseSync(":memory:", {
-    enableForeignKeyConstraints: true,
-  });
+export class NodeSqliteDatabase {
+  private readonly database: Database.Database;
+  readonly drizzle: TestDatabase;
 
-  async execAsync(source: string): Promise<void> {
-    this.database.exec(source);
+  constructor() {
+    this.database = new Database(":memory:");
+    this.database.pragma("foreign_keys = ON");
+    this.database.exec(
+      readFileSync(
+        fileURLToPath(new URL("../../drizzle/0000_spooky_magneto.sql", import.meta.url)),
+        "utf8"
+      )
+    );
+    this.drizzle = drizzle<DatabaseSchema>(this.database);
   }
 
-  async getAllAsync(source: string, ...params: SQLiteBindValue[]): Promise<unknown[]> {
-    return this.database.prepare(source).all(...params.map(toNodeSqliteValue));
+  async getAllAsync(source: string, ...params: NodeSqliteValue[]): Promise<unknown[]> {
+    return this.database.prepare(source).all(...params);
   }
 
-  async getFirstAsync(source: string, ...params: SQLiteBindValue[]): Promise<unknown> {
-    return this.database.prepare(source).get(...params.map(toNodeSqliteValue)) ?? null;
+  async getFirstAsync(source: string, ...params: NodeSqliteValue[]): Promise<unknown> {
+    return this.database.prepare(source).get(...params) ?? null;
   }
 
-  async runAsync(source: string, ...params: SQLiteBindValue[]): Promise<SQLiteRunResult> {
-    const result = this.database.prepare(source).run(...params.map(toNodeSqliteValue));
+  async runAsync(
+    source: string,
+    ...params: NodeSqliteValue[]
+  ): Promise<{ changes: number; lastInsertRowId: number }> {
+    const result = this.database.prepare(source).run(...params);
     return {
-      changes: Number(result.changes),
+      changes: result.changes,
       lastInsertRowId: Number(result.lastInsertRowid),
     };
-  }
-
-  async withTransactionAsync(task: () => Promise<void>): Promise<void> {
-    this.database.exec("BEGIN");
-    try {
-      await task();
-      this.database.exec("COMMIT");
-    } catch (error) {
-      this.database.exec("ROLLBACK");
-      throw error;
-    }
   }
 
   close(): void {
     this.database.close();
   }
-}
-
-function toNodeSqliteValue(value: SQLiteBindValue): NodeSqliteValue {
-  if (typeof value === "boolean") {
-    return value ? 1 : 0;
-  }
-  if (value instanceof ArrayBuffer) {
-    return new Uint8Array(value);
-  }
-  return value;
 }

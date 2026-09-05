@@ -1,106 +1,82 @@
-import { z } from "zod";
+import { and, desc, eq, isNull } from "drizzle-orm";
 
-import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
+import { type DeckId } from "@/features/decks/domain/deck.model";
 import {
   StudySession,
   StudySessionScopeSchema,
   type StudySessionScope,
 } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import { studySessions } from "@/infrastructure/sqlite/schema";
 
-const StudySessionRowSchema = z.compile(
-  z.object({
-    completed_at: z.string().nullable(),
-    created_at: z.string(),
-    current_reel_position: z.number().int().nonnegative(),
-    deck_id: DeckIdSchema.nullable(),
-    id: z.string(),
-    mode: StudySessionScopeSchema,
-  })
-);
-type StudySessionRow = z.infer<typeof StudySessionRowSchema>;
+export class SQLiteStudySessionRepository<TRunResult = unknown> implements StudySessionRepository {
+  private readonly database: DrizzleDatabase<TRunResult>;
 
-export class SQLiteStudySessionRepository implements StudySessionRepository {
-  private readonly database: SQLiteDatabaseLike;
-
-  constructor(database: SQLiteDatabaseLike) {
+  constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
   async completeActiveByScope(scope: StudySessionScope, completedAt: string): Promise<void> {
-    await this.database.runAsync(
-      "UPDATE study_sessions SET completed_at = ? WHERE mode = ? AND completed_at IS NULL",
-      completedAt,
-      scope
-    );
+    await this.database
+      .update(studySessions)
+      .set({ completedAt })
+      .where(and(eq(studySessions.scope, scope), isNull(studySessions.completedAt)));
   }
 
   async complete(sessionId: string, completedAt: string): Promise<void> {
-    await this.database.runAsync(
-      "UPDATE study_sessions SET completed_at = ? WHERE id = ? AND completed_at IS NULL",
-      completedAt,
-      sessionId
-    );
+    await this.database
+      .update(studySessions)
+      .set({ completedAt })
+      .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)));
   }
 
   async create(session: StudySession): Promise<void> {
-    await this.database.runAsync(
-      `INSERT INTO study_sessions
-        (id, mode, deck_id, current_reel_position, created_at, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      session.id,
-      session.scope,
-      session.deckId,
-      session.currentReelPosition,
-      session.createdAt,
-      session.completedAt
-    );
+    await this.database.insert(studySessions).values({
+      completedAt: session.completedAt,
+      createdAt: session.createdAt,
+      currentReelPosition: session.currentReelPosition,
+      deckId: session.deckId,
+      id: session.id,
+      scope: session.scope,
+    });
   }
 
   async findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null> {
-    const row =
+    const conditions =
       deckId === null
-        ? await this.database.getFirstAsync(
-            `SELECT id, mode, deck_id, current_reel_position, created_at, completed_at
-             FROM study_sessions
-             WHERE mode = ? AND deck_id IS NULL AND completed_at IS NULL
-             ORDER BY created_at DESC, id DESC
-             LIMIT 1`,
-            scope
-          )
-        : await this.database.getFirstAsync(
-            `SELECT id, mode, deck_id, current_reel_position, created_at, completed_at
-             FROM study_sessions
-             WHERE mode = ? AND deck_id = ? AND completed_at IS NULL
-             ORDER BY created_at DESC, id DESC
-             LIMIT 1`,
-            scope,
-            deckId
-          );
-    return row ? this.toModel(StudySessionRowSchema.parse(row)) : null;
+        ? and(eq(studySessions.scope, scope), isNull(studySessions.deckId))
+        : and(eq(studySessions.scope, scope), eq(studySessions.deckId, deckId));
+    const rows = await this.database
+      .select()
+      .from(studySessions)
+      .where(and(conditions, isNull(studySessions.completedAt)))
+      .orderBy(desc(studySessions.createdAt), desc(studySessions.id))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
   }
 
   async updateCurrentReelPosition(
     sessionId: string,
     currentReelPosition: number
   ): Promise<boolean> {
-    const result = await this.database.runAsync(
-      "UPDATE study_sessions SET current_reel_position = ? WHERE id = ? AND completed_at IS NULL",
-      currentReelPosition,
-      sessionId
-    );
-    return result.changes > 0;
+    const rows = await this.database
+      .update(studySessions)
+      .set({ currentReelPosition })
+      .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
+      .returning({ id: studySessions.id });
+    return rows.length > 0;
   }
 
-  private toModel(row: StudySessionRow): StudySession {
+  private toModel(row: typeof studySessions.$inferSelect): StudySession {
     return new StudySession({
-      completedAt: row.completed_at,
-      createdAt: row.created_at,
-      currentReelPosition: row.current_reel_position,
-      deckId: row.deck_id,
+      completedAt: row.completedAt,
+      createdAt: row.createdAt,
+      currentReelPosition: row.currentReelPosition,
+      deckId: row.deckId,
       id: row.id,
-      scope: row.mode,
+      scope: StudySessionScopeSchema.parse(row.scope),
     });
   }
 }

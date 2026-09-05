@@ -1,116 +1,114 @@
+import { and, asc, eq, lt, isNull } from "drizzle-orm";
+
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import { RecallLevelSchema, type RecallLevel } from "@/features/study/domain/recall-level";
-import { z } from "zod";
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import { type RecallLevel } from "@/features/study/domain/recall-level";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import { flashcardReviewAttempts } from "@/infrastructure/sqlite/schema";
 
-const ReviewAttemptRowSchema = z.compile(
-  z.object({
-    created_at: z.string(),
-    finalized_at: z.string().nullable(),
-    flashcard_id: z.string(),
-    id: z.string(),
-    reel_position: z.number().int().nonnegative(),
-    rating: RecallLevelSchema.nullable(),
-    study_session_id: z.string(),
-    updated_at: z.string(),
-  })
-);
-type ReviewAttemptRow = z.infer<typeof ReviewAttemptRowSchema>;
+export class SQLiteReviewAttemptRepository<
+  TRunResult = unknown,
+> implements ReviewAttemptRepository {
+  private readonly database: DrizzleDatabase<TRunResult>;
 
-export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
-  private readonly database: SQLiteDatabaseLike;
-
-  constructor(database: SQLiteDatabaseLike) {
+  constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
   async create(attempt: FlashcardReviewAttempt): Promise<void> {
-    await this.database.runAsync(
-      `INSERT INTO flashcard_review_attempts
-        (id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      attempt.id,
-      attempt.studySessionId,
-      attempt.flashcardId,
-      attempt.reelPosition,
-      attempt.rating,
-      attempt.createdAt,
-      attempt.updatedAt,
-      attempt.finalizedAt
-    );
+    await this.database.insert(flashcardReviewAttempts).values({
+      createdAt: attempt.createdAt,
+      finalizedAt: attempt.finalizedAt,
+      flashcardId: attempt.flashcardId,
+      id: attempt.id,
+      rating: attempt.rating,
+      reelPosition: attempt.reelPosition,
+      studySessionId: attempt.studySessionId,
+      updatedAt: attempt.updatedAt,
+    });
   }
 
   async updateRating(attemptId: string, rating: RecallLevel, updatedAt: string): Promise<boolean> {
-    const result = await this.database.runAsync(
-      "UPDATE flashcard_review_attempts SET rating = ?, updated_at = ? WHERE id = ? AND finalized_at IS NULL",
-      rating,
-      updatedAt,
-      attemptId
-    );
-    return result.changes > 0;
+    const rows = await this.database
+      .update(flashcardReviewAttempts)
+      .set({ rating, updatedAt })
+      .where(
+        and(eq(flashcardReviewAttempts.id, attemptId), isNull(flashcardReviewAttempts.finalizedAt))
+      )
+      .returning({ id: flashcardReviewAttempts.id });
+    return rows.length > 0;
   }
 
   async finalize(attemptId: string, finalizedAt: string, updatedAt: string): Promise<void> {
-    await this.database.runAsync(
-      "UPDATE flashcard_review_attempts SET finalized_at = ?, updated_at = ? WHERE id = ? AND finalized_at IS NULL",
-      finalizedAt,
-      updatedAt,
-      attemptId
-    );
+    await this.database
+      .update(flashcardReviewAttempts)
+      .set({ finalizedAt, updatedAt })
+      .where(
+        and(eq(flashcardReviewAttempts.id, attemptId), isNull(flashcardReviewAttempts.finalizedAt))
+      );
   }
 
   async findById(attemptId: string): Promise<FlashcardReviewAttempt | null> {
-    const row = await this.database.getFirstAsync(
-      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
-       FROM flashcard_review_attempts
-       WHERE id = ?`,
-      attemptId
-    );
-    return row ? this.toModel(ReviewAttemptRowSchema.parse(row)) : null;
+    const rows = await this.database
+      .select()
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.id, attemptId))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
   }
 
   async findBySessionAndReelPosition(
     studySessionId: string,
     reelPosition: number
   ): Promise<FlashcardReviewAttempt | null> {
-    const row = await this.database.getFirstAsync(
-      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
-       FROM flashcard_review_attempts
-       WHERE study_session_id = ? AND reel_position = ?
-       ORDER BY created_at, id
-       LIMIT 1`,
-      studySessionId,
-      reelPosition
-    );
-    return row ? this.toModel(ReviewAttemptRowSchema.parse(row)) : null;
+    const rows = await this.database
+      .select()
+      .from(flashcardReviewAttempts)
+      .where(
+        and(
+          eq(flashcardReviewAttempts.studySessionId, studySessionId),
+          eq(flashcardReviewAttempts.reelPosition, reelPosition)
+        )
+      )
+      .orderBy(asc(flashcardReviewAttempts.createdAt), asc(flashcardReviewAttempts.id))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
   }
 
   async listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number
   ): Promise<FlashcardReviewAttempt[]> {
-    const rows = await this.database.getAllAsync(
-      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
-       FROM flashcard_review_attempts
-       WHERE study_session_id = ? AND finalized_at IS NULL AND reel_position < ?
-       ORDER BY reel_position, created_at, id`,
-      studySessionId,
-      reelPosition
-    );
-    return rows.map((row) => this.toModel(ReviewAttemptRowSchema.parse(row)));
+    const rows = await this.database
+      .select()
+      .from(flashcardReviewAttempts)
+      .where(
+        and(
+          eq(flashcardReviewAttempts.studySessionId, studySessionId),
+          isNull(flashcardReviewAttempts.finalizedAt),
+          lt(flashcardReviewAttempts.reelPosition, reelPosition)
+        )
+      )
+      .orderBy(
+        asc(flashcardReviewAttempts.reelPosition),
+        asc(flashcardReviewAttempts.createdAt),
+        asc(flashcardReviewAttempts.id)
+      );
+    return rows.map((row) => this.toModel(row));
   }
 
-  private toModel(row: ReviewAttemptRow): FlashcardReviewAttempt {
+  private toModel(row: typeof flashcardReviewAttempts.$inferSelect): FlashcardReviewAttempt {
     return new FlashcardReviewAttempt({
-      createdAt: row.created_at,
-      finalizedAt: row.finalized_at,
-      flashcardId: row.flashcard_id,
+      createdAt: row.createdAt,
+      finalizedAt: row.finalizedAt,
+      flashcardId: row.flashcardId,
       id: row.id,
-      reelPosition: row.reel_position,
+      reelPosition: row.reelPosition,
       rating: row.rating,
-      studySessionId: row.study_session_id,
-      updatedAt: row.updated_at,
+      studySessionId: row.studySessionId,
+      updatedAt: row.updatedAt,
     });
   }
 }

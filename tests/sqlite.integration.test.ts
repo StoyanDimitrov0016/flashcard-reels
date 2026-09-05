@@ -4,10 +4,10 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { initializeSchema } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   OTHER_DECK_ID,
@@ -26,7 +26,6 @@ describe("SQLite study persistence", () => {
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
-    await initializeSchema(database);
     await database.runAsync(
       "INSERT INTO decks (id, title, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
       TEST_DECK_ID,
@@ -56,10 +55,10 @@ describe("SQLite study persistence", () => {
         )
       )
     );
-    sessions = new SQLiteStudySessionRepository(database);
-    items = new SQLiteStudySessionItemRepository(database);
-    attempts = new SQLiteReviewAttemptRepository(database);
-    recurrences = new SQLiteStudySessionRecurrenceRepository(database);
+    sessions = new SQLiteStudySessionRepository(database.drizzle);
+    items = new SQLiteStudySessionItemRepository(database.drizzle);
+    attempts = new SQLiteReviewAttemptRepository(database.drizzle);
+    recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
   });
 
   afterEach(() => {
@@ -181,6 +180,44 @@ describe("SQLite study persistence", () => {
 
     expect(await attempts.updateRating(attempt.id, "good", "2026-01-01T00:02:00.000Z")).toBe(false);
     expect((await attempts.findById(attempt.id))?.rating).toBeNull();
+  });
+
+  it("rolls back the rating when its recurrence write fails", async () => {
+    const session = makeSession(testId(235), "mixed");
+    await sessions.create(session);
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(236),
+      rating: null,
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await attempts.create(attempt);
+    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+
+    await expect(
+      transaction.rateAttempt(
+        attempt.id,
+        "again",
+        "2026-01-01T00:01:00.000Z",
+        new StudySessionRecurrence({
+          consumedAt: null,
+          createdAt: "2026-01-01T00:01:00.000Z",
+          flashcardId: attempt.flashcardId,
+          id: testId(237),
+          sourceAttemptId: testId(238),
+          studySessionId: session.id,
+          targetReelPosition: 8,
+        }),
+        8
+      )
+    ).rejects.toThrow();
+
+    expect((await attempts.findById(attempt.id))?.rating).toBeNull();
+    expect(await recurrences.listBySessionId(session.id)).toEqual([]);
   });
 
   it("keeps recurrence references and enforces pending uniqueness rules", async () => {
@@ -373,7 +410,6 @@ describe("SQLite study persistence", () => {
   });
 
   it("initializes only the canonical schema from an empty database", async () => {
-    const version = await database.getFirstAsync("PRAGMA user_version");
     const tables = await database.getAllAsync(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
     );
@@ -381,7 +417,6 @@ describe("SQLite study persistence", () => {
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_reviews'"
     );
 
-    expect(version).toEqual({ user_version: 1 });
     expect(tables).toEqual([
       { name: "deck_appearances" },
       { name: "decks" },
@@ -392,13 +427,5 @@ describe("SQLite study persistence", () => {
       { name: "study_sessions" },
     ]);
     expect(legacyTable).toBeNull();
-  });
-
-  it("rejects a historical local schema instead of running compatibility migrations", async () => {
-    await database.execAsync("PRAGMA user_version = 5");
-
-    await expect(initializeSchema(database)).rejects.toThrow(
-      "Unsupported database schema version 5; reset the local database"
-    );
   });
 });

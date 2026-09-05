@@ -1,145 +1,129 @@
-import { z } from "zod";
+import { and, asc, desc, eq, isNull, ne } from "drizzle-orm";
 
-import { FlashcardIdSchema } from "@/features/flashcards/domain/flashcard.model";
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import { studySessionRecurrences, studySessions } from "@/infrastructure/sqlite/schema";
 
-const StudySessionRecurrenceRowSchema = z.compile(
-  z.object({
-    consumed_at: z.string().nullable(),
-    created_at: z.string(),
-    flashcard_id: FlashcardIdSchema,
-    id: z.string(),
-    source_attempt_id: z.string(),
-    study_session_id: z.string(),
-    target_reel_position: z.number().int().nonnegative(),
-  })
-);
-type StudySessionRecurrenceRow = z.infer<typeof StudySessionRecurrenceRowSchema>;
-const StudySessionRecurrenceTargetRowSchema = z.compile(
-  z.object({ target_reel_position: z.number().int().nonnegative() })
-);
+export class SQLiteStudySessionRecurrenceRepository<
+  TRunResult = unknown,
+> implements StudySessionRecurrenceRepository {
+  private readonly database: DrizzleDatabase<TRunResult>;
 
-export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecurrenceRepository {
-  private readonly database: SQLiteDatabaseLike;
-
-  constructor(database: SQLiteDatabaseLike) {
+  constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
   async cancelPendingBySourceAttemptId(sourceAttemptId: string): Promise<void> {
-    await this.database.runAsync(
-      "DELETE FROM study_session_recurrences WHERE source_attempt_id = ? AND consumed_at IS NULL",
-      sourceAttemptId
-    );
+    await this.database
+      .delete(studySessionRecurrences)
+      .where(
+        and(
+          eq(studySessionRecurrences.sourceAttemptId, sourceAttemptId),
+          isNull(studySessionRecurrences.consumedAt)
+        )
+      );
   }
 
   async create(recurrence: StudySessionRecurrence): Promise<void> {
-    await this.database.runAsync(
-      `INSERT INTO study_session_recurrences
-        (id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      recurrence.id,
-      recurrence.studySessionId,
-      recurrence.flashcardId,
-      recurrence.sourceAttemptId,
-      recurrence.targetReelPosition,
-      recurrence.createdAt,
-      recurrence.consumedAt
-    );
+    await this.database.insert(studySessionRecurrences).values({
+      consumedAt: recurrence.consumedAt,
+      createdAt: recurrence.createdAt,
+      flashcardId: recurrence.flashcardId,
+      id: recurrence.id,
+      sourceAttemptId: recurrence.sourceAttemptId,
+      studySessionId: recurrence.studySessionId,
+      targetReelPosition: recurrence.targetReelPosition,
+    });
   }
 
   async listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]> {
-    const rows = await this.database.getAllAsync(
-      `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at
-       FROM study_session_recurrences
-       WHERE study_session_id = ?
-       ORDER BY target_reel_position, created_at, id`,
-      studySessionId
-    );
-    return rows.map((row) => this.toModel(StudySessionRecurrenceRowSchema.parse(row)));
+    const rows = await this.database
+      .select()
+      .from(studySessionRecurrences)
+      .where(eq(studySessionRecurrences.studySessionId, studySessionId))
+      .orderBy(
+        asc(studySessionRecurrences.targetReelPosition),
+        asc(studySessionRecurrences.createdAt),
+        asc(studySessionRecurrences.id)
+      );
+    return rows.map((row) => this.toModel(row));
   }
 
   async markConsumed(recurrenceId: string, consumedAt: string): Promise<boolean> {
-    const result = await this.database.runAsync(
-      "UPDATE study_session_recurrences SET consumed_at = ? WHERE id = ? AND consumed_at IS NULL",
-      consumedAt,
-      recurrenceId
-    );
-    return result.changes > 0;
+    const rows = await this.database
+      .update(studySessionRecurrences)
+      .set({ consumedAt })
+      .where(
+        and(
+          eq(studySessionRecurrences.id, recurrenceId),
+          isNull(studySessionRecurrences.consumedAt)
+        )
+      )
+      .returning({ id: studySessionRecurrences.id });
+    return rows.length > 0;
   }
 
   async schedulePending(
     recurrence: StudySessionRecurrence,
     proposedTargetReelPosition: number
   ): Promise<StudySessionRecurrence> {
-    let scheduled: StudySessionRecurrence | null = null;
+    return this.database.transaction((transaction) => {
+      transaction
+        .update(studySessions)
+        .set({ id: studySessions.id })
+        .where(eq(studySessions.id, recurrence.studySessionId))
+        .run();
 
-    await this.database.withTransactionAsync(async () => {
-      await this.database.runAsync(
-        "UPDATE study_sessions SET id = id WHERE id = ?",
-        recurrence.studySessionId
-      );
-
-      const existingRow = await this.database.getFirstAsync(
-        `SELECT id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at
-         FROM study_session_recurrences
-         WHERE source_attempt_id = ? AND consumed_at IS NULL
-         ORDER BY created_at DESC, id DESC
-         LIMIT 1`,
-        recurrence.sourceAttemptId
-      );
-      const existing = existingRow
-        ? this.toModel(StudySessionRecurrenceRowSchema.parse(existingRow))
-        : null;
-      const occupiedRows = await this.database.getAllAsync(
-        `SELECT target_reel_position
-         FROM study_session_recurrences
-         WHERE study_session_id = ? AND consumed_at IS NULL AND source_attempt_id <> ?`,
-        recurrence.studySessionId,
-        recurrence.sourceAttemptId
-      );
-      const occupiedReelPositions = new Set(
-        occupiedRows.map(
-          (row) => StudySessionRecurrenceTargetRowSchema.parse(row).target_reel_position
+      const existingRows = transaction
+        .select()
+        .from(studySessionRecurrences)
+        .where(
+          and(
+            eq(studySessionRecurrences.sourceAttemptId, recurrence.sourceAttemptId),
+            isNull(studySessionRecurrences.consumedAt)
+          )
         )
-      );
+        .orderBy(desc(studySessionRecurrences.createdAt), desc(studySessionRecurrences.id))
+        .limit(1)
+        .all();
+      const existingRow = existingRows[0];
+
+      const occupiedRows = transaction
+        .select({ targetReelPosition: studySessionRecurrences.targetReelPosition })
+        .from(studySessionRecurrences)
+        .where(
+          and(
+            eq(studySessionRecurrences.studySessionId, recurrence.studySessionId),
+            isNull(studySessionRecurrences.consumedAt),
+            ne(studySessionRecurrences.sourceAttemptId, recurrence.sourceAttemptId)
+          )
+        )
+        .all();
+      const occupiedReelPositions = new Set(occupiedRows.map((row) => row.targetReelPosition));
       const targetReelPosition = findNextFreeRecurrenceSlot(
         proposedTargetReelPosition,
         occupiedReelPositions
       );
 
-      if (existing) {
-        await this.database.runAsync(
-          "UPDATE study_session_recurrences SET target_reel_position = ? WHERE id = ? AND consumed_at IS NULL",
-          targetReelPosition,
-          existing.id
-        );
-        scheduled = new StudySessionRecurrence({
-          consumedAt: existing.consumedAt,
-          createdAt: existing.createdAt,
-          flashcardId: existing.flashcardId,
-          id: existing.id,
-          sourceAttemptId: existing.sourceAttemptId,
-          studySessionId: existing.studySessionId,
-          targetReelPosition,
-        });
-      } else {
-        await this.database.runAsync(
-          `INSERT INTO study_session_recurrences
-            (id, study_session_id, flashcard_id, source_attempt_id, target_reel_position, created_at, consumed_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          recurrence.id,
-          recurrence.studySessionId,
-          recurrence.flashcardId,
-          recurrence.sourceAttemptId,
-          targetReelPosition,
-          recurrence.createdAt,
-          recurrence.consumedAt
-        );
-        scheduled = new StudySessionRecurrence({
+      if (existingRow) {
+        transaction
+          .update(studySessionRecurrences)
+          .set({ targetReelPosition })
+          .where(
+            and(
+              eq(studySessionRecurrences.id, existingRow.id),
+              isNull(studySessionRecurrences.consumedAt)
+            )
+          )
+          .run();
+        return this.toModel({ ...existingRow, targetReelPosition });
+      }
+
+      transaction
+        .insert(studySessionRecurrences)
+        .values({
           consumedAt: recurrence.consumedAt,
           createdAt: recurrence.createdAt,
           flashcardId: recurrence.flashcardId,
@@ -147,25 +131,29 @@ export class SQLiteStudySessionRecurrenceRepository implements StudySessionRecur
           sourceAttemptId: recurrence.sourceAttemptId,
           studySessionId: recurrence.studySessionId,
           targetReelPosition,
-        });
-      }
+        })
+        .run();
+      return new StudySessionRecurrence({
+        consumedAt: recurrence.consumedAt,
+        createdAt: recurrence.createdAt,
+        flashcardId: recurrence.flashcardId,
+        id: recurrence.id,
+        sourceAttemptId: recurrence.sourceAttemptId,
+        studySessionId: recurrence.studySessionId,
+        targetReelPosition,
+      });
     });
-
-    if (!scheduled) {
-      throw new Error("Could not schedule study session recurrence");
-    }
-    return scheduled;
   }
 
-  private toModel(row: StudySessionRecurrenceRow): StudySessionRecurrence {
+  private toModel(row: typeof studySessionRecurrences.$inferSelect): StudySessionRecurrence {
     return new StudySessionRecurrence({
-      consumedAt: row.consumed_at,
-      createdAt: row.created_at,
-      flashcardId: row.flashcard_id,
+      consumedAt: row.consumedAt,
+      createdAt: row.createdAt,
+      flashcardId: row.flashcardId,
       id: row.id,
-      sourceAttemptId: row.source_attempt_id,
-      studySessionId: row.study_session_id,
-      targetReelPosition: row.target_reel_position,
+      sourceAttemptId: row.sourceAttemptId,
+      studySessionId: row.studySessionId,
+      targetReelPosition: row.targetReelPosition,
     });
   }
 }

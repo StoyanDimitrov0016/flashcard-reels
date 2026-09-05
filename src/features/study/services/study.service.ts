@@ -3,6 +3,7 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import type { ReviewAttemptTransaction } from "@/features/study/domain/review-attempt-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -27,6 +28,7 @@ export class StudyService {
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
   private readonly random: RandomSource;
+  private readonly reviewAttemptTransaction: ReviewAttemptTransaction | null;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -35,7 +37,8 @@ export class StudyService {
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
     idGenerator: IdGenerator,
-    random: RandomSource = Math.random
+    random: RandomSource = Math.random,
+    reviewAttemptTransaction: ReviewAttemptTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -44,6 +47,7 @@ export class StudyService {
     this.clock = clock;
     this.idGenerator = idGenerator;
     this.random = random;
+    this.reviewAttemptTransaction = reviewAttemptTransaction;
   }
 
   async openSession(
@@ -138,40 +142,50 @@ export class StudyService {
   }
 
   async rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean> {
-    const updated = await this.reviewAttemptRepository.updateRating(
-      attemptId,
-      rating,
-      this.clock.now()
-    );
-    if (!updated) {
+    const attempt = await this.reviewAttemptRepository.findById(attemptId);
+    if (!attempt || attempt.finalizedAt !== null) {
       return false;
     }
 
-    const attempt = await this.reviewAttemptRepository.findById(attemptId);
-    if (!attempt) {
-      return true;
-    }
-
+    const updatedAt = this.clock.now();
     const proposedTargetReelPosition = calculateRecurrenceTarget(
       attempt.reelPosition,
       rating,
       this.random
     );
-    if (proposedTargetReelPosition === null) {
+    const recurrence =
+      proposedTargetReelPosition === null
+        ? null
+        : new StudySessionRecurrence({
+            consumedAt: null,
+            createdAt: updatedAt,
+            flashcardId: attempt.flashcardId,
+            id: this.idGenerator.generate(),
+            sourceAttemptId: attempt.id,
+            studySessionId: attempt.studySessionId,
+            targetReelPosition: proposedTargetReelPosition,
+          });
+
+    if (this.reviewAttemptTransaction) {
+      return this.reviewAttemptTransaction.rateAttempt(
+        attemptId,
+        rating,
+        updatedAt,
+        recurrence,
+        proposedTargetReelPosition
+      );
+    }
+
+    const updated = await this.reviewAttemptRepository.updateRating(attemptId, rating, updatedAt);
+    if (!updated) {
+      return false;
+    }
+    if (recurrence === null || proposedTargetReelPosition === null) {
       await this.studySessionRecurrenceRepository.cancelPendingBySourceAttemptId(attemptId);
       return true;
     }
-
     await this.studySessionRecurrenceRepository.schedulePending(
-      new StudySessionRecurrence({
-        consumedAt: null,
-        createdAt: this.clock.now(),
-        flashcardId: attempt.flashcardId,
-        id: this.idGenerator.generate(),
-        sourceAttemptId: attempt.id,
-        studySessionId: attempt.studySessionId,
-        targetReelPosition: proposedTargetReelPosition,
-      }),
+      recurrence,
       proposedTargetReelPosition
     );
     return true;
