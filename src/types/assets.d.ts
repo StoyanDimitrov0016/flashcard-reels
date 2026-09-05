@@ -3,3 +3,9 @@ declare module "*.mp3" {
 
   export default asset;
 }
+
+declare module "*.sql" {
+  const migration: string;
+
+  export default migration;
+}

@@ -5,7 +5,7 @@
     "perf": "error",
     "suspicious": "error"
   },
-  "ignorePatterns": [".expo/**", "dist/**", "node_modules/**", "scripts/**"],
+  "ignorePatterns": [".expo/**", "dist/**", "drizzle/**", "node_modules/**", "scripts/**"],
   "options": { "typeAware": true },
   "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
   "rules": {

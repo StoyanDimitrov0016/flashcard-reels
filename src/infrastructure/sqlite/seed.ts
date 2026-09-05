@@ -1,42 +1,58 @@
 import { deckAppearanceSeedData, deckSeedData } from "@/features/decks/data/decks";
+
 import { flashcardSeedData } from "@/features/flashcards/data/flashcards";
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import { deckAppearances, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
-export async function seedDatabase(database: SQLiteDatabaseLike): Promise<void> {
-  await database.withTransactionAsync(async () => {
-    for (const deck of deckSeedData) {
-      // oxlint-disable-next-line no-await-in-loop -- Keep writes serialized on the transaction connection.
-      await database.runAsync(
-        "INSERT OR IGNORE INTO decks (id, title, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-        deck.id,
-        deck.title,
-        deck.description,
-        deck.createdAt,
-        deck.updatedAt
-      );
+export async function seedDatabase<TRunResult>(
+  database: DrizzleDatabase<TRunResult>
+): Promise<void> {
+  database.transaction((transaction) => {
+    if (deckSeedData.length > 0) {
+      transaction
+        .insert(decks)
+        .values(
+          deckSeedData.map((deck) => ({
+            createdAt: deck.createdAt,
+            description: deck.description,
+            id: deck.id,
+            title: deck.title,
+            updatedAt: deck.updatedAt,
+          }))
+        )
+        .onConflictDoNothing()
+        .run();
     }
 
-    for (const appearance of deckAppearanceSeedData) {
-      // oxlint-disable-next-line no-await-in-loop -- Keep writes serialized on the transaction connection.
-      await database.runAsync(
-        "INSERT OR IGNORE INTO deck_appearances (deck_id, accent_color, background_color) VALUES (?, ?, ?)",
-        appearance.deckId,
-        appearance.accentColor,
-        appearance.backgroundColor
-      );
+    if (deckAppearanceSeedData.length > 0) {
+      transaction
+        .insert(deckAppearances)
+        .values(
+          deckAppearanceSeedData.map((appearance) => ({
+            accentColor: appearance.accentColor,
+            backgroundColor: appearance.backgroundColor,
+            deckId: appearance.deckId,
+          }))
+        )
+        .onConflictDoNothing()
+        .run();
     }
 
-    for (const flashcard of flashcardSeedData) {
-      // oxlint-disable-next-line no-await-in-loop -- Keep writes serialized on the transaction connection.
-      await database.runAsync(
-        "INSERT OR IGNORE INTO flashcards (id, deck_id, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-        flashcard.id,
-        flashcard.deckId,
-        flashcard.question,
-        flashcard.answer,
-        flashcard.createdAt,
-        flashcard.updatedAt
-      );
+    if (flashcardSeedData.length > 0) {
+      transaction
+        .insert(flashcards)
+        .values(
+          flashcardSeedData.map((flashcard) => ({
+            answer: flashcard.answer,
+            createdAt: flashcard.createdAt,
+            deckId: flashcard.deckId,
+            id: flashcard.id,
+            question: flashcard.question,
+            updatedAt: flashcard.updatedAt,
+          }))
+        )
+        .onConflictDoNothing()
+        .run();
     }
   });
 }

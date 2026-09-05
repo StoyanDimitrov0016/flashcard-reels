@@ -1,131 +1,170 @@
-import { z } from "zod";
+import { sql } from "drizzle-orm";
+import {
+  check,
+  index,
+  integer,
+  sqliteTable,
+  text,
+  unique,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
-import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+export const decks = sqliteTable("decks", {
+  id: text("id").primaryKey().notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
 
-const CURRENT_SCHEMA_VERSION = 1;
+export const deckAppearances = sqliteTable("deck_appearances", {
+  deckId: text("deck_id")
+    .primaryKey()
+    .notNull()
+    .references(() => decks.id, { onDelete: "cascade" }),
+  accentColor: text("accent_color").notNull(),
+  backgroundColor: text("background_color").notNull(),
+});
 
-const DatabaseVersionRowSchema = z.compile(z.object({ user_version: z.number().int() }));
+export const flashcards = sqliteTable(
+  "flashcards",
+  {
+    id: text("id").primaryKey().notNull(),
+    deckId: text("deck_id")
+      .notNull()
+      .references(() => decks.id, { onDelete: "cascade" }),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [index("flashcards_deck_id_idx").on(table.deckId)]
+);
 
-const CANONICAL_SCHEMA = `
-  CREATE TABLE decks (
-    id TEXT PRIMARY KEY NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-  );
-
-  CREATE TABLE deck_appearances (
-    deck_id TEXT PRIMARY KEY NOT NULL,
-    accent_color TEXT NOT NULL,
-    background_color TEXT NOT NULL,
-    FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE flashcards (
-    id TEXT PRIMARY KEY NOT NULL,
-    deck_id TEXT NOT NULL,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
-  );
-
-  CREATE TABLE study_sessions (
-    id TEXT PRIMARY KEY NOT NULL,
-    mode TEXT NOT NULL CHECK (mode IN ('mixed', 'focused')),
-    deck_id TEXT,
-    current_reel_position INTEGER NOT NULL CHECK (current_reel_position >= 0),
-    created_at TEXT NOT NULL,
-    completed_at TEXT,
-    CHECK (
-      (mode = 'mixed' AND deck_id IS NULL) OR
-      (mode = 'focused' AND deck_id IS NOT NULL)
+export const studySessions = sqliteTable(
+  "study_sessions",
+  {
+    id: text("id").primaryKey().notNull(),
+    scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
+    deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
+    currentReelPosition: integer("current_reel_position").notNull(),
+    createdAt: text("created_at").notNull(),
+    completedAt: text("completed_at"),
+  },
+  (table) => [
+    check(
+      "study_sessions_scope_deck_check",
+      sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
     ),
-    FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
-  );
+    check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
+    index("study_sessions_active_scope_idx").on(
+      table.scope,
+      table.completedAt,
+      table.deckId,
+      table.createdAt,
+      table.id
+    ),
+  ]
+);
 
-  CREATE TABLE study_session_items (
-    id TEXT PRIMARY KEY NOT NULL,
-    study_session_id TEXT NOT NULL,
-    flashcard_id TEXT NOT NULL,
-    base_feed_position INTEGER NOT NULL CHECK (base_feed_position >= 0),
-    UNIQUE (study_session_id, base_feed_position),
-    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
-    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
-  );
+export const studySessionItems = sqliteTable(
+  "study_session_items",
+  {
+    id: text("id").primaryKey().notNull(),
+    studySessionId: text("study_session_id")
+      .notNull()
+      .references(() => studySessions.id, { onDelete: "cascade" }),
+    flashcardId: text("flashcard_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    baseFeedPosition: integer("base_feed_position").notNull(),
+  },
+  (table) => [
+    check("study_session_items_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
+    unique("study_session_items_session_position_unique").on(
+      table.studySessionId,
+      table.baseFeedPosition
+    ),
+    index("study_session_items_flashcard_id_idx").on(table.flashcardId),
+  ]
+);
 
-  CREATE TABLE flashcard_review_attempts (
-    id TEXT PRIMARY KEY NOT NULL,
-    study_session_id TEXT NOT NULL,
-    flashcard_id TEXT NOT NULL,
-    reel_position INTEGER NOT NULL CHECK (reel_position >= 0),
-    rating TEXT CHECK (rating IS NULL OR rating IN ('again', 'hard', 'good', 'easy')),
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    finalized_at TEXT,
-    UNIQUE (study_session_id, reel_position),
-    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
-    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
-  );
+export const flashcardReviewAttempts = sqliteTable(
+  "flashcard_review_attempts",
+  {
+    id: text("id").primaryKey().notNull(),
+    studySessionId: text("study_session_id")
+      .notNull()
+      .references(() => studySessions.id, { onDelete: "cascade" }),
+    flashcardId: text("flashcard_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    reelPosition: integer("reel_position").notNull(),
+    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+    finalizedAt: text("finalized_at"),
+  },
+  (table) => [
+    check("flashcard_review_attempts_reel_position_check", sql`${table.reelPosition} >= 0`),
+    check(
+      "flashcard_review_attempts_rating_check",
+      sql`${table.rating} IS NULL OR ${table.rating} IN ('again', 'hard', 'good', 'easy')`
+    ),
+    unique("review_attempts_session_reel_position_unique").on(
+      table.studySessionId,
+      table.reelPosition
+    ),
+    index("review_attempts_flashcard_id_idx").on(table.flashcardId),
+  ]
+);
 
-  CREATE TABLE study_session_recurrences (
-    id TEXT PRIMARY KEY NOT NULL,
-    study_session_id TEXT NOT NULL,
-    flashcard_id TEXT NOT NULL,
-    source_attempt_id TEXT NOT NULL,
-    target_reel_position INTEGER NOT NULL CHECK (target_reel_position >= 0),
-    created_at TEXT NOT NULL,
-    consumed_at TEXT,
-    FOREIGN KEY (study_session_id) REFERENCES study_sessions (id) ON DELETE CASCADE,
-    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE,
-    FOREIGN KEY (source_attempt_id) REFERENCES flashcard_review_attempts (id) ON DELETE CASCADE
-  );
+export const studySessionRecurrences = sqliteTable(
+  "study_session_recurrences",
+  {
+    id: text("id").primaryKey().notNull(),
+    studySessionId: text("study_session_id")
+      .notNull()
+      .references(() => studySessions.id, { onDelete: "cascade" }),
+    flashcardId: text("flashcard_id")
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    sourceAttemptId: text("source_attempt_id")
+      .notNull()
+      .references(() => flashcardReviewAttempts.id, { onDelete: "cascade" }),
+    targetReelPosition: integer("target_reel_position").notNull(),
+    createdAt: text("created_at").notNull(),
+    consumedAt: text("consumed_at"),
+  },
+  (table) => [
+    check(
+      "study_session_recurrences_target_reel_position_check",
+      sql`${table.targetReelPosition} >= 0`
+    ),
+    index("study_session_recurrences_session_position_idx").on(
+      table.studySessionId,
+      table.targetReelPosition,
+      table.createdAt,
+      table.id
+    ),
+    index("study_session_recurrences_flashcard_id_idx").on(table.flashcardId),
+    uniqueIndex("study_session_recurrences_pending_target_idx")
+      .on(table.studySessionId, table.targetReelPosition)
+      .where(sql`${table.consumedAt} IS NULL`),
+    uniqueIndex("study_session_recurrences_pending_source_attempt_idx")
+      .on(table.sourceAttemptId)
+      .where(sql`${table.consumedAt} IS NULL`),
+  ]
+);
 
-  CREATE INDEX flashcards_deck_id_idx ON flashcards (deck_id);
-  CREATE INDEX study_sessions_active_scope_idx
-    ON study_sessions (mode, completed_at, deck_id, created_at DESC, id DESC);
-  CREATE INDEX study_session_items_flashcard_id_idx
-    ON study_session_items (flashcard_id);
-  CREATE INDEX review_attempts_flashcard_id_idx
-    ON flashcard_review_attempts (flashcard_id);
-  CREATE INDEX study_session_recurrences_session_position_idx
-    ON study_session_recurrences (study_session_id, target_reel_position, created_at, id);
-  CREATE INDEX study_session_recurrences_flashcard_id_idx
-    ON study_session_recurrences (flashcard_id);
-  CREATE INDEX study_session_recurrences_source_attempt_id_idx
-    ON study_session_recurrences (source_attempt_id);
-  CREATE UNIQUE INDEX study_session_recurrences_pending_target_idx
-    ON study_session_recurrences (study_session_id, target_reel_position)
-    WHERE consumed_at IS NULL;
-  CREATE UNIQUE INDEX study_session_recurrences_pending_source_attempt_idx
-    ON study_session_recurrences (source_attempt_id)
-    WHERE consumed_at IS NULL;
-`;
+export const databaseSchema = {
+  decks,
+  deckAppearances,
+  flashcards,
+  studySessions,
+  studySessionItems,
+  flashcardReviewAttempts,
+  studySessionRecurrences,
+};
 
-export async function initializeSchema(database: SQLiteDatabaseLike): Promise<void> {
-  await database.execAsync("PRAGMA foreign_keys = ON;");
-
-  const versionRow = DatabaseVersionRowSchema.nullable().parse(
-    await database.getFirstAsync("PRAGMA user_version")
-  );
-  const currentVersion = versionRow?.user_version ?? 0;
-
-  if (currentVersion === CURRENT_SCHEMA_VERSION) {
-    return;
-  }
-
-  if (currentVersion !== 0) {
-    throw new Error(
-      `Unsupported database schema version ${currentVersion}; reset the local database`
-    );
-  }
-
-  await database.withTransactionAsync(async () => {
-    await database.execAsync(CANONICAL_SCHEMA);
-    // A single baseline version lets stale development databases fail fast instead of being
-    // mistaken for the canonical schema. There are no historical migrations to preserve.
-    await database.execAsync(`PRAGMA user_version = ${CURRENT_SCHEMA_VERSION}`);
-  });
-}
+export type DatabaseSchema = typeof databaseSchema;
