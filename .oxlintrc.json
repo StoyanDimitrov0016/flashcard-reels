@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "perf": "error",
+    "suspicious": "error"
+  },
+  "ignorePatterns": [".expo/**", "dist/**", "node_modules/**", "scripts/**"],
+  "options": { "typeAware": true },
+  "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
+  "rules": {
+    "eqeqeq": "error",
+    "curly": ["error", "all"],
+    "no-console": "error",
+    "no-debugger": "error",
+    "no-duplicate-imports": "error",
+    "no-nested-ternary": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "importNames": ["useCallback", "useMemo"],
+            "message": "React Compiler handles memoization; do not add manual memoization.",
+            "name": "react"
+          }
+        ]
+      }
+    ],
+    "react/jsx-no-useless-fragment": "error",
+    "react/jsx-no-constructed-context-values": "off",
+    "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
+    "react/no-array-index-key": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/style-prop-object": "off",
+    "react-perf/jsx-no-new-array-as-prop": "off",
+    "react-perf/jsx-no-new-function-as-prop": "off",
+    "react-perf/jsx-no-new-object-as-prop": "off",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unused-vars": "error"
+  }
+}
