@@ -1,5 +1,7 @@
 import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
 
+export type RandomSource = () => number;
+
 export type RecurrenceConfiguration = Readonly<{
   baseDistance: number;
   jitterMaximum: number;
@@ -16,7 +18,7 @@ export const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<
 export function calculateRecurrenceTarget(
   sourcePosition: number,
   rating: RecallLevel,
-  random: () => number = Math.random
+  random: RandomSource = Math.random
 ): number | null {
   const configuration = INTRA_SESSION_RECURRENCE_CONFIG[rating];
   if (!configuration) {
@@ -36,7 +38,17 @@ export function findNextFreeRecurrencePosition(
   sourcePosition: number,
   occupiedPositions: ReadonlySet<number>
 ): number {
-  let targetPosition = Math.max(sourcePosition + 1, proposedPosition);
+  return findNextFreeRecurrenceSlot(
+    Math.max(sourcePosition + 1, proposedPosition),
+    occupiedPositions
+  );
+}
+
+export function findNextFreeRecurrenceSlot(
+  proposedPosition: number,
+  occupiedPositions: ReadonlySet<number>
+): number {
+  let targetPosition = proposedPosition;
   while (occupiedPositions.has(targetPosition)) {
     targetPosition += 1;
   }

@@ -3,6 +3,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudyService } from "@/features/study/services/study.service";
+import type { RandomSource } from "@/features/study/config/recurrences";
 
 export type PreparedReelOccurrences = Readonly<{
   cards: Flashcard[];
@@ -19,9 +20,11 @@ export type PreparedReelFeed = Readonly<{
 
 export class ReelFeedService {
   private readonly studyService: StudyService;
+  private readonly random: RandomSource;
 
-  constructor(studyService: StudyService) {
+  constructor(studyService: StudyService, random: RandomSource = Math.random) {
     this.studyService = studyService;
+    this.random = random;
   }
 
   async prepareFeed(
@@ -169,7 +172,7 @@ export class ReelFeedService {
     const feed = [...cards];
 
     for (let index = feed.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const swapIndex = Math.floor(this.random() * (index + 1));
       const currentCard = feed[index];
       const swapCard = feed[swapIndex];
       if (!currentCard || !swapCard) {

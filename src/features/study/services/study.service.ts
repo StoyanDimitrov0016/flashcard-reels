@@ -1,10 +1,7 @@
 import { type RecallLevel } from "@/features/study/domain/flashcard-review.model";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
-import {
-  calculateRecurrenceTarget,
-  findNextFreeRecurrencePosition,
-} from "@/features/study/config/recurrences";
+import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
@@ -29,6 +26,7 @@ export class StudyService {
   private readonly studySessionItemRepository: StudySessionItemRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
+  private readonly random: RandomSource;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -36,7 +34,8 @@ export class StudyService {
     studySessionItemRepository: StudySessionItemRepository,
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
-    idGenerator: IdGenerator
+    idGenerator: IdGenerator,
+    random: RandomSource = Math.random
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -44,6 +43,7 @@ export class StudyService {
     this.studySessionItemRepository = studySessionItemRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
+    this.random = random;
   }
 
   async openSession(
@@ -111,6 +111,14 @@ export class StudyService {
     reelPosition: number,
     studySessionId: string
   ): Promise<string> {
+    const existingAttempt = await this.reviewAttemptRepository.findBySessionAndReelPosition(
+      studySessionId,
+      reelPosition
+    );
+    if (existingAttempt) {
+      return existingAttempt.id;
+    }
+
     const createdAt = this.clock.now();
     const attempt = new FlashcardReviewAttempt({
       createdAt,
@@ -141,49 +149,24 @@ export class StudyService {
       return true;
     }
 
-    const proposedPosition = calculateRecurrenceTarget(attempt.reelPosition, rating);
-    const pendingRecurrence =
-      await this.studySessionRecurrenceRepository.findPendingBySourceAttemptId(attemptId);
-
+    const proposedPosition = calculateRecurrenceTarget(attempt.reelPosition, rating, this.random);
     if (proposedPosition === null) {
       await this.studySessionRecurrenceRepository.cancelPendingBySourceAttemptId(attemptId);
       return true;
     }
 
-    const recurrences = await this.studySessionRecurrenceRepository.listBySessionId(
-      attempt.studySessionId
+    await this.studySessionRecurrenceRepository.schedulePending(
+      new StudySessionRecurrence({
+        consumedAt: null,
+        createdAt: this.clock.now(),
+        flashcardId: attempt.flashcardId,
+        id: this.idGenerator.generate(),
+        sourceAttemptId: attempt.id,
+        studySessionId: attempt.studySessionId,
+        targetPosition: proposedPosition,
+      }),
+      proposedPosition
     );
-    const occupiedPositions = new Set(
-      recurrences
-        .filter(
-          (recurrence) => recurrence.consumedAt === null && recurrence.id !== pendingRecurrence?.id
-        )
-        .map((recurrence) => recurrence.targetPosition)
-    );
-    const targetPosition = findNextFreeRecurrencePosition(
-      proposedPosition,
-      attempt.reelPosition,
-      occupiedPositions
-    );
-    if (pendingRecurrence) {
-      await this.studySessionRecurrenceRepository.updateTargetPosition(
-        pendingRecurrence.id,
-        targetPosition
-      );
-    } else {
-      const createdAt = this.clock.now();
-      await this.studySessionRecurrenceRepository.create(
-        new StudySessionRecurrence({
-          consumedAt: null,
-          createdAt,
-          flashcardId: attempt.flashcardId,
-          id: this.idGenerator.generate(),
-          sourceAttemptId: attempt.id,
-          studySessionId: attempt.studySessionId,
-          targetPosition,
-        })
-      );
-    }
     return true;
   }
 
@@ -196,14 +179,19 @@ export class StudyService {
     await this.reviewAttemptRepository.finalize(attemptId, finalizedAt, finalizedAt);
   }
 
-  async finalizeAttemptsOutsideEditableWindow(reelPosition: number): Promise<void> {
+  async finalizeAttemptsOutsideEditableWindow(
+    studySessionId: string,
+    reelPosition: number
+  ): Promise<void> {
     const firstEditablePosition = reelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
     if (firstEditablePosition <= 0) {
       return;
     }
 
-    const attempts =
-      await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(firstEditablePosition);
+    const attempts = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
+      studySessionId,
+      firstEditablePosition
+    );
     await Promise.all(attempts.map((attempt) => this.finalizeAttempt(attempt.id)));
   }
 }

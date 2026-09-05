@@ -1,5 +1,3 @@
-import type { SQLiteDatabase } from "expo-sqlite";
-
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import {
@@ -7,6 +5,7 @@ import {
   type RecallLevel,
 } from "@/features/study/domain/flashcard-review.model";
 import { z } from "zod";
+import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
 
 const ReviewAttemptRowSchema = z.compile(
   z.object({
@@ -23,9 +22,9 @@ const ReviewAttemptRowSchema = z.compile(
 type ReviewAttemptRow = z.infer<typeof ReviewAttemptRowSchema>;
 
 export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
-  private readonly database: SQLiteDatabase;
+  private readonly database: SQLiteDatabaseLike;
 
-  constructor(database: SQLiteDatabase) {
+  constructor(database: SQLiteDatabaseLike) {
     this.database = database;
   }
 
@@ -65,7 +64,7 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
   }
 
   async findById(attemptId: string): Promise<FlashcardReviewAttempt | null> {
-    const row = await this.database.getFirstAsync<unknown>(
+    const row = await this.database.getFirstAsync(
       `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
        FROM flashcard_review_attempts
        WHERE id = ?`,
@@ -74,12 +73,32 @@ export class SQLiteReviewAttemptRepository implements ReviewAttemptRepository {
     return row ? this.toModel(ReviewAttemptRowSchema.parse(row)) : null;
   }
 
-  async listUnfinalizedBeforeReelPosition(reelPosition: number): Promise<FlashcardReviewAttempt[]> {
-    const rows = await this.database.getAllAsync<unknown>(
+  async findBySessionAndReelPosition(
+    studySessionId: string,
+    reelPosition: number
+  ): Promise<FlashcardReviewAttempt | null> {
+    const row = await this.database.getFirstAsync(
       `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
        FROM flashcard_review_attempts
-       WHERE finalized_at IS NULL AND reel_position < ?
+       WHERE study_session_id = ? AND reel_position = ?
+       ORDER BY created_at, id
+       LIMIT 1`,
+      studySessionId,
+      reelPosition
+    );
+    return row ? this.toModel(ReviewAttemptRowSchema.parse(row)) : null;
+  }
+
+  async listUnfinalizedBeforeReelPosition(
+    studySessionId: string,
+    reelPosition: number
+  ): Promise<FlashcardReviewAttempt[]> {
+    const rows = await this.database.getAllAsync(
+      `SELECT id, study_session_id, flashcard_id, reel_position, rating, created_at, updated_at, finalized_at
+       FROM flashcard_review_attempts
+       WHERE study_session_id = ? AND finalized_at IS NULL AND reel_position < ?
        ORDER BY reel_position, created_at, id`,
+      studySessionId,
       reelPosition
     );
     return rows.map((row) => this.toModel(ReviewAttemptRowSchema.parse(row)));

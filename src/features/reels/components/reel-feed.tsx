@@ -70,7 +70,10 @@ export function ReelFeed({
       .startAttempt(cardId, reelPosition, studySessionId)
       .then((attemptId) => {
         setAttemptId(reelPosition, attemptId);
-        void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+        void studyService.finalizeAttemptsOutsideEditableWindow(
+          studySessionId,
+          activeIndexReference.current
+        );
         return attemptId;
       });
     startingAttemptPromises.current.set(reelPosition, start);
@@ -92,7 +95,10 @@ export function ReelFeed({
       .startAttempt(activeCard.id, activeIndex, studySessionId)
       .then((attemptId) => {
         setAttemptId(activeIndex, attemptId);
-        void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+        void studyService.finalizeAttemptsOutsideEditableWindow(
+          studySessionId,
+          activeIndexReference.current
+        );
         return attemptId;
       });
     startingAttemptPromises.current.set(activeIndex, start);
@@ -101,8 +107,8 @@ export function ReelFeed({
   }, [activeCard, activeIndex, attemptIds, setAttemptId, studyService, studySessionId]);
 
   useEffect(() => {
-    void studyService.finalizeAttemptsOutsideEditableWindow(activeIndex);
-  }, [activeIndex, studyService]);
+    void studyService.finalizeAttemptsOutsideEditableWindow(studySessionId, activeIndex);
+  }, [activeIndex, studySessionId, studyService]);
 
   useEffect(() => {
     void studyService.updateSessionPosition(studySessionId, activeIndex);

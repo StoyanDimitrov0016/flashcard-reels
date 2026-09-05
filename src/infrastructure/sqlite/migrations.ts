@@ -1,9 +1,13 @@
-import type { SQLiteDatabase } from "expo-sqlite";
-
 import { deckIdBySeedKey } from "@/features/decks/data/decks";
 import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
+import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
+import { z } from "zod";
 
 const DATABASE_VERSION = 5;
+const DatabaseColumnRowSchema = z.compile(z.object({ name: z.string() }));
+const DatabaseVersionRowSchema = z.compile(z.object({ user_version: z.number().int() }));
+const LegacyAttemptRowSchema = z.compile(z.object({ created_at: z.string() }));
+const TableNameRowSchema = z.compile(z.object({ name: z.string() }));
 
 const INITIAL_SCHEMA = `
   CREATE TABLE IF NOT EXISTS decks (
@@ -115,10 +119,12 @@ const INITIAL_SCHEMA = `
     WHERE consumed_at IS NULL;
 `;
 
-export async function runMigrations(database: SQLiteDatabase): Promise<void> {
+export async function runMigrations(database: SQLiteDatabaseLike): Promise<void> {
   await database.execAsync("PRAGMA foreign_keys = ON;");
 
-  const versionRow = await database.getFirstAsync<{ user_version: number }>("PRAGMA user_version");
+  const versionRow = DatabaseVersionRowSchema.nullable().parse(
+    await database.getFirstAsync("PRAGMA user_version")
+  );
   const currentVersion = versionRow ? versionRow.user_version : 0;
 
   if (currentVersion >= DATABASE_VERSION) {
@@ -145,7 +151,7 @@ export async function runMigrations(database: SQLiteDatabase): Promise<void> {
   });
 }
 
-async function migrateStudySessionRecurrences(database: SQLiteDatabase): Promise<void> {
+async function migrateStudySessionRecurrences(database: SQLiteDatabaseLike): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS study_session_recurrences (
       id TEXT PRIMARY KEY NOT NULL,
@@ -172,7 +178,7 @@ async function migrateStudySessionRecurrences(database: SQLiteDatabase): Promise
   `);
 }
 
-async function migrateStudySessionItems(database: SQLiteDatabase): Promise<void> {
+async function migrateStudySessionItems(database: SQLiteDatabaseLike): Promise<void> {
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS study_session_items (
       id TEXT PRIMARY KEY NOT NULL,
@@ -188,7 +194,7 @@ async function migrateStudySessionItems(database: SQLiteDatabase): Promise<void>
   `);
 }
 
-async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {
+async function migrateStudySessions(database: SQLiteDatabaseLike): Promise<void> {
   await database.execAsync("PRAGMA defer_foreign_keys = ON;");
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS study_sessions (
@@ -208,8 +214,10 @@ async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {
       ON study_sessions (completed_at);
   `);
 
-  const attemptsTable = await database.getFirstAsync<{ name: string }>(
-    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_review_attempts'"
+  const attemptsTable = TableNameRowSchema.nullable().parse(
+    await database.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_review_attempts'"
+    )
   );
   if (!attemptsTable) {
     await database.execAsync(`
@@ -233,16 +241,18 @@ async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {
     return;
   }
 
-  const columns = await database.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(flashcard_review_attempts)"
+  const columns = (await database.getAllAsync("PRAGMA table_info(flashcard_review_attempts)")).map(
+    (column) => DatabaseColumnRowSchema.parse(column)
   );
   if (columns.some((column) => column.name === "study_session_id")) {
     return;
   }
 
   const legacySessionId = "00000000-0000-4000-8000-000000000000";
-  const legacyAttempt = await database.getFirstAsync<{ created_at: string }>(
-    "SELECT created_at FROM flashcard_review_attempts ORDER BY created_at, id LIMIT 1"
+  const legacyAttempt = LegacyAttemptRowSchema.nullable().parse(
+    await database.getFirstAsync(
+      "SELECT created_at FROM flashcard_review_attempts ORDER BY created_at, id LIMIT 1"
+    )
   );
   if (legacyAttempt) {
     await database.runAsync(
@@ -281,7 +291,7 @@ async function migrateStudySessions(database: SQLiteDatabase): Promise<void> {
   `);
 }
 
-async function migrateCatalogIds(database: SQLiteDatabase): Promise<void> {
+async function migrateCatalogIds(database: SQLiteDatabaseLike): Promise<void> {
   await database.execAsync("PRAGMA defer_foreign_keys = ON;");
 
   await Promise.all(

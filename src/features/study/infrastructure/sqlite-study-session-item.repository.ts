@@ -1,9 +1,9 @@
-import type { SQLiteDatabase } from "expo-sqlite";
 import { z } from "zod";
 
 import { FlashcardIdSchema } from "@/features/flashcards/domain/flashcard.model";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
+import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
 
 const StudySessionItemRowSchema = z.compile(
   z.object({
@@ -18,9 +18,9 @@ type StudySessionItemRow = z.infer<typeof StudySessionItemRowSchema>;
 const INSERT_BATCH_SIZE = 200;
 
 export class SQLiteStudySessionItemRepository implements StudySessionItemRepository {
-  private readonly database: SQLiteDatabase;
+  private readonly database: SQLiteDatabaseLike;
 
-  constructor(database: SQLiteDatabase) {
+  constructor(database: SQLiteDatabaseLike) {
     this.database = database;
   }
 
@@ -55,7 +55,7 @@ export class SQLiteStudySessionItemRepository implements StudySessionItemReposit
   }
 
   async listBySessionId(studySessionId: string): Promise<StudySessionItem[]> {
-    const rows = await this.database.getAllAsync<unknown>(
+    const rows = await this.database.getAllAsync(
       `SELECT id, study_session_id, flashcard_id, position
        FROM study_session_items
        WHERE study_session_id = ?

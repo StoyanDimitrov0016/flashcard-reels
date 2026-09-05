@@ -6,5 +6,12 @@ export interface ReviewAttemptRepository {
   updateRating(attemptId: string, rating: RecallLevel, updatedAt: string): Promise<boolean>;
   finalize(attemptId: string, finalizedAt: string, updatedAt: string): Promise<void>;
   findById(attemptId: string): Promise<FlashcardReviewAttempt | null>;
-  listUnfinalizedBeforeReelPosition(reelPosition: number): Promise<FlashcardReviewAttempt[]>;
+  findBySessionAndReelPosition(
+    studySessionId: string,
+    reelPosition: number
+  ): Promise<FlashcardReviewAttempt | null>;
+  listUnfinalizedBeforeReelPosition(
+    studySessionId: string,
+    reelPosition: number
+  ): Promise<FlashcardReviewAttempt[]>;
 }

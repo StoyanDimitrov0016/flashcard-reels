@@ -1,4 +1,3 @@
-import type { SQLiteDatabase } from "expo-sqlite";
 import { z } from "zod";
 
 import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
@@ -8,6 +7,7 @@ import {
   type StudySessionScope,
 } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
+import type { SQLiteDatabaseLike } from "@/infrastructure/sqlite/sqlite-database";
 
 const StudySessionRowSchema = z.compile(
   z.object({
@@ -22,9 +22,9 @@ const StudySessionRowSchema = z.compile(
 type StudySessionRow = z.infer<typeof StudySessionRowSchema>;
 
 export class SQLiteStudySessionRepository implements StudySessionRepository {
-  private readonly database: SQLiteDatabase;
+  private readonly database: SQLiteDatabaseLike;
 
-  constructor(database: SQLiteDatabase) {
+  constructor(database: SQLiteDatabaseLike) {
     this.database = database;
   }
 
@@ -61,7 +61,7 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
   async findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null> {
     const row =
       deckId === null
-        ? await this.database.getFirstAsync<unknown>(
+        ? await this.database.getFirstAsync(
             `SELECT id, mode, deck_id, current_position, created_at, completed_at
              FROM study_sessions
              WHERE mode = ? AND deck_id IS NULL AND completed_at IS NULL
@@ -69,7 +69,7 @@ export class SQLiteStudySessionRepository implements StudySessionRepository {
              LIMIT 1`,
             scope
           )
-        : await this.database.getFirstAsync<unknown>(
+        : await this.database.getFirstAsync(
             `SELECT id, mode, deck_id, current_position, created_at, completed_at
              FROM study_sessions
              WHERE mode = ? AND deck_id = ? AND completed_at IS NULL
