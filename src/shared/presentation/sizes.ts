@@ -1,0 +1,30 @@
+export const sizes = {
+  border: 1,
+  icon: {
+    small: 18,
+    medium: 22,
+    large: 34,
+  },
+  radius: {
+    small: 2,
+    medium: 4,
+    control: 19,
+    card: 22,
+    panel: 24,
+    island: 28,
+    pill: 999,
+  },
+  spacing: {
+    xSmall: 4,
+    small: 6,
+    medium: 8,
+    large: 10,
+    xLarge: 12,
+    xxLarge: 14,
+    section: 16,
+    content: 20,
+    screen: 24,
+    spacious: 28,
+    wide: 36,
+  },
+} as const;
