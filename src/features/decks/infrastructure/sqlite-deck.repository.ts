@@ -38,6 +38,22 @@ export class SQLiteDeckRepository implements DeckRepository {
     return this.toModel(DeckRowSchema.parse(row));
   }
 
+  async findByIds(ids: readonly DeckId[]): Promise<Deck[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const placeholders = ids.map(() => "?").join(", ");
+    const rows = await this.database.getAllAsync<unknown>(
+      `SELECT id, title, description, created_at, updated_at
+       FROM decks
+       WHERE id IN (${placeholders})
+       ORDER BY title, id`,
+      ...ids
+    );
+    return rows.map((row) => this.toModel(DeckRowSchema.parse(row)));
+  }
+
   async list(): Promise<Deck[]> {
     const rows = await this.database.getAllAsync<unknown>(
       "SELECT id, title, description, created_at, updated_at FROM decks ORDER BY title"

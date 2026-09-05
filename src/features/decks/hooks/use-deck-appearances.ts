@@ -25,15 +25,17 @@ export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
         const requestedDeckIds = deckIdsKey
           ? deckIdsKey.split(",").map((deckId) => DeckIdSchema.parse(deckId))
           : [];
-        const appearances = await Promise.all(
-          requestedDeckIds.map(async (deckId) => {
-            const appearance = await deckService.getAppearance(deckId);
-            if (!appearance) {
-              throw new Error(`Missing appearance for deck ${deckId}`);
-            }
-            return [deckId, appearance] as const;
-          })
+        const loadedAppearances = await deckService.getAppearances(requestedDeckIds);
+        const appearancesByDeckId = new Map(
+          loadedAppearances.map((appearance) => [appearance.deckId, appearance] as const)
         );
+        const appearances = requestedDeckIds.map((deckId) => {
+          const appearance = appearancesByDeckId.get(deckId);
+          if (!appearance) {
+            throw new Error(`Missing appearance for deck ${deckId}`);
+          }
+          return [deckId, appearance] as const;
+        });
 
         if (active) {
           setState({ appearances: new Map(appearances), error: null, loading: false });

@@ -24,15 +24,15 @@ export function useDecks(deckIds: DeckId[]): DecksState {
         const requestedDeckIds = deckIdsKey
           ? deckIdsKey.split(",").map((deckId) => DeckIdSchema.parse(deckId))
           : [];
-        const decks = await Promise.all(
-          requestedDeckIds.map(async (deckId) => {
-            const deck = await deckService.findById(deckId);
-            if (!deck) {
-              throw new Error(`Missing deck ${deckId}`);
-            }
-            return [deckId, deck] as const;
-          })
-        );
+        const loadedDecks = await deckService.findByIds(requestedDeckIds);
+        const decksById = new Map(loadedDecks.map((deck) => [deck.id, deck] as const));
+        const decks = requestedDeckIds.map((deckId) => {
+          const deck = decksById.get(deckId);
+          if (!deck) {
+            throw new Error(`Missing deck ${deckId}`);
+          }
+          return [deckId, deck] as const;
+        });
 
         if (active) {
           setState({ decks: new Map(decks), error: null, loading: false });

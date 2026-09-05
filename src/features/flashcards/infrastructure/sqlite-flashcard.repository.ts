@@ -17,11 +17,41 @@ const FlashcardRowSchema = z.compile(
 );
 type FlashcardRow = z.infer<typeof FlashcardRowSchema>;
 
+const FlashcardCountRowSchema = z.compile(
+  z.object({
+    card_count: z.number().int().nonnegative(),
+    deck_id: DeckIdSchema,
+  })
+);
+type FlashcardCountRow = z.infer<typeof FlashcardCountRowSchema>;
+
 export class SQLiteFlashcardRepository implements FlashcardRepository {
   private readonly database: SQLiteDatabase;
 
   constructor(database: SQLiteDatabase) {
     this.database = database;
+  }
+
+  async countFlashcardsByDeckIds(deckIds: readonly DeckId[]): Promise<ReadonlyMap<DeckId, number>> {
+    const counts = new Map<DeckId, number>(deckIds.map((deckId) => [deckId, 0]));
+    if (deckIds.length === 0) {
+      return counts;
+    }
+
+    const placeholders = deckIds.map(() => "?").join(", ");
+    const rows = await this.database.getAllAsync<unknown>(
+      `SELECT deck_id, COUNT(*) AS card_count
+       FROM flashcards
+       WHERE deck_id IN (${placeholders})
+       GROUP BY deck_id
+       ORDER BY deck_id`,
+      ...deckIds
+    );
+    for (const row of rows) {
+      const parsedRow: FlashcardCountRow = FlashcardCountRowSchema.parse(row);
+      counts.set(parsedRow.deck_id, parsedRow.card_count);
+    }
+    return counts;
   }
 
   async findById(id: string): Promise<Flashcard | null> {

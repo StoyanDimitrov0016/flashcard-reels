@@ -28,18 +28,21 @@ export function useDeckCatalog(): DeckCatalogState {
     async function loadCatalog() {
       try {
         const decks = await deckService.list();
-        const entries = await Promise.all(
-          decks.map(async (deck) => {
-            const [appearance, cards] = await Promise.all([
-              deckService.getAppearance(deck.id),
-              flashcardService.listByDeckId(deck.id),
-            ]);
-            if (!appearance) {
-              throw new Error(`Missing appearance for deck ${deck.id}`);
-            }
-            return { appearance, cardCount: cards.length, deck };
-          })
+        const deckIds = decks.map((deck) => deck.id);
+        const [appearances, cardCounts] = await Promise.all([
+          deckService.getAppearances(deckIds),
+          flashcardService.countFlashcardsByDeckIds(deckIds),
+        ]);
+        const appearancesByDeckId = new Map(
+          appearances.map((appearance) => [appearance.deckId, appearance] as const)
         );
+        const entries = decks.map((deck) => {
+          const appearance = appearancesByDeckId.get(deck.id);
+          if (!appearance) {
+            throw new Error(`Missing appearance for deck ${deck.id}`);
+          }
+          return { appearance, cardCount: cardCounts.get(deck.id) ?? 0, deck };
+        });
         if (active) {
           setState({ entries, error: null, loading: false });
         }

@@ -16,8 +16,16 @@ export class DeckService {
     return this.deckRepository.findById(id);
   }
 
+  async findByIds(ids: readonly DeckId[]): Promise<Deck[]> {
+    return this.deckRepository.findByIds(ids);
+  }
+
   async getAppearance(deckId: DeckId): Promise<DeckAppearance | null> {
     return this.deckAppearanceRepository.findByDeckId(deckId);
+  }
+
+  async getAppearances(deckIds: readonly DeckId[]): Promise<DeckAppearance[]> {
+    return this.deckAppearanceRepository.findAppearancesByDeckIds(deckIds);
   }
 
   async list(): Promise<Deck[]> {

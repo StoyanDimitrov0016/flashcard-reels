@@ -32,6 +32,22 @@ export class SQLiteDeckAppearanceRepository implements DeckAppearanceRepository 
     return this.toModel(DeckAppearanceRowSchema.parse(row));
   }
 
+  async findAppearancesByDeckIds(deckIds: readonly DeckId[]): Promise<DeckAppearance[]> {
+    if (deckIds.length === 0) {
+      return [];
+    }
+
+    const placeholders = deckIds.map(() => "?").join(", ");
+    const rows = await this.database.getAllAsync<unknown>(
+      `SELECT deck_id, accent_color, background_color
+       FROM deck_appearances
+       WHERE deck_id IN (${placeholders})
+       ORDER BY deck_id`,
+      ...deckIds
+    );
+    return rows.map((row) => this.toModel(DeckAppearanceRowSchema.parse(row)));
+  }
+
   async save(appearance: DeckAppearance): Promise<void> {
     await this.database.runAsync(
       `INSERT INTO deck_appearances (deck_id, accent_color, background_color)
