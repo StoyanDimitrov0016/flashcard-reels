@@ -1,0 +1,26 @@
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
+import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
+import type { DeckRepository } from "@/features/decks/domain/deck.repository";
+
+export class DeckService {
+  private readonly deckRepository: DeckRepository;
+  private readonly deckAppearanceRepository: DeckAppearanceRepository;
+
+  constructor(deckRepository: DeckRepository, deckAppearanceRepository: DeckAppearanceRepository) {
+    this.deckRepository = deckRepository;
+    this.deckAppearanceRepository = deckAppearanceRepository;
+  }
+
+  async findById(id: DeckId): Promise<Deck | null> {
+    return this.deckRepository.findById(id);
+  }
+
+  async getAppearance(deckId: DeckId): Promise<DeckAppearance | null> {
+    return this.deckAppearanceRepository.findByDeckId(deckId);
+  }
+
+  async list(): Promise<Deck[]> {
+    return this.deckRepository.list();
+  }
+}
