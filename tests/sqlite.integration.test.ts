@@ -1,0 +1,356 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
+import { runMigrations } from "@/infrastructure/sqlite/migrations";
+import { NodeSqliteDatabase } from "./support/node-sqlite-database";
+import {
+  OTHER_DECK_ID,
+  TEST_DECK_ID,
+  makeFlashcard,
+  makeSession,
+  testId,
+} from "./support/study-test-support";
+
+describe("SQLite study persistence", () => {
+  let database: NodeSqliteDatabase;
+  let sessions: SQLiteStudySessionRepository;
+  let items: SQLiteStudySessionItemRepository;
+  let attempts: SQLiteReviewAttemptRepository;
+  let recurrences: SQLiteStudySessionRecurrenceRepository;
+
+  beforeEach(async () => {
+    database = new NodeSqliteDatabase();
+    await runMigrations(database);
+    await database.runAsync(
+      "INSERT INTO decks (id, title, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      TEST_DECK_ID,
+      "Test deck",
+      "Test deck",
+      "2026-01-01T00:00:00.000Z",
+      "2026-01-01T00:00:00.000Z"
+    );
+    await database.runAsync(
+      "INSERT INTO decks (id, title, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      OTHER_DECK_ID,
+      "Other deck",
+      "Other deck",
+      "2026-01-01T00:00:00.000Z",
+      "2026-01-01T00:00:00.000Z"
+    );
+    await Promise.all(
+      [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3, OTHER_DECK_ID)].map((card) =>
+        database.runAsync(
+          "INSERT INTO flashcards (id, deck_id, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+          card.id,
+          card.deckId,
+          card.question,
+          card.answer,
+          card.createdAt,
+          card.updatedAt
+        )
+      )
+    );
+    sessions = new SQLiteStudySessionRepository(database);
+    items = new SQLiteStudySessionItemRepository(database);
+    attempts = new SQLiteReviewAttemptRepository(database);
+    recurrences = new SQLiteStudySessionRecurrenceRepository(database);
+  });
+
+  afterEach(() => {
+    database.close();
+  });
+
+  it("creates Mixed and Focused sessions with their defined deck relationships", async () => {
+    const mixed = makeSession(testId(200), "mixed");
+    const focused = makeSession(testId(201), "focused", TEST_DECK_ID);
+    await sessions.create(mixed);
+    await sessions.create(focused);
+
+    expect((await sessions.findActive("mixed", null))?.deckId).toBeNull();
+    expect((await sessions.findActive("focused", TEST_DECK_ID))?.deckId).toBe(TEST_DECK_ID);
+    await expect(
+      sessions.create(makeSession(testId(202), "mixed", TEST_DECK_ID))
+    ).rejects.toThrow();
+  });
+
+  it("returns session items ordered by position and permits repeated flashcards", async () => {
+    const session = makeSession(testId(210), "mixed");
+    await sessions.create(session);
+    await items.createMany([
+      new StudySessionItem({
+        flashcardId: makeFlashcard(1).id,
+        id: testId(211),
+        position: 2,
+        studySessionId: session.id,
+      }),
+      new StudySessionItem({
+        flashcardId: makeFlashcard(1).id,
+        id: testId(212),
+        position: 0,
+        studySessionId: session.id,
+      }),
+    ]);
+
+    const stored = await items.listBySessionId(session.id);
+    expect(stored.map((item) => [item.position, item.flashcardId])).toEqual([
+      [0, makeFlashcard(1).id],
+      [2, makeFlashcard(1).id],
+    ]);
+    await expect(
+      items.createMany([
+        new StudySessionItem({
+          flashcardId: makeFlashcard(2).id,
+          id: testId(213),
+          position: 2,
+          studySessionId: session.id,
+        }),
+      ])
+    ).rejects.toThrow();
+  });
+
+  it("rolls back a batch session-item insert when one item violates a constraint", async () => {
+    const session = makeSession(testId(220), "mixed");
+    await sessions.create(session);
+
+    await expect(
+      items.createMany([
+        new StudySessionItem({
+          flashcardId: makeFlashcard(1).id,
+          id: testId(221),
+          position: 0,
+          studySessionId: session.id,
+        }),
+        new StudySessionItem({
+          flashcardId: makeFlashcard(2).id,
+          id: testId(222),
+          position: 0,
+          studySessionId: session.id,
+        }),
+      ])
+    ).rejects.toThrow();
+    expect(await items.listBySessionId(session.id)).toEqual([]);
+  });
+
+  it("protects finalized attempts from later rating updates", async () => {
+    const session = makeSession(testId(230), "mixed");
+    await sessions.create(session);
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(231),
+      rating: null,
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await attempts.create(attempt);
+    await attempts.finalize(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
+
+    expect(await attempts.updateRating(attempt.id, "good", "2026-01-01T00:02:00.000Z")).toBe(false);
+    expect((await attempts.findById(attempt.id))?.rating).toBeNull();
+  });
+
+  it("keeps recurrence references and enforces pending uniqueness rules", async () => {
+    const session = makeSession(testId(240), "mixed");
+    await sessions.create(session);
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(241),
+      rating: "again",
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await attempts.create(attempt);
+    const secondAttempt = new FlashcardReviewAttempt({
+      createdAt: attempt.createdAt,
+      finalizedAt: attempt.finalizedAt,
+      flashcardId: makeFlashcard(2).id,
+      id: testId(245),
+      rating: attempt.rating,
+      reelPosition: 1,
+      studySessionId: attempt.studySessionId,
+      updatedAt: attempt.updatedAt,
+    });
+    await attempts.create(secondAttempt);
+    const recurrence = new StudySessionRecurrence({
+      consumedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      flashcardId: attempt.flashcardId,
+      id: testId(242),
+      sourceAttemptId: attempt.id,
+      studySessionId: session.id,
+      targetPosition: 8,
+    });
+    await recurrences.create(recurrence);
+
+    await expect(
+      recurrences.create(
+        new StudySessionRecurrence({
+          consumedAt: recurrence.consumedAt,
+          createdAt: recurrence.createdAt,
+          flashcardId: recurrence.flashcardId,
+          id: testId(243),
+          sourceAttemptId: recurrence.sourceAttemptId,
+          studySessionId: recurrence.studySessionId,
+          targetPosition: 9,
+        })
+      )
+    ).rejects.toThrow();
+    await expect(
+      recurrences.create(
+        new StudySessionRecurrence({
+          consumedAt: recurrence.consumedAt,
+          createdAt: recurrence.createdAt,
+          flashcardId: recurrence.flashcardId,
+          id: testId(244),
+          sourceAttemptId: secondAttempt.id,
+          studySessionId: recurrence.studySessionId,
+          targetPosition: recurrence.targetPosition,
+        })
+      )
+    ).rejects.toThrow();
+
+    expect(await recurrences.markConsumed(recurrence.id, "2026-01-01T00:02:00.000Z")).toBe(true);
+    await recurrences.create(
+      new StudySessionRecurrence({
+        consumedAt: recurrence.consumedAt,
+        createdAt: recurrence.createdAt,
+        flashcardId: secondAttempt.flashcardId,
+        id: testId(246),
+        sourceAttemptId: secondAttempt.id,
+        studySessionId: recurrence.studySessionId,
+        targetPosition: recurrence.targetPosition,
+      })
+    );
+    expect(await recurrences.listBySessionId(session.id)).toHaveLength(2);
+  });
+
+  it("reserves the next free recurrence slot inside the SQLite transaction", async () => {
+    const session = makeSession(testId(247), "mixed");
+    await sessions.create(session);
+    const firstAttempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(248),
+      rating: "again",
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const secondAttempt = new FlashcardReviewAttempt({
+      createdAt: firstAttempt.createdAt,
+      finalizedAt: firstAttempt.finalizedAt,
+      flashcardId: makeFlashcard(2).id,
+      id: testId(249),
+      rating: firstAttempt.rating,
+      reelPosition: 1,
+      studySessionId: firstAttempt.studySessionId,
+      updatedAt: firstAttempt.updatedAt,
+    });
+    await attempts.create(firstAttempt);
+    await attempts.create(secondAttempt);
+
+    const firstRecurrence = new StudySessionRecurrence({
+      consumedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      flashcardId: firstAttempt.flashcardId,
+      id: testId(250),
+      sourceAttemptId: firstAttempt.id,
+      studySessionId: session.id,
+      targetPosition: 8,
+    });
+    const secondRecurrence = new StudySessionRecurrence({
+      consumedAt: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      flashcardId: secondAttempt.flashcardId,
+      id: testId(251),
+      sourceAttemptId: secondAttempt.id,
+      studySessionId: session.id,
+      targetPosition: 8,
+    });
+
+    expect((await recurrences.schedulePending(firstRecurrence, 8)).targetPosition).toBe(8);
+    expect((await recurrences.schedulePending(secondRecurrence, 8)).targetPosition).toBe(9);
+    expect(
+      (await recurrences.listBySessionId(session.id)).map((recurrence) => recurrence.targetPosition)
+    ).toEqual([8, 9]);
+  });
+
+  it("rejects recurrence rows whose session or source attempt does not exist", async () => {
+    await expect(
+      recurrences.create(
+        new StudySessionRecurrence({
+          consumedAt: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          flashcardId: makeFlashcard(1).id,
+          id: testId(250),
+          sourceAttemptId: testId(251),
+          studySessionId: testId(252),
+          targetPosition: 1,
+        })
+      )
+    ).rejects.toThrow();
+  });
+
+  it("cascades session-owned items, attempts, and recurrences", async () => {
+    const session = makeSession(testId(260), "mixed");
+    await sessions.create(session);
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(261),
+      rating: "again",
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await attempts.create(attempt);
+    await items.createMany([
+      new StudySessionItem({
+        flashcardId: attempt.flashcardId,
+        id: testId(262),
+        position: 0,
+        studySessionId: session.id,
+      }),
+    ]);
+    await recurrences.create(
+      new StudySessionRecurrence({
+        consumedAt: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        flashcardId: attempt.flashcardId,
+        id: testId(263),
+        sourceAttemptId: attempt.id,
+        studySessionId: session.id,
+        targetPosition: 8,
+      })
+    );
+
+    await database.runAsync("DELETE FROM study_sessions WHERE id = ?", session.id);
+
+    expect(await items.listBySessionId(session.id)).toEqual([]);
+    expect(await attempts.findById(attempt.id)).toBeNull();
+    expect(await recurrences.listBySessionId(session.id)).toEqual([]);
+  });
+
+  it("runs the current migration set in order and creates the recurrence table", async () => {
+    const version = await database.getFirstAsync("PRAGMA user_version");
+    const table = await database.getFirstAsync(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'study_session_recurrences'"
+    );
+
+    expect(version).toEqual({ user_version: 5 });
+    expect(table).toEqual({ name: "study_session_recurrences" });
+  });
+});

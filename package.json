@@ -13,7 +13,8 @@
     "conventions": "node scripts/check-conventions.mjs",
     "lint": "oxlint --type-aware --deny-warnings .",
     "typecheck": "tsc --noEmit",
-    "test:recurrence": "node --experimental-strip-types --test tests/recurrences.test.mjs",
+    "test": "vitest",
+    "test:run": "vitest run",
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
     "check:android": "expo export --platform android",
@@ -42,11 +43,13 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@types/node": "^26.4.1",
     "@types/react": "~19.2.2",
     "expo-doctor": "1.20.4",
     "oxfmt": "latest",
     "oxlint": "latest",
     "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.0"
   }
 }
