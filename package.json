@@ -1,0 +1,50 @@
+{
+  "name": "flashcard-reels",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "conventions": "node scripts/check-conventions.mjs",
+    "lint": "oxlint --type-aware --deny-warnings .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
+    "doctor": "expo-doctor",
+    "check:android": "expo export --platform android",
+    "verify": "npm run check && npm run doctor && npm run check:android"
+  },
+  "dependencies": {
+    "expo": "~57.0.20",
+    "expo-audio": "~57.0.4",
+    "expo-constants": "~57.0.17",
+    "expo-font": "~57.0.3",
+    "expo-linking": "~57.0.9",
+    "expo-router": "~57.0.19",
+    "expo-sqlite": "~57.0.2",
+    "expo-status-bar": "~57.0.1",
+    "expo-symbols": "~57.0.2",
+    "expo-system-ui": "~57.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-pager-view": "8.0.2",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-tab-view": "^4.3.2",
+    "react-native-web": "~0.21.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "expo-doctor": "1.20.4",
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "oxlint-tsgolint": "^7.0.2001",
+    "typescript": "~6.0.3"
+  }
+}
