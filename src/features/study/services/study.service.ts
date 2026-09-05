@@ -1,35 +1,57 @@
-import {
-  FlashcardReview,
-  type FlashcardReviewFields,
-  type RecallLevel,
-} from "@/features/study/domain/flashcard-review.model";
-import type { ReviewRepository } from "@/features/study/domain/review.repository";
+import { type RecallLevel } from "@/features/study/domain/flashcard-review.model";
+import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
+import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
 export class StudyService {
-  private readonly reviewRepository: ReviewRepository;
+  private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
 
-  constructor(reviewRepository: ReviewRepository, clock: Clock, idGenerator: IdGenerator) {
-    this.reviewRepository = reviewRepository;
+  constructor(
+    reviewAttemptRepository: ReviewAttemptRepository,
+    clock: Clock,
+    idGenerator: IdGenerator
+  ) {
+    this.reviewAttemptRepository = reviewAttemptRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
   }
 
-  async listReviews(flashcardId: string): Promise<FlashcardReview[]> {
-    return this.reviewRepository.listByFlashcardId(flashcardId);
+  async startAttempt(flashcardId: string, reelPosition: number): Promise<string> {
+    const createdAt = this.clock.now();
+    const attempt = new FlashcardReviewAttempt({
+      createdAt,
+      flashcardId,
+      finalizedAt: null,
+      id: this.idGenerator.generate(),
+      reelPosition,
+      rating: null,
+      updatedAt: createdAt,
+    });
+    await this.reviewAttemptRepository.create(attempt);
+    return attempt.id;
   }
 
-  async recordReview(flashcardId: string, level: RecallLevel): Promise<void> {
-    const reviewFields: FlashcardReviewFields = {
-      flashcardId,
-      id: this.idGenerator.generate(),
-      level,
-      reviewedAt: this.clock.now(),
-    };
-    const review = new FlashcardReview(reviewFields);
-    await this.reviewRepository.save(review);
+  async rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean> {
+    return this.reviewAttemptRepository.updateRating(attemptId, rating, this.clock.now());
+  }
+
+  async finalizeAttempt(attemptId: string): Promise<void> {
+    const finalizedAt = this.clock.now();
+    await this.reviewAttemptRepository.finalize(attemptId, finalizedAt, finalizedAt);
+  }
+
+  async finalizeAttemptsOutsideEditableWindow(reelPosition: number): Promise<void> {
+    const firstEditablePosition = reelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
+    if (firstEditablePosition <= 0) {
+      return;
+    }
+
+    const attempts =
+      await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(firstEditablePosition);
+    await Promise.all(attempts.map((attempt) => this.finalizeAttempt(attempt.id)));
   }
 }

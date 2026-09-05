@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { RecallLevel } from "@/features/study/domain/flashcard-review.model";
 
 export function useRecallSession() {
+  const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
   const [revealedCardIds, setRevealedCardIds] = useState<ReadonlySet<string>>(() => new Set());
   const [recallLevels, setRecallLevels] = useState<ReadonlyMap<string, RecallLevel>>(
     () => new Map()
@@ -26,5 +27,9 @@ export function useRecallSession() {
     setRecallLevels((currentLevels) => new Map(currentLevels).set(cardId, level));
   };
 
-  return { rateCard, recallLevels, revealedCardIds, toggleCard };
+  const setAttemptId = (reelPosition: number, attemptId: string) => {
+    setAttemptIds((currentAttemptIds) => new Map(currentAttemptIds).set(reelPosition, attemptId));
+  };
+
+  return { attemptIds, rateCard, recallLevels, revealedCardIds, setAttemptId, toggleCard };
 }

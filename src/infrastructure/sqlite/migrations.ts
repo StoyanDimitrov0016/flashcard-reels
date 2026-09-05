@@ -41,6 +41,20 @@ const INITIAL_SCHEMA = `
 
   CREATE INDEX IF NOT EXISTS flashcards_deck_id_idx ON flashcards (deck_id);
   CREATE INDEX IF NOT EXISTS reviews_flashcard_id_idx ON flashcard_reviews (flashcard_id);
+
+  CREATE TABLE IF NOT EXISTS flashcard_review_attempts (
+    id TEXT PRIMARY KEY NOT NULL,
+    flashcard_id TEXT NOT NULL,
+    reel_position INTEGER NOT NULL,
+    rating TEXT CHECK (rating IS NULL OR rating IN ('again', 'hard', 'good', 'easy')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    finalized_at TEXT,
+    FOREIGN KEY (flashcard_id) REFERENCES flashcards (id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS review_attempts_flashcard_id_idx
+    ON flashcard_review_attempts (flashcard_id);
 `;
 
 export async function runMigrations(database: SQLiteDatabase): Promise<void> {

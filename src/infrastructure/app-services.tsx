@@ -8,7 +8,7 @@ import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-dec
 import { DeckService } from "@/features/decks/services/deck.service";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
-import { SQLiteReviewRepository } from "@/features/study/infrastructure/sqlite-review.repository";
+import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { StudyService } from "@/features/study/services/study.service";
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
@@ -30,7 +30,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const deckRepository = new SQLiteDeckRepository(database);
     const deckAppearanceRepository = new SQLiteDeckAppearanceRepository(database);
     const flashcardRepository = new SQLiteFlashcardRepository(database);
-    const reviewRepository = new SQLiteReviewRepository(database);
+    const reviewAttemptRepository = new SQLiteReviewAttemptRepository(database);
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
 
@@ -38,7 +38,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
       deckService: new DeckService(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardService(flashcardRepository),
-      studyService: new StudyService(reviewRepository, clock, idGenerator),
+      studyService: new StudyService(reviewAttemptRepository, clock, idGenerator),
     };
   });
 

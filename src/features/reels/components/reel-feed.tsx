@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
 import { useDeckAppearances } from "@/features/decks/hooks/use-deck-appearances";
@@ -15,15 +16,69 @@ type ReelFeedProps = Readonly<{ cards: Flashcard[]; showMainFeedLink?: boolean }
 export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
-  const { activeIndex, handleMomentumScrollEnd } = useReelFeed({
+  const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
     itemCount: cards.length,
     itemHeight: height,
   });
-  const { rateCard, recallLevels, revealedCardIds, toggleCard } = useRecallSession();
+  const { attemptIds, rateCard, recallLevels, revealedCardIds, setAttemptId, toggleCard } =
+    useRecallSession();
   const { answerAudioService, studyService } = useAppServices();
+  const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
+  const activeIndexReference = useRef(activeIndex);
+  const activeCard = cards[activeIndex];
   const deckIds = [...new Set(cards.map((card) => card.deckId))];
   const { appearances } = useDeckAppearances(deckIds);
   const { decks } = useDecks(deckIds);
+
+  useEffect(() => {
+    activeIndexReference.current = activeIndex;
+  }, [activeIndex]);
+
+  const startAttemptForReel = (reelPosition: number, cardId: string): Promise<string> => {
+    const existingAttemptId = attemptIds.get(reelPosition);
+    if (existingAttemptId) {
+      return Promise.resolve(existingAttemptId);
+    }
+
+    const existingStart = startingAttemptPromises.current.get(reelPosition);
+    if (existingStart) {
+      return existingStart;
+    }
+
+    const start = studyService.startAttempt(cardId, reelPosition).then((attemptId) => {
+      setAttemptId(reelPosition, attemptId);
+      void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+      return attemptId;
+    });
+    startingAttemptPromises.current.set(reelPosition, start);
+    void start.finally(() => startingAttemptPromises.current.delete(reelPosition));
+    return start;
+  };
+
+  useEffect(() => {
+    if (!activeCard) {
+      return undefined;
+    }
+
+    const existingAttemptId = attemptIds.get(activeIndex);
+    if (existingAttemptId || startingAttemptPromises.current.has(activeIndex)) {
+      return undefined;
+    }
+
+    const start = studyService.startAttempt(activeCard.id, activeIndex).then((attemptId) => {
+      setAttemptId(activeIndex, attemptId);
+      void studyService.finalizeAttemptsOutsideEditableWindow(activeIndexReference.current);
+      return attemptId;
+    });
+    startingAttemptPromises.current.set(activeIndex, start);
+    void start.finally(() => startingAttemptPromises.current.delete(activeIndex));
+    return undefined;
+  }, [activeCard, activeIndex, attemptIds, setAttemptId, studyService]);
+
+  useEffect(() => {
+    void studyService.finalizeAttemptsOutsideEditableWindow(activeIndex);
+  }, [activeIndex, studyService]);
+
   const getItemLayout = (_data: ArrayLike<Flashcard> | null | undefined, index: number) => ({
     index,
     length: height,
@@ -47,8 +102,13 @@ export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
         isActive={index === activeIndex}
         onFlip={() => toggleCard(item.id)}
         onRate={(level) => {
-          rateCard(item.id, level);
-          void studyService.recordReview(item.id, level);
+          void startAttemptForReel(index, item.id)
+            .then((attemptId) => studyService.rateAttempt(attemptId, level))
+            .then((updated) => {
+              if (updated) {
+                rateCard(item.id, level);
+              }
+            });
         }}
         recallLevel={recallLevels.get(item.id) ?? null}
         revealed={revealedCardIds.has(item.id)}
@@ -68,7 +128,7 @@ export function ReelFeed({ cards, showMainFeedLink = false }: ReelFeedProps) {
           extraData={{ activeIndex, recallLevels, revealedCardIds }}
           getItemLayout={getItemLayout}
           keyExtractor={(card) => card.id}
-          onMomentumScrollEnd={handleMomentumScrollEnd}
+          onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
