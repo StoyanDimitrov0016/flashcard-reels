@@ -10,6 +10,7 @@ import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { StudyService } from "@/features/study/services/study.service";
+import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 
@@ -17,6 +18,7 @@ type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
   deckService: DeckService;
   flashcardService: FlashcardService;
+  reelFeedService: ReelFeedService;
   studyService: StudyService;
 }>;
 
@@ -38,6 +40,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
       deckService: new DeckService(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardService(flashcardRepository),
+      reelFeedService: new ReelFeedService(),
       studyService: new StudyService(reviewAttemptRepository, clock, idGenerator),
     };
   });

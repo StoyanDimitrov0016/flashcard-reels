@@ -2,12 +2,12 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
 import { EmptySession } from "@/features/reels/components/empty-session";
 import { FeedModeSwitcher } from "@/features/reels/components/feed-mode-switcher";
 import { ReelFeed } from "@/features/reels/components/reel-feed";
 import { type DeckSession, useDeckSession } from "@/features/reels/context/deck-session-context";
-import { useShuffledCards } from "@/features/reels/hooks/use-shuffled-cards";
-import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
+import { usePreparedReelFeed } from "@/features/reels/hooks/use-prepared-reel-feed";
 import { palette } from "@/shared/presentation/palette";
 
 type SessionFeedProps = Readonly<{ onChooseDeck: () => void; session: DeckSession }>;
@@ -23,9 +23,17 @@ function LoadingState() {
 type ReadyForYouFeedProps = Readonly<{ cards: Flashcard[] }>;
 
 function ReadyForYouFeed({ cards }: ReadyForYouFeedProps) {
-  const shuffledCards = useShuffledCards(cards);
+  const preparedCards = usePreparedReelFeed(cards);
 
-  return <ReelFeed cards={shuffledCards} key="for-you" />;
+  return <ReelFeed cards={preparedCards} />;
+}
+
+type ReadySessionFeedContentProps = Readonly<{ cards: Flashcard[] }>;
+
+function ReadySessionFeedContent({ cards }: ReadySessionFeedContentProps) {
+  const preparedCards = usePreparedReelFeed(cards);
+
+  return <ReelFeed cards={preparedCards} showMainFeedLink />;
 }
 
 function ReadySessionFeed({
@@ -37,14 +45,16 @@ function ReadySessionFeed({
     return <LoadingState />;
   }
 
-  return <ReelFeed cards={cards} key={`session-${session.deckId}`} showMainFeedLink />;
+  return <ReadySessionFeedContent cards={cards} />;
 }
 
 function SessionFeed({ onChooseDeck, session }: SessionFeedProps) {
   if (session.status === "empty") {
     return <EmptySession onChooseDeck={onChooseDeck} />;
   }
-  return <ReadySessionFeed key={`session-${session.deckId}`} session={session} />;
+  return (
+    <ReadySessionFeed key={`session-${session.deckId}-${session.revision}`} session={session} />
+  );
 }
 
 export default function DiscoverScreen() {

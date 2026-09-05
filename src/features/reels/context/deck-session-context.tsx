@@ -13,7 +13,7 @@ export type FeedMode = "for-you" | "session";
 
 export type DeckSession =
   | Readonly<{ status: "empty" }>
-  | Readonly<{ deckId: DeckId; status: "ready" }>;
+  | Readonly<{ deckId: DeckId; revision: number; status: "ready" }>;
 
 const DeckSessionContext = createContext<DeckSessionContextValue | null>(null);
 
@@ -27,7 +27,11 @@ export function DeckSessionProvider({ children }: DeckSessionProviderProps) {
     selectMode,
     session,
     startSession: (deckId: DeckId) => {
-      setSession({ deckId, status: "ready" });
+      setSession((currentSession) => ({
+        deckId,
+        revision: currentSession.status === "ready" ? currentSession.revision + 1 : 1,
+        status: "ready",
+      }));
       selectMode("session");
     },
   };
