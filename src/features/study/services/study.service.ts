@@ -2,7 +2,7 @@ import { type RecallLevel } from "@/features/study/domain/flashcard-review.model
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import { StudySession, type StudySessionMode } from "@/features/study/domain/study-session.model";
+import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Clock } from "@/shared/domain/clock";
@@ -26,23 +26,35 @@ export class StudyService {
     this.idGenerator = idGenerator;
   }
 
-  async startSession(mode: StudySessionMode, deckId: DeckId | null): Promise<string> {
-    if ((mode === "mixed" && deckId !== null) || (mode === "focused" && deckId === null)) {
-      throw new Error("Study session mode and deck must agree");
+  async openSession(
+    scope: StudySessionScope,
+    deckId: DeckId | null,
+    replaceExisting: boolean
+  ): Promise<StudySession> {
+    if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
+      throw new Error("Study session scope and deck must agree");
     }
 
     const createdAt = this.clock.now();
-    await this.studySessionRepository.completeOpenSessions(createdAt);
+    if (replaceExisting) {
+      await this.studySessionRepository.completeActiveByScope(scope, createdAt);
+    }
+
+    const activeSession = await this.studySessionRepository.findActive(scope, deckId);
+    if (activeSession) {
+      return activeSession;
+    }
+
     const session = new StudySession({
       completedAt: null,
       createdAt,
       currentPosition: 0,
       deckId,
       id: this.idGenerator.generate(),
-      mode,
+      scope,
     });
     await this.studySessionRepository.create(session);
-    return session.id;
+    return session;
   }
 
   async updateSessionPosition(sessionId: string, currentPosition: number): Promise<boolean> {

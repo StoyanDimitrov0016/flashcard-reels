@@ -13,14 +13,21 @@ import { palette } from "@/shared/presentation/palette";
 
 type ReelFeedProps = Readonly<{
   cards: Flashcard[];
+  initialPosition: number;
   showMainFeedLink?: boolean;
   studySessionId: string;
 }>;
 
-export function ReelFeed({ cards, showMainFeedLink = false, studySessionId }: ReelFeedProps) {
+export function ReelFeed({
+  cards,
+  initialPosition,
+  showMainFeedLink = false,
+  studySessionId,
+}: ReelFeedProps) {
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
   const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
+    initialPosition,
     itemCount: cards.length,
     itemHeight: height,
   });
@@ -139,6 +146,7 @@ export function ReelFeed({ cards, showMainFeedLink = false, studySessionId }: Re
           decelerationRate="fast"
           extraData={{ activeIndex, recallLevels, revealedCardIds }}
           getItemLayout={getItemLayout}
+          initialScrollIndex={cards.length > 0 ? activeIndex : undefined}
           keyExtractor={(card) => card.id}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled

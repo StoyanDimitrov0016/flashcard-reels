@@ -4,14 +4,18 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
-import { EmptySession } from "@/features/reels/components/empty-session";
-import { FeedModeSwitcher } from "@/features/reels/components/feed-mode-switcher";
+import { EmptyFocusedFeed } from "@/features/reels/components/empty-focused-feed";
+import { FeedScopeSwitcher } from "@/features/reels/components/feed-scope-switcher";
 import { ReelFeed } from "@/features/reels/components/reel-feed";
-import { type DeckSession, useDeckSession } from "@/features/reels/context/deck-session-context";
+import { type FocusedFeedState, useFeedScope } from "@/features/reels/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/hooks/use-prepared-reel-feed";
 import { palette } from "@/shared/presentation/palette";
 
-type SessionFeedProps = Readonly<{ onChooseDeck: () => void; session: DeckSession }>;
+type FocusedFeedProps = Readonly<{
+  focusedFeed: FocusedFeedState;
+  onChooseDeck: () => void;
+  onSessionStarted: () => void;
+}>;
 
 function LoadingState() {
   return (
@@ -21,24 +25,10 @@ function LoadingState() {
   );
 }
 
-type ReadyForYouFeedProps = Readonly<{ cards: Flashcard[] }>;
+type ReadyMixedFeedProps = Readonly<{ cards: Flashcard[] }>;
 
-function ReadyForYouFeed({ cards }: ReadyForYouFeedProps) {
-  const preparedFeed = usePreparedReelFeed(cards, "mixed", null);
-  if (!preparedFeed) {
-    return <LoadingState />;
-  }
-
-  return <ReelFeed cards={preparedFeed.cards} studySessionId={preparedFeed.studySessionId} />;
-}
-
-type ReadySessionFeedContentProps = Readonly<{
-  cards: Flashcard[];
-  deckId: DeckId;
-}>;
-
-function ReadySessionFeedContent({ cards, deckId }: ReadySessionFeedContentProps) {
-  const preparedFeed = usePreparedReelFeed(cards, "focused", deckId);
+function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
+  const preparedFeed = usePreparedReelFeed(cards, "mixed", null, false);
   if (!preparedFeed) {
     return <LoadingState />;
   }
@@ -46,52 +36,107 @@ function ReadySessionFeedContent({ cards, deckId }: ReadySessionFeedContentProps
   return (
     <ReelFeed
       cards={preparedFeed.cards}
+      initialPosition={preparedFeed.currentPosition}
+      studySessionId={preparedFeed.studySessionId}
+    />
+  );
+}
+
+type ReadyFocusedFeedContentProps = Readonly<{
+  cards: Flashcard[];
+  deckId: DeckId;
+  onSessionStarted: () => void;
+  replaceSession: boolean;
+}>;
+
+function ReadyFocusedFeedContent({
+  cards,
+  deckId,
+  onSessionStarted,
+  replaceSession,
+}: ReadyFocusedFeedContentProps) {
+  const preparedFeed = usePreparedReelFeed(
+    cards,
+    "focused",
+    deckId,
+    replaceSession,
+    onSessionStarted
+  );
+  if (!preparedFeed) {
+    return <LoadingState />;
+  }
+
+  return (
+    <ReelFeed
+      cards={preparedFeed.cards}
+      initialPosition={preparedFeed.currentPosition}
       showMainFeedLink
       studySessionId={preparedFeed.studySessionId}
     />
   );
 }
 
-function ReadySessionFeed({
-  session,
-}: Readonly<{ session: Extract<DeckSession, { status: "ready" }> }>) {
-  const { cards, loading } = useFlashcards(session.deckId);
+function ReadyFocusedFeed({
+  focusedFeed,
+  onSessionStarted,
+}: Readonly<{
+  focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
+  onSessionStarted: () => void;
+}>) {
+  const { cards, loading } = useFlashcards(focusedFeed.deckId);
 
   if (loading) {
     return <LoadingState />;
   }
 
-  return <ReadySessionFeedContent cards={cards} deckId={session.deckId} />;
+  return (
+    <ReadyFocusedFeedContent
+      cards={cards}
+      deckId={focusedFeed.deckId}
+      onSessionStarted={onSessionStarted}
+      replaceSession={focusedFeed.replaceSession}
+    />
+  );
 }
 
-function SessionFeed({ onChooseDeck, session }: SessionFeedProps) {
-  if (session.status === "empty") {
-    return <EmptySession onChooseDeck={onChooseDeck} />;
+function FocusedFeed({ focusedFeed, onChooseDeck, onSessionStarted }: FocusedFeedProps) {
+  if (focusedFeed.status === "empty") {
+    return <EmptyFocusedFeed onChooseDeck={onChooseDeck} />;
   }
   return (
-    <ReadySessionFeed key={`session-${session.deckId}-${session.revision}`} session={session} />
+    <ReadyFocusedFeed
+      key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
+      focusedFeed={focusedFeed}
+      onSessionStarted={onSessionStarted}
+    />
   );
 }
 
 export default function DiscoverScreen() {
   const router = useRouter();
-  const { activeMode, session } = useDeckSession();
+  const { activeScope, consumeFocusedFeedReplacement, focusedFeed } = useFeedScope();
   const { cards, loading } = useFlashcards(null);
   let feed: React.ReactNode;
 
-  if (activeMode === "for-you") {
+  if (activeScope === "mixed") {
     if (loading) {
       feed = <LoadingState />;
     } else {
-      feed = <ReadyForYouFeed cards={cards} />;
+      feed = <ReadyMixedFeed cards={cards} />;
     }
   } else {
-    feed = <SessionFeed onChooseDeck={() => router.navigate("/(tabs)/decks")} session={session} />;
+    feed = (
+      <FocusedFeed
+        focusedFeed={focusedFeed}
+        onChooseDeck={() => router.navigate("/(tabs)/decks")}
+        onSessionStarted={consumeFocusedFeedReplacement}
+      />
+    );
   }
 
   return (
     <View style={styles.screen}>
-      <FeedModeSwitcher />
+      <FeedScopeSwitcher />
       {feed}
     </View>
   );

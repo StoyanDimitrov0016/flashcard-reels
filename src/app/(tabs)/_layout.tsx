@@ -2,7 +2,7 @@ import { TopTabs } from "expo-router/js-top-tabs";
 import { SymbolView } from "expo-symbols";
 import type { ColorValue } from "react-native";
 
-import { DeckSessionProvider } from "@/features/reels/context/deck-session-context";
+import { FeedScopeProvider } from "@/features/reels/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
@@ -12,7 +12,7 @@ export default function TabLayout() {
   "use no memo";
 
   return (
-    <DeckSessionProvider>
+    <FeedScopeProvider>
       <TopTabs
         tabBarPosition="bottom"
         screenOptions={{
@@ -59,6 +59,6 @@ export default function TabLayout() {
           }}
         />
       </TopTabs>
-    </DeckSessionProvider>
+    </FeedScopeProvider>
   );
 }

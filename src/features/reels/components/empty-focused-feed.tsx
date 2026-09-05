@@ -4,9 +4,9 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-type EmptySessionProps = Readonly<{ onChooseDeck: () => void }>;
+type EmptyFocusedFeedProps = Readonly<{ onChooseDeck: () => void }>;
 
-export function EmptySession({ onChooseDeck }: EmptySessionProps) {
+export function EmptyFocusedFeed({ onChooseDeck }: EmptyFocusedFeedProps) {
   return (
     <View style={styles.screen}>
       <View style={styles.iconShell}>
@@ -16,7 +16,7 @@ export function EmptySession({ onChooseDeck }: EmptySessionProps) {
           tintColor={palette.info}
         />
       </View>
-      <Text style={styles.title}>Build a focused session</Text>
+      <Text style={styles.title}>Build a focused feed</Text>
       <Text style={styles.copy}>Choose a deck, then work through only its flashcards.</Text>
       <Pressable accessibilityRole="button" onPress={onChooseDeck} style={styles.button}>
         <Text style={styles.buttonLabel}>Choose a deck</Text>

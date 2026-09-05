@@ -1,27 +1,25 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useDeckSession } from "@/features/reels/context/deck-session-context";
+import { useFeedScope } from "@/features/reels/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-export function FeedModeSwitcher() {
-  const { activeMode, selectMode } = useDeckSession();
+export function FeedScopeSwitcher() {
+  const { activeScope, selectScope } = useFeedScope();
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.switcher}>
-        <Pressable onPress={() => selectMode("for-you")} style={styles.mode}>
-          <Text style={[styles.label, activeMode === "for-you" && styles.activeLabel]}>
-            For You
-          </Text>
-          {activeMode === "for-you" && <View style={styles.indicator} />}
+        <Pressable onPress={() => selectScope("mixed")} style={styles.scope}>
+          <Text style={[styles.label, activeScope === "mixed" && styles.activeLabel]}>Mixed</Text>
+          {activeScope === "mixed" && <View style={styles.indicator} />}
         </Pressable>
-        <Pressable onPress={() => selectMode("session")} style={styles.mode}>
-          <Text style={[styles.label, activeMode === "session" && styles.activeLabel]}>
-            Session
+        <Pressable onPress={() => selectScope("focused")} style={styles.scope}>
+          <Text style={[styles.label, activeScope === "focused" && styles.activeLabel]}>
+            Focused
           </Text>
-          {activeMode === "session" && <View style={styles.indicator} />}
+          {activeScope === "focused" && <View style={styles.indicator} />}
         </Pressable>
       </View>
     </SafeAreaView>
@@ -36,7 +34,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: 52,
   },
-  mode: { alignItems: "center", flex: 1, justifyContent: "center" },
+  scope: { alignItems: "center", flex: 1, justifyContent: "center" },
   label: { color: palette.textMuted, fontSize: 15, fontWeight: "700" },
   activeLabel: { color: palette.textPrimary },
   indicator: {

@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { useDeckSession } from "@/features/reels/context/deck-session-context";
+import { useFeedScope } from "@/features/reels/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
@@ -26,21 +26,21 @@ export function ReelHeader({
   total,
 }: ReelHeaderProps) {
   const router = useRouter();
-  const { startSession } = useDeckSession();
+  const { startFocusedFeed } = useFeedScope();
 
   return (
     <View style={styles.header}>
       {showMainFeedLink ? (
         <View style={[styles.deckChip, { borderColor: appearance.accentColor }]}>
           <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>
-            {deck.title} session
+            {deck.title} focused
           </Text>
         </View>
       ) : (
         <Pressable
-          accessibilityLabel={`Start ${deck.title} session`}
+          accessibilityLabel={`Start focused ${deck.title} feed`}
           onPress={() => {
-            startSession(card.deckId);
+            startFocusedFeed(card.deckId);
             router.navigate("/(tabs)/(discover)");
           }}
           style={[styles.deckChip, { borderColor: appearance.accentColor }]}

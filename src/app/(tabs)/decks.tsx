@@ -3,13 +3,13 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckCatalog } from "@/features/decks/hooks/use-deck-catalog";
-import { useDeckSession } from "@/features/reels/context/deck-session-context";
+import { useFeedScope } from "@/features/reels/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
 export default function DeckCatalogScreen() {
   const router = useRouter();
-  const { startSession } = useDeckSession();
+  const { startFocusedFeed } = useFeedScope();
   const { entries, loading } = useDeckCatalog();
 
   return (
@@ -23,11 +23,11 @@ export default function DeckCatalogScreen() {
         ) : (
           entries.map(({ appearance, cardCount, deck }) => (
             <Pressable
-              accessibilityLabel={`Start ${deck.title} session`}
+              accessibilityLabel={`Start focused ${deck.title} feed`}
               accessibilityRole="button"
               key={deck.id}
               onPress={() => {
-                startSession(deck.id);
+                startFocusedFeed(deck.id);
                 router.navigate("/(tabs)/(discover)");
               }}
               style={styles.deck}
