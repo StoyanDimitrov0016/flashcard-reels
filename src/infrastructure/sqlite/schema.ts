@@ -33,12 +33,17 @@ export const flashcards = sqliteTable(
     deckId: text("deck_id")
       .notNull()
       .references(() => decks.id, { onDelete: "cascade" }),
+    deckPosition: integer("deck_position").notNull(),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
-  (table) => [index("flashcards_deck_id_idx").on(table.deckId)]
+  (table) => [
+    check("flashcards_deck_position_check", sql`${table.deckPosition} >= 0`),
+    index("flashcards_deck_id_idx").on(table.deckId),
+    unique("flashcards_deck_position_unique").on(table.deckId, table.deckPosition),
+  ]
 );
 
 export const studySessions = sqliteTable(

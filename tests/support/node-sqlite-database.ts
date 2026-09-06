@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
@@ -16,12 +16,10 @@ export class NodeSqliteDatabase {
   constructor() {
     this.database = new Database(":memory:");
     this.database.pragma("foreign_keys = ON");
-    this.database.exec(
-      readFileSync(
-        fileURLToPath(new URL("../../drizzle/0000_spooky_magneto.sql", import.meta.url)),
-        "utf8"
-      )
-    );
+    const migrationDirectory = fileURLToPath(new URL("../../drizzle", import.meta.url));
+    for (const migrationFile of orderedMigrationFiles(readdirSync(migrationDirectory))) {
+      this.database.exec(readFileSync(`${migrationDirectory}/${migrationFile}`, "utf8"));
+    }
     this.drizzle = drizzle<DatabaseSchema>(this.database);
   }
 
@@ -47,4 +45,20 @@ export class NodeSqliteDatabase {
   close(): void {
     this.database.close();
   }
+}
+
+function orderedMigrationFiles(files: readonly string[]): string[] {
+  const orderedFiles: string[] = [];
+  for (const file of files) {
+    if (!file.endsWith(".sql")) {
+      continue;
+    }
+    const insertionIndex = orderedFiles.findIndex((current) => file.localeCompare(current) < 0);
+    if (insertionIndex < 0) {
+      orderedFiles.push(file);
+    } else {
+      orderedFiles.splice(insertionIndex, 0, file);
+    }
+  }
+  return orderedFiles;
 }

@@ -5,6 +5,7 @@ import { StudySessionItem } from "@/features/study/domain/study-session-item.mod
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -23,6 +24,7 @@ describe("SQLite study persistence", () => {
   let items: SQLiteStudySessionItemRepository;
   let attempts: SQLiteReviewAttemptRepository;
   let recurrences: SQLiteStudySessionRecurrenceRepository;
+  let flashcards: SQLiteFlashcardRepository;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -43,11 +45,16 @@ describe("SQLite study persistence", () => {
       "2026-01-01T00:00:00.000Z"
     );
     await Promise.all(
-      [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3, OTHER_DECK_ID)].map((card) =>
+      [
+        makeFlashcard(1, TEST_DECK_ID, 1),
+        makeFlashcard(2, TEST_DECK_ID, 0),
+        makeFlashcard(3, OTHER_DECK_ID),
+      ].map((card) =>
         database.runAsync(
-          "INSERT INTO flashcards (id, deck_id, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+          "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
           card.id,
           card.deckId,
+          card.deckPosition,
           card.question,
           card.answer,
           card.createdAt,
@@ -59,6 +66,7 @@ describe("SQLite study persistence", () => {
     items = new SQLiteStudySessionItemRepository(database.drizzle);
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
+    flashcards = new SQLiteFlashcardRepository(database.drizzle);
   });
 
   afterEach(() => {
@@ -75,6 +83,39 @@ describe("SQLite study persistence", () => {
     expect((await sessions.findActive("focused", TEST_DECK_ID))?.deckId).toBe(TEST_DECK_ID);
     await expect(
       sessions.create(makeSession(testId(202), "mixed", TEST_DECK_ID))
+    ).rejects.toThrow();
+  });
+
+  it("reads Focus cards by explicit deck position and enforces deck-position uniqueness", async () => {
+    const cards = await flashcards.listByDeckId(TEST_DECK_ID);
+    expect(cards.map((card) => [card.id, card.deckPosition])).toEqual([
+      [makeFlashcard(2).id, 0],
+      [makeFlashcard(1).id, 1],
+    ]);
+
+    await expect(
+      database.runAsync(
+        "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        testId(270),
+        TEST_DECK_ID,
+        0,
+        "Question 270",
+        "Answer 270",
+        "2026-01-01T00:00:00.000Z",
+        "2026-01-01T00:00:00.000Z"
+      )
+    ).rejects.toThrow();
+    await expect(
+      database.runAsync(
+        "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        testId(271),
+        TEST_DECK_ID,
+        -1,
+        "Question 271",
+        "Answer 271",
+        "2026-01-01T00:00:00.000Z",
+        "2026-01-01T00:00:00.000Z"
+      )
     ).rejects.toThrow();
   });
 

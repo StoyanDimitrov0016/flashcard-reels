@@ -46,6 +46,7 @@ export async function seedDatabase<TRunResult>(
             answer: flashcard.answer,
             createdAt: flashcard.createdAt,
             deckId: flashcard.deckId,
+            deckPosition: flashcard.deckPosition,
             id: flashcard.id,
             question: flashcard.question,
             updatedAt: flashcard.updatedAt,

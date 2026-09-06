@@ -22,11 +22,16 @@ export function testId(index: number): string {
   return `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
 }
 
-export function makeFlashcard(index: number, deckId: string = TEST_DECK_ID): Flashcard {
+export function makeFlashcard(
+  index: number,
+  deckId: string = TEST_DECK_ID,
+  deckPosition = index - 1
+): Flashcard {
   return new Flashcard({
     answer: `Answer ${index}`,
     createdAt: "2026-01-01T00:00:00.000Z",
     deckId,
+    deckPosition,
     id: testId(index),
     question: `Question ${index}`,
     updatedAt: "2026-01-01T00:00:00.000Z",

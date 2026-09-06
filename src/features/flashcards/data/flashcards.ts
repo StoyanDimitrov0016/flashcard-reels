@@ -1075,11 +1075,19 @@ const flashcardSeedSource = [
   },
 ];
 
-export const flashcardSeedData: FlashcardFields[] = flashcardSeedSource.map((flashcard) => ({
-  ...flashcard,
-  deckId: getRequiredSeedId(deckIdBySeedKey, flashcard.deckId),
-  id: getRequiredSeedId(flashcardIdBySeedKey, flashcard.id),
-}));
+const nextDeckPositionBySeedKey = new Map<string, number>();
+
+export const flashcardSeedData: FlashcardFields[] = flashcardSeedSource.map((flashcard) => {
+  const deckPosition = nextDeckPositionBySeedKey.get(flashcard.deckId) ?? 0;
+  nextDeckPositionBySeedKey.set(flashcard.deckId, deckPosition + 1);
+
+  return {
+    ...flashcard,
+    deckId: getRequiredSeedId(deckIdBySeedKey, flashcard.deckId),
+    deckPosition,
+    id: getRequiredSeedId(flashcardIdBySeedKey, flashcard.id),
+  };
+});
 
 function getRequiredSeedId<T>(ids: Readonly<Record<string, T>>, seedKey: string): T {
   const id = ids[seedKey];

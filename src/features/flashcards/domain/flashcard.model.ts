@@ -8,6 +8,7 @@ export const FlashcardFieldsSchema = z.compile(
   z.object({
     id: FlashcardIdSchema,
     deckId: DeckIdSchema,
+    deckPosition: z.number().int().nonnegative(),
     question: z.string(),
     answer: z.string(),
     createdAt: z.string(),
@@ -21,6 +22,7 @@ export type FlashcardId = Uuid;
 export class Flashcard {
   public readonly id: FlashcardId;
   public readonly deckId: DeckId;
+  public readonly deckPosition: number;
   public readonly question: string;
   public readonly answer: string;
   public readonly createdAt: string;
@@ -29,6 +31,7 @@ export class Flashcard {
   constructor(fields: FlashcardFields) {
     this.id = fields.id;
     this.deckId = fields.deckId;
+    this.deckPosition = fields.deckPosition;
     this.question = fields.question;
     this.answer = fields.answer;
     this.createdAt = fields.createdAt;
