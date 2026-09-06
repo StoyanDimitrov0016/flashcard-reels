@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
+import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import { OTHER_DECK_ID, createStudyHarness, makeFlashcard } from "./support/study-test-support";
 
 function first<T>(items: readonly T[]): T {
@@ -100,6 +101,40 @@ describe("study session behavior", () => {
     await expect(harness.service.openSession("focused", null, false)).rejects.toThrow(
       "Study session scope and deck must agree"
     );
+  });
+
+  it("resumes a focused session before inactivity expiry and replaces it after expiry", async () => {
+    const harness = createStudyHarness();
+    const initial = await harness.service.openSession("focused", makeFlashcard(1).deckId, false);
+    const resumed = await harness.service.openSession("focused", makeFlashcard(1).deckId, false);
+
+    expect(resumed.created).toBe(false);
+    expect(resumed.session.id).toBe(initial.session.id);
+
+    harness.clock.advance(FOCUS_SESSION_INACTIVITY_TIMEOUT_MS);
+    const restarted = await harness.service.openSession("focused", makeFlashcard(1).deckId, false);
+
+    expect(restarted.created).toBe(true);
+    expect(restarted.session.id).not.toBe(initial.session.id);
+    expect(restarted.session.deckId).toBe(initial.session.deckId);
+    expect(
+      harness.sessions.all().find((session) => session.id === initial.session.id)?.completedAt
+    ).not.toBeNull();
+  });
+
+  it("replaces only the active focused session when another deck is selected", async () => {
+    const harness = createStudyHarness();
+    const mixed = await harness.service.openSession("mixed", null, false);
+    const focused = await harness.service.openSession("focused", makeFlashcard(1).deckId, false);
+    const replacement = await harness.service.openSession("focused", OTHER_DECK_ID, false);
+
+    expect(replacement.created).toBe(true);
+    expect(
+      harness.sessions.all().find((session) => session.id === focused.session.id)?.completedAt
+    ).not.toBeNull();
+    expect(
+      harness.sessions.all().find((session) => session.id === mixed.session.id)?.completedAt
+    ).toBeNull();
   });
 
   it("preserves the stable base sequence when a recurrence is scheduled", async () => {

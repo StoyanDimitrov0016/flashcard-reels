@@ -12,6 +12,7 @@ export const StudySessionFieldsSchema = z.compile(
     currentReelPosition: z.number().int().nonnegative(),
     deckId: DeckIdSchema.nullable(),
     id: z.string(),
+    lastActiveAt: z.string(),
     scope: StudySessionScopeSchema,
   })
 );
@@ -19,6 +20,7 @@ export type StudySessionFields = Readonly<z.infer<typeof StudySessionFieldsSchem
 
 export class StudySession {
   public readonly id: string;
+  public readonly lastActiveAt: string;
   public readonly scope: StudySessionScope;
   public readonly deckId: DeckId | null;
   public readonly currentReelPosition: number;
@@ -31,6 +33,7 @@ export class StudySession {
     this.currentReelPosition = fields.currentReelPosition;
     this.deckId = fields.deckId;
     this.id = fields.id;
+    this.lastActiveAt = fields.lastActiveAt;
     this.scope = fields.scope;
   }
 }

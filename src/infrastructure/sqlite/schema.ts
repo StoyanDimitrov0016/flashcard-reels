@@ -55,6 +55,7 @@ export const studySessions = sqliteTable(
     currentReelPosition: integer("current_reel_position").notNull(),
     createdAt: text("created_at").notNull(),
     completedAt: text("completed_at"),
+    lastActiveAt: text("last_active_at").notNull(),
   },
   (table) => [
     check(

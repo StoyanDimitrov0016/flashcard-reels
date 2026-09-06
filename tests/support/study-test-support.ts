@@ -50,16 +50,21 @@ export function makeSession(
     currentReelPosition,
     deckId,
     id,
+    lastActiveAt: "2026-01-01T00:00:00.000Z",
     scope,
   });
 }
 
 export class TestClock implements Clock {
-  private tick = 0;
+  private currentTime = Date.parse("2026-01-01T00:00:00.000Z");
 
   now(): string {
-    this.tick += 1;
-    return `2026-01-01T00:00:${this.tick.toString().padStart(2, "0")}.000Z`;
+    this.currentTime += 1000;
+    return new Date(this.currentTime).toISOString();
+  }
+
+  advance(milliseconds: number): void {
+    this.currentTime += milliseconds;
   }
 }
 
@@ -188,6 +193,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
             currentReelPosition: session.currentReelPosition,
             deckId: session.deckId,
             id: session.id,
+            lastActiveAt: session.lastActiveAt,
             scope: session.scope,
           })
         );
@@ -206,6 +212,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           currentReelPosition: session.currentReelPosition,
           deckId: session.deckId,
           id: session.id,
+          lastActiveAt: session.lastActiveAt,
           scope: session.scope,
         })
       );
@@ -234,9 +241,21 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
     );
   }
 
+  async findActiveByScope(scope: "mixed" | "focused"): Promise<StudySession | null> {
+    return (
+      ordered(
+        [...this.sessions.values()].filter(
+          (session) => session.scope === scope && session.completedAt === null
+        ),
+        (left, right) => right.createdAt.localeCompare(left.createdAt)
+      )[0] ?? null
+    );
+  }
+
   async updateCurrentReelPosition(
     sessionId: string,
-    currentReelPosition: number
+    currentReelPosition: number,
+    lastActiveAt: string
   ): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session || session.completedAt !== null) {
@@ -250,6 +269,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         currentReelPosition,
         deckId: session.deckId,
         id: session.id,
+        lastActiveAt,
         scope: session.scope,
       })
     );

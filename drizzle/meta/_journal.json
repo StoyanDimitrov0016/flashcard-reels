@@ -15,6 +15,13 @@
       "when": 1788631907401,
       "tag": "0001_chief_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788632731855,
+      "tag": "0002_clean_dark_phoenix",
+      "breakpoints": true
     }
   ]
 }

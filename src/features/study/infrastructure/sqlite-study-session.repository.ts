@@ -38,6 +38,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       currentReelPosition: session.currentReelPosition,
       deckId: session.deckId,
       id: session.id,
+      lastActiveAt: session.lastActiveAt,
       scope: session.scope,
     });
   }
@@ -57,13 +58,25 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
     return row ? this.toModel(row) : null;
   }
 
+  async findActiveByScope(scope: StudySessionScope): Promise<StudySession | null> {
+    const rows = await this.database
+      .select()
+      .from(studySessions)
+      .where(and(eq(studySessions.scope, scope), isNull(studySessions.completedAt)))
+      .orderBy(desc(studySessions.createdAt), desc(studySessions.id))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
+  }
+
   async updateCurrentReelPosition(
     sessionId: string,
-    currentReelPosition: number
+    currentReelPosition: number,
+    lastActiveAt: string
   ): Promise<boolean> {
     const rows = await this.database
       .update(studySessions)
-      .set({ currentReelPosition })
+      .set({ currentReelPosition, lastActiveAt })
       .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
       .returning({ id: studySessions.id });
     return rows.length > 0;
@@ -76,6 +89,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       currentReelPosition: row.currentReelPosition,
       deckId: row.deckId,
       id: row.id,
+      lastActiveAt: row.lastActiveAt,
       scope: StudySessionScopeSchema.parse(row.scope),
     });
   }

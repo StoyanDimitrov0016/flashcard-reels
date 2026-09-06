@@ -6,5 +6,10 @@ export interface StudySessionRepository {
   complete(sessionId: string, completedAt: string): Promise<void>;
   create(session: StudySession): Promise<void>;
   findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null>;
-  updateCurrentReelPosition(sessionId: string, currentReelPosition: number): Promise<boolean>;
+  findActiveByScope(scope: StudySessionScope): Promise<StudySession | null>;
+  updateCurrentReelPosition(
+    sessionId: string,
+    currentReelPosition: number,
+    lastActiveAt: string
+  ): Promise<boolean>;
 }

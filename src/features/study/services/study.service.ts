@@ -1,6 +1,9 @@
 import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
+import {
+  EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
+  FOCUS_SESSION_INACTIVITY_TIMEOUT_MS,
+} from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
@@ -60,13 +63,35 @@ export class StudyService {
     }
 
     const createdAt = this.clock.now();
-    if (replaceExisting) {
-      await this.studySessionRepository.completeActiveByScope(scope, createdAt);
-    }
-
-    const activeSession = await this.studySessionRepository.findActive(scope, deckId);
+    const activeSession = await this.studySessionRepository.findActiveByScope(scope);
     if (activeSession) {
-      return { created: false, session: activeSession };
+      const focusExpired =
+        scope === "focused" &&
+        Date.parse(createdAt) - Date.parse(activeSession.lastActiveAt) >=
+          FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
+      const shouldReplace =
+        replaceExisting ||
+        (scope === "focused" && (activeSession.deckId !== deckId || focusExpired));
+      if (!shouldReplace) {
+        await this.studySessionRepository.updateCurrentReelPosition(
+          activeSession.id,
+          activeSession.currentReelPosition,
+          createdAt
+        );
+        return {
+          created: false,
+          session: new StudySession({
+            completedAt: activeSession.completedAt,
+            createdAt: activeSession.createdAt,
+            currentReelPosition: activeSession.currentReelPosition,
+            deckId: activeSession.deckId,
+            id: activeSession.id,
+            lastActiveAt: createdAt,
+            scope: activeSession.scope,
+          }),
+        };
+      }
+      await this.studySessionRepository.complete(activeSession.id, createdAt);
     }
 
     const session = new StudySession({
@@ -75,6 +100,7 @@ export class StudyService {
       currentReelPosition: 0,
       deckId,
       id: this.idGenerator.generate(),
+      lastActiveAt: createdAt,
       scope,
     });
     await this.studySessionRepository.create(session);
@@ -110,7 +136,11 @@ export class StudyService {
     sessionId: string,
     currentReelPosition: number
   ): Promise<boolean> {
-    return this.studySessionRepository.updateCurrentReelPosition(sessionId, currentReelPosition);
+    return this.studySessionRepository.updateCurrentReelPosition(
+      sessionId,
+      currentReelPosition,
+      this.clock.now()
+    );
   }
 
   async startAttempt(
