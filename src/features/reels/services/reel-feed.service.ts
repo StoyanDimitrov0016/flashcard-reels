@@ -112,6 +112,15 @@ export class ReelFeedService {
     additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize
   ): Promise<void> {
     const targetPosition = session.currentReelPosition + additionalWindow;
+    const pendingFutureRecurrenceCardIds = new Set(
+      (await this.studyService.listSessionRecurrences(session.id))
+        .filter(
+          (recurrence) =>
+            recurrence.consumedAt === null &&
+            recurrence.targetReelPosition > session.currentReelPosition
+        )
+        .map((recurrence) => recurrence.flashcardId)
+    );
     const materializeBatch = async (strategyState: StrategyState): Promise<void> => {
       const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
       if (materializedThrough >= targetPosition) {
@@ -141,7 +150,12 @@ export class ReelFeedService {
           continue;
         }
 
-        const nextCard = this.nextCard(sourceCards, session.strategy, strategyState);
+        const nextCard = this.nextCard(
+          sourceCards,
+          session.strategy,
+          strategyState,
+          pendingFutureRecurrenceCardIds
+        );
         if (!nextCard.card) {
           break;
         }
@@ -221,7 +235,8 @@ export class ReelFeedService {
   private nextCard(
     cards: readonly Flashcard[],
     strategy: StudySessionStrategy,
-    state: StrategyState
+    state: StrategyState,
+    excludedCardIds: ReadonlySet<string> = new Set()
   ): Readonly<{ card: Flashcard | null; state: StrategyState }> {
     if (cards.length === 0) {
       return { card: null, state };
@@ -240,9 +255,15 @@ export class ReelFeedService {
       cursor = 0;
     }
 
-    const cardId = cycle[cursor];
-    const card = cards.find((candidate) => candidate.id === cardId) ?? null;
-    return { card, state: { cursor: cursor + 1, cycle } };
+    for (let offset = 0; offset < cycle.length; offset += 1) {
+      const nextCursor = cursor + offset;
+      const cardId = cycle[nextCursor % cycle.length];
+      const card = cards.find((candidate) => candidate.id === cardId) ?? null;
+      if (card && !excludedCardIds.has(card.id)) {
+        return { card, state: { cursor: nextCursor + 1, cycle } };
+      }
+    }
+    return { card: null, state: { cursor: cursor + cycle.length, cycle } };
   }
 
   private mergeMaterializedReels(

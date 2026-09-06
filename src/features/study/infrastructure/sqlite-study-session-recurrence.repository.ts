@@ -1,10 +1,9 @@
-import { and, asc, desc, eq, gte, isNull, lte, ne } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
 
-import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import { studySessionRecurrences, studySessions } from "@/infrastructure/sqlite/schema";
+import { studySessionRecurrences } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRecurrenceRepository<
   TRunResult = unknown,
@@ -77,86 +76,6 @@ export class SQLiteStudySessionRecurrenceRepository<
       )
       .returning({ id: studySessionRecurrences.id });
     return rows.length > 0;
-  }
-
-  async schedulePending(
-    recurrence: StudySessionRecurrence,
-    proposedTargetReelPosition: number
-  ): Promise<StudySessionRecurrence> {
-    return this.database.transaction((transaction) => {
-      transaction
-        .update(studySessions)
-        .set({ id: studySessions.id })
-        .where(eq(studySessions.id, recurrence.studySessionId))
-        .run();
-
-      const existingRows = transaction
-        .select()
-        .from(studySessionRecurrences)
-        .where(
-          and(
-            eq(studySessionRecurrences.sourceAttemptId, recurrence.sourceAttemptId),
-            isNull(studySessionRecurrences.consumedAt)
-          )
-        )
-        .orderBy(desc(studySessionRecurrences.createdAt), desc(studySessionRecurrences.id))
-        .limit(1)
-        .all();
-      const existingRow = existingRows[0];
-
-      const occupiedRows = transaction
-        .select({ targetReelPosition: studySessionRecurrences.targetReelPosition })
-        .from(studySessionRecurrences)
-        .where(
-          and(
-            eq(studySessionRecurrences.studySessionId, recurrence.studySessionId),
-            isNull(studySessionRecurrences.consumedAt),
-            ne(studySessionRecurrences.sourceAttemptId, recurrence.sourceAttemptId)
-          )
-        )
-        .all();
-      const occupiedReelPositions = new Set(occupiedRows.map((row) => row.targetReelPosition));
-      const targetReelPosition = findNextFreeRecurrenceSlot(
-        proposedTargetReelPosition,
-        occupiedReelPositions
-      );
-
-      if (existingRow) {
-        transaction
-          .update(studySessionRecurrences)
-          .set({ targetReelPosition })
-          .where(
-            and(
-              eq(studySessionRecurrences.id, existingRow.id),
-              isNull(studySessionRecurrences.consumedAt)
-            )
-          )
-          .run();
-        return this.toModel({ ...existingRow, targetReelPosition });
-      }
-
-      transaction
-        .insert(studySessionRecurrences)
-        .values({
-          consumedAt: recurrence.consumedAt,
-          createdAt: recurrence.createdAt,
-          flashcardId: recurrence.flashcardId,
-          id: recurrence.id,
-          sourceAttemptId: recurrence.sourceAttemptId,
-          studySessionId: recurrence.studySessionId,
-          targetReelPosition,
-        })
-        .run();
-      return new StudySessionRecurrence({
-        consumedAt: recurrence.consumedAt,
-        createdAt: recurrence.createdAt,
-        flashcardId: recurrence.flashcardId,
-        id: recurrence.id,
-        sourceAttemptId: recurrence.sourceAttemptId,
-        studySessionId: recurrence.studySessionId,
-        targetReelPosition,
-      });
-    });
   }
 
   private toModel(row: typeof studySessionRecurrences.$inferSelect): StudySessionRecurrence {

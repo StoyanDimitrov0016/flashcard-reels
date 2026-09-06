@@ -10,8 +10,4 @@ export interface StudySessionRecurrenceRepository {
     throughTargetReelPosition: number
   ): Promise<StudySessionRecurrence[]>;
   markConsumed(recurrenceId: string, consumedAt: string): Promise<boolean>;
-  schedulePending(
-    recurrence: StudySessionRecurrence,
-    proposedTargetReelPosition: number
-  ): Promise<StudySessionRecurrence>;
 }

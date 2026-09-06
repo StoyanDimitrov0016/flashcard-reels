@@ -346,6 +346,51 @@ describe("SQLite study persistence", () => {
     expect(await recurrences.listBySessionId(session.id)).toEqual([]);
   });
 
+  it("moves recurrence targets past committed base reels without changing them", async () => {
+    const session = makeSession(testId(238), "mixed");
+    await sessions.create(session);
+    const baseItems = Array.from(
+      { length: 11 },
+      (_, reelPosition) =>
+        new StudySessionItem({
+          baseFeedPosition: reelPosition,
+          flashcardId: makeFlashcard((reelPosition % 2) + 1).id,
+          id: testId(340 + reelPosition),
+          reelPosition,
+          studySessionId: session.id,
+        })
+    );
+    await items.createMany(baseItems);
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(352),
+      rating: null,
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await attempts.create(attempt);
+    const recurrence = new StudySessionRecurrence({
+      consumedAt: null,
+      createdAt: "2026-01-01T00:01:00.000Z",
+      flashcardId: attempt.flashcardId,
+      id: testId(353),
+      sourceAttemptId: attempt.id,
+      studySessionId: session.id,
+      targetReelPosition: 8,
+    });
+
+    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+    expect(
+      await transaction.rateAttempt(attempt.id, "again", "2026-01-01T00:01:00.000Z", recurrence, 8)
+    ).toBe(true);
+
+    expect((await recurrences.listBySessionId(session.id))[0]?.targetReelPosition).toBe(11);
+    expect(await items.listBySessionId(session.id)).toEqual(baseItems);
+  });
+
   it("keeps recurrence references and enforces pending uniqueness rules", async () => {
     const session = makeSession(testId(240), "mixed");
     await sessions.create(session);
@@ -469,8 +514,25 @@ describe("SQLite study persistence", () => {
       targetReelPosition: 8,
     });
 
-    expect((await recurrences.schedulePending(firstRecurrence, 8)).targetReelPosition).toBe(8);
-    expect((await recurrences.schedulePending(secondRecurrence, 8)).targetReelPosition).toBe(9);
+    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+    expect(
+      await transaction.rateAttempt(
+        firstAttempt.id,
+        "again",
+        "2026-01-01T00:01:00.000Z",
+        firstRecurrence,
+        8
+      )
+    ).toBe(true);
+    expect(
+      await transaction.rateAttempt(
+        secondAttempt.id,
+        "again",
+        "2026-01-01T00:01:00.000Z",
+        secondRecurrence,
+        8
+      )
+    ).toBe(true);
     expect(
       (await recurrences.listBySessionId(session.id)).map(
         (recurrence) => recurrence.targetReelPosition

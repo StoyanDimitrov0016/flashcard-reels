@@ -315,6 +315,66 @@ describe("study session behavior", () => {
     expect(occurrences.find(({ reelPosition }) => reelPosition === 9)?.recurrenceId).toBeDefined();
   });
 
+  it("keeps a flashcard with a pending future recurrence out of Shuffle materialization", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const reservedCard = feed.occurrences[0]?.card;
+    if (!reservedCard) {
+      throw new Error("Expected a prepared card");
+    }
+
+    const attemptId = await harness.service.startAttempt(reservedCard.id, 0, feed.studySessionId);
+    await harness.service.rateAttempt(attemptId, "again");
+    await feedService.extendFeed(cards, feed.studySessionId);
+
+    const materializedItems = await harness.service.listSessionItems(feed.studySessionId);
+    expect(
+      materializedItems
+        .filter((item) => item.reelPosition >= 6 && item.reelPosition <= 7)
+        .map((item) => item.flashcardId)
+    ).not.toContain(reservedCard.id);
+  });
+
+  it("does not exclude pending recurrences from Ordered materialization", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2)];
+    const feed = await feedService.prepareFeed(
+      cards,
+      "focused",
+      cards[0]?.deckId ?? null,
+      false,
+      "ordered"
+    );
+    const sourceCard = feed.occurrences[0]?.card;
+    if (!sourceCard) {
+      throw new Error("Expected a prepared card");
+    }
+
+    const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
+    await harness.service.rateAttempt(attemptId, "again");
+    await feedService.extendFeed(cards, feed.studySessionId);
+
+    const materializedItems = await harness.service.listSessionItems(feed.studySessionId);
+    expect(materializedItems.find((item) => item.reelPosition === 6)?.flashcardId).toBe(
+      cards[0]?.id
+    );
+  });
+
+  it("stops a Shuffle extension cleanly when its only card is recurrence-reserved", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const card = makeFlashcard(1);
+    const feed = await feedService.prepareFeed([card], "mixed", null, false);
+    const attemptId = await harness.service.startAttempt(card.id, 0, feed.studySessionId);
+    await harness.service.rateAttempt(attemptId, "again");
+
+    await expect(feedService.extendFeed([card], feed.studySessionId)).resolves.toBeDefined();
+    expect((await harness.service.listSessionItems(feed.studySessionId)).length).toBe(6);
+  });
+
   it("keeps a pending recurrence reserved until its exact future position is materialized", async () => {
     const harness = createStudyHarness(() => 0.5);
     const feedService = new ReelFeedService(harness.service, () => 0);

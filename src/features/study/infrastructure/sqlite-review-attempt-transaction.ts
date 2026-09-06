@@ -7,6 +7,7 @@ import type { ReviewAttemptTransaction } from "@/features/study/services/review-
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import {
   flashcardReviewAttempts,
+  studySessionItems,
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -88,9 +89,18 @@ export class SQLiteReviewAttemptTransaction<
           )
         )
         .all();
+      const occupiedBaseRows = transaction
+        .select({ reelPosition: studySessionItems.reelPosition })
+        .from(studySessionItems)
+        .where(eq(studySessionItems.studySessionId, recurrence.studySessionId))
+        .all();
+      const occupiedReelPositions = new Set([
+        ...occupiedRows.map((row) => row.targetReelPosition),
+        ...occupiedBaseRows.map((row) => row.reelPosition),
+      ]);
       const targetReelPosition = findNextFreeRecurrenceSlot(
         proposedTargetReelPosition,
-        new Set(occupiedRows.map((row) => row.targetReelPosition))
+        occupiedReelPositions
       );
 
       if (existing) {
