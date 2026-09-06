@@ -2,7 +2,6 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 
 export interface StudySessionRepository {
-  completeActiveByScope(scope: StudySessionScope, completedAt: string): Promise<void>;
   complete(sessionId: string, completedAt: string): Promise<void>;
   create(session: StudySession): Promise<void>;
   findById(sessionId: string): Promise<StudySession | null>;
@@ -13,5 +12,4 @@ export interface StudySessionRepository {
     currentReelPosition: number,
     lastActiveAt: string
   ): Promise<boolean>;
-  updateStrategyState(sessionId: string, strategyState: string): Promise<boolean>;
 }

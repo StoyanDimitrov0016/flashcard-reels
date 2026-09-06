@@ -8,6 +8,7 @@ import { StudyService } from "@/features/study/services/study.service";
 import {
   createStudyHarness,
   InMemoryReviewAttemptTransaction,
+  InMemoryStudySessionFeedTransaction,
   makeFlashcard,
 } from "./support/study-test-support";
 
@@ -250,6 +251,7 @@ describe("intra-session recurrence behavior", () => {
       harness.clock,
       { generate: () => "00000000-0000-4000-8000-000000009999" },
       new InMemoryReviewAttemptTransaction(harness.attempts, harness.recurrences),
+      new InMemoryStudySessionFeedTransaction(harness.items, harness.sessions),
       () => 0
     );
 

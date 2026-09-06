@@ -10,6 +10,7 @@ import type { StudySessionRecurrenceRepository } from "@/features/study/domain/s
 import { StudySession } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
+import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
 import { StudyService } from "@/features/study/services/study.service";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
@@ -187,28 +188,6 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
 export class InMemoryStudySessionRepository implements StudySessionRepository {
   private readonly sessions = new Map<string, StudySession>();
 
-  async completeActiveByScope(scope: "mixed" | "focused", completedAt: string): Promise<void> {
-    for (const session of this.sessions.values()) {
-      if (session.scope === scope && session.completedAt === null) {
-        this.sessions.set(
-          session.id,
-          new StudySession({
-            completedAt,
-            compactedThroughReelPosition: session.compactedThroughReelPosition,
-            createdAt: session.createdAt,
-            currentReelPosition: session.currentReelPosition,
-            deckId: session.deckId,
-            id: session.id,
-            lastActiveAt: session.lastActiveAt,
-            scope: session.scope,
-            strategyState: session.strategyState,
-            strategy: session.strategy,
-          })
-        );
-      }
-    }
-  }
-
   async complete(sessionId: string, completedAt: string): Promise<void> {
     const session = this.sessions.get(sessionId);
     if (session && session.completedAt === null) {
@@ -294,7 +273,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
     return true;
   }
 
-  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
+  async setStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session || session.completedAt !== null) {
       return false;
@@ -354,6 +333,49 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
       [...this.items.values()].filter((item) => item.studySessionId === studySessionId),
       (left, right) => left.reelPosition - right.reelPosition
     );
+  }
+
+  all(): StudySessionItem[] {
+    return [...this.items.values()];
+  }
+
+  restore(items: readonly StudySessionItem[]): void {
+    this.items.clear();
+    for (const item of items) {
+      this.items.set(item.id, item);
+    }
+  }
+}
+
+export class InMemoryStudySessionFeedTransaction implements StudySessionFeedTransaction {
+  private readonly items: InMemoryStudySessionItemRepository;
+  private readonly sessions: InMemoryStudySessionRepository;
+
+  constructor(items: InMemoryStudySessionItemRepository, sessions: InMemoryStudySessionRepository) {
+    this.items = items;
+    this.sessions = sessions;
+  }
+
+  async append(
+    sessionId: string,
+    items: readonly StudySessionItem[],
+    strategyState: string
+  ): Promise<void> {
+    const itemSnapshot = this.items.all();
+    const session = await this.sessions.findById(sessionId);
+    try {
+      await this.items.createMany(items);
+      const updated = await this.sessions.setStrategyState(sessionId, strategyState);
+      if (!updated) {
+        throw new Error(`Could not update study session ${sessionId}`);
+      }
+    } catch (error) {
+      this.items.restore(itemSnapshot);
+      if (session) {
+        await this.sessions.setStrategyState(sessionId, session.strategyState);
+      }
+      throw error;
+    }
   }
 }
 
@@ -551,6 +573,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
   const recurrences = new InMemoryStudySessionRecurrenceRepository();
   const clock = new TestClock();
   const transaction = new InMemoryReviewAttemptTransaction(attempts, recurrences);
+  const feedTransaction = new InMemoryStudySessionFeedTransaction(items, sessions);
   const service = new StudyService(
     attempts,
     sessions,
@@ -559,6 +582,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
     clock,
     new SequenceIdGenerator(),
     transaction,
+    feedTransaction,
     random
   );
   return { attempts, clock, items, recurrences, service, sessions };

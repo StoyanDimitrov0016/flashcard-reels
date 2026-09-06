@@ -9,6 +9,7 @@ import {
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -35,6 +36,7 @@ export class StudyService {
   private readonly idGenerator: IdGenerator;
   private readonly random: RandomSource;
   private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
+  private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -44,6 +46,7 @@ export class StudyService {
     clock: Clock,
     idGenerator: IdGenerator,
     reviewAttemptTransaction: ReviewAttemptTransaction,
+    studySessionFeedTransaction: StudySessionFeedTransaction,
     random: RandomSource = Math.random
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
@@ -53,6 +56,7 @@ export class StudyService {
     this.clock = clock;
     this.idGenerator = idGenerator;
     this.reviewAttemptTransaction = reviewAttemptTransaction;
+    this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.random = random;
   }
 
@@ -129,10 +133,6 @@ export class StudyService {
     return this.studySessionRepository.findById(sessionId);
   }
 
-  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
-    return this.studySessionRepository.updateStrategyState(sessionId, strategyState);
-  }
-
   async getCompactionBoundary(sessionId: string): Promise<Readonly<{
     shouldCheck: boolean;
     safeThroughReelPosition: number;
@@ -163,9 +163,10 @@ export class StudyService {
     };
   }
 
-  async createSessionItems(
+  async appendSessionItems(
     sessionId: string,
     cards: readonly Flashcard[],
+    strategyState: string,
     baseFeedPositionStart = 0,
     reelPositions = cards.map((_card, index) => baseFeedPositionStart + index)
   ): Promise<void> {
@@ -182,7 +183,7 @@ export class StudyService {
           studySessionId: sessionId,
         })
     );
-    await this.studySessionItemRepository.createMany(items);
+    await this.studySessionFeedTransaction.append(sessionId, items, strategyState);
   }
 
   async listSessionItems(sessionId: string): Promise<StudySessionItem[]> {

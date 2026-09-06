@@ -147,13 +147,13 @@ export class ReelFeedService {
         return [...items];
       }
 
-      await this.studyService.createSessionItems(
+      await this.studyService.appendSessionItems(
         session.id,
         batchCards,
+        JSON.stringify(strategyState),
         items.length,
         batchReelPositions
       );
-      await this.studyService.updateStrategyState(session.id, JSON.stringify(strategyState));
       return materializeBatch(await this.studyService.listSessionItems(session.id), strategyState);
     };
 

@@ -12,6 +12,7 @@ import { FlashcardService } from "@/features/flashcards/services/flashcard.servi
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { StudyService } from "@/features/study/services/study.service";
@@ -42,6 +43,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
     const studySessionItemRepository = new SQLiteStudySessionItemRepository(drizzleDatabase);
+    const studySessionFeedTransaction = new SQLiteStudySessionFeedTransaction(drizzleDatabase);
     const studySessionRecurrenceRepository = new SQLiteStudySessionRecurrenceRepository(
       drizzleDatabase
     );
@@ -56,6 +58,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       clock,
       idGenerator,
       reviewAttemptTransaction,
+      studySessionFeedTransaction,
       Math.random
     );
 

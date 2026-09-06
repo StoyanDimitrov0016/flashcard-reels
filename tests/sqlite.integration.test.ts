@@ -7,6 +7,7 @@ import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/s
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
@@ -155,6 +156,32 @@ describe("SQLite study persistence", () => {
         }),
       ])
     ).rejects.toThrow();
+  });
+
+  it("rolls back feed items and strategy state together", async () => {
+    const session = makeSession(testId(214), "mixed");
+    await sessions.create(session);
+    const feedTransaction = new SQLiteStudySessionFeedTransaction(database.drizzle);
+    const item = new StudySessionItem({
+      baseFeedPosition: 0,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(215),
+      reelPosition: 0,
+      studySessionId: session.id,
+    });
+    const duplicate = new StudySessionItem({
+      baseFeedPosition: 0,
+      flashcardId: makeFlashcard(2).id,
+      id: testId(216),
+      reelPosition: 0,
+      studySessionId: session.id,
+    });
+
+    await expect(
+      feedTransaction.append(session.id, [item, duplicate], '{"cursor":1}')
+    ).rejects.toThrow();
+    expect(await items.listBySessionId(session.id)).toEqual([]);
+    expect((await sessions.findById(session.id))?.strategyState).toBe("{}");
   });
 
   it("rolls back a batch session-item insert when one item violates a constraint", async () => {

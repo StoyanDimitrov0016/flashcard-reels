@@ -18,13 +18,6 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
     this.database = database;
   }
 
-  async completeActiveByScope(scope: StudySessionScope, completedAt: string): Promise<void> {
-    await this.database
-      .update(studySessions)
-      .set({ completedAt })
-      .where(and(eq(studySessions.scope, scope), isNull(studySessions.completedAt)));
-  }
-
   async complete(sessionId: string, completedAt: string): Promise<void> {
     await this.database
       .update(studySessions)
@@ -91,15 +84,6 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
     const rows = await this.database
       .update(studySessions)
       .set({ currentReelPosition, lastActiveAt })
-      .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
-      .returning({ id: studySessions.id });
-    return rows.length > 0;
-  }
-
-  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
-    const rows = await this.database
-      .update(studySessions)
-      .set({ strategyState })
       .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
       .returning({ id: studySessions.id });
     return rows.length > 0;
