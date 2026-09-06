@@ -2,6 +2,7 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -84,7 +85,7 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
     this.attempts.set(attempt.id, attempt);
   }
 
-  async updateRating(attemptId: string, rating: RecallLevel, updatedAt: string): Promise<boolean> {
+  async applyRating(attemptId: string, rating: RecallLevel, updatedAt: string): Promise<boolean> {
     const attempt = this.attempts.get(attemptId);
     if (!attempt || attempt.finalizedAt !== null) {
       return false;
@@ -158,6 +159,13 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
 
   all(): FlashcardReviewAttempt[] {
     return [...this.attempts.values()];
+  }
+
+  restore(attempts: readonly FlashcardReviewAttempt[]): void {
+    this.attempts.clear();
+    for (const attempt of attempts) {
+      this.attempts.set(attempt.id, attempt);
+    }
   }
 }
 
@@ -372,6 +380,13 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
     return [...this.recurrences.values()];
   }
 
+  restore(recurrences: readonly StudySessionRecurrence[]): void {
+    this.recurrences.clear();
+    for (const recurrence of recurrences) {
+      this.recurrences.set(recurrence.id, recurrence);
+    }
+  }
+
   private assertPendingConstraints(
     recurrence: StudySessionRecurrence,
     replacingId: string | null = null
@@ -392,6 +407,46 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
       ) {
         throw new Error("Duplicate pending target reel position");
       }
+    }
+  }
+}
+
+export class InMemoryReviewAttemptTransaction implements ReviewAttemptTransaction {
+  private readonly attempts: InMemoryReviewAttemptRepository;
+  private readonly recurrences: InMemoryStudySessionRecurrenceRepository;
+
+  constructor(
+    attempts: InMemoryReviewAttemptRepository,
+    recurrences: InMemoryStudySessionRecurrenceRepository
+  ) {
+    this.attempts = attempts;
+    this.recurrences = recurrences;
+  }
+
+  async rateAttempt(
+    attemptId: string,
+    rating: RecallLevel,
+    updatedAt: string,
+    recurrence: StudySessionRecurrence | null,
+    proposedTargetReelPosition: number | null
+  ): Promise<boolean> {
+    const attemptsSnapshot = this.attempts.all();
+    const recurrencesSnapshot = this.recurrences.all();
+    try {
+      const updated = await this.attempts.applyRating(attemptId, rating, updatedAt);
+      if (!updated) {
+        return false;
+      }
+      if (recurrence === null || proposedTargetReelPosition === null) {
+        await this.recurrences.cancelPendingBySourceAttemptId(attemptId);
+      } else {
+        await this.recurrences.schedulePending(recurrence, proposedTargetReelPosition);
+      }
+      return true;
+    } catch (error) {
+      this.attempts.restore(attemptsSnapshot);
+      this.recurrences.restore(recurrencesSnapshot);
+      throw error;
     }
   }
 }
@@ -424,6 +479,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
   const items = new InMemoryStudySessionItemRepository();
   const recurrences = new InMemoryStudySessionRecurrenceRepository();
   const clock = new TestClock();
+  const transaction = new InMemoryReviewAttemptTransaction(attempts, recurrences);
   const service = new StudyService(
     attempts,
     sessions,
@@ -431,6 +487,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
     recurrences,
     clock,
     new SequenceIdGenerator(),
+    transaction,
     random
   );
   return { attempts, clock, items, recurrences, service, sessions };

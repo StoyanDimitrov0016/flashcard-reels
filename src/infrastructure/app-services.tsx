@@ -55,8 +55,8 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       studySessionRecurrenceRepository,
       clock,
       idGenerator,
-      Math.random,
-      reviewAttemptTransaction
+      reviewAttemptTransaction,
+      Math.random
     );
 
     return {

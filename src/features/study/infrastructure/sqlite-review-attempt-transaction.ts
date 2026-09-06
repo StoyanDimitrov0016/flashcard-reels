@@ -1,9 +1,9 @@
 import { and, desc, eq, isNull, ne } from "drizzle-orm";
 
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
-import type { ReviewAttemptTransaction } from "@/features/study/domain/review-attempt-transaction";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import {
   flashcardReviewAttempts,

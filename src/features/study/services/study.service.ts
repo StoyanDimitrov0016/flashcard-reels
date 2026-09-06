@@ -3,7 +3,7 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import { EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import type { ReviewAttemptTransaction } from "@/features/study/domain/review-attempt-transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -28,7 +28,7 @@ export class StudyService {
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
   private readonly random: RandomSource;
-  private readonly reviewAttemptTransaction: ReviewAttemptTransaction | null;
+  private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -37,8 +37,8 @@ export class StudyService {
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
     idGenerator: IdGenerator,
-    random: RandomSource = Math.random,
-    reviewAttemptTransaction: ReviewAttemptTransaction | null = null
+    reviewAttemptTransaction: ReviewAttemptTransaction,
+    random: RandomSource = Math.random
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -46,8 +46,8 @@ export class StudyService {
     this.studySessionItemRepository = studySessionItemRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
-    this.random = random;
     this.reviewAttemptTransaction = reviewAttemptTransaction;
+    this.random = random;
   }
 
   async openSession(
@@ -166,29 +166,13 @@ export class StudyService {
             targetReelPosition: proposedTargetReelPosition,
           });
 
-    if (this.reviewAttemptTransaction) {
-      return this.reviewAttemptTransaction.rateAttempt(
-        attemptId,
-        rating,
-        updatedAt,
-        recurrence,
-        proposedTargetReelPosition
-      );
-    }
-
-    const updated = await this.reviewAttemptRepository.updateRating(attemptId, rating, updatedAt);
-    if (!updated) {
-      return false;
-    }
-    if (recurrence === null || proposedTargetReelPosition === null) {
-      await this.studySessionRecurrenceRepository.cancelPendingBySourceAttemptId(attemptId);
-      return true;
-    }
-    await this.studySessionRecurrenceRepository.schedulePending(
+    return this.reviewAttemptTransaction.rateAttempt(
+      attemptId,
+      rating,
+      updatedAt,
       recurrence,
       proposedTargetReelPosition
     );
-    return true;
   }
 
   async consumeRecurrence(recurrenceId: string): Promise<boolean> {

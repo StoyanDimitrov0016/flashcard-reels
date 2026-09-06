@@ -178,7 +178,10 @@ describe("SQLite study persistence", () => {
     );
     await attempts.finalize(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
 
-    expect(await attempts.updateRating(attempt.id, "good", "2026-01-01T00:02:00.000Z")).toBe(false);
+    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+    expect(
+      await transaction.rateAttempt(attempt.id, "good", "2026-01-01T00:02:00.000Z", null, null)
+    ).toBe(false);
     expect((await attempts.findById(attempt.id))?.rating).toBeNull();
   });
 

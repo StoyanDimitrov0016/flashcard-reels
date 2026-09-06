@@ -2,7 +2,6 @@ import { and, asc, eq, lt, isNull } from "drizzle-orm";
 
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import { type RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { flashcardReviewAttempts } from "@/infrastructure/sqlite/schema";
 
@@ -26,17 +25,6 @@ export class SQLiteReviewAttemptRepository<
       studySessionId: attempt.studySessionId,
       updatedAt: attempt.updatedAt,
     });
-  }
-
-  async updateRating(attemptId: string, rating: RecallLevel, updatedAt: string): Promise<boolean> {
-    const rows = await this.database
-      .update(flashcardReviewAttempts)
-      .set({ rating, updatedAt })
-      .where(
-        and(eq(flashcardReviewAttempts.id, attemptId), isNull(flashcardReviewAttempts.finalizedAt))
-      )
-      .returning({ id: flashcardReviewAttempts.id });
-    return rows.length > 0;
   }
 
   async finalize(attemptId: string, finalizedAt: string, updatedAt: string): Promise<void> {

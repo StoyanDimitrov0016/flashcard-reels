@@ -5,7 +5,11 @@ import {
   calculateRecurrenceTarget,
 } from "@/features/study/config/recurrences";
 import { StudyService } from "@/features/study/services/study.service";
-import { createStudyHarness, makeFlashcard } from "./support/study-test-support";
+import {
+  createStudyHarness,
+  InMemoryReviewAttemptTransaction,
+  makeFlashcard,
+} from "./support/study-test-support";
 
 function first<T>(items: readonly T[]): T {
   const item = items[0];
@@ -245,6 +249,7 @@ describe("intra-session recurrence behavior", () => {
       harness.recurrences,
       harness.clock,
       { generate: () => "00000000-0000-4000-8000-000000009999" },
+      new InMemoryReviewAttemptTransaction(harness.attempts, harness.recurrences),
       () => 0
     );
 
