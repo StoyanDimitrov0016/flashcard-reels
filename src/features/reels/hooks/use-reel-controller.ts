@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
@@ -28,35 +28,39 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     feed.loadedFromReelPosition,
     feed.loadedThroughReelPosition
   );
+  const { getAttemptId, rateCard, setAttemptId } = recallSession;
 
-  const replaceFeed = (nextFeed: PreparedReelFeed) => {
+  const replaceFeed = useCallback((nextFeed: PreparedReelFeed) => {
     feedReference.current = nextFeed;
     setFeed(nextFeed);
-  };
+  }, []);
 
-  const startAttempt = (occurrence: PreparedReelOccurrence): Promise<string> => {
-    const existingAttemptId = recallSession.attemptIds.get(occurrence.reelPosition);
-    if (existingAttemptId) {
-      return Promise.resolve(existingAttemptId);
-    }
+  const startAttempt = useCallback(
+    (occurrence: PreparedReelOccurrence): Promise<string> => {
+      const existingAttemptId = getAttemptId(occurrence.reelPosition);
+      if (existingAttemptId) {
+        return Promise.resolve(existingAttemptId);
+      }
 
-    const existingStart = startingAttemptPromises.current.get(occurrence.reelPosition);
-    if (existingStart) {
-      return existingStart;
-    }
+      const existingStart = startingAttemptPromises.current.get(occurrence.reelPosition);
+      if (existingStart) {
+        return existingStart;
+      }
 
-    const start = studyService
-      .startAttempt(occurrence.card.id, occurrence.reelPosition, initialFeed.studySessionId)
-      .then((attemptId) => {
-        recallSession.setAttemptId(occurrence.reelPosition, attemptId);
-        return attemptId;
-      });
-    startingAttemptPromises.current.set(occurrence.reelPosition, start);
-    void start.finally(() => startingAttemptPromises.current.delete(occurrence.reelPosition));
-    return start;
-  };
+      const start = studyService
+        .startAttempt(occurrence.card.id, occurrence.reelPosition, initialFeed.studySessionId)
+        .then((attemptId) => {
+          setAttemptId(occurrence.reelPosition, attemptId);
+          return attemptId;
+        });
+      startingAttemptPromises.current.set(occurrence.reelPosition, start);
+      void start.finally(() => startingAttemptPromises.current.delete(occurrence.reelPosition));
+      return start;
+    },
+    [getAttemptId, initialFeed.studySessionId, setAttemptId, studyService]
+  );
 
-  const onExtensionNeeded = () => {
+  const onExtensionNeeded = useCallback(() => {
     if (extensionInFlight.current) {
       return Promise.resolve();
     }
@@ -68,50 +72,71 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
       .finally(() => {
         extensionInFlight.current = false;
       });
-  };
+  }, [initialFeed.studySessionId, reelFeedService, replaceFeed, sourceCards]);
 
-  const onOccurrenceBecameActive = (occurrence: PreparedReelOccurrence) => {
-    const currentFeed = feedReference.current;
-    const localIndex = currentFeed.occurrences.findIndex(
-      (current) => current.key === occurrence.key
-    );
-    const shouldExtend =
-      localIndex >= 0 &&
-      currentFeed.occurrences.length - localIndex <= FEED_ENGINE_CONFIG.extensionThreshold;
+  const onOccurrenceBecameActive = useCallback(
+    (reelPosition: number) => {
+      const occurrence = feedReference.current.occurrences.find(
+        (current) => current.reelPosition === reelPosition
+      );
+      if (!occurrence) {
+        return;
+      }
 
-    void startAttempt(occurrence).then(() =>
-      Promise.all([
-        persistPositionThenExtend(
-          () =>
-            studyService.updateSessionReelPosition(
-              initialFeed.studySessionId,
-              occurrence.reelPosition
-            ),
-          () => (shouldExtend ? onExtensionNeeded() : Promise.resolve())
-        ),
-        studyService.finalizeAttemptsOutsideEditableWindow(
-          initialFeed.studySessionId,
-          occurrence.reelPosition
-        ),
-        occurrence.recurrenceId
-          ? studyService.consumeRecurrence(occurrence.recurrenceId)
-          : Promise.resolve(false),
-      ])
-    );
-  };
+      const currentFeed = feedReference.current;
+      const localIndex = currentFeed.occurrences.findIndex(
+        (current) => current.key === occurrence.key
+      );
+      const shouldExtend =
+        localIndex >= 0 &&
+        currentFeed.occurrences.length - localIndex <= FEED_ENGINE_CONFIG.extensionThreshold;
 
-  const onRatingSelected = (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
-    void startAttempt(occurrence)
-      .then((attemptId) => studyService.rateAttempt(attemptId, level))
-      .then((updated) => {
-        if (updated) {
-          recallSession.rateCard(occurrence.reelPosition, level);
-          void reelFeedService
-            .refreshFeed(sourceCards, initialFeed.studySessionId)
-            .then(replaceFeed);
-        }
-      });
-  };
+      void startAttempt(occurrence).then(() =>
+        Promise.all([
+          persistPositionThenExtend(
+            () =>
+              studyService.updateSessionReelPosition(
+                initialFeed.studySessionId,
+                occurrence.reelPosition
+              ),
+            () => (shouldExtend ? onExtensionNeeded() : Promise.resolve())
+          ),
+          studyService.finalizeAttemptsOutsideEditableWindow(
+            initialFeed.studySessionId,
+            occurrence.reelPosition
+          ),
+          occurrence.recurrenceId
+            ? studyService.consumeRecurrence(occurrence.recurrenceId)
+            : Promise.resolve(false),
+        ])
+      );
+    },
+    [initialFeed.studySessionId, onExtensionNeeded, startAttempt, studyService]
+  );
+
+  const onRatingSelected = useCallback(
+    (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
+      void startAttempt(occurrence)
+        .then((attemptId) => studyService.rateAttempt(attemptId, level))
+        .then((updated) => {
+          if (updated) {
+            rateCard(occurrence.reelPosition, level);
+            void reelFeedService
+              .refreshFeed(sourceCards, initialFeed.studySessionId)
+              .then(replaceFeed);
+          }
+        });
+    },
+    [
+      initialFeed.studySessionId,
+      rateCard,
+      reelFeedService,
+      replaceFeed,
+      sourceCards,
+      startAttempt,
+      studyService,
+    ]
+  );
 
   return {
     answerAudioService,

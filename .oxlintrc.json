@@ -28,7 +28,7 @@
       {
         "paths": [
           {
-            "importNames": ["useCallback", "useMemo"],
+            "importNames": ["useMemo"],
             "message": "React Compiler handles memoization; do not add manual memoization.",
             "name": "react"
           }

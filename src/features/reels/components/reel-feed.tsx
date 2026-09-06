@@ -37,18 +37,20 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     itemHeight: height,
     loadedFromReelPosition: feed.loadedFromReelPosition,
   });
-  const activeOccurrence = feed.occurrences.find(
+  const activeOccurrenceReelPosition = feed.occurrences.some(
     (occurrence) => occurrence.reelPosition === activeReelPosition
-  );
+  )
+    ? activeReelPosition
+    : undefined;
   const deckIds = [...new Set(feed.occurrences.map(({ card }) => card.deckId))];
   const { appearances } = useDeckAppearances(deckIds);
   const { decks } = useDecks(deckIds);
 
   useEffect(() => {
-    if (activeOccurrence) {
-      onOccurrenceBecameActive(activeOccurrence);
+    if (activeOccurrenceReelPosition !== undefined) {
+      onOccurrenceBecameActive(activeOccurrenceReelPosition);
     }
-  }, [activeOccurrence, onOccurrenceBecameActive]);
+  }, [activeOccurrenceReelPosition, onOccurrenceBecameActive]);
 
   useLayoutEffect(() => {
     if (loadedFromReference.current === feed.loadedFromReelPosition) {

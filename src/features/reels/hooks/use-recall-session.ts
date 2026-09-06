@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { StudyService } from "@/features/study/services/study.service";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
@@ -10,6 +10,7 @@ export function useRecallSession(
   throughReelPosition: number
 ) {
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
+  const attemptIdsReference = useRef<ReadonlyMap<number, string>>(new Map());
   const [revealedPositions, setRevealedPositions] = useState<ReadonlySet<number>>(() => new Set());
   const [recallLevels, setRecallLevels] = useState<ReadonlyMap<number, RecallLevel>>(
     () => new Map()
@@ -31,6 +32,7 @@ export function useRecallSession(
             nextRecallLevels.set(attempt.reelPosition, attempt.rating);
           }
         }
+        attemptIdsReference.current = nextAttemptIds;
         setAttemptIds(nextAttemptIds);
         setRecallLevels(nextRecallLevels);
       })
@@ -41,7 +43,12 @@ export function useRecallSession(
     };
   }, [fromReelPosition, studyService, studySessionId, throughReelPosition]);
 
-  const toggleCard = (reelPosition: number) => {
+  const getAttemptId = useCallback(
+    (reelPosition: number) => attemptIdsReference.current.get(reelPosition),
+    []
+  );
+
+  const toggleCard = useCallback((reelPosition: number) => {
     setRevealedPositions((currentPositions) => {
       const nextPositions = new Set(currentPositions);
 
@@ -53,18 +60,21 @@ export function useRecallSession(
 
       return nextPositions;
     });
-  };
+  }, []);
 
-  const rateCard = (reelPosition: number, level: RecallLevel) => {
+  const rateCard = useCallback((reelPosition: number, level: RecallLevel) => {
     setRecallLevels((currentLevels) => new Map(currentLevels).set(reelPosition, level));
-  };
+  }, []);
 
-  const setAttemptId = (reelPosition: number, attemptId: string) => {
-    setAttemptIds((currentAttemptIds) => new Map(currentAttemptIds).set(reelPosition, attemptId));
-  };
+  const setAttemptId = useCallback((reelPosition: number, attemptId: string) => {
+    const nextAttemptIds = new Map(attemptIdsReference.current).set(reelPosition, attemptId);
+    attemptIdsReference.current = nextAttemptIds;
+    setAttemptIds(nextAttemptIds);
+  }, []);
 
   return {
     attemptIds,
+    getAttemptId,
     rateCard,
     recallLevels,
     revealedPositions,
