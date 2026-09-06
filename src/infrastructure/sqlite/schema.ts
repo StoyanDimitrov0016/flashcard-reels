@@ -46,6 +46,42 @@ export const flashcards = sqliteTable(
   ]
 );
 
+export const learnerProfiles = sqliteTable(
+  "learner_profiles",
+  {
+    flashcardId: text("flashcard_id")
+      .primaryKey()
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    reviewCount: integer("review_count").notNull().default(0),
+    againCount: integer("again_count").notNull().default(0),
+    hardCount: integer("hard_count").notNull().default(0),
+    goodCount: integer("good_count").notNull().default(0),
+    easyCount: integer("easy_count").notNull().default(0),
+    firstReviewedAt: text("first_reviewed_at"),
+    lastReviewedAt: text("last_reviewed_at"),
+    resetAt: text("reset_at"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    check("learner_profiles_review_count_check", sql`${table.reviewCount} >= 0`),
+    check("learner_profiles_again_count_check", sql`${table.againCount} >= 0`),
+    check("learner_profiles_hard_count_check", sql`${table.hardCount} >= 0`),
+    check("learner_profiles_good_count_check", sql`${table.goodCount} >= 0`),
+    check("learner_profiles_easy_count_check", sql`${table.easyCount} >= 0`),
+    check(
+      "learner_profiles_counter_sum_check",
+      sql`${table.reviewCount} = ${table.againCount} + ${table.hardCount} + ${table.goodCount} + ${table.easyCount}`
+    ),
+    check(
+      "learner_profiles_reviewed_at_order_check",
+      sql`${table.firstReviewedAt} IS NULL OR ${table.lastReviewedAt} IS NULL OR ${table.firstReviewedAt} <= ${table.lastReviewedAt}`
+    ),
+    index("learner_profiles_reset_at_idx").on(table.resetAt),
+  ]
+);
+
 export const studySessions = sqliteTable(
   "study_sessions",
   {
@@ -184,6 +220,7 @@ export const databaseSchema = {
   decks,
   deckAppearances,
   flashcards,
+  learnerProfiles,
   studySessions,
   studySessionItems,
   flashcardReviewAttempts,
