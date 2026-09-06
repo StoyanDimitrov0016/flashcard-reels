@@ -8,5 +8,5 @@
     "tests/**/*.test.ts"
   ],
   "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs", "tests/**/*.ts"],
-  "ignoreDependencies": ["expo-updates"]
+  "ignoreDependencies": ["expo-updates", "react-native-pager-view", "react-native-tab-view"]
 }
