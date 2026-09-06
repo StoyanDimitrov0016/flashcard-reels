@@ -127,12 +127,14 @@ describe("SQLite study persistence", () => {
         flashcardId: makeFlashcard(1).id,
         id: testId(211),
         baseFeedPosition: 2,
+        reelPosition: 2,
         studySessionId: session.id,
       }),
       new StudySessionItem({
         flashcardId: makeFlashcard(1).id,
         id: testId(212),
         baseFeedPosition: 0,
+        reelPosition: 0,
         studySessionId: session.id,
       }),
     ]);
@@ -148,6 +150,7 @@ describe("SQLite study persistence", () => {
           flashcardId: makeFlashcard(2).id,
           id: testId(213),
           baseFeedPosition: 2,
+          reelPosition: 2,
           studySessionId: session.id,
         }),
       ])
@@ -164,12 +167,14 @@ describe("SQLite study persistence", () => {
           flashcardId: makeFlashcard(1).id,
           id: testId(221),
           baseFeedPosition: 0,
+          reelPosition: 0,
           studySessionId: session.id,
         }),
         new StudySessionItem({
           flashcardId: makeFlashcard(2).id,
           id: testId(222),
           baseFeedPosition: 0,
+          reelPosition: 1,
           studySessionId: session.id,
         }),
       ])
@@ -431,6 +436,7 @@ describe("SQLite study persistence", () => {
         flashcardId: attempt.flashcardId,
         id: testId(262),
         baseFeedPosition: 0,
+        reelPosition: 0,
         studySessionId: session.id,
       }),
     ]);

@@ -18,6 +18,7 @@ export const StudySessionFieldsSchema = z.compile(
     id: z.string(),
     lastActiveAt: z.string(),
     scope: StudySessionScopeSchema,
+    strategyState: z.string(),
     strategy: StudySessionStrategySchema,
   })
 );
@@ -28,6 +29,7 @@ export class StudySession {
   public readonly lastActiveAt: string;
   public readonly scope: StudySessionScope;
   public readonly strategy: StudySessionStrategy;
+  public readonly strategyState: string;
   public readonly deckId: DeckId | null;
   public readonly currentReelPosition: number;
   public readonly createdAt: string;
@@ -42,5 +44,6 @@ export class StudySession {
     this.lastActiveAt = fields.lastActiveAt;
     this.scope = fields.scope;
     this.strategy = fields.strategy;
+    this.strategyState = fields.strategyState;
   }
 }

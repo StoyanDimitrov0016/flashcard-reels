@@ -36,7 +36,9 @@ describe("study session behavior", () => {
     const resumedMixed = await feedService.prepareFeed(cards, "mixed", null, false);
     expect(resumedMixed.studySessionId).toBe(mixed.studySessionId);
     expect(resumedMixed.currentReelPosition).toBe(2);
-    expect(resumedMixed.cards.map((card) => card.id)).toEqual(mixed.cards.map((card) => card.id));
+    expect(resumedMixed.cards.slice(0, mixed.cards.length).map((card) => card.id)).toEqual(
+      mixed.cards.map((card) => card.id)
+    );
   });
 
   it("replaces only the previous Focused session when a different deck is selected", async () => {
@@ -83,13 +85,15 @@ describe("study session behavior", () => {
     const persistedItems = await harness.service.listSessionItems(firstFeed.studySessionId);
     const resumedFeed = await feedService.prepareFeed(cards, "mixed", null, false);
 
-    expect(shuffleCalls).toBe(cards.length - 1);
+    const shuffleCallsAfterFirstFeed = shuffleCalls;
+    expect(shuffleCallsAfterFirstFeed).toBeGreaterThan(0);
     expect(persistedItems.map((item) => item.flashcardId)).toEqual(
       firstFeed.baseCards.map((card) => card.id)
     );
     expect(resumedFeed.cards.map((card) => card.id)).toEqual(
       firstFeed.cards.map((card) => card.id)
     );
+    expect(shuffleCalls).toBe(shuffleCallsAfterFirstFeed);
   });
 
   it("persists the ordered Focus strategy and wraps by deck position", async () => {
@@ -118,9 +122,14 @@ describe("study session behavior", () => {
       "ordered"
     );
 
-    expect(firstFeed.cards.map((card) => card.id)).toEqual(
-      [cardOne, cardTwo, cardThree].map((card) => card.id)
-    );
+    expect(firstFeed.cards.map((card) => card.id)).toEqual([
+      cardOne.id,
+      cardTwo.id,
+      cardThree.id,
+      cardOne.id,
+      cardTwo.id,
+      cardThree.id,
+    ]);
     expect(resumedFeed.studySessionId).toBe(firstFeed.studySessionId);
     expect(resumedFeed.cards.map((card) => card.id)).toEqual(
       firstFeed.cards.map((card) => card.id)
@@ -215,8 +224,17 @@ describe("study session behavior", () => {
       (await harness.service.listSessionItems(feed.studySessionId)).map(
         (item) => item.baseFeedPosition
       )
+    ).toEqual(Array.from({ length: 6 }, (_, index) => index));
+    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    expect(
+      (await harness.service.listSessionItems(feed.studySessionId)).map(
+        (item) => item.baseFeedPosition
+      )
     ).toEqual(Array.from({ length: 10 }, (_, index) => index));
-    const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
+    const occurrences = await feedService.refreshOccurrences(
+      extended.baseCards,
+      feed.studySessionId
+    );
     expect(occurrences.cards.filter((card) => card.id === sourceCard.id)).toHaveLength(2);
   });
 
@@ -244,14 +262,18 @@ describe("study session behavior", () => {
     await harness.service.rateAttempt(firstAttemptId, "again");
     await harness.service.rateAttempt(secondAttemptId, "again");
 
-    const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
+    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    const occurrences = await feedService.refreshOccurrences(
+      extended.baseCards,
+      feed.studySessionId
+    );
     expect(occurrences.cards[8]?.id).toBe(firstBaseCard.id);
     expect(occurrences.cards[9]?.id).toBe(secondBaseCard.id);
     expect(occurrences.recurrenceIds.get(8)).toBeDefined();
     expect(occurrences.recurrenceIds.get(9)).toBeDefined();
   });
 
-  it("does not render a recurrence beyond finite base-feed material before its target", async () => {
+  it("renders a recurrence beyond the initial materialized range only at its target", async () => {
     const harness = createStudyHarness(() => 0.5);
     const feedService = new ReelFeedService(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
@@ -265,10 +287,14 @@ describe("study session behavior", () => {
     await harness.service.rateAttempt(attemptId, "again");
 
     const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
-    expect(occurrences.cards).toHaveLength(cards.length);
+    expect(occurrences.cards).toHaveLength(6);
     expect(occurrences.recurrenceIds.size).toBe(0);
     expect((await harness.service.listSessionRecurrences(feed.studySessionId))[0]?.consumedAt).toBe(
       null
     );
+
+    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    expect(extended.cards[8]?.id).toBe(sourceCard.id);
+    expect(extended.recurrenceIds.get(8)).toBeDefined();
   });
 });

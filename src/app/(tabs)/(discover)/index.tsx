@@ -29,6 +29,7 @@ function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
       initialReelPosition={preparedFeed.currentReelPosition}
       key={preparedFeed.studySessionId}
       recurrenceIds={preparedFeed.recurrenceIds}
+      sourceCards={cards}
       studySessionId={preparedFeed.studySessionId}
     />
   );

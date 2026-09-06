@@ -30,6 +30,7 @@ export class SQLiteStudySessionItemRepository<
               baseFeedPosition: item.baseFeedPosition,
               flashcardId: item.flashcardId,
               id: item.id,
+              reelPosition: item.reelPosition,
               studySessionId: item.studySessionId,
             }))
           )
@@ -43,13 +44,14 @@ export class SQLiteStudySessionItemRepository<
       .select()
       .from(studySessionItems)
       .where(eq(studySessionItems.studySessionId, studySessionId))
-      .orderBy(asc(studySessionItems.baseFeedPosition), asc(studySessionItems.id));
+      .orderBy(asc(studySessionItems.reelPosition), asc(studySessionItems.id));
     return rows.map(
       (row) =>
         new StudySessionItem({
           baseFeedPosition: row.baseFeedPosition,
           flashcardId: row.flashcardId,
           id: row.id,
+          reelPosition: row.reelPosition,
           studySessionId: row.studySessionId,
         })
     );

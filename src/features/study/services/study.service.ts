@@ -94,6 +94,7 @@ export class StudyService {
             id: activeSession.id,
             lastActiveAt: createdAt,
             scope: activeSession.scope,
+            strategyState: activeSession.strategyState,
             strategy: activeSession.strategy,
           }),
         };
@@ -109,6 +110,7 @@ export class StudyService {
       id: this.idGenerator.generate(),
       lastActiveAt: createdAt,
       scope,
+      strategyState: "{}",
       strategy,
     });
     await this.studySessionRepository.create(session);
@@ -119,13 +121,30 @@ export class StudyService {
     await this.studySessionRepository.complete(sessionId, this.clock.now());
   }
 
-  async createSessionItems(sessionId: string, cards: readonly Flashcard[]): Promise<void> {
+  async findSession(sessionId: string): Promise<StudySession | null> {
+    return this.studySessionRepository.findById(sessionId);
+  }
+
+  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
+    return this.studySessionRepository.updateStrategyState(sessionId, strategyState);
+  }
+
+  async createSessionItems(
+    sessionId: string,
+    cards: readonly Flashcard[],
+    baseFeedPositionStart = 0,
+    reelPositions = cards.map((_card, index) => baseFeedPositionStart + index)
+  ): Promise<void> {
+    if (cards.length !== reelPositions.length) {
+      throw new Error("Session item cards and reel positions must have the same length");
+    }
     const items = cards.map(
-      (card, baseFeedPosition) =>
+      (card, index) =>
         new StudySessionItem({
           flashcardId: card.id,
           id: this.idGenerator.generate(),
-          baseFeedPosition,
+          baseFeedPosition: baseFeedPositionStart + index,
+          reelPosition: reelPositions[index] ?? 0,
           studySessionId: sessionId,
         })
     );

@@ -54,6 +54,7 @@ function ReadyFocusedFeedContent({
       key={preparedFeed.studySessionId}
       recurrenceIds={preparedFeed.recurrenceIds}
       showMainFeedLink
+      sourceCards={cards}
       studySessionId={preparedFeed.studySessionId}
     />
   );

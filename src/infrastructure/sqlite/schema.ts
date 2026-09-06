@@ -57,6 +57,7 @@ export const studySessions = sqliteTable(
     createdAt: text("created_at").notNull(),
     completedAt: text("completed_at"),
     lastActiveAt: text("last_active_at").notNull(),
+    strategyState: text("strategy_state").notNull(),
   },
   (table) => [
     check(
@@ -86,12 +87,18 @@ export const studySessionItems = sqliteTable(
       .notNull()
       .references(() => flashcards.id, { onDelete: "cascade" }),
     baseFeedPosition: integer("base_feed_position").notNull(),
+    reelPosition: integer("reel_position").notNull(),
   },
   (table) => [
     check("study_session_items_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
+    check("study_session_items_reel_position_check", sql`${table.reelPosition} >= 0`),
     unique("study_session_items_session_position_unique").on(
       table.studySessionId,
       table.baseFeedPosition
+    ),
+    unique("study_session_items_session_reel_position_unique").on(
+      table.studySessionId,
+      table.reelPosition
     ),
     index("study_session_items_flashcard_id_idx").on(table.flashcardId),
   ]

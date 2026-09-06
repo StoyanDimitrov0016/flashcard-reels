@@ -54,6 +54,7 @@ export function makeSession(
     id,
     lastActiveAt: "2026-01-01T00:00:00.000Z",
     scope,
+    strategyState: "{}",
     strategy,
   });
 }
@@ -198,6 +199,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
             id: session.id,
             lastActiveAt: session.lastActiveAt,
             scope: session.scope,
+            strategyState: session.strategyState,
             strategy: session.strategy,
           })
         );
@@ -218,6 +220,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           id: session.id,
           lastActiveAt: session.lastActiveAt,
           scope: session.scope,
+          strategyState: session.strategyState,
           strategy: session.strategy,
         })
       );
@@ -229,6 +232,10 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       throw new Error(`Duplicate session ${session.id}`);
     }
     this.sessions.set(session.id, session);
+  }
+
+  async findById(sessionId: string): Promise<StudySession | null> {
+    return this.sessions.get(sessionId) ?? null;
   }
 
   async findActive(
@@ -276,6 +283,29 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         id: session.id,
         lastActiveAt,
         scope: session.scope,
+        strategyState: session.strategyState,
+        strategy: session.strategy,
+      })
+    );
+    return true;
+  }
+
+  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
+    const session = this.sessions.get(sessionId);
+    if (!session || session.completedAt !== null) {
+      return false;
+    }
+    this.sessions.set(
+      sessionId,
+      new StudySession({
+        completedAt: session.completedAt,
+        createdAt: session.createdAt,
+        currentReelPosition: session.currentReelPosition,
+        deckId: session.deckId,
+        id: session.id,
+        lastActiveAt: session.lastActiveAt,
+        scope: session.scope,
+        strategyState,
         strategy: session.strategy,
       })
     );
@@ -294,15 +324,20 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
     const keys = new Set<string>();
     for (const item of items) {
       const key = `${item.studySessionId}:base-${item.baseFeedPosition}`;
+      const reelKey = `${item.studySessionId}:reel-${item.reelPosition}`;
       if (
         keys.has(key) ||
+        keys.has(reelKey) ||
         [...this.items.values()].some(
-          (current) => `${current.studySessionId}:${current.baseFeedPosition}` === key
+          (current) =>
+            `${current.studySessionId}:${current.baseFeedPosition}` === key ||
+            `${current.studySessionId}:${current.reelPosition}` === reelKey
         )
       ) {
         throw new Error(`Duplicate base feed position ${key}`);
       }
       keys.add(key);
+      keys.add(reelKey);
     }
     for (const item of items) {
       this.items.set(item.id, item);
@@ -312,7 +347,7 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
   async listBySessionId(studySessionId: string): Promise<StudySessionItem[]> {
     return ordered(
       [...this.items.values()].filter((item) => item.studySessionId === studySessionId),
-      (left, right) => left.baseFeedPosition - right.baseFeedPosition
+      (left, right) => left.reelPosition - right.reelPosition
     );
   }
 }

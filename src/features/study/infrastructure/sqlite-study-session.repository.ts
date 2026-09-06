@@ -41,6 +41,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: session.id,
       lastActiveAt: session.lastActiveAt,
       scope: session.scope,
+      strategyState: session.strategyState,
       strategy: session.strategy,
     });
   }
@@ -55,6 +56,16 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       .from(studySessions)
       .where(and(conditions, isNull(studySessions.completedAt)))
       .orderBy(desc(studySessions.createdAt), desc(studySessions.id))
+      .limit(1);
+    const row = rows[0];
+    return row ? this.toModel(row) : null;
+  }
+
+  async findById(sessionId: string): Promise<StudySession | null> {
+    const rows = await this.database
+      .select()
+      .from(studySessions)
+      .where(eq(studySessions.id, sessionId))
       .limit(1);
     const row = rows[0];
     return row ? this.toModel(row) : null;
@@ -84,6 +95,15 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
     return rows.length > 0;
   }
 
+  async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
+    const rows = await this.database
+      .update(studySessions)
+      .set({ strategyState })
+      .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
+      .returning({ id: studySessions.id });
+    return rows.length > 0;
+  }
+
   private toModel(row: typeof studySessions.$inferSelect): StudySession {
     return new StudySession({
       completedAt: row.completedAt,
@@ -93,6 +113,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: row.id,
       lastActiveAt: row.lastActiveAt,
       scope: StudySessionScopeSchema.parse(row.scope),
+      strategyState: row.strategyState,
       strategy: StudySessionStrategySchema.parse(row.strategy),
     });
   }

@@ -8,6 +8,7 @@ import { ReelCard } from "@/features/reels/components/reel-card";
 import { useRecallSession } from "@/features/reels/hooks/use-recall-session";
 import { useReelFeed } from "@/features/reels/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/hooks/use-reel-viewport";
+import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
 import type { PreparedReelOccurrences } from "@/features/reels/services/reel-feed.service";
 import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
@@ -18,6 +19,7 @@ type ReelFeedProps = Readonly<{
   initialReelPosition: number;
   recurrenceIds: ReadonlyMap<number, string>;
   showMainFeedLink?: boolean;
+  sourceCards: Flashcard[];
   studySessionId: string;
 }>;
 
@@ -27,8 +29,10 @@ export function ReelFeed({
   initialReelPosition,
   recurrenceIds,
   showMainFeedLink = false,
+  sourceCards,
   studySessionId,
 }: ReelFeedProps) {
+  const [materializedBaseCards, setMaterializedBaseCards] = useState(baseCards);
   const [occurrences, setOccurrences] = useState<PreparedReelOccurrences>(() => ({
     cards,
     recurrenceIds,
@@ -44,6 +48,7 @@ export function ReelFeed({
   const { attemptIds, rateCard, recallLevels, revealedPositions, setAttemptId, toggleCard } =
     useRecallSession();
   const { answerAudioService, reelFeedService, studyService } = useAppServices();
+  const extensionInFlight = useRef(false);
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const activeIndexReference = useRef(activeIndex);
   const activeCard = displayCards[activeIndex];
@@ -121,6 +126,27 @@ export function ReelFeed({
     }
   }, [activeIndex, occurrences.recurrenceIds, studyService]);
 
+  useEffect(() => {
+    if (
+      displayCards.length === 0 ||
+      activeIndex < displayCards.length - FEED_ENGINE_CONFIG.extensionThreshold ||
+      extensionInFlight.current
+    ) {
+      return;
+    }
+
+    extensionInFlight.current = true;
+    void reelFeedService
+      .extendFeed(sourceCards, studySessionId)
+      .then((feed) => {
+        setMaterializedBaseCards(feed.baseCards);
+        setOccurrences({ cards: feed.cards, recurrenceIds: feed.recurrenceIds });
+      })
+      .finally(() => {
+        extensionInFlight.current = false;
+      });
+  }, [activeIndex, displayCards.length, reelFeedService, sourceCards, studySessionId]);
+
   const getItemLayout = (_data: ArrayLike<Flashcard> | null | undefined, index: number) => ({
     index,
     length: height,
@@ -150,7 +176,7 @@ export function ReelFeed({
               if (updated) {
                 rateCard(index, level);
                 return reelFeedService
-                  .refreshOccurrences(baseCards, studySessionId)
+                  .refreshOccurrences(materializedBaseCards, studySessionId)
                   .then(setOccurrences);
               }
               return undefined;
