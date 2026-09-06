@@ -4,6 +4,10 @@ export interface StudySessionRecurrenceRepository {
   cancelPendingBySourceAttemptId(sourceAttemptId: string): Promise<void>;
   create(recurrence: StudySessionRecurrence): Promise<void>;
   listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]>;
+  listPendingFlashcardIdsFromTargetPosition(
+    studySessionId: string,
+    fromTargetReelPosition: number
+  ): Promise<string[]>;
   listBySessionIdInTargetRange(
     studySessionId: string,
     fromTargetReelPosition: number,

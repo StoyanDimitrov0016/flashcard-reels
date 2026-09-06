@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, asc, eq, gt, gte, isNull, lte } from "drizzle-orm";
 
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
@@ -39,6 +39,24 @@ export class SQLiteStudySessionRecurrenceRepository<
 
   async listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]> {
     return this.listBySessionIdInTargetRange(studySessionId, 0, Number.MAX_SAFE_INTEGER);
+  }
+
+  async listPendingFlashcardIdsFromTargetPosition(
+    studySessionId: string,
+    fromTargetReelPosition: number
+  ): Promise<string[]> {
+    const rows = await this.database
+      .select({ flashcardId: studySessionRecurrences.flashcardId })
+      .from(studySessionRecurrences)
+      .where(
+        and(
+          eq(studySessionRecurrences.studySessionId, studySessionId),
+          isNull(studySessionRecurrences.consumedAt),
+          gt(studySessionRecurrences.targetReelPosition, fromTargetReelPosition)
+        )
+      )
+      .orderBy(asc(studySessionRecurrences.targetReelPosition), asc(studySessionRecurrences.id));
+    return rows.map((row) => row.flashcardId);
   }
 
   async listBySessionIdInTargetRange(

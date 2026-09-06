@@ -181,6 +181,16 @@ export class StudyService {
     return this.studySessionRecurrenceRepository.listBySessionId(sessionId);
   }
 
+  async listPendingRecurrenceFlashcardIdsFromTargetPosition(
+    sessionId: string,
+    fromTargetReelPosition: number
+  ): Promise<string[]> {
+    return this.studySessionRecurrenceRepository.listPendingFlashcardIdsFromTargetPosition(
+      sessionId,
+      fromTargetReelPosition
+    );
+  }
+
   async listSessionRecurrencesInTargetRange(
     sessionId: string,
     fromTargetReelPosition: number,

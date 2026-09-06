@@ -113,13 +113,10 @@ export class ReelFeedService {
   ): Promise<void> {
     const targetPosition = session.currentReelPosition + additionalWindow;
     const pendingFutureRecurrenceCardIds = new Set(
-      (await this.studyService.listSessionRecurrences(session.id))
-        .filter(
-          (recurrence) =>
-            recurrence.consumedAt === null &&
-            recurrence.targetReelPosition > session.currentReelPosition
-        )
-        .map((recurrence) => recurrence.flashcardId)
+      await this.studyService.listPendingRecurrenceFlashcardIdsFromTargetPosition(
+        session.id,
+        session.currentReelPosition
+      )
     );
     const materializeBatch = async (strategyState: StrategyState): Promise<void> => {
       const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);

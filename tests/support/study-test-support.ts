@@ -526,6 +526,18 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
     );
   }
 
+  async listPendingFlashcardIdsFromTargetPosition(
+    studySessionId: string,
+    fromTargetReelPosition: number
+  ): Promise<string[]> {
+    return (await this.listBySessionId(studySessionId))
+      .filter(
+        (recurrence) =>
+          recurrence.consumedAt === null && recurrence.targetReelPosition > fromTargetReelPosition
+      )
+      .map((recurrence) => recurrence.flashcardId);
+  }
+
   async listBySessionIdInTargetRange(
     studySessionId: string,
     fromTargetReelPosition: number,

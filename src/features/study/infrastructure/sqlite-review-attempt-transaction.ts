@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, ne } from "drizzle-orm";
 
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
@@ -85,14 +85,20 @@ export class SQLiteReviewAttemptTransaction<
           and(
             eq(studySessionRecurrences.studySessionId, recurrence.studySessionId),
             isNull(studySessionRecurrences.consumedAt),
-            ne(studySessionRecurrences.sourceAttemptId, attemptId)
+            ne(studySessionRecurrences.sourceAttemptId, attemptId),
+            gte(studySessionRecurrences.targetReelPosition, proposedTargetReelPosition)
           )
         )
         .all();
       const occupiedBaseRows = transaction
         .select({ reelPosition: studySessionItems.reelPosition })
         .from(studySessionItems)
-        .where(eq(studySessionItems.studySessionId, recurrence.studySessionId))
+        .where(
+          and(
+            eq(studySessionItems.studySessionId, recurrence.studySessionId),
+            gte(studySessionItems.reelPosition, proposedTargetReelPosition)
+          )
+        )
         .all();
       const occupiedReelPositions = new Set([
         ...occupiedRows.map((row) => row.targetReelPosition),

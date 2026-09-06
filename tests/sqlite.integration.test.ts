@@ -419,7 +419,7 @@ describe("SQLite study persistence", () => {
     const session = makeSession(testId(238), "mixed");
     await sessions.create(session);
     const baseItems = Array.from(
-      { length: 11 },
+      { length: 1_001 },
       (_, reelPosition) =>
         new StudySessionItem({
           baseFeedPosition: reelPosition,
@@ -456,7 +456,7 @@ describe("SQLite study persistence", () => {
       await transaction.rateAttempt(attempt.id, "again", "2026-01-01T00:01:00.000Z", recurrence, 8)
     ).toBe(true);
 
-    expect((await recurrences.listBySessionId(session.id))[0]?.targetReelPosition).toBe(11);
+    expect((await recurrences.listBySessionId(session.id))[0]?.targetReelPosition).toBe(1_001);
     expect(await items.listBySessionId(session.id)).toEqual(baseItems);
   });
 
@@ -495,6 +495,11 @@ describe("SQLite study persistence", () => {
       targetReelPosition: 8,
     });
     await recurrences.create(recurrence);
+
+    expect(await recurrences.listPendingFlashcardIdsFromTargetPosition(session.id, 7)).toEqual([
+      attempt.flashcardId,
+    ]);
+    expect(await recurrences.listPendingFlashcardIdsFromTargetPosition(session.id, 8)).toEqual([]);
 
     await expect(
       recurrences.create(
