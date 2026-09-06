@@ -7,7 +7,7 @@ import { useFeedScope } from "@/features/reels/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-export default function DeckCatalogScreen() {
+export default function LibraryScreen() {
   const router = useRouter();
   const { startFocusedFeed } = useFeedScope();
   const { entries, loading } = useDeckCatalog();
@@ -15,7 +15,7 @@ export default function DeckCatalogScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.title}>Decks</Text>
+        <Text style={styles.title}>Library</Text>
       </View>
       <ScrollView contentContainerStyle={styles.list}>
         {loading ? (
@@ -28,7 +28,7 @@ export default function DeckCatalogScreen() {
               key={deck.id}
               onPress={() => {
                 startFocusedFeed(deck.id);
-                router.navigate("/(tabs)/(discover)");
+                router.navigate("../focus");
               }}
               style={styles.deck}
             >

@@ -42,7 +42,24 @@ export default function TabLayout() {
           }}
         />
         <TopTabs.Screen
-          name="decks"
+          name="focus"
+          options={{
+            tabBarIcon: ({ color }: TabIconProps) => (
+              <SymbolView
+                name={{
+                  android: "center_focus_strong",
+                  ios: "scope",
+                  web: "center_focus_strong",
+                }}
+                size={sizes.icon.medium}
+                tintColor={color}
+              />
+            ),
+            title: "Focus",
+          }}
+        />
+        <TopTabs.Screen
+          name="library"
           options={{
             tabBarIcon: ({ color }: TabIconProps) => (
               <SymbolView
@@ -55,7 +72,7 @@ export default function TabLayout() {
                 tintColor={color}
               />
             ),
-            title: "Decks",
+            title: "Library",
           }}
         />
       </TopTabs>
