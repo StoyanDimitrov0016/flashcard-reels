@@ -132,12 +132,11 @@ describe("study session behavior", () => {
     const firstFeed = await feedService.prepareFeed(cards, "mixed", null, false);
     const persistedItems = await harness.service.listSessionItems(firstFeed.studySessionId);
     const resumedFeed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const resumedItems = await harness.service.listSessionItems(firstFeed.studySessionId);
 
     const shuffleCallsAfterFirstFeed = shuffleCalls;
     expect(shuffleCallsAfterFirstFeed).toBeGreaterThan(0);
-    expect(persistedItems.map((item) => item.flashcardId)).toEqual(
-      persistedItems.map((item) => item.flashcardId)
-    );
+    expect(resumedItems).toEqual(persistedItems);
     expect(resumedFeed.occurrences.map(({ card }) => card.id)).toEqual(
       firstFeed.occurrences.map(({ card }) => card.id)
     );

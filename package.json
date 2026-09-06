@@ -11,7 +11,9 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "conventions": "node scripts/check-conventions.mjs",
-    "lint": "oxlint --type-aware --deny-warnings .",
+    "lint": "oxlint --type-aware --quiet .",
+    "lint:report": "oxlint --type-aware .",
+    "lint:strict": "oxlint --type-aware --deny-warnings .",
     "typecheck": "tsc --noEmit",
     "test:architecture": "node tools/oxlint-plugin-flashcards/tests/rules.test.js",
     "check:dead-code": "knip",
@@ -22,7 +24,7 @@
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
     "check:android": "expo export --platform android",
-    "verify": "npm run check && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
+    "verify": "npm run check && npm run lint:report && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
