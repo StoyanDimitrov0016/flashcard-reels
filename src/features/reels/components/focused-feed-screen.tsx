@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -98,7 +99,7 @@ export default function FocusedFeedScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView edges={["top"]} style={styles.screen}>
       <View style={styles.strategySwitcher}>
         {(["shuffle", "ordered"] as const).map((strategy) => (
           <Pressable
@@ -129,7 +130,7 @@ export default function FocusedFeedScreen() {
         key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
         onSessionStarted={consumeFocusedFeedReplacement}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
