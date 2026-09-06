@@ -48,11 +48,9 @@ function ReadyFocusedFeedContent({
 
   return (
     <ReelFeed
-      baseCards={preparedFeed.baseCards}
-      cards={preparedFeed.cards}
       initialReelPosition={preparedFeed.currentReelPosition}
       key={preparedFeed.studySessionId}
-      recurrenceIds={preparedFeed.recurrenceIds}
+      occurrences={preparedFeed.occurrences}
       showMainFeedLink
       sourceCards={cards}
       studySessionId={preparedFeed.studySessionId}

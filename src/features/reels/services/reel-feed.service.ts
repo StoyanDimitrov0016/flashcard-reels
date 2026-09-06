@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
@@ -17,17 +16,21 @@ const StrategyStateSchema = z.object({
 
 type StrategyState = Readonly<z.infer<typeof StrategyStateSchema>>;
 
-export type PreparedReelOccurrences = Readonly<{
-  cards: Flashcard[];
-  recurrenceIds: ReadonlyMap<number, string>;
+export type PreparedReelOccurrence = Readonly<{
+  card: Flashcard;
+  key: string;
+  recurrenceId: string | null;
+  reelPosition: number;
 }>;
 
+export type PreparedReelOccurrences = readonly PreparedReelOccurrence[];
+
 export type PreparedReelFeed = Readonly<{
-  baseCards: Flashcard[];
-  cards: Flashcard[];
+  occurrences: PreparedReelOccurrences;
   currentReelPosition: number;
+  loadedFromReelPosition: number;
+  loadedThroughReelPosition: number;
   materializedThroughReelPosition: number;
-  recurrenceIds: ReadonlyMap<number, string>;
   studySessionId: string;
 }>;
 
@@ -53,21 +56,16 @@ export class ReelFeedService {
       replaceExistingSession,
       strategy
     );
-    let items = await this.studyService.listSessionItems(openedSession.session.id);
+    const hasItems =
+      (await this.studyService.findMaxSessionBaseFeedPosition(openedSession.session.id)) !== null;
 
-    if (!openedSession.created && items.length === 0) {
+    if (!openedSession.created && !hasItems) {
       await this.studyService.completeSession(openedSession.session.id);
       openedSession = await this.studyService.openSession(scope, deckId, true, strategy);
-      items = [];
     }
 
-    items = await this.ensureMaterialized(cards, openedSession.session, items);
-    return this.buildPreparedFeed(
-      cards,
-      openedSession.session.id,
-      openedSession.session.currentReelPosition,
-      items
-    );
+    await this.ensureMaterialized(cards, openedSession.session);
+    return this.buildPreparedFeed(cards, openedSession.session);
   }
 
   async extendFeed(cards: readonly Flashcard[], studySessionId: string): Promise<PreparedReelFeed> {
@@ -75,26 +73,24 @@ export class ReelFeedService {
     if (!session) {
       throw new Error(`Missing study session ${studySessionId}`);
     }
-    const items = await this.ensureMaterialized(
+    await this.ensureMaterialized(
       cards,
       session,
-      await this.studyService.listSessionItems(studySessionId),
       FEED_ENGINE_CONFIG.futureWindowSize + FEED_ENGINE_CONFIG.materializationBatchSize
     );
-    return this.buildPreparedFeed(cards, session.id, session.currentReelPosition, items);
+    return this.buildPreparedFeed(cards, session);
   }
 
   async refreshOccurrences(
-    baseCards: readonly Flashcard[],
+    sourceCards: readonly Flashcard[],
     studySessionId: string
   ): Promise<PreparedReelOccurrences> {
-    const items = await this.studyService.listSessionItems(studySessionId);
-    const recurrences = await this.studyService.listSessionRecurrences(studySessionId);
-    return this.mergeMaterializedReels(
-      items,
-      recurrences,
-      new Map(baseCards.map((card) => [card.id, card]))
-    );
+    const session = await this.studyService.findSession(studySessionId);
+    if (!session) {
+      throw new Error(`Missing study session ${studySessionId}`);
+    }
+    const feed = await this.buildPreparedFeed(sourceCards, session);
+    return feed.occurrences;
   }
 
   private async ensureMaterialized(
@@ -105,24 +101,28 @@ export class ReelFeedService {
       strategy: StudySessionStrategy;
       strategyState: string;
     }>,
-    existingItems: readonly StudySessionItem[],
     additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize
-  ): Promise<StudySessionItem[]> {
-    const recurrences = await this.studyService.listSessionRecurrences(session.id);
-    const occupiedRecurrencePositions = new Set(
-      recurrences.map((recurrence) => recurrence.targetReelPosition)
-    );
+  ): Promise<void> {
     const targetPosition = session.currentReelPosition + additionalWindow;
-    const materializeBatch = async (
-      items: readonly StudySessionItem[],
-      strategyState: StrategyState
-    ): Promise<StudySessionItem[]> => {
-      if (this.maxMaterializedPosition(items) >= targetPosition) {
-        return [...items];
+    const materializeBatch = async (strategyState: StrategyState): Promise<void> => {
+      const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
+      if (materializedThrough >= targetPosition) {
+        return;
       }
       const batchCards: Flashcard[] = [];
       const batchReelPositions: number[] = [];
-      let nextReelPosition = this.maxMaterializedPosition(items) + 1;
+      let nextReelPosition =
+        ((await this.studyService.findMaxSessionReelPosition(session.id)) ?? -1) + 1;
+      const reservedRecurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+        session.id,
+        nextReelPosition,
+        targetPosition
+      );
+      const occupiedRecurrencePositions = new Set(
+        reservedRecurrences.map((recurrence) => recurrence.targetReelPosition)
+      );
+      const baseFeedPositionStart =
+        ((await this.studyService.findMaxSessionBaseFeedPosition(session.id)) ?? -1) + 1;
 
       while (
         nextReelPosition <= targetPosition &&
@@ -144,50 +144,69 @@ export class ReelFeedService {
       }
 
       if (batchCards.length === 0) {
-        return [...items];
+        return;
       }
 
       await this.studyService.appendSessionItems(
         session.id,
         batchCards,
         JSON.stringify(strategyState),
-        items.length,
+        baseFeedPositionStart,
         batchReelPositions
       );
-      return materializeBatch(await this.studyService.listSessionItems(session.id), strategyState);
+      await materializeBatch(strategyState);
     };
 
-    return materializeBatch(existingItems, parseStrategyState(session.strategyState));
+    return materializeBatch(parseStrategyState(session.strategyState));
   }
 
   private async buildPreparedFeed(
     sourceCards: readonly Flashcard[],
-    studySessionId: string,
-    currentReelPosition: number,
-    items: readonly StudySessionItem[]
+    session: Readonly<{ currentReelPosition: number; id: string }>
   ): Promise<PreparedReelFeed> {
-    const recurrences = await this.studyService.listSessionRecurrences(studySessionId);
+    const materializedThrough = await this.findMaterializedThrough(
+      session.id,
+      session.currentReelPosition + FEED_ENGINE_CONFIG.futureWindowSize
+    );
+    const loadedFromReelPosition = Math.max(
+      0,
+      session.currentReelPosition - FEED_ENGINE_CONFIG.pastWindowSize
+    );
+    const loadedThroughReelPosition = Math.min(
+      session.currentReelPosition + FEED_ENGINE_CONFIG.futureWindowSize,
+      materializedThrough
+    );
+    const items =
+      loadedFromReelPosition <= loadedThroughReelPosition
+        ? await this.studyService.listSessionItemsInReelPositionRange(
+            session.id,
+            loadedFromReelPosition,
+            loadedThroughReelPosition
+          )
+        : [];
+    const recurrences =
+      loadedFromReelPosition <= loadedThroughReelPosition
+        ? await this.studyService.listSessionRecurrencesInTargetRange(
+            session.id,
+            loadedFromReelPosition,
+            loadedThroughReelPosition
+          )
+        : [];
     const occurrences = this.mergeMaterializedReels(
       items,
       recurrences,
-      new Map(sourceCards.map((card) => [card.id, card]))
+      new Map(sourceCards.map((card) => [card.id, card])),
+      loadedFromReelPosition,
+      loadedThroughReelPosition
     );
-    const cardsById = new Map(sourceCards.map((card) => [card.id, card]));
-    const baseCards = items.map((item) => {
-      const card = cardsById.get(item.flashcardId);
-      if (!card) {
-        throw new Error(`Missing flashcard ${item.flashcardId} for prepared feed`);
-      }
-      return card;
-    });
 
     return {
-      baseCards,
-      cards: occurrences.cards,
-      currentReelPosition,
-      materializedThroughReelPosition: this.maxMaterializedPosition(items, recurrences),
-      recurrenceIds: occurrences.recurrenceIds,
-      studySessionId,
+      currentReelPosition: session.currentReelPosition,
+      loadedFromReelPosition,
+      loadedThroughReelPosition,
+      materializedThroughReelPosition: materializedThrough,
+      occurrences,
+      studySessionId: session.id,
     };
   }
 
@@ -221,20 +240,24 @@ export class ReelFeedService {
   private mergeMaterializedReels(
     items: readonly StudySessionItem[],
     recurrences: readonly StudySessionRecurrence[],
-    cardsById: ReadonlyMap<string, Flashcard>
+    cardsById: ReadonlyMap<string, Flashcard>,
+    fromReelPosition: number,
+    throughReelPosition: number
   ): PreparedReelOccurrences {
     const itemByPosition = new Map(items.map((item) => [item.reelPosition, item] as const));
     const recurrenceByPosition = new Map(
       recurrences.map((recurrence) => [recurrence.targetReelPosition, recurrence] as const)
     );
-    const through = this.maxMaterializedPosition(items, recurrences);
-    const cards: Flashcard[] = [];
-    const recurrenceIds = new Map<number, string>();
+    const occurrences: PreparedReelOccurrence[] = [];
 
-    for (let reelPosition = 0; reelPosition <= through; reelPosition += 1) {
+    for (
+      let reelPosition = fromReelPosition;
+      reelPosition <= throughReelPosition;
+      reelPosition += 1
+    ) {
       const recurrence = recurrenceByPosition.get(reelPosition);
       const item = itemByPosition.get(reelPosition);
-      const cardId = recurrence?.flashcardId ?? item?.flashcardId;
+      const cardId = item?.flashcardId ?? recurrence?.flashcardId;
       if (!cardId) {
         throw new Error(`Missing materialized reel at position ${reelPosition}`);
       }
@@ -242,28 +265,34 @@ export class ReelFeedService {
       if (!card) {
         throw new Error(`Missing flashcard ${cardId} for prepared reel`);
       }
-      cards.push(card);
-      if (recurrence && recurrence.consumedAt === null) {
-        recurrenceIds.set(reelPosition, recurrence.id);
-      }
+      occurrences.push({
+        card,
+        key: `${card.id}-${reelPosition}`,
+        recurrenceId: recurrence?.consumedAt === null ? recurrence.id : null,
+        reelPosition,
+      });
     }
-    return { cards, recurrenceIds };
+    return occurrences;
   }
 
-  private maxMaterializedPosition(
-    items: readonly StudySessionItem[],
-    recurrences: readonly StudySessionRecurrence[] = []
-  ): number {
-    let maximum = items.reduce((current, item) => Math.max(current, item.reelPosition), -1);
-    let advanced = true;
-    while (advanced) {
-      advanced = false;
-      if (recurrences.some((recurrence) => recurrence.targetReelPosition === maximum + 1)) {
-        maximum += 1;
-        advanced = true;
-      }
+  private async findMaterializedThrough(studySessionId: string, through: number): Promise<number> {
+    let materializedThrough =
+      (await this.studyService.findMaxSessionReelPosition(studySessionId)) ?? -1;
+    if (materializedThrough >= through) {
+      return materializedThrough;
     }
-    return maximum;
+    const recurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+      studySessionId,
+      materializedThrough + 1,
+      through
+    );
+    const recurrencePositions = new Set(
+      recurrences.map((recurrence) => recurrence.targetReelPosition)
+    );
+    while (recurrencePositions.has(materializedThrough + 1)) {
+      materializedThrough += 1;
+    }
+    return materializedThrough;
   }
 
   private orderCards(cards: readonly Flashcard[]): Flashcard[] {

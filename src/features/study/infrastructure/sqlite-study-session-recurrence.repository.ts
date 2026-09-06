@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, ne } from "drizzle-orm";
 
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -39,10 +39,24 @@ export class SQLiteStudySessionRecurrenceRepository<
   }
 
   async listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]> {
+    return this.listBySessionIdInTargetRange(studySessionId, 0, Number.MAX_SAFE_INTEGER);
+  }
+
+  async listBySessionIdInTargetRange(
+    studySessionId: string,
+    fromTargetReelPosition: number,
+    throughTargetReelPosition: number
+  ): Promise<StudySessionRecurrence[]> {
     const rows = await this.database
       .select()
       .from(studySessionRecurrences)
-      .where(eq(studySessionRecurrences.studySessionId, studySessionId))
+      .where(
+        and(
+          eq(studySessionRecurrences.studySessionId, studySessionId),
+          gte(studySessionRecurrences.targetReelPosition, fromTargetReelPosition),
+          lte(studySessionRecurrences.targetReelPosition, throughTargetReelPosition)
+        )
+      )
       .orderBy(
         asc(studySessionRecurrences.targetReelPosition),
         asc(studySessionRecurrences.createdAt),

@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
@@ -39,11 +39,45 @@ export class SQLiteStudySessionItemRepository<
     });
   }
 
+  async findMaxBaseFeedPosition(studySessionId: string): Promise<number | null> {
+    const rows = await this.database
+      .select({ baseFeedPosition: studySessionItems.baseFeedPosition })
+      .from(studySessionItems)
+      .where(eq(studySessionItems.studySessionId, studySessionId))
+      .orderBy(desc(studySessionItems.baseFeedPosition))
+      .limit(1);
+    return rows[0]?.baseFeedPosition ?? null;
+  }
+
+  async findMaxReelPosition(studySessionId: string): Promise<number | null> {
+    const rows = await this.database
+      .select({ reelPosition: studySessionItems.reelPosition })
+      .from(studySessionItems)
+      .where(eq(studySessionItems.studySessionId, studySessionId))
+      .orderBy(desc(studySessionItems.reelPosition))
+      .limit(1);
+    return rows[0]?.reelPosition ?? null;
+  }
+
   async listBySessionId(studySessionId: string): Promise<StudySessionItem[]> {
+    return this.listBySessionIdInReelPositionRange(studySessionId, 0, Number.MAX_SAFE_INTEGER);
+  }
+
+  async listBySessionIdInReelPositionRange(
+    studySessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<StudySessionItem[]> {
     const rows = await this.database
       .select()
       .from(studySessionItems)
-      .where(eq(studySessionItems.studySessionId, studySessionId))
+      .where(
+        and(
+          eq(studySessionItems.studySessionId, studySessionId),
+          gte(studySessionItems.reelPosition, fromReelPosition),
+          lte(studySessionItems.reelPosition, throughReelPosition)
+        )
+      )
       .orderBy(asc(studySessionItems.reelPosition), asc(studySessionItems.id));
     return rows.map(
       (row) =>

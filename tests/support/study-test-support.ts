@@ -335,6 +335,36 @@ export class InMemoryStudySessionItemRepository implements StudySessionItemRepos
     );
   }
 
+  async findMaxBaseFeedPosition(studySessionId: string): Promise<number | null> {
+    const positions = [...this.items.values()]
+      .filter((item) => item.studySessionId === studySessionId)
+      .map((item) => item.baseFeedPosition);
+    return positions.length > 0 ? Math.max(...positions) : null;
+  }
+
+  async findMaxReelPosition(studySessionId: string): Promise<number | null> {
+    const positions = [...this.items.values()]
+      .filter((item) => item.studySessionId === studySessionId)
+      .map((item) => item.reelPosition);
+    return positions.length > 0 ? Math.max(...positions) : null;
+  }
+
+  async listBySessionIdInReelPositionRange(
+    studySessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<StudySessionItem[]> {
+    return ordered(
+      [...this.items.values()].filter(
+        (item) =>
+          item.studySessionId === studySessionId &&
+          item.reelPosition >= fromReelPosition &&
+          item.reelPosition <= throughReelPosition
+      ),
+      (left, right) => left.reelPosition - right.reelPosition
+    );
+  }
+
   all(): StudySessionItem[] {
     return [...this.items.values()];
   }
@@ -399,6 +429,23 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
     return ordered(
       [...this.recurrences.values()].filter(
         (recurrence) => recurrence.studySessionId === studySessionId
+      ),
+      (left, right) =>
+        left.targetReelPosition - right.targetReelPosition || left.id.localeCompare(right.id)
+    );
+  }
+
+  async listBySessionIdInTargetRange(
+    studySessionId: string,
+    fromTargetReelPosition: number,
+    throughTargetReelPosition: number
+  ): Promise<StudySessionRecurrence[]> {
+    return ordered(
+      [...this.recurrences.values()].filter(
+        (recurrence) =>
+          recurrence.studySessionId === studySessionId &&
+          recurrence.targetReelPosition >= fromTargetReelPosition &&
+          recurrence.targetReelPosition <= throughTargetReelPosition
       ),
       (left, right) =>
         left.targetReelPosition - right.targetReelPosition || left.id.localeCompare(right.id)

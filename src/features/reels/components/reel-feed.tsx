@@ -14,30 +14,22 @@ import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
 
 type ReelFeedProps = Readonly<{
-  baseCards: Flashcard[];
-  cards: Flashcard[];
   initialReelPosition: number;
-  recurrenceIds: ReadonlyMap<number, string>;
+  occurrences: PreparedReelOccurrences;
   showMainFeedLink?: boolean;
   sourceCards: Flashcard[];
   studySessionId: string;
 }>;
 
 export function ReelFeed({
-  baseCards,
-  cards,
   initialReelPosition,
-  recurrenceIds,
+  occurrences: initialOccurrences,
   showMainFeedLink = false,
   sourceCards,
   studySessionId,
 }: ReelFeedProps) {
-  const [materializedBaseCards, setMaterializedBaseCards] = useState(baseCards);
-  const [occurrences, setOccurrences] = useState<PreparedReelOccurrences>(() => ({
-    cards,
-    recurrenceIds,
-  }));
-  const displayCards = occurrences.cards;
+  const [occurrences, setOccurrences] = useState<PreparedReelOccurrences>(initialOccurrences);
+  const displayCards = occurrences.map((occurrence) => occurrence.card);
   const { handleLayout, viewport } = useReelViewport();
   const { height, width } = viewport;
   const { activeIndex, handleMomentumScrollEnd: handleFeedMomentumScrollEnd } = useReelFeed({
@@ -120,11 +112,11 @@ export function ReelFeed({
   }, [activeIndex, studySessionId, studyService]);
 
   useEffect(() => {
-    const recurrenceId = occurrences.recurrenceIds.get(activeIndex);
+    const recurrenceId = occurrences[activeIndex]?.recurrenceId;
     if (recurrenceId) {
       void studyService.consumeRecurrence(recurrenceId);
     }
-  }, [activeIndex, occurrences.recurrenceIds, studyService]);
+  }, [activeIndex, occurrences, studyService]);
 
   useEffect(() => {
     if (
@@ -139,8 +131,7 @@ export function ReelFeed({
     void reelFeedService
       .extendFeed(sourceCards, studySessionId)
       .then((feed) => {
-        setMaterializedBaseCards(feed.baseCards);
-        setOccurrences({ cards: feed.cards, recurrenceIds: feed.recurrenceIds });
+        setOccurrences(feed.occurrences);
       })
       .finally(() => {
         extensionInFlight.current = false;
@@ -176,7 +167,7 @@ export function ReelFeed({
               if (updated) {
                 rateCard(index, level);
                 return reelFeedService
-                  .refreshOccurrences(materializedBaseCards, studySessionId)
+                  .refreshOccurrences(sourceCards, studySessionId)
                   .then(setOccurrences);
               }
               return undefined;

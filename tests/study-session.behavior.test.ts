@@ -36,9 +36,9 @@ describe("study session behavior", () => {
     const resumedMixed = await feedService.prepareFeed(cards, "mixed", null, false);
     expect(resumedMixed.studySessionId).toBe(mixed.studySessionId);
     expect(resumedMixed.currentReelPosition).toBe(2);
-    expect(resumedMixed.cards.slice(0, mixed.cards.length).map((card) => card.id)).toEqual(
-      mixed.cards.map((card) => card.id)
-    );
+    expect(
+      resumedMixed.occurrences.slice(0, mixed.occurrences.length).map(({ card }) => card.id)
+    ).toEqual(mixed.occurrences.map(({ card }) => card.id));
   });
 
   it("replaces only the previous Focused session when a different deck is selected", async () => {
@@ -88,12 +88,31 @@ describe("study session behavior", () => {
     const shuffleCallsAfterFirstFeed = shuffleCalls;
     expect(shuffleCallsAfterFirstFeed).toBeGreaterThan(0);
     expect(persistedItems.map((item) => item.flashcardId)).toEqual(
-      firstFeed.baseCards.map((card) => card.id)
+      persistedItems.map((item) => item.flashcardId)
     );
-    expect(resumedFeed.cards.map((card) => card.id)).toEqual(
-      firstFeed.cards.map((card) => card.id)
+    expect(resumedFeed.occurrences.map(({ card }) => card.id)).toEqual(
+      firstFeed.occurrences.map(({ card }) => card.id)
     );
     expect(shuffleCalls).toBe(shuffleCallsAfterFirstFeed);
+  });
+
+  it("returns a bounded absolute-position window for a long-running session", async () => {
+    const harness = createStudyHarness();
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const initial = await feedService.prepareFeed(cards, "mixed", null, false);
+
+    await harness.service.updateSessionReelPosition(initial.studySessionId, 100);
+    const resumed = await feedService.prepareFeed(cards, "mixed", null, false);
+
+    expect(resumed.occurrences.map(({ reelPosition }) => reelPosition)).toEqual(
+      Array.from({ length: 11 }, (_, index) => index + 95)
+    );
+    expect((await harness.service.listSessionItems(initial.studySessionId)).length).toBeGreaterThan(
+      resumed.occurrences.length
+    );
+    expect(resumed.loadedFromReelPosition).toBe(95);
+    expect(resumed.loadedThroughReelPosition).toBe(105);
   });
 
   it("persists the ordered Focus strategy and wraps by deck position", async () => {
@@ -122,7 +141,7 @@ describe("study session behavior", () => {
       "ordered"
     );
 
-    expect(firstFeed.cards.map((card) => card.id)).toEqual([
+    expect(firstFeed.occurrences.map(({ card }) => card.id)).toEqual([
       cardOne.id,
       cardTwo.id,
       cardThree.id,
@@ -131,8 +150,8 @@ describe("study session behavior", () => {
       cardThree.id,
     ]);
     expect(resumedFeed.studySessionId).toBe(firstFeed.studySessionId);
-    expect(resumedFeed.cards.map((card) => card.id)).toEqual(
-      firstFeed.cards.map((card) => card.id)
+    expect(resumedFeed.occurrences.map(({ card }) => card.id)).toEqual(
+      firstFeed.occurrences.map(({ card }) => card.id)
     );
   });
 
@@ -228,7 +247,7 @@ describe("study session behavior", () => {
     const feedService = new ReelFeedService(harness.service, () => 0);
     const cards = Array.from({ length: 10 }, (_, index) => makeFlashcard(index + 1));
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
-    const sourceCard = first(feed.baseCards);
+    const sourceCard = first(feed.occurrences).card;
 
     const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
     await harness.service.rateAttempt(attemptId, "again");
@@ -238,17 +257,15 @@ describe("study session behavior", () => {
         (item) => item.baseFeedPosition
       )
     ).toEqual(Array.from({ length: 6 }, (_, index) => index));
-    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
+    await feedService.extendFeed(cards, feed.studySessionId);
     expect(
       (await harness.service.listSessionItems(feed.studySessionId)).map(
         (item) => item.baseFeedPosition
       )
-    ).toEqual(Array.from({ length: 10 }, (_, index) => index));
-    const occurrences = await feedService.refreshOccurrences(
-      extended.baseCards,
-      feed.studySessionId
-    );
-    expect(occurrences.cards.filter((card) => card.id === sourceCard.id)).toHaveLength(2);
+    ).toEqual(Array.from({ length: 15 }, (_, index) => index));
+    const occurrences = await feedService.refreshOccurrences(cards, feed.studySessionId);
+    expect(occurrences.filter(({ card }) => card.id === sourceCard.id)).toHaveLength(2);
   });
 
   it("renders multiple recurrences at their exact reel positions without target drift", async () => {
@@ -256,8 +273,8 @@ describe("study session behavior", () => {
     const feedService = new ReelFeedService(harness.service, () => 0);
     const cards = Array.from({ length: 12 }, (_, index) => makeFlashcard(index + 1));
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
-    const firstBaseCard = feed.baseCards[0];
-    const secondBaseCard = feed.baseCards[1];
+    const firstBaseCard = feed.occurrences[0]?.card;
+    const secondBaseCard = feed.occurrences[1]?.card;
     if (!firstBaseCard || !secondBaseCard) {
       throw new Error("Expected two base feed cards");
     }
@@ -275,18 +292,20 @@ describe("study session behavior", () => {
     await harness.service.rateAttempt(firstAttemptId, "again");
     await harness.service.rateAttempt(secondAttemptId, "again");
 
-    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
+    await feedService.extendFeed(cards, feed.studySessionId);
     const materializedItems = await harness.service.listSessionItems(feed.studySessionId);
     expect(materializedItems.map((item) => item.reelPosition)).not.toContain(8);
     expect(materializedItems.map((item) => item.reelPosition)).not.toContain(9);
-    const occurrences = await feedService.refreshOccurrences(
-      extended.baseCards,
-      feed.studySessionId
+    const occurrences = await feedService.refreshOccurrences(cards, feed.studySessionId);
+    expect(occurrences.find(({ reelPosition }) => reelPosition === 8)?.card.id).toBe(
+      firstBaseCard.id
     );
-    expect(occurrences.cards[8]?.id).toBe(firstBaseCard.id);
-    expect(occurrences.cards[9]?.id).toBe(secondBaseCard.id);
-    expect(occurrences.recurrenceIds.get(8)).toBeDefined();
-    expect(occurrences.recurrenceIds.get(9)).toBeDefined();
+    expect(occurrences.find(({ reelPosition }) => reelPosition === 9)?.card.id).toBe(
+      secondBaseCard.id
+    );
+    expect(occurrences.find(({ reelPosition }) => reelPosition === 8)?.recurrenceId).toBeDefined();
+    expect(occurrences.find(({ reelPosition }) => reelPosition === 9)?.recurrenceId).toBeDefined();
   });
 
   it("keeps a pending recurrence reserved until its exact future position is materialized", async () => {
@@ -294,7 +313,7 @@ describe("study session behavior", () => {
     const feedService = new ReelFeedService(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
-    const sourceCard = feed.baseCards[0];
+    const sourceCard = feed.occurrences[0]?.card;
     if (!sourceCard) {
       throw new Error("Expected a source card");
     }
@@ -302,11 +321,16 @@ describe("study session behavior", () => {
     const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
     await harness.service.rateAttempt(attemptId, "again");
     const beforeExtension = await harness.service.listSessionItems(feed.studySessionId);
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
     const extended = await feedService.extendFeed(cards, feed.studySessionId);
 
     expect(beforeExtension.map((item) => item.reelPosition)).not.toContain(8);
-    expect(extended.cards[8]?.id).toBe(sourceCard.id);
-    expect(extended.recurrenceIds.get(8)).toBeDefined();
+    expect(extended.occurrences.find(({ reelPosition }) => reelPosition === 8)?.card.id).toBe(
+      sourceCard.id
+    );
+    expect(
+      extended.occurrences.find(({ reelPosition }) => reelPosition === 8)?.recurrenceId
+    ).toBeDefined();
   });
 
   it("renders a recurrence beyond the initial materialized range only at its target", async () => {
@@ -314,7 +338,7 @@ describe("study session behavior", () => {
     const feedService = new ReelFeedService(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
-    const sourceCard = feed.baseCards[0];
+    const sourceCard = feed.occurrences[0]?.card;
     if (!sourceCard) {
       throw new Error("Expected a base feed card");
     }
@@ -322,15 +346,20 @@ describe("study session behavior", () => {
     const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
     await harness.service.rateAttempt(attemptId, "again");
 
-    const occurrences = await feedService.refreshOccurrences(feed.baseCards, feed.studySessionId);
-    expect(occurrences.cards).toHaveLength(6);
-    expect(occurrences.recurrenceIds.size).toBe(0);
+    const occurrences = await feedService.refreshOccurrences(cards, feed.studySessionId);
+    expect(occurrences).toHaveLength(6);
+    expect(occurrences.filter(({ recurrenceId }) => recurrenceId !== null)).toHaveLength(0);
     expect((await harness.service.listSessionRecurrences(feed.studySessionId))[0]?.consumedAt).toBe(
       null
     );
 
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
     const extended = await feedService.extendFeed(cards, feed.studySessionId);
-    expect(extended.cards[8]?.id).toBe(sourceCard.id);
-    expect(extended.recurrenceIds.get(8)).toBeDefined();
+    expect(extended.occurrences.find(({ reelPosition }) => reelPosition === 8)?.card.id).toBe(
+      sourceCard.id
+    );
+    expect(
+      extended.occurrences.find(({ reelPosition }) => reelPosition === 8)?.recurrenceId
+    ).toBeDefined();
   });
 });

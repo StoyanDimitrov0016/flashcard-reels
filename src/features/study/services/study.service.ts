@@ -190,8 +190,40 @@ export class StudyService {
     return this.studySessionItemRepository.listBySessionId(sessionId);
   }
 
+  async findMaxSessionBaseFeedPosition(sessionId: string): Promise<number | null> {
+    return this.studySessionItemRepository.findMaxBaseFeedPosition(sessionId);
+  }
+
+  async findMaxSessionReelPosition(sessionId: string): Promise<number | null> {
+    return this.studySessionItemRepository.findMaxReelPosition(sessionId);
+  }
+
+  async listSessionItemsInReelPositionRange(
+    sessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<StudySessionItem[]> {
+    return this.studySessionItemRepository.listBySessionIdInReelPositionRange(
+      sessionId,
+      fromReelPosition,
+      throughReelPosition
+    );
+  }
+
   async listSessionRecurrences(sessionId: string): Promise<StudySessionRecurrence[]> {
     return this.studySessionRecurrenceRepository.listBySessionId(sessionId);
+  }
+
+  async listSessionRecurrencesInTargetRange(
+    sessionId: string,
+    fromTargetReelPosition: number,
+    throughTargetReelPosition: number
+  ): Promise<StudySessionRecurrence[]> {
+    return this.studySessionRecurrenceRepository.listBySessionIdInTargetRange(
+      sessionId,
+      fromTargetReelPosition,
+      throughTargetReelPosition
+    );
   }
 
   async updateSessionReelPosition(
