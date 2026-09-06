@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
+import { getLocalReelIndex } from "@/features/reels/hooks/use-reel-feed";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import { OTHER_DECK_ID, createStudyHarness, makeFlashcard } from "./support/study-test-support";
 
@@ -13,6 +14,12 @@ function first<T>(items: readonly T[]): T {
 }
 
 describe("study session behavior", () => {
+  it("maps the persisted absolute position to the local loaded-window index", () => {
+    expect(getLocalReelIndex(5_000, 4_950, 151)).toBe(50);
+    expect(getLocalReelIndex(4_900, 4_950, 151)).toBe(0);
+    expect(getLocalReelIndex(5_200, 4_950, 151)).toBe(150);
+  });
+
   it("keeps Mixed and Focused sessions active independently", async () => {
     const harness = createStudyHarness();
     const feedService = new ReelFeedService(harness.service, () => 0);

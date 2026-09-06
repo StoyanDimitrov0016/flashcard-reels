@@ -8,6 +8,11 @@ export interface ReviewAttemptRepository {
     studySessionId: string,
     reelPosition: number
   ): Promise<FlashcardReviewAttempt | null>;
+  listBySessionAndReelPositionRange(
+    studySessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<FlashcardReviewAttempt[]>;
   listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number

@@ -158,6 +158,22 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
     );
   }
 
+  async listBySessionAndReelPositionRange(
+    studySessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<FlashcardReviewAttempt[]> {
+    return ordered(
+      [...this.attempts.values()].filter(
+        (attempt) =>
+          attempt.studySessionId === studySessionId &&
+          attempt.reelPosition >= fromReelPosition &&
+          attempt.reelPosition <= throughReelPosition
+      ),
+      (left, right) => left.reelPosition - right.reelPosition
+    );
+  }
+
   async listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number

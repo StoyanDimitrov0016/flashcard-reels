@@ -1,4 +1,4 @@
-import { and, asc, eq, lt, isNull } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lt, lte } from "drizzle-orm";
 
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
@@ -63,6 +63,29 @@ export class SQLiteReviewAttemptRepository<
       .limit(1);
     const row = rows[0];
     return row ? this.toModel(row) : null;
+  }
+
+  async listBySessionAndReelPositionRange(
+    studySessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<FlashcardReviewAttempt[]> {
+    const rows = await this.database
+      .select()
+      .from(flashcardReviewAttempts)
+      .where(
+        and(
+          eq(flashcardReviewAttempts.studySessionId, studySessionId),
+          gte(flashcardReviewAttempts.reelPosition, fromReelPosition),
+          lte(flashcardReviewAttempts.reelPosition, throughReelPosition)
+        )
+      )
+      .orderBy(
+        asc(flashcardReviewAttempts.reelPosition),
+        asc(flashcardReviewAttempts.createdAt),
+        asc(flashcardReviewAttempts.id)
+      );
+    return rows.map((row) => this.toModel(row));
   }
 
   async listUnfinalizedBeforeReelPosition(

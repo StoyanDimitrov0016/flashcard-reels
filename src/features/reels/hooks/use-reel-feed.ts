@@ -1,17 +1,37 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 
 type UseReelFeedParameters = Readonly<{
   initialReelPosition: number;
   itemHeight: number;
   itemCount: number;
+  loadedFromReelPosition: number;
 }>;
 
-export function useReelFeed({ initialReelPosition, itemCount, itemHeight }: UseReelFeedParameters) {
-  const normalizedInitialPosition =
-    itemCount === 0 ? 0 : Math.min(itemCount - 1, Math.max(0, initialReelPosition));
-  const [activeIndex, setActiveIndex] = useState(normalizedInitialPosition);
-  const activeIndexReference = useRef(normalizedInitialPosition);
+export function useReelFeed({
+  initialReelPosition,
+  itemCount,
+  itemHeight,
+  loadedFromReelPosition,
+}: UseReelFeedParameters) {
+  const normalizedInitialIndex = getLocalReelIndex(
+    initialReelPosition,
+    loadedFromReelPosition,
+    itemCount
+  );
+  const [activeIndex, setActiveIndex] = useState(normalizedInitialIndex);
+  const activeIndexReference = useRef(normalizedInitialIndex);
+  const activeReelPositionReference = useRef(initialReelPosition);
+
+  useEffect(() => {
+    const nextIndex = getLocalReelIndex(
+      activeReelPositionReference.current,
+      loadedFromReelPosition,
+      itemCount
+    );
+    activeIndexReference.current = nextIndex;
+    setActiveIndex(nextIndex);
+  }, [itemCount, loadedFromReelPosition]);
 
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const nextIndex = Math.min(
@@ -21,9 +41,23 @@ export function useReelFeed({ initialReelPosition, itemCount, itemHeight }: UseR
 
     if (nextIndex !== activeIndexReference.current) {
       activeIndexReference.current = nextIndex;
+      activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
       setActiveIndex(nextIndex);
     }
   };
 
-  return { activeIndex, handleMomentumScrollEnd };
+  return {
+    activeIndex,
+    activeReelPosition: loadedFromReelPosition + activeIndex,
+    handleMomentumScrollEnd,
+  };
+}
+
+export function getLocalReelIndex(
+  absoluteReelPosition: number,
+  loadedFromReelPosition: number,
+  itemCount: number
+): number {
+  const localIndex = absoluteReelPosition - loadedFromReelPosition;
+  return itemCount === 0 ? 0 : Math.min(itemCount - 1, Math.max(0, localIndex));
 }

@@ -184,6 +184,30 @@ describe("SQLite study persistence", () => {
     expect(await items.findMaxReelPosition(session.id)).toBe(11);
   });
 
+  it("reads only review attempts in the retained reel range", async () => {
+    const session = makeSession(testId(229), "mixed");
+    await sessions.create(session);
+    await Promise.all(
+      [10, 11, 12].map((reelPosition) =>
+        attempts.create(
+          new FlashcardReviewAttempt({
+            createdAt: "2026-01-01T00:00:00.000Z",
+            finalizedAt: null,
+            flashcardId: makeFlashcard(1).id,
+            id: testId(230 + reelPosition),
+            rating: reelPosition === 11 ? "hard" : null,
+            reelPosition,
+            studySessionId: session.id,
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          })
+        )
+      )
+    );
+
+    const stored = await attempts.listBySessionAndReelPositionRange(session.id, 11, 11);
+    expect(stored.map((attempt) => [attempt.reelPosition, attempt.rating])).toEqual([[11, "hard"]]);
+  });
+
   it("rolls back feed items and strategy state together", async () => {
     const session = makeSession(testId(214), "mixed");
     await sessions.create(session);

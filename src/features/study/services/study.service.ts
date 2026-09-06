@@ -265,6 +265,18 @@ export class StudyService {
     return attempt.id;
   }
 
+  async listReviewAttemptsInReelPositionRange(
+    sessionId: string,
+    fromReelPosition: number,
+    throughReelPosition: number
+  ): Promise<FlashcardReviewAttempt[]> {
+    return this.reviewAttemptRepository.listBySessionAndReelPositionRange(
+      sessionId,
+      fromReelPosition,
+      throughReelPosition
+    );
+  }
+
   async rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean> {
     const attempt = await this.reviewAttemptRepository.findById(attemptId);
     if (!attempt || attempt.finalizedAt !== null) {

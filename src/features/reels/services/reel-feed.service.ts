@@ -5,6 +5,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudyService } from "@/features/study/services/study.service";
 import type { RandomSource } from "@/features/study/config/recurrences";
@@ -85,12 +86,19 @@ export class ReelFeedService {
     sourceCards: readonly Flashcard[],
     studySessionId: string
   ): Promise<PreparedReelOccurrences> {
+    const feed = await this.refreshFeed(sourceCards, studySessionId);
+    return feed.occurrences;
+  }
+
+  async refreshFeed(
+    sourceCards: readonly Flashcard[],
+    studySessionId: string
+  ): Promise<PreparedReelFeed> {
     const session = await this.studyService.findSession(studySessionId);
     if (!session) {
       throw new Error(`Missing study session ${studySessionId}`);
     }
-    const feed = await this.buildPreparedFeed(sourceCards, session);
-    return feed.occurrences;
+    return this.buildPreparedFeed(sourceCards, session);
   }
 
   private async ensureMaterialized(

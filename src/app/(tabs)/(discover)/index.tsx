@@ -23,13 +23,7 @@ function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
   }
 
   return (
-    <ReelFeed
-      initialReelPosition={preparedFeed.currentReelPosition}
-      key={preparedFeed.studySessionId}
-      occurrences={preparedFeed.occurrences}
-      sourceCards={cards}
-      studySessionId={preparedFeed.studySessionId}
-    />
+    <ReelFeed key={preparedFeed.studySessionId} preparedFeed={preparedFeed} sourceCards={cards} />
   );
 }
 

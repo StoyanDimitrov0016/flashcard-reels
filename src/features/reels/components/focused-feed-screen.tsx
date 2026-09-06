@@ -48,12 +48,10 @@ function ReadyFocusedFeedContent({
 
   return (
     <ReelFeed
-      initialReelPosition={preparedFeed.currentReelPosition}
       key={preparedFeed.studySessionId}
-      occurrences={preparedFeed.occurrences}
+      preparedFeed={preparedFeed}
       showMainFeedLink
       sourceCards={cards}
-      studySessionId={preparedFeed.studySessionId}
     />
   );
 }
