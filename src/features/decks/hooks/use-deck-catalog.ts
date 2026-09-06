@@ -4,7 +4,7 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
-export type DeckCatalogEntry = Readonly<{
+type DeckCatalogEntry = Readonly<{
   appearance: DeckAppearance;
   cardCount: number;
   deck: Deck;

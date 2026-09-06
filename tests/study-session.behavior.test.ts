@@ -122,6 +122,31 @@ describe("study session behavior", () => {
     expect(resumed.loadedThroughReelPosition).toBe(105);
   });
 
+  it("keeps a 1,000-position session bounded and resumable", async () => {
+    const harness = createStudyHarness(() => 0);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = Array.from({ length: 5 }, (_, index) => makeFlashcard(index + 1));
+    const initial = await feedService.prepareFeed(cards, "mixed", null, false);
+    const initialItems = await harness.service.listSessionItems(initial.studySessionId);
+
+    await harness.service.updateSessionReelPosition(initial.studySessionId, 1_000);
+    const loaded = await feedService.prepareFeed(cards, "mixed", null, false);
+    const persistedItems = await harness.service.listSessionItems(initial.studySessionId);
+
+    expect(persistedItems).toHaveLength(1_006);
+    expect(persistedItems.slice(0, initialItems.length)).toEqual(initialItems);
+    expect(loaded.occurrences.map(({ reelPosition }) => reelPosition)).toEqual(
+      Array.from({ length: 11 }, (_, index) => index + 995)
+    );
+
+    const resumed = await new ReelFeedService(harness.service, () => {
+      throw new Error("A resumed prepared session must not reshuffle");
+    }).prepareFeed(cards, "mixed", null, false);
+    expect(resumed.occurrences.map(({ card }) => card.id)).toEqual(
+      loaded.occurrences.map(({ card }) => card.id)
+    );
+  });
+
   it("persists the ordered Focus strategy and wraps by deck position", async () => {
     const harness = createStudyHarness();
     const feedService = new ReelFeedService(harness.service, () => 0.999);
@@ -236,16 +261,16 @@ describe("study session behavior", () => {
     ).toBeNull();
   });
 
-  it("exposes a compaction boundary without crossing unfinished history", async () => {
+  it("exposes compaction eligibility without crossing unfinished history", async () => {
     const harness = createStudyHarness();
     const { session } = await harness.service.openSession("mixed", null, false);
     await harness.service.updateSessionReelPosition(session.id, 130);
 
-    const boundary = await harness.service.getCompactionBoundary(session.id);
+    const boundary = await harness.service.getCompactionEligibility(session.id);
     expect(boundary).toEqual({ safeThroughReelPosition: 30, shouldCheck: true });
 
     await harness.service.startAttempt(makeFlashcard(1).id, 20, session.id);
-    const blockedBoundary = await harness.service.getCompactionBoundary(session.id);
+    const blockedBoundary = await harness.service.getCompactionEligibility(session.id);
     expect(blockedBoundary).toEqual({ safeThroughReelPosition: 19, shouldCheck: false });
   });
 

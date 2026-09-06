@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { FlashcardIdSchema, type FlashcardId } from "@/features/flashcards/domain/flashcard.model";
 
-export const StudySessionItemFieldsSchema = z.compile(
+const StudySessionItemFieldsSchema = z.compile(
   z.object({
     flashcardId: FlashcardIdSchema,
     id: z.string(),

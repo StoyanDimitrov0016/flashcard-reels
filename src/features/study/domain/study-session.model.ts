@@ -9,7 +9,7 @@ import {
 export const StudySessionScopeSchema = z.enum(["mixed", "focused"]);
 export type StudySessionScope = z.infer<typeof StudySessionScopeSchema>;
 
-export const StudySessionFieldsSchema = z.compile(
+const StudySessionFieldsSchema = z.compile(
   z.object({
     completedAt: z.string().nullable(),
     compactedThroughReelPosition: z.number().int().gte(-1),

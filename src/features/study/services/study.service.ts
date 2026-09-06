@@ -99,7 +99,8 @@ export class StudyService {
     return this.studySessionRepository.findActiveByScope(scope);
   }
 
-  async getCompactionBoundary(sessionId: string): Promise<Readonly<{
+  /** Returns compaction eligibility; it never advances the durable checkpoint. */
+  async getCompactionEligibility(sessionId: string): Promise<Readonly<{
     shouldCheck: boolean;
     safeThroughReelPosition: number;
   }> | null> {

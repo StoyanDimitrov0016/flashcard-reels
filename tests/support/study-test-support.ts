@@ -23,7 +23,6 @@ import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 export const TEST_DECK_ID = "00000000-0000-4000-8000-000000000100";
 export const OTHER_DECK_ID = "00000000-0000-4000-8000-000000000101";
-export const TEST_SESSION_ID = "00000000-0000-4000-8000-000000000200";
 
 export function testId(index: number): string {
   return `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;

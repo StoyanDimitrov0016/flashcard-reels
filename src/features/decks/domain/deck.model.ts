@@ -5,7 +5,7 @@ import { UuidSchema } from "@/shared/domain/uuid";
 export const DeckIdSchema = UuidSchema;
 export type DeckId = z.infer<typeof DeckIdSchema>;
 
-export const DeckFieldsSchema = z.compile(
+const DeckFieldsSchema = z.compile(
   z.object({
     id: DeckIdSchema,
     title: z.string(),

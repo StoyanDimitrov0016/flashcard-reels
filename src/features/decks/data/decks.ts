@@ -3,7 +3,7 @@ import type { DeckFields, DeckId } from "@/features/decks/domain/deck.model";
 
 const POC_TIMESTAMP = "2026-09-04T00:00:00.000Z";
 
-export const deckFieldsById = {
+const deckFieldsById = {
   javascript: {
     id: "a73071db-1fcb-4ffa-8f08-bd353dd5cfc1",
     title: "JavaScript",
@@ -48,7 +48,7 @@ export const deckFieldsById = {
   },
 } satisfies Record<DeckId, DeckFields>;
 
-export const deckAppearanceFieldsById = {
+const deckAppearanceFieldsById = {
   javascript: {
     deckId: "a73071db-1fcb-4ffa-8f08-bd353dd5cfc1",
     accentColor: "#F8C15C",

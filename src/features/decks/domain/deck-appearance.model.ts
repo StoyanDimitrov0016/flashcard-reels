@@ -1,7 +1,7 @@
 import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
 import { z } from "zod";
 
-export const DeckAppearanceFieldsSchema = z.compile(
+const DeckAppearanceFieldsSchema = z.compile(
   z.object({
     deckId: DeckIdSchema,
     accentColor: z.string(),

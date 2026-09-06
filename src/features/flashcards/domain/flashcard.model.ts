@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const FlashcardIdSchema = UuidSchema;
 
-export const FlashcardFieldsSchema = z.compile(
+const FlashcardFieldsSchema = z.compile(
   z.object({
     id: FlashcardIdSchema,
     deckId: DeckIdSchema,

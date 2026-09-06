@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { FlashcardIdSchema } from "@/features/flashcards/domain/flashcard.model";
 
-export const StudySessionRecurrenceFieldsSchema = z.compile(
+const StudySessionRecurrenceFieldsSchema = z.compile(
   z.object({
     consumedAt: z.string().nullable(),
     createdAt: z.string(),

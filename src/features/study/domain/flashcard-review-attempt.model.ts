@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { RecallLevelSchema, type RecallLevel } from "@/features/study/domain/recall-level";
 
-export const FlashcardReviewAttemptFieldsSchema = z.compile(
+const FlashcardReviewAttemptFieldsSchema = z.compile(
   z.object({
     id: z.string(),
     flashcardId: z.string(),
