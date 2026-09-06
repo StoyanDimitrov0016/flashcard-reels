@@ -301,16 +301,16 @@ describe("study session behavior", () => {
     ).toBeNull();
   });
 
-  it("exposes compaction eligibility without crossing unfinished history", async () => {
+  it("exposes aggregation eligibility without crossing unfinished history", async () => {
     const harness = createStudyHarness();
     const { session } = await harness.service.openSession("mixed", null, false);
     await harness.service.updateSessionReelPosition(session.id, 130);
 
-    const boundary = await harness.service.getCompactionEligibility(session.id);
+    const boundary = await harness.service.getAggregationEligibility(session.id);
     expect(boundary).toEqual({ safeThroughReelPosition: 30, shouldCheck: true });
 
     await harness.service.startAttempt(makeFlashcard(1).id, 20, session.id);
-    const blockedBoundary = await harness.service.getCompactionEligibility(session.id);
+    const blockedBoundary = await harness.service.getAggregationEligibility(session.id);
     expect(blockedBoundary).toEqual({ safeThroughReelPosition: 19, shouldCheck: false });
   });
 

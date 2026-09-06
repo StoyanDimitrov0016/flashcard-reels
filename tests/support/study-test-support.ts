@@ -53,7 +53,7 @@ export function makeSession(
 ): StudySession {
   return new StudySession({
     completedAt: null,
-    compactedThroughReelPosition: -1,
+    aggregatedThroughReelPosition: -1,
     createdAt: "2026-01-01T00:00:00.000Z",
     currentReelPosition,
     deckId,
@@ -215,7 +215,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         sessionId,
         new StudySession({
           completedAt,
-          compactedThroughReelPosition: session.compactedThroughReelPosition,
+          aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
           createdAt: session.createdAt,
           currentReelPosition: session.currentReelPosition,
           deckId: session.deckId,
@@ -279,7 +279,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       sessionId,
       new StudySession({
         completedAt: session.completedAt,
-        compactedThroughReelPosition: session.compactedThroughReelPosition,
+        aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition,
         deckId: session.deckId,
@@ -302,7 +302,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       sessionId,
       new StudySession({
         completedAt: session.completedAt,
-        compactedThroughReelPosition: session.compactedThroughReelPosition,
+        aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition: session.currentReelPosition,
         deckId: session.deckId,
@@ -360,7 +360,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
         created: false,
         session: new StudySession({
           completedAt: activeSession.completedAt,
-          compactedThroughReelPosition: activeSession.compactedThroughReelPosition,
+          aggregatedThroughReelPosition: activeSession.aggregatedThroughReelPosition,
           createdAt: activeSession.createdAt,
           currentReelPosition: activeSession.currentReelPosition,
           deckId: activeSession.deckId,
@@ -377,7 +377,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
     }
     const session = new StudySession({
       completedAt: null,
-      compactedThroughReelPosition: -1,
+      aggregatedThroughReelPosition: -1,
       createdAt: now,
       currentReelPosition: 0,
       deckId,

@@ -12,7 +12,7 @@ export type StudySessionScope = z.infer<typeof StudySessionScopeSchema>;
 const StudySessionFieldsSchema = z.compile(
   z.object({
     completedAt: z.string().nullable(),
-    compactedThroughReelPosition: z.number().int().gte(-1),
+    aggregatedThroughReelPosition: z.number().int().gte(-1),
     createdAt: z.string(),
     currentReelPosition: z.number().int().nonnegative(),
     deckId: DeckIdSchema.nullable(),
@@ -35,11 +35,11 @@ export class StudySession {
   public readonly currentReelPosition: number;
   public readonly createdAt: string;
   public readonly completedAt: string | null;
-  public readonly compactedThroughReelPosition: number;
+  public readonly aggregatedThroughReelPosition: number;
 
   constructor(fields: StudySessionFields) {
     this.completedAt = fields.completedAt;
-    this.compactedThroughReelPosition = fields.compactedThroughReelPosition;
+    this.aggregatedThroughReelPosition = fields.aggregatedThroughReelPosition;
     this.createdAt = fields.createdAt;
     this.currentReelPosition = fields.currentReelPosition;
     this.deckId = fields.deckId;

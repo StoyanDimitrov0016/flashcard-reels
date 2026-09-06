@@ -92,7 +92,9 @@ export const studySessions = sqliteTable(
     currentReelPosition: integer("current_reel_position").notNull(),
     createdAt: text("created_at").notNull(),
     completedAt: text("completed_at"),
-    compactedThroughReelPosition: integer("compacted_through_reel_position").notNull().default(-1),
+    aggregatedThroughReelPosition: integer("aggregated_through_reel_position")
+      .notNull()
+      .default(-1),
     lastActiveAt: text("last_active_at").notNull(),
     strategyState: text("strategy_state").notNull(),
   },
@@ -104,8 +106,8 @@ export const studySessions = sqliteTable(
     check("study_sessions_strategy_check", sql`${table.strategy} IN ('shuffle', 'ordered')`),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
     check(
-      "study_sessions_compacted_through_reel_position_check",
-      sql`${table.compactedThroughReelPosition} >= -1`
+      "study_sessions_aggregated_through_reel_position_check",
+      sql`${table.aggregatedThroughReelPosition} >= -1`
     ),
     index("study_sessions_active_scope_idx").on(
       table.scope,

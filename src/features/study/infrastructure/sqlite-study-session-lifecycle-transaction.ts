@@ -76,7 +76,7 @@ export class SQLiteStudySessionLifecycleTransaction<
 
       const session = new StudySession({
         completedAt: null,
-        compactedThroughReelPosition: -1,
+        aggregatedThroughReelPosition: -1,
         createdAt: now,
         currentReelPosition: 0,
         deckId,
@@ -89,7 +89,7 @@ export class SQLiteStudySessionLifecycleTransaction<
       transaction
         .insert(studySessions)
         .values({
-          compactedThroughReelPosition: session.compactedThroughReelPosition,
+          aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
           completedAt: session.completedAt,
           createdAt: session.createdAt,
           currentReelPosition: session.currentReelPosition,
@@ -108,7 +108,7 @@ export class SQLiteStudySessionLifecycleTransaction<
   private toModel(row: typeof studySessions.$inferSelect): StudySession {
     return new StudySession({
       completedAt: row.completedAt,
-      compactedThroughReelPosition: row.compactedThroughReelPosition,
+      aggregatedThroughReelPosition: row.aggregatedThroughReelPosition,
       createdAt: row.createdAt,
       currentReelPosition: row.currentReelPosition,
       deckId: row.deckId,

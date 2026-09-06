@@ -1,7 +1,7 @@
 import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import {
-  COMPACTION_CHECK_INTERVAL,
+  AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
 } from "@/features/study/config/review-attempts";
@@ -99,8 +99,8 @@ export class StudyService {
     return this.studySessionRepository.findActiveByScope(scope);
   }
 
-  /** Returns compaction eligibility; it never advances the durable checkpoint. */
-  async getCompactionEligibility(sessionId: string): Promise<Readonly<{
+  /** Returns aggregation eligibility; it never advances the durable checkpoint. */
+  async getAggregationEligibility(sessionId: string): Promise<Readonly<{
     shouldCheck: boolean;
     safeThroughReelPosition: number;
   }> | null> {
@@ -110,8 +110,11 @@ export class StudyService {
     }
 
     const candidate = session.currentReelPosition - DETAILED_REVIEW_HISTORY_RETENTION;
-    if (candidate <= session.compactedThroughReelPosition) {
-      return { safeThroughReelPosition: session.compactedThroughReelPosition, shouldCheck: false };
+    if (candidate <= session.aggregatedThroughReelPosition) {
+      return {
+        safeThroughReelPosition: session.aggregatedThroughReelPosition,
+        shouldCheck: false,
+      };
     }
 
     const unfinished = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
@@ -125,8 +128,9 @@ export class StudyService {
     return {
       safeThroughReelPosition,
       shouldCheck:
-        safeThroughReelPosition > session.compactedThroughReelPosition &&
-        safeThroughReelPosition - session.compactedThroughReelPosition >= COMPACTION_CHECK_INTERVAL,
+        safeThroughReelPosition > session.aggregatedThroughReelPosition &&
+        safeThroughReelPosition - session.aggregatedThroughReelPosition >=
+          AGGREGATION_CHECK_INTERVAL,
     };
   }
 
