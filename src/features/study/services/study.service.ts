@@ -1,5 +1,6 @@
 import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/services/learner-profile-aggregation-transaction";
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
@@ -38,6 +39,7 @@ export class StudyService {
   private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
+  private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -49,7 +51,8 @@ export class StudyService {
     reviewAttemptTransaction: ReviewAttemptTransaction,
     studySessionFeedTransaction: StudySessionFeedTransaction,
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
-    random: RandomSource = Math.random
+    random: RandomSource = Math.random,
+    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -61,6 +64,7 @@ export class StudyService {
     this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
+    this.learnerProfileAggregationTransaction = learnerProfileAggregationTransaction;
   }
 
   async openSession(
@@ -77,7 +81,7 @@ export class StudyService {
     }
 
     const createdAt = this.clock.now();
-    return this.studySessionLifecycleTransaction.open(
+    const opened = await this.studySessionLifecycleTransaction.open(
       scope,
       deckId,
       replaceExisting,
@@ -85,10 +89,17 @@ export class StudyService {
       createdAt,
       this.idGenerator.generate()
     );
+    if (opened.replacedSessionId !== null) {
+      await this.finalizeAndAggregateCompletedSession(opened.replacedSessionId);
+    }
+    await this.aggregateActiveSessionIfEligible(opened.session.id);
+    return opened;
   }
 
   async completeSession(sessionId: string): Promise<void> {
+    await this.finalizeAllAttempts(sessionId);
     await this.studySessionRepository.complete(sessionId, this.clock.now());
+    await this.aggregateCompletedSession(sessionId);
   }
 
   async findSession(sessionId: string): Promise<StudySession | null> {
@@ -307,6 +318,7 @@ export class StudyService {
   ): Promise<void> {
     const firstEditablePosition = reelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
     if (firstEditablePosition <= 0) {
+      await this.aggregateActiveSessionIfEligible(studySessionId);
       return;
     }
 
@@ -315,5 +327,66 @@ export class StudyService {
       firstEditablePosition
     );
     await Promise.all(attempts.map((attempt) => this.finalizeAttempt(attempt.id)));
+    await this.aggregateActiveSessionIfEligible(studySessionId);
+  }
+
+  private async finalizeAndAggregateCompletedSession(sessionId: string): Promise<void> {
+    await this.finalizeAllAttempts(sessionId);
+    await this.aggregateCompletedSession(sessionId);
+  }
+
+  private async finalizeAllAttempts(studySessionId: string): Promise<void> {
+    const maxReelPosition = await this.reviewAttemptRepository.findMaxReelPosition(studySessionId);
+    if (maxReelPosition === null) {
+      return;
+    }
+    const attempts = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
+      studySessionId,
+      maxReelPosition + 1
+    );
+    await Promise.all(attempts.map((attempt) => this.finalizeAttempt(attempt.id)));
+  }
+
+  private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
+    if (!this.learnerProfileAggregationTransaction) {
+      return;
+    }
+    const eligibility = await this.getAggregationEligibility(studySessionId);
+    if (!eligibility?.shouldCheck) {
+      return;
+    }
+    await this.learnerProfileAggregationTransaction.aggregate(
+      studySessionId,
+      eligibility.safeThroughReelPosition,
+      this.clock.now()
+    );
+  }
+
+  private async aggregateCompletedSession(studySessionId: string): Promise<void> {
+    const aggregation = this.learnerProfileAggregationTransaction;
+    if (!aggregation) {
+      return;
+    }
+    const maximumAttemptPosition =
+      await this.reviewAttemptRepository.findMaxReelPosition(studySessionId);
+    if (maximumAttemptPosition === null) {
+      return;
+    }
+
+    const aggregateNextChunk = async (session: StudySession | null): Promise<void> => {
+      if (!session || session.aggregatedThroughReelPosition >= maximumAttemptPosition) {
+        return;
+      }
+      const result = await aggregation.aggregate(
+        studySessionId,
+        maximumAttemptPosition,
+        this.clock.now()
+      );
+      if (result.throughReelPosition <= session.aggregatedThroughReelPosition) {
+        return;
+      }
+      return aggregateNextChunk(await this.studySessionRepository.findById(studySessionId));
+    };
+    await aggregateNextChunk(await this.studySessionRepository.findById(studySessionId));
   }
 }

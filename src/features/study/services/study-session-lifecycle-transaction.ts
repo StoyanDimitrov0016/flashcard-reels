@@ -4,6 +4,7 @@ import type { StudySessionStrategy } from "@/features/study/domain/study-session
 
 export type OpenStudySessionResult = Readonly<{
   created: boolean;
+  replacedSessionId: string | null;
   session: StudySession;
 }>;
 

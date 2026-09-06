@@ -13,6 +13,7 @@ export interface ReviewAttemptRepository {
     fromReelPosition: number,
     throughReelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;
+  findMaxReelPosition(studySessionId: string): Promise<number | null>;
   listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number

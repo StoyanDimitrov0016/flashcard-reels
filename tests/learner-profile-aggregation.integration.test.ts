@@ -5,9 +5,21 @@ import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infra
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
+import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
+import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { StudyService } from "@/features/study/services/study.service";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
-import { TEST_DECK_ID, makeFlashcard, makeSession, testId } from "./support/study-test-support";
+import {
+  TEST_DECK_ID,
+  SequenceIdGenerator,
+  TestClock,
+  makeFlashcard,
+  makeSession,
+  testId,
+} from "./support/study-test-support";
 
 describe("SQLite learner-profile aggregation", () => {
   let database: NodeSqliteDatabase;
@@ -153,6 +165,64 @@ describe("SQLite learner-profile aggregation", () => {
       resetAt: "2026-01-01T00:02:00.000Z",
     });
   });
+
+  it("aggregates all remaining history when a Focus session completes", async () => {
+    const service = createService();
+    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    await createAttempt(opened.session.id, 0, "hard", "2026-01-01T00:01:00.000Z");
+
+    await service.completeSession(opened.session.id);
+
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      hardCount: 1,
+      reviewCount: 1,
+    });
+    expect((await sessions.findById(opened.session.id))?.aggregatedThroughReelPosition).toBe(0);
+  });
+
+  it("aggregates safe history while an active Discover session continues", async () => {
+    const service = createService();
+    const opened = await service.openSession("mixed", null, false);
+    await createAttempt(opened.session.id, 0, "again", "2026-01-01T00:01:00.000Z");
+    await service.updateSessionReelPosition(opened.session.id, 130);
+    await service.finalizeAttemptsOutsideEditableWindow(opened.session.id, 130);
+
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      againCount: 1,
+      reviewCount: 1,
+    });
+    expect((await sessions.findById(opened.session.id))?.aggregatedThroughReelPosition).toBe(24);
+  });
+
+  it("aggregates a replaced Focus session after its finalization boundary closes", async () => {
+    const service = createService();
+    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    await createAttempt(first.session.id, 0, "easy", "2026-01-01T00:01:00.000Z");
+
+    const replacement = await service.openSession("focused", TEST_DECK_ID, true);
+
+    expect(replacement.replacedSessionId).toBe(first.session.id);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      easyCount: 1,
+      reviewCount: 1,
+    });
+  });
+
+  function createService(): StudyService {
+    return new StudyService(
+      attempts,
+      sessions,
+      new SQLiteStudySessionItemRepository(database.drizzle),
+      new SQLiteStudySessionRecurrenceRepository(database.drizzle),
+      new TestClock(),
+      new SequenceIdGenerator(),
+      new SQLiteReviewAttemptTransaction(database.drizzle),
+      new SQLiteStudySessionFeedTransaction(database.drizzle),
+      new SQLiteStudySessionLifecycleTransaction(database.drizzle),
+      () => 0,
+      aggregation
+    );
+  }
 
   async function createAttempt(
     studySessionId: string,

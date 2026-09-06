@@ -62,6 +62,7 @@ export class SQLiteStudySessionLifecycleTransaction<
           .run();
         return {
           created: false,
+          replacedSessionId: null,
           session: this.toModel({ ...activeRow, lastActiveAt: now }),
         };
       }
@@ -101,7 +102,7 @@ export class SQLiteStudySessionLifecycleTransaction<
           strategyState: session.strategyState,
         })
         .run();
-      return { created: true, session };
+      return { created: true, replacedSessionId: activeRow?.id ?? null, session };
     });
   }
 

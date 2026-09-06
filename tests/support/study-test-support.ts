@@ -178,6 +178,13 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
     );
   }
 
+  async findMaxReelPosition(studySessionId: string): Promise<number | null> {
+    const positions = [...this.attempts.values()]
+      .filter((attempt) => attempt.studySessionId === studySessionId)
+      .map((attempt) => attempt.reelPosition);
+    return positions.length > 0 ? Math.max(...positions) : null;
+  }
+
   async listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number
@@ -358,6 +365,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
       );
       return {
         created: false,
+        replacedSessionId: null,
         session: new StudySession({
           completedAt: activeSession.completedAt,
           aggregatedThroughReelPosition: activeSession.aggregatedThroughReelPosition,
@@ -388,7 +396,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
       strategyState: "{}",
     });
     await this.sessions.create(session);
-    return { created: true, session };
+    return { created: true, replacedSessionId: activeSession?.id ?? null, session };
   }
 }
 

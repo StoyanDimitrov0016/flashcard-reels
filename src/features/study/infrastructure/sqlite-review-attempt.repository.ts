@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lt, lte } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lt, lte, max } from "drizzle-orm";
 
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
@@ -86,6 +86,14 @@ export class SQLiteReviewAttemptRepository<
         asc(flashcardReviewAttempts.id)
       );
     return rows.map((row) => this.toModel(row));
+  }
+
+  async findMaxReelPosition(studySessionId: string): Promise<number | null> {
+    const rows = await this.database
+      .select({ reelPosition: max(flashcardReviewAttempts.reelPosition) })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.studySessionId, studySessionId));
+    return rows[0]?.reelPosition ?? null;
   }
 
   async listUnfinalizedBeforeReelPosition(
