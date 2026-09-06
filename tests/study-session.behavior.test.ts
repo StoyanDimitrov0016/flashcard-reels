@@ -263,6 +263,9 @@ describe("study session behavior", () => {
     await harness.service.rateAttempt(secondAttemptId, "again");
 
     const extended = await feedService.extendFeed(cards, feed.studySessionId);
+    const materializedItems = await harness.service.listSessionItems(feed.studySessionId);
+    expect(materializedItems.map((item) => item.reelPosition)).not.toContain(8);
+    expect(materializedItems.map((item) => item.reelPosition)).not.toContain(9);
     const occurrences = await feedService.refreshOccurrences(
       extended.baseCards,
       feed.studySessionId
@@ -271,6 +274,26 @@ describe("study session behavior", () => {
     expect(occurrences.cards[9]?.id).toBe(secondBaseCard.id);
     expect(occurrences.recurrenceIds.get(8)).toBeDefined();
     expect(occurrences.recurrenceIds.get(9)).toBeDefined();
+  });
+
+  it("keeps a pending recurrence reserved until its exact future position is materialized", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const sourceCard = feed.baseCards[0];
+    if (!sourceCard) {
+      throw new Error("Expected a source card");
+    }
+
+    const attemptId = await harness.service.startAttempt(sourceCard.id, 0, feed.studySessionId);
+    await harness.service.rateAttempt(attemptId, "again");
+    const beforeExtension = await harness.service.listSessionItems(feed.studySessionId);
+    const extended = await feedService.extendFeed(cards, feed.studySessionId);
+
+    expect(beforeExtension.map((item) => item.reelPosition)).not.toContain(8);
+    expect(extended.cards[8]?.id).toBe(sourceCard.id);
+    expect(extended.recurrenceIds.get(8)).toBeDefined();
   });
 
   it("renders a recurrence beyond the initial materialized range only at its target", async () => {
