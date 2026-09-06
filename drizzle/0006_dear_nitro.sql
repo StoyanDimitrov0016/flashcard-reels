@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `study_sessions_one_active_per_scope_idx` ON `study_sessions` (`scope`) WHERE "study_sessions"."completed_at" IS NULL;

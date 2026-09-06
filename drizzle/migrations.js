@@ -7,6 +7,7 @@ import m0002 from "./0002_clean_dark_phoenix.sql";
 import m0003 from "./0003_yellow_lizard.sql";
 import m0004 from "./0004_stiff_the_watchers.sql";
 import m0005 from "./0005_married_imperial_guard.sql";
+import m0006 from "./0006_dear_nitro.sql";
 
 export default {
   journal,
@@ -17,5 +18,6 @@ export default {
     m0003,
     m0004,
     m0005,
+    m0006,
   },
 };

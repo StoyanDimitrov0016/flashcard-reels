@@ -8,14 +8,18 @@ import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
+import { StudyService } from "@/features/study/services/study.service";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   OTHER_DECK_ID,
   TEST_DECK_ID,
   makeFlashcard,
   makeSession,
+  SequenceIdGenerator,
+  TestClock,
   testId,
 } from "./support/study-test-support";
 
@@ -85,6 +89,71 @@ describe("SQLite study persistence", () => {
     await expect(
       sessions.create(makeSession(testId(202), "mixed", TEST_DECK_ID))
     ).rejects.toThrow();
+  });
+
+  it("enforces one active session per scope while permitting completed history", async () => {
+    const first = makeSession(testId(203), "mixed");
+    await sessions.create(first);
+    await expect(sessions.create(makeSession(testId(204), "mixed"))).rejects.toThrow();
+
+    await sessions.complete(first.id, "2026-01-01T00:01:00.000Z");
+    await expect(sessions.create(makeSession(testId(205), "mixed"))).resolves.toBeUndefined();
+  });
+
+  it("replaces an active Focus session atomically without touching Discover", async () => {
+    const clock = new TestClock();
+    const service = new StudyService(
+      attempts,
+      sessions,
+      items,
+      recurrences,
+      clock,
+      new SequenceIdGenerator(),
+      new SQLiteReviewAttemptTransaction(database.drizzle),
+      new SQLiteStudySessionFeedTransaction(database.drizzle),
+      new SQLiteStudySessionLifecycleTransaction(database.drizzle)
+    );
+    const mixed = await service.openSession("mixed", null, false);
+    const firstFocus = await service.openSession("focused", TEST_DECK_ID, false);
+    const replacement = await service.openSession("focused", OTHER_DECK_ID, false);
+
+    expect(replacement.created).toBe(true);
+    expect((await sessions.findById(firstFocus.session.id))?.completedAt).not.toBeNull();
+    expect((await sessions.findById(mixed.session.id))?.completedAt).toBeNull();
+    expect(
+      (
+        await database.getAllAsync(
+          "SELECT scope, COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL GROUP BY scope"
+        )
+      ).length
+    ).toBe(2);
+  });
+
+  it("leaves no duplicate active sessions across repeated open paths", async () => {
+    const clock = new TestClock();
+    const service = new StudyService(
+      attempts,
+      sessions,
+      items,
+      recurrences,
+      clock,
+      new SequenceIdGenerator(),
+      new SQLiteReviewAttemptTransaction(database.drizzle),
+      new SQLiteStudySessionFeedTransaction(database.drizzle),
+      new SQLiteStudySessionLifecycleTransaction(database.drizzle)
+    );
+
+    await Promise.all([
+      service.openSession("mixed", null, false),
+      service.openSession("mixed", null, false),
+      service.openSession("mixed", null, false),
+    ]);
+
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE scope = 'mixed' AND completed_at IS NULL"
+      )
+    ).toEqual({ count: 1 });
   });
 
   it("reads Focus cards by explicit deck position and enforces deck-position uniqueness", async () => {

@@ -78,6 +78,9 @@ export const studySessions = sqliteTable(
       table.createdAt,
       table.id
     ),
+    uniqueIndex("study_sessions_one_active_per_scope_idx")
+      .on(table.scope)
+      .where(sql`${table.completedAt} IS NULL`),
   ]
 );
 

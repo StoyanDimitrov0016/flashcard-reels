@@ -82,9 +82,18 @@ function ReadyFocusedFeed({
 
 export default function FocusedFeedScreen() {
   const router = useRouter();
-  const { consumeFocusedFeedReplacement, focusedFeed, startFocusedFeed } = useFeedScope();
+  const {
+    consumeFocusedFeedReplacement,
+    focusedFeed,
+    focusRestoring,
+    focusRevision,
+    startFocusedFeed,
+  } = useFeedScope();
 
   if (focusedFeed.status === "empty") {
+    if (focusRestoring) {
+      return <LoadingState />;
+    }
     return <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />;
   }
 
@@ -117,7 +126,7 @@ export default function FocusedFeedScreen() {
       </View>
       <ReadyFocusedFeed
         focusedFeed={focusedFeed}
-        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
+        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
         onSessionStarted={consumeFocusedFeedReplacement}
       />
     </View>

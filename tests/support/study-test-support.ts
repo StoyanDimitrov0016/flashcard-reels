@@ -1,6 +1,7 @@
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
+import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
@@ -11,6 +12,10 @@ import { StudySession } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
+import type {
+  OpenStudySessionResult,
+  StudySessionLifecycleTransaction,
+} from "@/features/study/services/study-session-lifecycle-transaction";
 import { StudyService } from "@/features/study/services/study.service";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
@@ -314,6 +319,77 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
 
   all(): StudySession[] {
     return [...this.sessions.values()];
+  }
+}
+
+export class InMemoryStudySessionLifecycleTransaction implements StudySessionLifecycleTransaction {
+  private readonly sessions: InMemoryStudySessionRepository;
+
+  constructor(sessions: InMemoryStudySessionRepository) {
+    this.sessions = sessions;
+  }
+
+  async open(
+    scope: "mixed" | "focused",
+    deckId: string | null,
+    replaceExisting: boolean,
+    strategy: StudySessionStrategy,
+    now: string,
+    sessionId: string
+  ): Promise<OpenStudySessionResult> {
+    const activeSession = await this.sessions.findActiveByScope(scope);
+    const focusExpired =
+      activeSession &&
+      scope === "focused" &&
+      Date.parse(now) - Date.parse(activeSession.lastActiveAt) >=
+        FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
+    const shouldReplace =
+      activeSession &&
+      (replaceExisting ||
+        (scope === "focused" &&
+          (activeSession.deckId !== deckId ||
+            activeSession.strategy !== strategy ||
+            focusExpired)));
+
+    if (activeSession && !shouldReplace) {
+      await this.sessions.updateCurrentReelPosition(
+        activeSession.id,
+        activeSession.currentReelPosition,
+        now
+      );
+      return {
+        created: false,
+        session: new StudySession({
+          completedAt: activeSession.completedAt,
+          compactedThroughReelPosition: activeSession.compactedThroughReelPosition,
+          createdAt: activeSession.createdAt,
+          currentReelPosition: activeSession.currentReelPosition,
+          deckId: activeSession.deckId,
+          id: activeSession.id,
+          lastActiveAt: now,
+          scope: activeSession.scope,
+          strategy: activeSession.strategy,
+          strategyState: activeSession.strategyState,
+        }),
+      };
+    }
+    if (activeSession) {
+      await this.sessions.complete(activeSession.id, now);
+    }
+    const session = new StudySession({
+      completedAt: null,
+      compactedThroughReelPosition: -1,
+      createdAt: now,
+      currentReelPosition: 0,
+      deckId,
+      id: sessionId,
+      lastActiveAt: now,
+      scope,
+      strategy,
+      strategyState: "{}",
+    });
+    await this.sessions.create(session);
+    return { created: true, session };
   }
 }
 
@@ -637,6 +713,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
   const clock = new TestClock();
   const transaction = new InMemoryReviewAttemptTransaction(attempts, recurrences);
   const feedTransaction = new InMemoryStudySessionFeedTransaction(items, sessions);
+  const lifecycleTransaction = new InMemoryStudySessionLifecycleTransaction(sessions);
   const service = new StudyService(
     attempts,
     sessions,
@@ -646,6 +723,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
     new SequenceIdGenerator(),
     transaction,
     feedTransaction,
+    lifecycleTransaction,
     random
   );
   return { attempts, clock, items, recurrences, service, sessions };

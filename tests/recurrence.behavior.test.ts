@@ -9,6 +9,7 @@ import {
   createStudyHarness,
   InMemoryReviewAttemptTransaction,
   InMemoryStudySessionFeedTransaction,
+  InMemoryStudySessionLifecycleTransaction,
   makeFlashcard,
 } from "./support/study-test-support";
 
@@ -252,6 +253,7 @@ describe("intra-session recurrence behavior", () => {
       { generate: () => "00000000-0000-4000-8000-000000009999" },
       new InMemoryReviewAttemptTransaction(harness.attempts, harness.recurrences),
       new InMemoryStudySessionFeedTransaction(harness.items, harness.sessions),
+      new InMemoryStudySessionLifecycleTransaction(harness.sessions),
       () => 0
     );
 

@@ -4,17 +4,20 @@ import {
   COMPACTION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
-  FOCUS_SESSION_INACTIVITY_TIMEOUT_MS,
 } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
+import type {
+  OpenStudySessionResult,
+  StudySessionLifecycleTransaction,
+} from "@/features/study/services/study-session-lifecycle-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
-import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -22,10 +25,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
-export type OpenStudySession = Readonly<{
-  created: boolean;
-  session: StudySession;
-}>;
+export type OpenStudySession = OpenStudySessionResult;
 
 export class StudyService {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
@@ -37,6 +37,7 @@ export class StudyService {
   private readonly random: RandomSource;
   private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
+  private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -47,6 +48,7 @@ export class StudyService {
     idGenerator: IdGenerator,
     reviewAttemptTransaction: ReviewAttemptTransaction,
     studySessionFeedTransaction: StudySessionFeedTransaction,
+    studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     random: RandomSource = Math.random
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
@@ -57,6 +59,7 @@ export class StudyService {
     this.idGenerator = idGenerator;
     this.reviewAttemptTransaction = reviewAttemptTransaction;
     this.studySessionFeedTransaction = studySessionFeedTransaction;
+    this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
   }
 
@@ -74,55 +77,14 @@ export class StudyService {
     }
 
     const createdAt = this.clock.now();
-    const activeSession = await this.studySessionRepository.findActiveByScope(scope);
-    if (activeSession) {
-      const focusExpired =
-        scope === "focused" &&
-        Date.parse(createdAt) - Date.parse(activeSession.lastActiveAt) >=
-          FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
-      const shouldReplace =
-        replaceExisting ||
-        (scope === "focused" &&
-          (activeSession.deckId !== deckId || activeSession.strategy !== strategy || focusExpired));
-      if (!shouldReplace) {
-        await this.studySessionRepository.updateCurrentReelPosition(
-          activeSession.id,
-          activeSession.currentReelPosition,
-          createdAt
-        );
-        return {
-          created: false,
-          session: new StudySession({
-            completedAt: activeSession.completedAt,
-            compactedThroughReelPosition: activeSession.compactedThroughReelPosition,
-            createdAt: activeSession.createdAt,
-            currentReelPosition: activeSession.currentReelPosition,
-            deckId: activeSession.deckId,
-            id: activeSession.id,
-            lastActiveAt: createdAt,
-            scope: activeSession.scope,
-            strategyState: activeSession.strategyState,
-            strategy: activeSession.strategy,
-          }),
-        };
-      }
-      await this.studySessionRepository.complete(activeSession.id, createdAt);
-    }
-
-    const session = new StudySession({
-      completedAt: null,
-      compactedThroughReelPosition: -1,
-      createdAt,
-      currentReelPosition: 0,
-      deckId,
-      id: this.idGenerator.generate(),
-      lastActiveAt: createdAt,
+    return this.studySessionLifecycleTransaction.open(
       scope,
-      strategyState: "{}",
+      deckId,
+      replaceExisting,
       strategy,
-    });
-    await this.studySessionRepository.create(session);
-    return { created: true, session };
+      createdAt,
+      this.idGenerator.generate()
+    );
   }
 
   async completeSession(sessionId: string): Promise<void> {
@@ -131,6 +93,10 @@ export class StudyService {
 
   async findSession(sessionId: string): Promise<StudySession | null> {
     return this.studySessionRepository.findById(sessionId);
+  }
+
+  async findSessionByScope(scope: StudySessionScope): Promise<StudySession | null> {
+    return this.studySessionRepository.findActiveByScope(scope);
   }
 
   async getCompactionBoundary(sessionId: string): Promise<Readonly<{

@@ -15,6 +15,7 @@ import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructur
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { StudyService } from "@/features/study/services/study.service";
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
 import { SystemClock } from "@/infrastructure/system-clock";
@@ -48,6 +49,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase
     );
     const studySessionRepository = new SQLiteStudySessionRepository(drizzleDatabase);
+    const studySessionLifecycleTransaction = new SQLiteStudySessionLifecycleTransaction(
+      drizzleDatabase
+    );
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
     const studyService = new StudyService(
@@ -59,6 +63,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       idGenerator,
       reviewAttemptTransaction,
       studySessionFeedTransaction,
+      studySessionLifecycleTransaction,
       Math.random
     );
 
