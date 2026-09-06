@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
 import { getLocalReelIndex } from "@/features/reels/hooks/use-reel-feed";
+import { persistPositionThenExtend } from "@/features/reels/services/reel-position-extension";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import { OTHER_DECK_ID, createStudyHarness, makeFlashcard } from "./support/study-test-support";
 
@@ -18,6 +19,40 @@ describe("study session behavior", () => {
     expect(getLocalReelIndex(5_000, 4_950, 151)).toBe(50);
     expect(getLocalReelIndex(4_900, 4_950, 151)).toBe(0);
     expect(getLocalReelIndex(5_200, 4_950, 151)).toBe(150);
+  });
+
+  it("extends from the newly persisted absolute position", async () => {
+    const harness = createStudyHarness();
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const activeReelPosition = 5;
+    const observedPositions: number[] = [];
+
+    await persistPositionThenExtend(
+      async () => {
+        const persisted = await harness.service.updateSessionReelPosition(
+          feed.studySessionId,
+          activeReelPosition
+        );
+        observedPositions.push(
+          (await harness.service.findSession(feed.studySessionId))?.currentReelPosition ?? -1
+        );
+        return persisted;
+      },
+      async () => {
+        observedPositions.push(
+          (await harness.service.findSession(feed.studySessionId))?.currentReelPosition ?? -1
+        );
+        await feedService.extendFeed(cards, feed.studySessionId);
+      }
+    );
+
+    expect(observedPositions).toEqual([activeReelPosition, activeReelPosition]);
+    const extended = await feedService.refreshFeed(cards, feed.studySessionId);
+    expect(extended.currentReelPosition).toBe(activeReelPosition);
+    expect(extended.loadedFromReelPosition).toBe(0);
+    expect(extended.loadedThroughReelPosition).toBe(10);
   });
 
   it("keeps Mixed and Focused sessions active independently", async () => {

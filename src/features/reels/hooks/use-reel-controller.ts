@@ -9,6 +9,7 @@ import type {
 import { useRecallSession } from "@/features/reels/hooks/use-recall-session";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useAppServices } from "@/infrastructure/app-services";
+import { persistPositionThenExtend } from "@/features/reels/services/reel-position-extension";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;
@@ -57,21 +58,37 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
 
   const onExtensionNeeded = () => {
     if (extensionInFlight.current) {
-      return;
+      return Promise.resolve();
     }
     extensionInFlight.current = true;
-    void reelFeedService
+    return reelFeedService
       .extendFeed(sourceCards, initialFeed.studySessionId)
       .then(replaceFeed)
+      .then(() => undefined)
       .finally(() => {
         extensionInFlight.current = false;
       });
   };
 
   const onOccurrenceBecameActive = (occurrence: PreparedReelOccurrence) => {
+    const currentFeed = feedReference.current;
+    const localIndex = currentFeed.occurrences.findIndex(
+      (current) => current.key === occurrence.key
+    );
+    const shouldExtend =
+      localIndex >= 0 &&
+      currentFeed.occurrences.length - localIndex <= FEED_ENGINE_CONFIG.extensionThreshold;
+
     void startAttempt(occurrence).then(() =>
       Promise.all([
-        studyService.updateSessionReelPosition(initialFeed.studySessionId, occurrence.reelPosition),
+        persistPositionThenExtend(
+          () =>
+            studyService.updateSessionReelPosition(
+              initialFeed.studySessionId,
+              occurrence.reelPosition
+            ),
+          () => (shouldExtend ? onExtensionNeeded() : Promise.resolve())
+        ),
         studyService.finalizeAttemptsOutsideEditableWindow(
           initialFeed.studySessionId,
           occurrence.reelPosition
@@ -81,17 +98,6 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
           : Promise.resolve(false),
       ])
     );
-
-    const currentFeed = feedReference.current;
-    const localIndex = currentFeed.occurrences.findIndex(
-      (current) => current.key === occurrence.key
-    );
-    if (
-      localIndex >= 0 &&
-      currentFeed.occurrences.length - localIndex <= FEED_ENGINE_CONFIG.extensionThreshold
-    ) {
-      onExtensionNeeded();
-    }
   };
 
   const onRatingSelected = (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
