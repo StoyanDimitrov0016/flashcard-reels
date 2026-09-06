@@ -92,6 +92,70 @@ describe("study session behavior", () => {
     );
   });
 
+  it("persists the ordered Focus strategy and wraps by deck position", async () => {
+    const harness = createStudyHarness();
+    const feedService = new ReelFeedService(harness.service, () => 0.999);
+    const cards = [makeFlashcard(3), makeFlashcard(1), makeFlashcard(2)];
+    const cardThree = cards[0];
+    const cardOne = cards[1];
+    const cardTwo = cards[2];
+    if (!cardThree || !cardOne || !cardTwo) {
+      throw new Error("Expected three cards");
+    }
+
+    const firstFeed = await feedService.prepareFeed(
+      cards,
+      "focused",
+      cardThree.deckId,
+      false,
+      "ordered"
+    );
+    const resumedFeed = await feedService.prepareFeed(
+      [cardTwo, cardThree, cardOne],
+      "focused",
+      cardThree.deckId,
+      false,
+      "ordered"
+    );
+
+    expect(firstFeed.cards.map((card) => card.id)).toEqual(
+      [cardOne, cardTwo, cardThree].map((card) => card.id)
+    );
+    expect(resumedFeed.studySessionId).toBe(firstFeed.studySessionId);
+    expect(resumedFeed.cards.map((card) => card.id)).toEqual(
+      firstFeed.cards.map((card) => card.id)
+    );
+  });
+
+  it("changing the Focus strategy replaces only the Focus session", async () => {
+    const harness = createStudyHarness();
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2)];
+    const mixed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const shuffled = await feedService.prepareFeed(
+      cards,
+      "focused",
+      cards[0]?.deckId ?? null,
+      false,
+      "shuffle"
+    );
+    const ordered = await feedService.prepareFeed(
+      cards,
+      "focused",
+      cards[0]?.deckId ?? null,
+      false,
+      "ordered"
+    );
+
+    expect(ordered.studySessionId).not.toBe(shuffled.studySessionId);
+    expect(
+      harness.sessions.all().find((session) => session.id === shuffled.studySessionId)?.completedAt
+    ).not.toBeNull();
+    expect(
+      harness.sessions.all().find((session) => session.id === mixed.studySessionId)?.completedAt
+    ).toBeNull();
+  });
+
   it("rejects a session whose scope and deck relationship is invalid", async () => {
     const harness = createStudyHarness();
 

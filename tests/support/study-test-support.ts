@@ -8,6 +8,7 @@ import type { StudySessionItemRepository } from "@/features/study/domain/study-s
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import { StudySession } from "@/features/study/domain/study-session.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import { StudyService } from "@/features/study/services/study.service";
 import type { Clock } from "@/shared/domain/clock";
@@ -42,7 +43,8 @@ export function makeSession(
   id: string,
   scope: "mixed" | "focused",
   deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
-  currentReelPosition = 0
+  currentReelPosition = 0,
+  strategy: StudySessionStrategy = "shuffle"
 ): StudySession {
   return new StudySession({
     completedAt: null,
@@ -52,6 +54,7 @@ export function makeSession(
     id,
     lastActiveAt: "2026-01-01T00:00:00.000Z",
     scope,
+    strategy,
   });
 }
 
@@ -195,6 +198,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
             id: session.id,
             lastActiveAt: session.lastActiveAt,
             scope: session.scope,
+            strategy: session.strategy,
           })
         );
       }
@@ -214,6 +218,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           id: session.id,
           lastActiveAt: session.lastActiveAt,
           scope: session.scope,
+          strategy: session.strategy,
         })
       );
     }
@@ -271,6 +276,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         id: session.id,
         lastActiveAt,
         scope: session.scope,
+        strategy: session.strategy,
       })
     );
     return true;

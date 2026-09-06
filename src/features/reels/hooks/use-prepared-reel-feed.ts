@@ -4,6 +4,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed } from "@/features/reels/services/reel-feed.service";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type PreparationState = Readonly<{
@@ -15,6 +16,7 @@ type PreparationRequest = Readonly<{
   cards: readonly Flashcard[];
   deckId: DeckId | null;
   scope: StudySessionScope;
+  strategy: StudySessionStrategy;
   promise: Promise<PreparedReelFeed>;
 }>;
 
@@ -25,7 +27,8 @@ export function usePreparedReelFeed(
   scope: StudySessionScope,
   deckId: DeckId | null,
   replaceExistingSession: boolean,
-  onSessionStarted?: () => void
+  onSessionStarted?: () => void,
+  strategy: StudySessionStrategy = "shuffle"
 ): PreparedReelFeed | null {
   const { reelFeedService } = useAppServices();
   const [state, setState] = useState<PreparationState>(initialState);
@@ -39,16 +42,18 @@ export function usePreparedReelFeed(
       previousRequest &&
       previousRequest.cards === cards &&
       previousRequest.deckId === deckId &&
-      previousRequest.scope === scope
+      previousRequest.scope === scope &&
+      previousRequest.strategy === strategy
         ? previousRequest.promise
         : (() => {
             const nextPromise = reelFeedService.prepareFeed(
               cards,
               scope,
               deckId,
-              replaceExistingSession
+              replaceExistingSession,
+              strategy
             );
-            requestReference.current = { cards, deckId, promise: nextPromise, scope };
+            requestReference.current = { cards, deckId, promise: nextPromise, scope, strategy };
             void nextPromise.then(() => {
               onSessionStarted?.();
             });
@@ -73,7 +78,7 @@ export function usePreparedReelFeed(
     return () => {
       active = false;
     };
-  }, [cards, deckId, onSessionStarted, reelFeedService, replaceExistingSession, scope]);
+  }, [cards, deckId, onSessionStarted, reelFeedService, replaceExistingSession, scope, strategy]);
 
   if (state.error) {
     throw state.error;

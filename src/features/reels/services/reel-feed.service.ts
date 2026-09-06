@@ -2,6 +2,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudyService } from "@/features/study/services/study.service";
 import type { RandomSource } from "@/features/study/config/recurrences";
 
@@ -31,21 +32,28 @@ export class ReelFeedService {
     cards: readonly Flashcard[],
     scope: StudySessionScope,
     deckId: DeckId | null,
-    replaceExistingSession: boolean
+    replaceExistingSession: boolean,
+    strategy: StudySessionStrategy = "shuffle"
   ): Promise<PreparedReelFeed> {
-    let openedSession = await this.studyService.openSession(scope, deckId, replaceExistingSession);
+    let openedSession = await this.studyService.openSession(
+      scope,
+      deckId,
+      replaceExistingSession,
+      strategy
+    );
     let items = openedSession.created
       ? []
       : await this.studyService.listSessionItems(openedSession.session.id);
 
     if (!openedSession.created && items.length === 0) {
       await this.studyService.completeSession(openedSession.session.id);
-      openedSession = await this.studyService.openSession(scope, deckId, true);
+      openedSession = await this.studyService.openSession(scope, deckId, true, strategy);
       items = [];
     }
 
     if (openedSession.created) {
-      const preparedCards = this.shuffle(cards);
+      const preparedCards =
+        openedSession.session.strategy === "ordered" ? this.orderCards(cards) : this.shuffle(cards);
       await this.studyService.createSessionItems(openedSession.session.id, preparedCards);
       const occurrences = await this.loadOccurrences(preparedCards, openedSession.session.id);
       return {
@@ -152,5 +160,22 @@ export class ReelFeedService {
     }
 
     return feed;
+  }
+
+  private orderCards(cards: readonly Flashcard[]): Flashcard[] {
+    const orderedCards: Flashcard[] = [];
+    for (const card of cards) {
+      const insertionIndex = orderedCards.findIndex(
+        (current) =>
+          card.deckPosition < current.deckPosition ||
+          (card.deckPosition === current.deckPosition && card.id.localeCompare(current.id) < 0)
+      );
+      if (insertionIndex < 0) {
+        orderedCards.push(card);
+      } else {
+        orderedCards.splice(insertionIndex, 0, card);
+      }
+    }
+    return orderedCards;
   }
 }

@@ -6,6 +6,7 @@ import {
   StudySessionScopeSchema,
   type StudySessionScope,
 } from "@/features/study/domain/study-session.model";
+import { StudySessionStrategySchema } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { studySessions } from "@/infrastructure/sqlite/schema";
@@ -40,6 +41,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: session.id,
       lastActiveAt: session.lastActiveAt,
       scope: session.scope,
+      strategy: session.strategy,
     });
   }
 
@@ -91,6 +93,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: row.id,
       lastActiveAt: row.lastActiveAt,
       scope: StudySessionScopeSchema.parse(row.scope),
+      strategy: StudySessionStrategySchema.parse(row.strategy),
     });
   }
 }

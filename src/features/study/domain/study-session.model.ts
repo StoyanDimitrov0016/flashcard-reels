@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
+import {
+  StudySessionStrategySchema,
+  type StudySessionStrategy,
+} from "@/features/study/domain/study-session-strategy";
 
 export const StudySessionScopeSchema = z.enum(["mixed", "focused"]);
 export type StudySessionScope = z.infer<typeof StudySessionScopeSchema>;
@@ -14,6 +18,7 @@ export const StudySessionFieldsSchema = z.compile(
     id: z.string(),
     lastActiveAt: z.string(),
     scope: StudySessionScopeSchema,
+    strategy: StudySessionStrategySchema,
   })
 );
 export type StudySessionFields = Readonly<z.infer<typeof StudySessionFieldsSchema>>;
@@ -22,6 +27,7 @@ export class StudySession {
   public readonly id: string;
   public readonly lastActiveAt: string;
   public readonly scope: StudySessionScope;
+  public readonly strategy: StudySessionStrategy;
   public readonly deckId: DeckId | null;
   public readonly currentReelPosition: number;
   public readonly createdAt: string;
@@ -35,5 +41,6 @@ export class StudySession {
     this.id = fields.id;
     this.lastActiveAt = fields.lastActiveAt;
     this.scope = fields.scope;
+    this.strategy = fields.strategy;
   }
 }

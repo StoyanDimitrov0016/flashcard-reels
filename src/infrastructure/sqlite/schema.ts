@@ -51,6 +51,7 @@ export const studySessions = sqliteTable(
   {
     id: text("id").primaryKey().notNull(),
     scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
+    strategy: text("strategy", { enum: ["shuffle", "ordered"] }).notNull(),
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
     currentReelPosition: integer("current_reel_position").notNull(),
     createdAt: text("created_at").notNull(),
@@ -62,6 +63,7 @@ export const studySessions = sqliteTable(
       "study_sessions_scope_deck_check",
       sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
     ),
+    check("study_sessions_strategy_check", sql`${table.strategy} IN ('shuffle', 'ordered')`),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
     index("study_sessions_active_scope_idx").on(
       table.scope,

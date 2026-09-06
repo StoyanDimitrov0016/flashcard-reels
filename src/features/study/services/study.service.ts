@@ -12,6 +12,7 @@ import type { StudySessionItemRepository } from "@/features/study/domain/study-s
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -56,10 +57,14 @@ export class StudyService {
   async openSession(
     scope: StudySessionScope,
     deckId: DeckId | null,
-    replaceExisting: boolean
+    replaceExisting: boolean,
+    strategy: StudySessionStrategy = "shuffle"
   ): Promise<OpenStudySession> {
     if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
       throw new Error("Study session scope and deck must agree");
+    }
+    if (scope === "mixed" && strategy !== "shuffle") {
+      throw new Error("Mixed sessions only support the shuffle strategy");
     }
 
     const createdAt = this.clock.now();
@@ -71,7 +76,8 @@ export class StudyService {
           FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
       const shouldReplace =
         replaceExisting ||
-        (scope === "focused" && (activeSession.deckId !== deckId || focusExpired));
+        (scope === "focused" &&
+          (activeSession.deckId !== deckId || activeSession.strategy !== strategy || focusExpired));
       if (!shouldReplace) {
         await this.studySessionRepository.updateCurrentReelPosition(
           activeSession.id,
@@ -88,6 +94,7 @@ export class StudyService {
             id: activeSession.id,
             lastActiveAt: createdAt,
             scope: activeSession.scope,
+            strategy: activeSession.strategy,
           }),
         };
       }
@@ -102,6 +109,7 @@ export class StudyService {
       id: this.idGenerator.generate(),
       lastActiveAt: createdAt,
       scope,
+      strategy,
     });
     await this.studySessionRepository.create(session);
     return { created: true, session };
