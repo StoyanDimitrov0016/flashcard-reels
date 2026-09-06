@@ -255,15 +255,26 @@ export class ReelFeedService {
       cursor = 0;
     }
 
+    let fallback: Readonly<{ card: Flashcard; cursor: number }> | null = null;
     for (let offset = 0; offset < cycle.length; offset += 1) {
       const nextCursor = cursor + offset;
       const cardId = cycle[nextCursor % cycle.length];
       const card = cards.find((candidate) => candidate.id === cardId) ?? null;
-      if (card && !excludedCardIds.has(card.id)) {
+      if (!card) {
+        continue;
+      }
+      fallback ??= { card, cursor: nextCursor };
+      if (!excludedCardIds.has(card.id)) {
         return { card, state: { cursor: nextCursor + 1, cycle } };
       }
     }
-    return { card: null, state: { cursor: cursor + cycle.length, cycle } };
+
+    // A reserved Shuffle candidate is preferred, but cannot dead-end an infinite feed.
+    // If every candidate is reserved, use the first deterministic cycle candidate so
+    // materialization can pass through the recurrence target without rewriting history.
+    return fallback
+      ? { card: fallback.card, state: { cursor: fallback.cursor + 1, cycle } }
+      : { card: null, state: { cursor: cursor + cycle.length, cycle } };
   }
 
   private mergeMaterializedReels(

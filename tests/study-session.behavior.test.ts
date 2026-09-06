@@ -388,16 +388,78 @@ describe("study session behavior", () => {
     );
   });
 
-  it("stops a Shuffle extension cleanly when its only card is recurrence-reserved", async () => {
+  it("keeps a one-card Shuffle feed moving through a pending recurrence", async () => {
     const harness = createStudyHarness(() => 0.5);
     const feedService = new ReelFeedService(harness.service, () => 0);
     const card = makeFlashcard(1);
     const feed = await feedService.prepareFeed([card], "mixed", null, false);
     const attemptId = await harness.service.startAttempt(card.id, 0, feed.studySessionId);
     await harness.service.rateAttempt(attemptId, "again");
+    const beforeExtension = await harness.service.listSessionItems(feed.studySessionId);
+    const pendingRecurrence = first(
+      await harness.service.listSessionRecurrences(feed.studySessionId)
+    );
 
-    await expect(feedService.extendFeed([card], feed.studySessionId)).resolves.toBeDefined();
-    expect((await harness.service.listSessionItems(feed.studySessionId)).length).toBe(6);
+    await feedService.extendFeed([card], feed.studySessionId);
+    const afterExtension = await harness.service.listSessionItems(feed.studySessionId);
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
+    const continued = await feedService.refreshFeed([card], feed.studySessionId);
+
+    expect(continued.occurrences.map(({ reelPosition }) => reelPosition)).toEqual(
+      Array.from({ length: 11 }, (_, index) => index)
+    );
+    expect(continued.occurrences.find(({ reelPosition }) => reelPosition === 8)?.recurrenceId).toBe(
+      pendingRecurrence.id
+    );
+    expect(afterExtension.slice(0, beforeExtension.length)).toEqual(beforeExtension);
+  });
+
+  it("uses a deterministic fallback when every small-deck Shuffle candidate is reserved", async () => {
+    const harness = createStudyHarness(() => 0.5);
+    const feedService = new ReelFeedService(harness.service, () => 0);
+    const cards = [makeFlashcard(1), makeFlashcard(2)];
+    const feed = await feedService.prepareFeed(cards, "mixed", null, false);
+    const firstCard = feed.occurrences[0]?.card;
+    const secondCard = feed.occurrences[1]?.card;
+    if (!firstCard || !secondCard) {
+      throw new Error("Expected two prepared cards");
+    }
+
+    const firstAttemptId = await harness.service.startAttempt(firstCard.id, 0, feed.studySessionId);
+    const secondAttemptId = await harness.service.startAttempt(
+      secondCard.id,
+      1,
+      feed.studySessionId
+    );
+    await harness.service.rateAttempt(firstAttemptId, "again");
+    await harness.service.rateAttempt(secondAttemptId, "again");
+    const beforeExtension = await harness.service.listSessionItems(feed.studySessionId);
+    const pendingRecurrences = await harness.service.listSessionRecurrences(feed.studySessionId);
+    const firstRecurrence = pendingRecurrences.find(
+      (recurrence) => recurrence.sourceAttemptId === firstAttemptId
+    );
+    const secondRecurrence = pendingRecurrences.find(
+      (recurrence) => recurrence.sourceAttemptId === secondAttemptId
+    );
+    if (!firstRecurrence || !secondRecurrence) {
+      throw new Error("Expected two pending recurrences");
+    }
+
+    await feedService.extendFeed(cards, feed.studySessionId);
+    const afterExtension = await harness.service.listSessionItems(feed.studySessionId);
+    await harness.service.updateSessionReelPosition(feed.studySessionId, 5);
+    const continued = await feedService.refreshFeed(cards, feed.studySessionId);
+
+    expect(continued.occurrences.map(({ reelPosition }) => reelPosition)).toEqual(
+      Array.from({ length: 11 }, (_, index) => index)
+    );
+    expect(afterExtension.slice(0, beforeExtension.length)).toEqual(beforeExtension);
+    expect(continued.occurrences.find(({ reelPosition }) => reelPosition === 8)?.recurrenceId).toBe(
+      firstRecurrence.id
+    );
+    expect(continued.occurrences.find(({ reelPosition }) => reelPosition === 9)?.recurrenceId).toBe(
+      secondRecurrence.id
+    );
   });
 
   it("keeps a pending recurrence reserved until its exact future position is materialized", async () => {
