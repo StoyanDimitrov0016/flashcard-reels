@@ -210,6 +210,19 @@ describe("study session behavior", () => {
     ).toBeNull();
   });
 
+  it("exposes a compaction boundary without crossing unfinished history", async () => {
+    const harness = createStudyHarness();
+    const { session } = await harness.service.openSession("mixed", null, false);
+    await harness.service.updateSessionReelPosition(session.id, 130);
+
+    const boundary = await harness.service.getCompactionBoundary(session.id);
+    expect(boundary).toEqual({ safeThroughReelPosition: 30, shouldCheck: true });
+
+    await harness.service.startAttempt(makeFlashcard(1).id, 20, session.id);
+    const blockedBoundary = await harness.service.getCompactionBoundary(session.id);
+    expect(blockedBoundary).toEqual({ safeThroughReelPosition: 19, shouldCheck: false });
+  });
+
   it("preserves the stable base sequence when a recurrence is scheduled", async () => {
     const harness = createStudyHarness(() => 0.5);
     const feedService = new ReelFeedService(harness.service, () => 0);

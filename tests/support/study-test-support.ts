@@ -48,6 +48,7 @@ export function makeSession(
 ): StudySession {
   return new StudySession({
     completedAt: null,
+    compactedThroughReelPosition: -1,
     createdAt: "2026-01-01T00:00:00.000Z",
     currentReelPosition,
     deckId,
@@ -193,6 +194,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           session.id,
           new StudySession({
             completedAt,
+            compactedThroughReelPosition: session.compactedThroughReelPosition,
             createdAt: session.createdAt,
             currentReelPosition: session.currentReelPosition,
             deckId: session.deckId,
@@ -214,6 +216,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         sessionId,
         new StudySession({
           completedAt,
+          compactedThroughReelPosition: session.compactedThroughReelPosition,
           createdAt: session.createdAt,
           currentReelPosition: session.currentReelPosition,
           deckId: session.deckId,
@@ -277,6 +280,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       sessionId,
       new StudySession({
         completedAt: session.completedAt,
+        compactedThroughReelPosition: session.compactedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition,
         deckId: session.deckId,
@@ -299,6 +303,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
       sessionId,
       new StudySession({
         completedAt: session.completedAt,
+        compactedThroughReelPosition: session.compactedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition: session.currentReelPosition,
         deckId: session.deckId,

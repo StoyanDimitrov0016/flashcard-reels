@@ -34,6 +34,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
 
   async create(session: StudySession): Promise<void> {
     await this.database.insert(studySessions).values({
+      compactedThroughReelPosition: session.compactedThroughReelPosition,
       completedAt: session.completedAt,
       createdAt: session.createdAt,
       currentReelPosition: session.currentReelPosition,
@@ -107,6 +108,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
   private toModel(row: typeof studySessions.$inferSelect): StudySession {
     return new StudySession({
       completedAt: row.completedAt,
+      compactedThroughReelPosition: row.compactedThroughReelPosition,
       createdAt: row.createdAt,
       currentReelPosition: row.currentReelPosition,
       deckId: row.deckId,

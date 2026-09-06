@@ -1,6 +1,8 @@
 import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import {
+  COMPACTION_CHECK_INTERVAL,
+  DETAILED_REVIEW_HISTORY_RETENTION,
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
   FOCUS_SESSION_INACTIVITY_TIMEOUT_MS,
 } from "@/features/study/config/review-attempts";
@@ -88,6 +90,7 @@ export class StudyService {
           created: false,
           session: new StudySession({
             completedAt: activeSession.completedAt,
+            compactedThroughReelPosition: activeSession.compactedThroughReelPosition,
             createdAt: activeSession.createdAt,
             currentReelPosition: activeSession.currentReelPosition,
             deckId: activeSession.deckId,
@@ -104,6 +107,7 @@ export class StudyService {
 
     const session = new StudySession({
       completedAt: null,
+      compactedThroughReelPosition: -1,
       createdAt,
       currentReelPosition: 0,
       deckId,
@@ -127,6 +131,36 @@ export class StudyService {
 
   async updateStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
     return this.studySessionRepository.updateStrategyState(sessionId, strategyState);
+  }
+
+  async getCompactionBoundary(sessionId: string): Promise<Readonly<{
+    shouldCheck: boolean;
+    safeThroughReelPosition: number;
+  }> | null> {
+    const session = await this.studySessionRepository.findById(sessionId);
+    if (!session) {
+      return null;
+    }
+
+    const candidate = session.currentReelPosition - DETAILED_REVIEW_HISTORY_RETENTION;
+    if (candidate <= session.compactedThroughReelPosition) {
+      return { safeThroughReelPosition: session.compactedThroughReelPosition, shouldCheck: false };
+    }
+
+    const unfinished = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
+      sessionId,
+      candidate + 1
+    );
+    const safeThroughReelPosition = unfinished.reduce(
+      (safePosition, attempt) => Math.min(safePosition, attempt.reelPosition - 1),
+      candidate
+    );
+    return {
+      safeThroughReelPosition,
+      shouldCheck:
+        safeThroughReelPosition > session.compactedThroughReelPosition &&
+        safeThroughReelPosition - session.compactedThroughReelPosition >= COMPACTION_CHECK_INTERVAL,
+    };
   }
 
   async createSessionItems(
