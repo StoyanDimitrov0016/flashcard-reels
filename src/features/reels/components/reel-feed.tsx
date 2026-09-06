@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
 import { useDeckAppearances } from "@/features/decks/hooks/use-deck-appearances";
@@ -6,7 +6,7 @@ import { useDecks } from "@/features/decks/hooks/use-decks";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { ReelCard } from "@/features/reels/components/reel-card";
 import { useReelController } from "@/features/reels/hooks/use-reel-controller";
-import { useReelFeed } from "@/features/reels/hooks/use-reel-feed";
+import { getLocalReelIndex, useReelFeed } from "@/features/reels/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/hooks/use-reel-viewport";
 import type {
   PreparedReelFeed,
@@ -24,6 +24,8 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
   const controller = useReelController({ initialFeed: preparedFeed, sourceCards });
   const { answerAudioService, feed, onOccurrenceBecameActive, onRatingSelected } = controller;
   const { handleLayout, viewport } = useReelViewport();
+  const feedListReference = useRef<FlatList<PreparedReelOccurrence>>(null);
+  const loadedFromReference = useRef(feed.loadedFromReelPosition);
   const { height, width } = viewport;
   const {
     activeIndex,
@@ -35,7 +37,9 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     itemHeight: height,
     loadedFromReelPosition: feed.loadedFromReelPosition,
   });
-  const activeOccurrence = feed.occurrences[activeIndex];
+  const activeOccurrence = feed.occurrences.find(
+    (occurrence) => occurrence.reelPosition === activeReelPosition
+  );
   const deckIds = [...new Set(feed.occurrences.map(({ card }) => card.deckId))];
   const { appearances } = useDeckAppearances(deckIds);
   const { decks } = useDecks(deckIds);
@@ -46,6 +50,22 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     }
   }, [activeOccurrence, onOccurrenceBecameActive]);
 
+  useLayoutEffect(() => {
+    if (loadedFromReference.current === feed.loadedFromReelPosition) {
+      return;
+    }
+
+    loadedFromReference.current = feed.loadedFromReelPosition;
+    feedListReference.current?.scrollToIndex({
+      animated: false,
+      index: getLocalReelIndex(
+        activeReelPosition,
+        feed.loadedFromReelPosition,
+        feed.occurrences.length
+      ),
+    });
+  }, [activeReelPosition, feed.loadedFromReelPosition, feed.occurrences.length]);
+
   const getItemLayout = (
     _data: ArrayLike<PreparedReelOccurrence> | null | undefined,
     index: number
@@ -54,7 +74,7 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     length: height,
     offset: height * index,
   });
-  const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item, index }) => {
+  const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item }) => {
     const appearance = appearances.get(item.card.deckId);
     const deck = decks.get(item.card.deckId);
     if (!appearance || !deck) {
@@ -69,7 +89,7 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
         deck={deck}
         height={height}
         index={item.reelPosition}
-        isActive={index === activeIndex}
+        isActive={item.reelPosition === activeReelPosition}
         onFlip={() => controller.toggleCard(item.reelPosition)}
         onRate={(level) => onRatingSelected(item, level)}
         recallLevel={controller.recallLevels.get(item.reelPosition) ?? null}
@@ -98,6 +118,7 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
           keyExtractor={(occurrence) => occurrence.key}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
+          ref={feedListReference}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
         />

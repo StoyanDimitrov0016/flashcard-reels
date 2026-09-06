@@ -20,6 +20,7 @@ export function useReelFeed({
     itemCount
   );
   const [activeIndex, setActiveIndex] = useState(normalizedInitialIndex);
+  const [activeReelPosition, setActiveReelPosition] = useState(initialReelPosition);
   const activeIndexReference = useRef(normalizedInitialIndex);
   const activeReelPositionReference = useRef(initialReelPosition);
 
@@ -30,7 +31,9 @@ export function useReelFeed({
       itemCount
     );
     activeIndexReference.current = nextIndex;
+    activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
     setActiveIndex(nextIndex);
+    setActiveReelPosition(activeReelPositionReference.current);
   }, [itemCount, loadedFromReelPosition]);
 
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -43,12 +46,13 @@ export function useReelFeed({
       activeIndexReference.current = nextIndex;
       activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
       setActiveIndex(nextIndex);
+      setActiveReelPosition(activeReelPositionReference.current);
     }
   };
 
   return {
     activeIndex,
-    activeReelPosition: loadedFromReelPosition + activeIndex,
+    activeReelPosition,
     handleMomentumScrollEnd,
   };
 }

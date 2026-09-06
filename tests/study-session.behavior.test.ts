@@ -21,6 +21,12 @@ describe("study session behavior", () => {
     expect(getLocalReelIndex(5_200, 4_950, 151)).toBe(150);
   });
 
+  it("keeps the same absolute occurrence when a rolling window origin shifts", () => {
+    expect(getLocalReelIndex(5_000, 4_950, 11)).toBe(10);
+    expect(getLocalReelIndex(5_000, 4_991, 11)).toBe(9);
+    expect(getLocalReelIndex(5_000, 5_000, 11)).toBe(0);
+  });
+
   it("extends from the newly persisted absolute position", async () => {
     const harness = createStudyHarness();
     const feedService = new ReelFeedService(harness.service, () => 0);
