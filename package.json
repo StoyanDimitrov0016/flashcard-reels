@@ -13,6 +13,8 @@
     "conventions": "node scripts/check-conventions.mjs",
     "lint": "oxlint --type-aware --deny-warnings .",
     "typecheck": "tsc --noEmit",
+    "test:architecture": "node tools/oxlint-plugin-flashcards/tests/rules.test.js",
+    "check:dead-code": "knip",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "test": "vitest",
@@ -20,7 +22,7 @@
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
     "check:android": "expo export --platform android",
-    "verify": "npm run check && npm run doctor && npm run check:android"
+    "verify": "npm run check && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
@@ -38,10 +40,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-pager-view": "8.0.2",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-tab-view": "^4.3.2",
     "react-native-web": "~0.21.0",
     "zod": "^4.5.4"
   },
@@ -52,7 +52,9 @@
     "babel-plugin-inline-import": "^3.0.0",
     "better-sqlite3": "^13.0.3",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^10.10.0",
     "expo-doctor": "1.20.4",
+    "knip": "^6.34.0",
     "oxfmt": "latest",
     "oxlint": "latest",
     "oxlint-tsgolint": "^7.0.2001",

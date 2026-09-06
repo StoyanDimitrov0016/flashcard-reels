@@ -1,0 +1,75 @@
+const { RuleTester } = require("eslint");
+const plugin = require("../index.js");
+
+const tester = new RuleTester({ languageOptions: { ecmaVersion: 2022, sourceType: "module" } });
+
+tester.run(
+  "no-service-locator-in-presentation",
+  plugin.rules["no-service-locator-in-presentation"],
+  {
+    valid: [
+      {
+        code: 'import { useReelController } from "./use-reel-controller";',
+        filename: "src/features/reels/components/reel-feed.tsx",
+      },
+    ],
+    invalid: [
+      {
+        code: 'import { useAppServices } from "@/infrastructure/app-services";',
+        filename: "src/features/reels/components/reel-feed.tsx",
+        errors: 1,
+      },
+    ],
+  }
+);
+
+tester.run("no-engine-policy-in-presentation", plugin.rules["no-engine-policy-in-presentation"], {
+  valid: [
+    { code: "const threshold = 2;", filename: "src/features/reels/components/reel-feed.tsx" },
+  ],
+  invalid: [
+    {
+      code: 'import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";',
+      filename: "src/features/reels/components/reel-feed.tsx",
+      errors: 1,
+    },
+  ],
+});
+
+tester.run(
+  "no-persistence-orchestration-in-react-effect",
+  plugin.rules["no-persistence-orchestration-in-react-effect"],
+  {
+    valid: [
+      {
+        code: "useEffect(() => controller.onOccurrenceBecameActive(item), [item]);",
+        filename: "src/features/reels/components/reel-feed.tsx",
+      },
+    ],
+    invalid: [
+      {
+        code: "useEffect(() => service.rateAttempt(id, level), [id, level]);",
+        filename: "src/features/reels/components/reel-feed.tsx",
+        errors: 1,
+      },
+    ],
+  }
+);
+
+tester.run("no-ui-index-as-domain-position", plugin.rules["no-ui-index-as-domain-position"], {
+  valid: [
+    {
+      code: "studyService.startAttempt(card.id, occurrence.reelPosition, sessionId);",
+      filename: "src/features/reels/components/reel-feed.tsx",
+    },
+  ],
+  invalid: [
+    {
+      code: "studyService.startAttempt(card.id, activeIndex, sessionId);",
+      filename: "src/features/reels/components/reel-feed.tsx",
+      errors: 1,
+    },
+  ],
+});
+
+console.log("Flashcards architecture plugin RuleTester checks passed.");

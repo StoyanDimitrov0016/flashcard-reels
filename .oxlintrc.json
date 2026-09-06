@@ -5,8 +5,16 @@
     "perf": "error",
     "suspicious": "error"
   },
-  "ignorePatterns": [".expo/**", "dist/**", "drizzle/**", "node_modules/**", "scripts/**"],
+  "ignorePatterns": [
+    ".expo/**",
+    "dist/**",
+    "drizzle/**",
+    "node_modules/**",
+    "scripts/**",
+    "tools/**"
+  ],
   "options": { "typeAware": true },
+  "jsPlugins": ["./tools/oxlint-plugin-flashcards/index.js"],
   "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
   "rules": {
     "eqeqeq": "error",
@@ -41,6 +49,76 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unused-vars": "error"
-  }
+    "typescript/no-unused-vars": "error",
+    "flashcards/no-service-locator-in-presentation": "error",
+    "flashcards/no-engine-policy-in-presentation": "error",
+    "flashcards/no-persistence-orchestration-in-react-effect": "warn",
+    "flashcards/no-ui-index-as-domain-position": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["src/features/**/components/**", "src/features/**/screens/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              { "group": ["@/infrastructure/sqlite/**"] },
+              { "group": ["@/features/**/infrastructure/**"] },
+              { "group": ["expo-sqlite"] },
+              { "group": ["better-sqlite3"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "react",
+                  "react-native",
+                  "expo-router",
+                  "expo-status-bar",
+                  "expo-sqlite",
+                  "@/features/**/components/**",
+                  "@/shared/presentation/**"
+                ]
+              },
+              { "allowImportNamePattern": "^AudioSource$", "group": ["expo-audio"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/infrastructure/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [{ "group": ["@/features/**/components/**", "@/features/**/hooks/**"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**/services/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              { "group": ["@/features/**/infrastructure/**", "@/infrastructure/sqlite/**"] }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
