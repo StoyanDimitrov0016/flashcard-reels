@@ -78,6 +78,13 @@
       "when": 1788687123832,
       "tag": "0010_magenta_corsair",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1788693451018,
+      "tag": "0011_oval_sauron",
+      "breakpoints": true
     }
   ]
 }

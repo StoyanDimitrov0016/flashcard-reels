@@ -75,6 +75,10 @@ export const learnerProfiles = sqliteTable(
       sql`${table.reviewCount} = ${table.againCount} + ${table.hardCount} + ${table.goodCount} + ${table.easyCount}`
     ),
     check(
+      "learner_profiles_reviewed_at_presence_check",
+      sql`(${table.reviewCount} = 0 AND ${table.firstReviewedAt} IS NULL AND ${table.lastReviewedAt} IS NULL) OR (${table.reviewCount} > 0 AND ${table.firstReviewedAt} IS NOT NULL AND ${table.lastReviewedAt} IS NOT NULL)`
+    ),
+    check(
       "learner_profiles_reviewed_at_order_check",
       sql`${table.firstReviewedAt} IS NULL OR ${table.lastReviewedAt} IS NULL OR ${table.firstReviewedAt} <= ${table.lastReviewedAt}`
     ),
@@ -172,6 +176,10 @@ export const flashcardReviewAttempts = sqliteTable(
     check(
       "flashcard_review_attempts_rating_check",
       sql`${table.rating} IS NULL OR ${table.rating} IN ('again', 'hard', 'good', 'easy')`
+    ),
+    check(
+      "flashcard_review_attempts_rating_timestamp_check",
+      sql`(${table.rating} IS NULL AND ${table.ratedAt} IS NULL) OR (${table.rating} IS NOT NULL AND ${table.ratedAt} IS NOT NULL)`
     ),
     unique("review_attempts_session_reel_position_unique").on(
       table.studySessionId,

@@ -265,6 +265,7 @@ describe("SQLite study persistence", () => {
             flashcardId: makeFlashcard(1).id,
             id: testId(230 + reelPosition),
             rating: reelPosition === 11 ? "hard" : null,
+            ratedAt: reelPosition === 11 ? "2026-01-01T00:00:00.000Z" : null,
             reelPosition,
             studySessionId: session.id,
             updatedAt: "2026-01-01T00:00:00.000Z",
@@ -377,6 +378,39 @@ describe("SQLite study persistence", () => {
     expect((await attempts.findById(attempt.id))?.rating).toBeNull();
   });
 
+  it("rejects incoherent rating and learner-profile timestamp states", async () => {
+    const session = makeSession(testId(274), "mixed");
+    await sessions.create(session);
+    await expect(
+      database.runAsync(
+        "INSERT INTO flashcard_review_attempts (id, study_session_id, flashcard_id, reel_position, rating, created_at, rated_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        testId(275),
+        session.id,
+        makeFlashcard(1).id,
+        0,
+        "good",
+        "2026-01-01T00:00:00.000Z",
+        null,
+        "2026-01-01T00:00:00.000Z"
+      )
+    ).rejects.toThrow();
+    await expect(
+      database.runAsync(
+        "INSERT INTO learner_profiles (flashcard_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        makeFlashcard(1).id,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "2026-01-01T00:00:00.000Z",
+        null,
+        "2026-01-01T00:00:00.000Z",
+        "2026-01-01T00:00:00.000Z"
+      )
+    ).rejects.toThrow();
+  });
+
   it("rolls back the rating when its recurrence write fails", async () => {
     const session = makeSession(testId(235), "mixed");
     await sessions.create(session);
@@ -469,6 +503,7 @@ describe("SQLite study persistence", () => {
       flashcardId: makeFlashcard(1).id,
       id: testId(241),
       rating: "again",
+      ratedAt: "2026-01-01T00:00:00.000Z",
       reelPosition: 0,
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
@@ -480,6 +515,7 @@ describe("SQLite study persistence", () => {
       flashcardId: makeFlashcard(2).id,
       id: testId(245),
       rating: attempt.rating,
+      ratedAt: attempt.ratedAt,
       reelPosition: 1,
       studySessionId: attempt.studySessionId,
       updatedAt: attempt.updatedAt,
@@ -552,6 +588,7 @@ describe("SQLite study persistence", () => {
       flashcardId: makeFlashcard(1).id,
       id: testId(248),
       rating: "again",
+      ratedAt: "2026-01-01T00:00:00.000Z",
       reelPosition: 0,
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
@@ -562,6 +599,7 @@ describe("SQLite study persistence", () => {
       flashcardId: makeFlashcard(2).id,
       id: testId(249),
       rating: firstAttempt.rating,
+      ratedAt: firstAttempt.ratedAt,
       reelPosition: 1,
       studySessionId: firstAttempt.studySessionId,
       updatedAt: firstAttempt.updatedAt,
@@ -639,6 +677,7 @@ describe("SQLite study persistence", () => {
       flashcardId: makeFlashcard(1).id,
       id: testId(261),
       rating: "again",
+      ratedAt: "2026-01-01T00:00:00.000Z",
       reelPosition: 0,
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
