@@ -60,23 +60,3 @@ export class LearnerProfile {
     this.updatedAt = fields.updatedAt;
   }
 }
-
-export function emptyLearnerProfile(
-  flashcardId: string,
-  createdAt: string,
-  resetAt: string | null = null
-): LearnerProfile {
-  return new LearnerProfile({
-    againCount: 0,
-    createdAt,
-    easyCount: 0,
-    firstReviewedAt: null,
-    flashcardId,
-    goodCount: 0,
-    hardCount: 0,
-    lastReviewedAt: null,
-    resetAt,
-    reviewCount: 0,
-    updatedAt: createdAt,
-  });
-}

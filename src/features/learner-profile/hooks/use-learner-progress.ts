@@ -9,7 +9,7 @@ import {
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
-export type LearnerProgressRow = Readonly<{
+type LearnerProgressRow = Readonly<{
   card: Flashcard;
   deck: Deck;
   explanation: LearnerProfileExplanation;

@@ -1,6 +1,6 @@
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 
-export type AdaptivePriority = "New" | "High" | "Normal" | "Low";
+type AdaptivePriority = "New" | "High" | "Normal" | "Low";
 
 export type LearnerProfileExplanation = Readonly<{
   averageRecallScore: number | null;
