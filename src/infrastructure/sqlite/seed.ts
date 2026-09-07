@@ -2,7 +2,12 @@ import { deckAppearanceSeedData, deckSeedData } from "@/features/decks/data/deck
 
 import { flashcardSeedData } from "@/features/flashcards/data/flashcards";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import { deckAppearances, decks, flashcards } from "@/infrastructure/sqlite/schema";
+import {
+  deckAppearances,
+  decks,
+  flashcards,
+  learnerProfiles,
+} from "@/infrastructure/sqlite/schema";
 
 export async function seedDatabase<TRunResult>(
   database: DrizzleDatabase<TRunResult>
@@ -49,6 +54,17 @@ export async function seedDatabase<TRunResult>(
             deckPosition: flashcard.deckPosition,
             id: flashcard.id,
             question: flashcard.question,
+            updatedAt: flashcard.updatedAt,
+          }))
+        )
+        .onConflictDoNothing()
+        .run();
+      transaction
+        .insert(learnerProfiles)
+        .values(
+          flashcardSeedData.map((flashcard) => ({
+            createdAt: flashcard.createdAt,
+            flashcardId: flashcard.id,
             updatedAt: flashcard.updatedAt,
           }))
         )
