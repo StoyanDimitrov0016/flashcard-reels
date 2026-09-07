@@ -2,8 +2,8 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
-import { ReelFeed } from "@/features/reels/components/reel-feed";
-import { usePreparedReelFeed } from "@/features/reels/hooks/use-prepared-reel-feed";
+import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
+import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { palette } from "@/shared/presentation/palette";
 
 function LoadingState() {

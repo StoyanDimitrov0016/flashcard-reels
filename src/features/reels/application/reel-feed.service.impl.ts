@@ -1,10 +1,18 @@
-import { z } from "zod";
-
 import { buildAdaptiveShuffleBag } from "@/features/learner-profile/domain/adaptive-shuffle-policy";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
+import {
+  FeedStrategyStateSchema,
+  type FeedStrategyState,
+} from "@/features/reels/contracts/feed-strategy-state.schema";
+import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import type {
+  PreparedReelFeed,
+  PreparedReelOccurrence,
+  PreparedReelOccurrences,
+} from "@/features/reels/domain/reel-feed";
+import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
@@ -12,32 +20,7 @@ import type { StudySessionStrategy } from "@/features/study/domain/study-session
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { RandomSource } from "@/features/study/config/recurrences";
 
-const StrategyStateSchema = z.object({
-  cursor: z.number().int().nonnegative().default(0),
-  cycle: z.array(z.string()).default([]),
-});
-
-type StrategyState = Readonly<z.infer<typeof StrategyStateSchema>>;
-
-export type PreparedReelOccurrence = Readonly<{
-  card: Flashcard;
-  key: string;
-  recurrenceId: string | null;
-  reelPosition: number;
-}>;
-
-export type PreparedReelOccurrences = readonly PreparedReelOccurrence[];
-
-export type PreparedReelFeed = Readonly<{
-  occurrences: PreparedReelOccurrences;
-  currentReelPosition: number;
-  loadedFromReelPosition: number;
-  loadedThroughReelPosition: number;
-  materializedThroughReelPosition: number;
-  studySessionId: string;
-}>;
-
-export class ReelFeedService {
+export class ReelFeedServiceImpl implements ReelFeedService {
   private readonly studyService: StudyService;
   private readonly random: RandomSource;
 
@@ -126,7 +109,7 @@ export class ReelFeedService {
             sourceCards.map((card) => card.id)
           )
         : new Map<string, LearnerProfile>();
-    const materializeBatch = async (strategyState: StrategyState): Promise<void> => {
+    const materializeBatch = async (strategyState: FeedStrategyState): Promise<void> => {
       const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
       if (materializedThrough >= targetPosition) {
         return;
@@ -241,10 +224,10 @@ export class ReelFeedService {
   private nextCard(
     cards: readonly Flashcard[],
     strategy: StudySessionStrategy,
-    state: StrategyState,
+    state: FeedStrategyState,
     learnerProfiles: ReadonlyMap<string, LearnerProfile>,
     excludedCardIds: ReadonlySet<string> = new Set()
-  ): Readonly<{ card: Flashcard | null; state: StrategyState }> {
+  ): Readonly<{ card: Flashcard | null; state: FeedStrategyState }> {
     if (cards.length === 0) {
       return { card: null, state };
     }
@@ -360,9 +343,9 @@ export class ReelFeedService {
   }
 }
 
-function parseStrategyState(rawState: string): StrategyState {
+function parseStrategyState(rawState: string): FeedStrategyState {
   try {
-    const parsed = StrategyStateSchema.safeParse(JSON.parse(rawState));
+    const parsed = FeedStrategyStateSchema.safeParse(JSON.parse(rawState));
     return parsed.success ? parsed.data : { cursor: 0, cycle: [] };
   } catch {
     return { cursor: 0, cycle: [] };

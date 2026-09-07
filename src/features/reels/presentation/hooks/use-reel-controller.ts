@@ -1,15 +1,12 @@
 import { useCallback, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
-import type {
-  PreparedReelFeed,
-  PreparedReelOccurrence,
-} from "@/features/reels/services/reel-feed.service";
-import { useRecallSession } from "@/features/reels/hooks/use-recall-session";
+import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
+import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useAppServices } from "@/infrastructure/app-services";
-import { persistPositionThenExtend } from "@/features/reels/services/reel-position-extension";
+import { persistPositionThenExtend } from "@/features/reels/application/reel-position-extension";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;

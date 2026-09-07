@@ -4,14 +4,11 @@ import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 import { useDeckAppearances } from "@/features/decks/hooks/use-deck-appearances";
 import { useDecks } from "@/features/decks/hooks/use-decks";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { ReelCard } from "@/features/reels/components/reel-card";
-import { useReelController } from "@/features/reels/hooks/use-reel-controller";
-import { getLocalReelIndex, useReelFeed } from "@/features/reels/hooks/use-reel-feed";
-import { useReelViewport } from "@/features/reels/hooks/use-reel-viewport";
-import type {
-  PreparedReelFeed,
-  PreparedReelOccurrence,
-} from "@/features/reels/services/reel-feed.service";
+import { ReelCard } from "@/features/reels/presentation/components/reel-card";
+import { useReelController } from "@/features/reels/presentation/hooks/use-reel-controller";
+import { getLocalReelIndex, useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
+import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
+import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import { palette } from "@/shared/presentation/palette";
 
 type ReelFeedProps = Readonly<{

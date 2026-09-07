@@ -5,10 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/hooks/use-flashcards";
-import { EmptyFocusedFeed } from "@/features/reels/components/empty-focused-feed";
-import { ReelFeed } from "@/features/reels/components/reel-feed";
-import { useFeedScope, type FocusedFeedState } from "@/features/reels/context/feed-scope-context";
-import { usePreparedReelFeed } from "@/features/reels/hooks/use-prepared-reel-feed";
+import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
+import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
+import {
+  useFeedScope,
+  type FocusedFeedState,
+} from "@/features/reels/presentation/context/feed-scope-context";
+import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 

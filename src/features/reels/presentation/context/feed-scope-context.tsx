@@ -2,7 +2,7 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
-import { useFocusedFeedLifecycle } from "@/features/reels/hooks/use-focused-feed-lifecycle";
+import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
 
 type FeedScopeContextValue = Readonly<{
   focusedFeed: FocusedFeedState;

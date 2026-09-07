@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed } from "@/features/reels/services/reel-feed.service";
+import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import { useAppServices } from "@/infrastructure/app-services";

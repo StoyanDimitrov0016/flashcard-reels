@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
-import { getLocalReelIndex } from "@/features/reels/hooks/use-reel-feed";
-import { persistPositionThenExtend } from "@/features/reels/services/reel-position-extension";
+import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
+import { persistPositionThenExtend } from "@/features/reels/application/reel-position-extension";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import { OTHER_DECK_ID, createStudyHarness, makeFlashcard } from "./support/study-test-support";
 
@@ -29,7 +29,7 @@ describe("study session behavior", () => {
 
   it("extends from the newly persisted absolute position", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const activeReelPosition = 5;
@@ -63,7 +63,7 @@ describe("study session behavior", () => {
 
   it("keeps Mixed and Focused sessions active independently", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = Array.from({ length: 10 }, (_, index) => makeFlashcard(index + 1));
 
     const mixed = await feedService.prepareFeed(cards, "mixed", null, false);
@@ -91,7 +91,7 @@ describe("study session behavior", () => {
 
   it("replaces only the previous Focused session when a different deck is selected", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const mixedCards = [makeFlashcard(1), makeFlashcard(2)];
     const firstFocusedCards = [makeFlashcard(3)];
     const secondFocusedCards = [makeFlashcard(4, OTHER_DECK_ID)];
@@ -123,7 +123,7 @@ describe("study session behavior", () => {
   it("resumes a prepared feed without reshuffling it", async () => {
     const harness = createStudyHarness();
     let shuffleCalls = 0;
-    const feedService = new ReelFeedService(harness.service, () => {
+    const feedService = new ReelFeedServiceImpl(harness.service, () => {
       shuffleCalls += 1;
       return 0;
     });
@@ -145,7 +145,7 @@ describe("study session behavior", () => {
 
   it("returns a bounded absolute-position window for a long-running session", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const initial = await feedService.prepareFeed(cards, "mixed", null, false);
 
@@ -164,7 +164,7 @@ describe("study session behavior", () => {
 
   it("keeps a 1,000-position session bounded and resumable", async () => {
     const harness = createStudyHarness(() => 0);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = Array.from({ length: 5 }, (_, index) => makeFlashcard(index + 1));
     const initial = await feedService.prepareFeed(cards, "mixed", null, false);
     const initialItems = await harness.service.listSessionItems(initial.studySessionId);
@@ -179,7 +179,7 @@ describe("study session behavior", () => {
       Array.from({ length: 11 }, (_, index) => index + 995)
     );
 
-    const resumed = await new ReelFeedService(harness.service, () => {
+    const resumed = await new ReelFeedServiceImpl(harness.service, () => {
       throw new Error("A resumed prepared session must not reshuffle");
     }).prepareFeed(cards, "mixed", null, false);
     expect(resumed.occurrences.map(({ card }) => card.id)).toEqual(
@@ -189,7 +189,7 @@ describe("study session behavior", () => {
 
   it("persists the ordered Focus strategy and wraps by deck position", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0.999);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0.999);
     const cards = [makeFlashcard(3), makeFlashcard(1), makeFlashcard(2)];
     const cardThree = cards[0];
     const cardOne = cards[1];
@@ -229,7 +229,7 @@ describe("study session behavior", () => {
 
   it("changing the Focus strategy replaces only the Focus session", async () => {
     const harness = createStudyHarness();
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2)];
     const mixed = await feedService.prepareFeed(cards, "mixed", null, false);
     const shuffled = await feedService.prepareFeed(
@@ -316,7 +316,7 @@ describe("study session behavior", () => {
 
   it("preserves the stable base sequence when a recurrence is scheduled", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = Array.from({ length: 10 }, (_, index) => makeFlashcard(index + 1));
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const sourceCard = first(feed.occurrences).card;
@@ -342,7 +342,7 @@ describe("study session behavior", () => {
 
   it("renders multiple recurrences at their exact reel positions without target drift", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = Array.from({ length: 12 }, (_, index) => makeFlashcard(index + 1));
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const firstBaseCard = feed.occurrences[0]?.card;
@@ -382,7 +382,7 @@ describe("study session behavior", () => {
 
   it("keeps a flashcard with a pending future recurrence out of Shuffle materialization", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const reservedCard = feed.occurrences[0]?.card;
@@ -404,7 +404,7 @@ describe("study session behavior", () => {
 
   it("does not exclude pending recurrences from Ordered materialization", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2)];
     const feed = await feedService.prepareFeed(
       cards,
@@ -430,7 +430,7 @@ describe("study session behavior", () => {
 
   it("keeps a one-card Shuffle feed moving through a pending recurrence", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const card = makeFlashcard(1);
     const feed = await feedService.prepareFeed([card], "mixed", null, false);
     const attemptId = await harness.service.startAttempt(card.id, 0, feed.studySessionId);
@@ -456,7 +456,7 @@ describe("study session behavior", () => {
 
   it("uses a deterministic fallback when every small-deck Shuffle candidate is reserved", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const firstCard = feed.occurrences[0]?.card;
@@ -504,7 +504,7 @@ describe("study session behavior", () => {
 
   it("keeps a pending recurrence reserved until its exact future position is materialized", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const sourceCard = feed.occurrences[0]?.card;
@@ -529,7 +529,7 @@ describe("study session behavior", () => {
 
   it("renders a recurrence beyond the initial materialized range only at its target", async () => {
     const harness = createStudyHarness(() => 0.5);
-    const feedService = new ReelFeedService(harness.service, () => 0);
+    const feedService = new ReelFeedServiceImpl(harness.service, () => 0);
     const cards = [makeFlashcard(1), makeFlashcard(2), makeFlashcard(3)];
     const feed = await feedService.prepareFeed(cards, "mixed", null, false);
     const sourceCard = feed.occurrences[0]?.card;

@@ -22,7 +22,8 @@ import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sq
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import type { StudyService } from "@/features/study/domain/study.service";
-import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
+import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
@@ -84,7 +85,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       deckService: new DeckService(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardService(flashcardRepository),
       learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),
-      reelFeedService: new ReelFeedService(studyService),
+      reelFeedService: new ReelFeedServiceImpl(studyService),
       studyService,
     };
   });

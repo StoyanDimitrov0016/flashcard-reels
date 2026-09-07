@@ -1,3 +1,3 @@
-import FocusedFeedScreen from "@/features/reels/components/focused-feed-screen";
+import FocusedFeedScreen from "@/features/reels/presentation/components/focused-feed-screen";
 
 export default FocusedFeedScreen;

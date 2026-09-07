@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckCatalog } from "@/features/decks/hooks/use-deck-catalog";
-import { useFeedScope } from "@/features/reels/context/feed-scope-context";
+import { useFeedScope } from "@/features/reels/presentation/context/feed-scope-context";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
