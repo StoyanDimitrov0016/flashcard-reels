@@ -8,7 +8,7 @@ import type { StudySessionRecurrence } from "@/features/study/domain/study-sessi
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
-export type OpenStudySession = Readonly<{
+type OpenStudySession = Readonly<{
   created: boolean;
   replacedSessionId: string | null;
   session: StudySession;
