@@ -3,6 +3,7 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
 import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
+import type { StudyService } from "@/features/study/domain/study.service";
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
@@ -12,12 +13,12 @@ import {
 } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
-import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
-} from "@/features/study/services/study-session-lifecycle-transaction";
+} from "@/features/study/application/study-session-lifecycle-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -32,7 +33,7 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 export type OpenStudySession = OpenStudySessionResult;
 
-export class StudyService {
+export class StudyServiceImpl implements StudyService {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
   private readonly studySessionRepository: StudySessionRepository;

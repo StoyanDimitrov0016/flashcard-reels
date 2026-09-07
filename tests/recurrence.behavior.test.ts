@@ -4,7 +4,7 @@ import {
   INTRA_SESSION_RECURRENCE_CONFIG,
   calculateRecurrenceTarget,
 } from "@/features/study/config/recurrences";
-import { StudyService } from "@/features/study/services/study.service";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import {
   createStudyHarness,
   InMemoryReviewAttemptTransaction,
@@ -244,7 +244,7 @@ describe("intra-session recurrence behavior", () => {
     const attemptId = await harness.service.startAttempt(makeFlashcard(1).id, 0, session.id);
     await harness.service.rateAttempt(attemptId, "again");
 
-    const reconstructed = new StudyService(
+    const reconstructed = new StudyServiceImpl(
       harness.attempts,
       harness.sessions,
       harness.items,

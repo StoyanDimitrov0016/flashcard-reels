@@ -20,7 +20,8 @@ import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructu
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
-import { StudyService } from "@/features/study/services/study.service";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
+import type { StudyService } from "@/features/study/domain/study.service";
 import { ReelFeedService } from "@/features/reels/services/reel-feed.service";
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
@@ -63,7 +64,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
-    const studyService = new StudyService(
+    const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
       studySessionRepository,
       studySessionItemRepository,

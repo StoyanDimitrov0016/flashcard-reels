@@ -11,7 +11,7 @@ import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructu
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { StudyService } from "@/features/study/services/study.service";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   OTHER_DECK_ID,
@@ -102,7 +102,7 @@ describe("SQLite study persistence", () => {
 
   it("replaces an active Focus session atomically without touching Discover", async () => {
     const clock = new TestClock();
-    const service = new StudyService(
+    const service = new StudyServiceImpl(
       attempts,
       sessions,
       items,
@@ -131,7 +131,7 @@ describe("SQLite study persistence", () => {
 
   it("leaves no duplicate active sessions across repeated open paths", async () => {
     const clock = new TestClock();
-    const service = new StudyService(
+    const service = new StudyServiceImpl(
       attempts,
       sessions,
       items,

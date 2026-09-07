@@ -11,7 +11,7 @@ import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructur
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
-import { StudyService } from "@/features/study/services/study.service";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   TEST_DECK_ID,
@@ -363,8 +363,8 @@ describe("SQLite learner-profile aggregation", () => {
     aggregationTransaction: LearnerProfileAggregationTransaction | null = aggregation,
     sessionRepository: SQLiteStudySessionRepository = sessions,
     idGenerator: SequenceIdGenerator = new SequenceIdGenerator()
-  ): StudyService {
-    return new StudyService(
+  ): StudyServiceImpl {
+    return new StudyServiceImpl(
       attempts,
       sessionRepository,
       new SQLiteStudySessionItemRepository(database.drizzle),

@@ -3,7 +3,7 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import type { ReviewAttemptTransaction } from "@/features/study/services/review-attempt-transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
@@ -11,12 +11,12 @@ import type { StudySessionRecurrenceRepository } from "@/features/study/domain/s
 import { StudySession } from "@/features/study/domain/study-session.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
-import type { StudySessionFeedTransaction } from "@/features/study/services/study-session-feed-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
-} from "@/features/study/services/study-session-lifecycle-transaction";
-import { StudyService } from "@/features/study/services/study.service";
+} from "@/features/study/application/study-session-lifecycle-transaction";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -733,7 +733,7 @@ export type StudyHarness = Readonly<{
   clock: TestClock;
   items: InMemoryStudySessionItemRepository;
   recurrences: InMemoryStudySessionRecurrenceRepository;
-  service: StudyService;
+  service: StudyServiceImpl;
   sessions: InMemoryStudySessionRepository;
 }>;
 
@@ -746,7 +746,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
   const transaction = new InMemoryReviewAttemptTransaction(attempts, recurrences);
   const feedTransaction = new InMemoryStudySessionFeedTransaction(items, sessions);
   const lifecycleTransaction = new InMemoryStudySessionLifecycleTransaction(sessions);
-  const service = new StudyService(
+  const service = new StudyServiceImpl(
     attempts,
     sessions,
     items,

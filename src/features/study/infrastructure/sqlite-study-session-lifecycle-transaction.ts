@@ -14,7 +14,7 @@ import {
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
-} from "@/features/study/services/study-session-lifecycle-transaction";
+} from "@/features/study/application/study-session-lifecycle-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { studySessions } from "@/infrastructure/sqlite/schema";
 

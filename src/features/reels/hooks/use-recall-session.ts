@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { StudyService } from "@/features/study/services/study.service";
+import type { StudyService } from "@/features/study/domain/study.service";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export function useRecallSession(
