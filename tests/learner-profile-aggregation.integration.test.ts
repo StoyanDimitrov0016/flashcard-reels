@@ -319,6 +319,46 @@ describe("SQLite learner-profile aggregation", () => {
     expect(await sessions.findCompletedSessionsPendingAggregation(2)).toHaveLength(2);
   });
 
+  it("bounds foreground completed-session aggregation and resumes from its checkpoint", async () => {
+    const service = createService();
+    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    await Promise.all(
+      Array.from({ length: 150 }, (_value, reelPosition) =>
+        createAttempt(opened.session.id, reelPosition, "good", "2026-01-01T00:01:00.000Z")
+      )
+    );
+
+    await service.completeSession(opened.session.id);
+
+    expect((await sessions.findById(opened.session.id))?.aggregatedThroughReelPosition).toBe(49);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      goodCount: 50,
+      reviewCount: 50,
+    });
+    expect(await sessions.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
+
+    await service.recoverPendingCompletedSessionAggregation(1);
+    expect((await sessions.findById(opened.session.id))?.aggregatedThroughReelPosition).toBe(99);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      goodCount: 100,
+      reviewCount: 100,
+    });
+
+    await service.recoverPendingCompletedSessionAggregation(1);
+    expect((await sessions.findById(opened.session.id))?.aggregatedThroughReelPosition).toBe(149);
+    expect(await sessions.findCompletedSessionsPendingAggregation(1)).toEqual([]);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      goodCount: 150,
+      reviewCount: 150,
+    });
+
+    await service.recoverPendingCompletedSessionAggregation(1);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      goodCount: 150,
+      reviewCount: 150,
+    });
+  });
+
   function createService(
     aggregationTransaction: LearnerProfileAggregationTransaction | null = aggregation,
     sessionRepository: SQLiteStudySessionRepository = sessions,
