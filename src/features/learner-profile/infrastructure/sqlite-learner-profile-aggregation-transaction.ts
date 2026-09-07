@@ -5,7 +5,7 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type {
   LearnerProfileAggregationResult,
   LearnerProfileAggregationTransaction,
-} from "@/features/learner-profile/services/learner-profile-aggregation-transaction";
+} from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import {
   flashcardReviewAttempts,

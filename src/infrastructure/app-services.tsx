@@ -6,7 +6,8 @@ import { BundledAnswerAudioRepository } from "@/features/audio/infrastructure/bu
 import { AnswerAudioService } from "@/features/audio/services/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
-import { LearnerProfileService } from "@/features/learner-profile/services/learner-profile.service";
+import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
+import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { DeckService } from "@/features/decks/services/deck.service";
@@ -81,7 +82,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
       deckService: new DeckService(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardService(flashcardRepository),
-      learnerProfileService: new LearnerProfileService(learnerProfileRepository, clock),
+      learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),
       reelFeedService: new ReelFeedService(studyService),
       studyService,
     };

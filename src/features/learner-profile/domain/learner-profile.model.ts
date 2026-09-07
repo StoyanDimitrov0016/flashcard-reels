@@ -1,21 +1,16 @@
-import { z } from "zod";
-
-const LearnerProfileFieldsSchema = z.compile(
-  z.object({
-    againCount: z.number().int().nonnegative(),
-    createdAt: z.string(),
-    easyCount: z.number().int().nonnegative(),
-    firstReviewedAt: z.string().nullable(),
-    flashcardId: z.string(),
-    goodCount: z.number().int().nonnegative(),
-    hardCount: z.number().int().nonnegative(),
-    lastReviewedAt: z.string().nullable(),
-    resetAt: z.string().nullable(),
-    reviewCount: z.number().int().nonnegative(),
-    updatedAt: z.string(),
-  })
-);
-export type LearnerProfileFields = Readonly<z.infer<typeof LearnerProfileFieldsSchema>>;
+export type LearnerProfileFields = Readonly<{
+  againCount: number;
+  createdAt: string;
+  easyCount: number;
+  firstReviewedAt: string | null;
+  flashcardId: string;
+  goodCount: number;
+  hardCount: number;
+  lastReviewedAt: string | null;
+  resetAt: string | null;
+  reviewCount: number;
+  updatedAt: string;
+}>;
 
 export class LearnerProfile {
   public readonly againCount: number;

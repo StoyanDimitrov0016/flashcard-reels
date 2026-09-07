@@ -2,7 +2,7 @@ import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
-import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/services/learner-profile-aggregation-transaction";
+import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,

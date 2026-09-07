@@ -1,9 +1,10 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
+import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import type { Clock } from "@/shared/domain/clock";
 
-export class LearnerProfileService {
+export class LearnerProfileServiceImpl implements LearnerProfileService {
   private readonly clock: Clock;
   private readonly repository: LearnerProfileRepository;
 
