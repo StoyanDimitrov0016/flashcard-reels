@@ -36,6 +36,8 @@
       }
     ],
     "react/jsx-no-useless-fragment": "error",
+    "react/exhaustive-deps": "error",
+    "react/exhaustive-effect-dependencies": "off",
     "react/jsx-no-constructed-context-values": "off",
     "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
     "react/no-array-index-key": "error",
@@ -54,7 +56,10 @@
     "flashcards/no-engine-policy-in-presentation": "error",
     "flashcards/no-persistence-orchestration-in-react-effect": "warn",
     "flashcards/no-ui-index-as-domain-position": "warn",
-    "flashcards/no-zod-in-domain": "error"
+    "flashcards/no-zod-in-domain": "error",
+    "flashcards/require-local-const-arrow-functions": "error",
+    "flashcards/require-named-react-effect-callback": "error",
+    "flashcards/require-named-react-effect-cleanup": "error"
   },
   "overrides": [
     {

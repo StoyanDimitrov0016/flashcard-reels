@@ -48,6 +48,32 @@ function memberName(node) {
     : null;
 }
 
+function functionName(node) {
+  if (
+    (node.type === "FunctionDeclaration" || node.type === "FunctionExpression") &&
+    node.id?.type === "Identifier"
+  ) {
+    return node.id.name;
+  }
+  if (node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier") {
+    return node.parent.id.name;
+  }
+  return null;
+}
+
+function isReactFunction(node) {
+  const name = functionName(node);
+  return name !== null && (/^[A-Z]/.test(name) || /^use[A-Z0-9]/.test(name));
+}
+
+function isEffectCallback(node) {
+  return (
+    node.type === "FunctionExpression" &&
+    node.parent?.type === "CallExpression" &&
+    isIdentifier(node.parent.callee, "useEffect")
+  );
+}
+
 function findPersistenceCall(node) {
   if (!node || typeof node !== "object") {
     return null;
@@ -206,6 +232,81 @@ const noUiIndexAsDomainPosition = {
   },
 };
 
+const requireNamedReactEffectCallback = {
+  meta: {
+    type: "problem",
+    schema: [],
+    messages: { forbidden: "useEffect callbacks must be inline named function expressions." },
+  },
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (!isIdentifier(node.callee, "useEffect")) {
+          return;
+        }
+        const callback = node.arguments[0];
+        if (!callback || callback.type !== "FunctionExpression" || callback.id === null) {
+          context.report({ messageId: "forbidden", node: callback ?? node });
+        }
+      },
+    };
+  },
+};
+
+const requireNamedReactEffectCleanup = {
+  meta: {
+    type: "problem",
+    schema: [],
+    messages: { forbidden: "Direct useEffect cleanup functions must be inline and named." },
+  },
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (!isIdentifier(node.callee, "useEffect")) {
+          return;
+        }
+        const callback = node.arguments[0];
+        if (!callback || callback.type !== "FunctionExpression" || !callback.body) {
+          return;
+        }
+        for (const statement of callback.body.body) {
+          if (
+            statement.type === "ReturnStatement" &&
+            statement.argument &&
+            (statement.argument.type === "ArrowFunctionExpression" ||
+              (statement.argument.type === "FunctionExpression" && statement.argument.id === null))
+          ) {
+            context.report({ messageId: "forbidden", node: statement.argument });
+          }
+        }
+      },
+    };
+  },
+};
+
+const requireLocalConstArrowFunctions = {
+  meta: {
+    type: "problem",
+    schema: [],
+    messages: {
+      forbidden: "Functions local to React components and hooks must use const arrow syntax.",
+    },
+  },
+  create(context) {
+    return {
+      FunctionDeclaration(node) {
+        if (node.parent?.type !== "BlockStatement") {
+          return;
+        }
+        const owner = node.parent.parent;
+        if (owner && (isReactFunction(owner) || isEffectCallback(owner))) {
+          context.report({ messageId: "forbidden", node });
+        }
+      },
+    };
+  },
+};
+
 module.exports = {
   meta: { name: "flashcards" },
   rules: {
@@ -214,5 +315,8 @@ module.exports = {
     "no-persistence-orchestration-in-react-effect": noPersistenceOrchestrationInReactEffect,
     "no-ui-index-as-domain-position": noUiIndexAsDomainPosition,
     "no-zod-in-domain": noZodInDomain,
+    "require-local-const-arrow-functions": requireLocalConstArrowFunctions,
+    "require-named-react-effect-callback": requireNamedReactEffectCallback,
+    "require-named-react-effect-cleanup": requireNamedReactEffectCleanup,
   },
 };
