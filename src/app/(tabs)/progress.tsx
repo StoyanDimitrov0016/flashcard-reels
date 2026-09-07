@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLearnerProgress } from "@/features/learner-profile/hooks/use-learner-progress";
+import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
 export default function ProgressScreen() {
   const { loading, refresh, rows } = useLearnerProgress();
+  const { learnerProfileService } = useAppServices();
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const deckFilters = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const visibleRows = selectedDeckId ? rows.filter((row) => row.deck.id === selectedDeckId) : rows;
@@ -48,9 +58,37 @@ export default function ProgressScreen() {
                 />
               ))}
             </ScrollView>
+            <View style={styles.resetActions}>
+              {selectedDeckId && (
+                <ResetButton
+                  label="Reset selected deck"
+                  onPress={() =>
+                    confirmReset("this deck", () =>
+                      learnerProfileService.resetDeckProgress(selectedDeckId).then(refresh)
+                    )
+                  }
+                />
+              )}
+              <ResetButton
+                label="Reset all progress"
+                onPress={() =>
+                  confirmReset("all learning progress", () =>
+                    learnerProfileService.resetAllProgress().then(refresh)
+                  )
+                }
+              />
+            </View>
             <View style={styles.list}>
               {visibleRows.map((row) => (
-                <ProgressRow key={row.card.id} row={row} />
+                <ProgressRow
+                  key={row.card.id}
+                  onReset={() =>
+                    confirmReset("this card", () =>
+                      learnerProfileService.resetCardProgress(row.card.id).then(refresh)
+                    )
+                  }
+                  row={row}
+                />
               ))}
             </View>
             <Pressable accessibilityRole="button" onPress={refresh} style={styles.refreshButton}>
@@ -84,9 +122,21 @@ function FilterButton({
   );
 }
 
+function ResetButton({ label, onPress }: Readonly<{ label: string; onPress: () => void }>) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={styles.resetButton}>
+      <Text style={styles.resetLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function ProgressRow({
+  onReset,
   row,
-}: Readonly<{ row: ReturnType<typeof useLearnerProgress>["rows"][number] }>) {
+}: Readonly<{
+  onReset: () => void;
+  row: ReturnType<typeof useLearnerProgress>["rows"][number];
+}>) {
   const { card, deck, explanation, profile } = row;
   return (
     <View style={styles.card}>
@@ -105,7 +155,23 @@ function ProgressRow({
           : "Not reviewed yet"}
       </Text>
       <Text style={styles.reason}>{explanation.reason}</Text>
+      <ResetButton label="Reset card progress" onPress={onReset} />
     </View>
+  );
+}
+
+function confirmReset(scope: string, onConfirm: () => Promise<void>): void {
+  Alert.alert(
+    `Reset ${scope}?`,
+    "Learning progress will be reset, but cards and decks will not be deleted.",
+    [
+      { style: "cancel", text: "Cancel" },
+      {
+        onPress: () => void onConfirm().catch(() => undefined),
+        style: "destructive",
+        text: "Reset",
+      },
+    ]
   );
 }
 
@@ -140,6 +206,9 @@ const styles = StyleSheet.create({
   filterLabel: { color: palette.textMuted, fontSize: 13 },
   selectedFilterLabel: { color: palette.ink, fontWeight: "700" },
   list: { gap: sizes.spacing.small },
+  resetActions: { gap: sizes.spacing.small },
+  resetButton: { alignSelf: "flex-start", paddingVertical: sizes.spacing.xSmall },
+  resetLabel: { color: palette.danger, fontSize: 12, fontWeight: "700" },
   card: {
     backgroundColor: palette.surface,
     borderRadius: sizes.radius.card,
