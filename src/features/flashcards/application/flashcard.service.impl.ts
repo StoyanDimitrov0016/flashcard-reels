@@ -1,8 +1,9 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { FlashcardRepository } from "@/features/flashcards/domain/flashcard.repository";
+import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 
-export class FlashcardService {
+export class FlashcardServiceImpl implements FlashcardService {
   private readonly flashcardRepository: FlashcardRepository;
 
   constructor(flashcardRepository: FlashcardRepository) {

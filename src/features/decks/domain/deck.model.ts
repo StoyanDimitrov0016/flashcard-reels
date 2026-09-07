@@ -1,20 +1,11 @@
-import { z } from "zod";
-
-import { UuidSchema } from "@/shared/domain/uuid";
-
-export const DeckIdSchema = UuidSchema;
-export type DeckId = z.infer<typeof DeckIdSchema>;
-
-const DeckFieldsSchema = z.compile(
-  z.object({
-    id: DeckIdSchema,
-    title: z.string(),
-    description: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-  })
-);
-export type DeckFields = Readonly<z.infer<typeof DeckFieldsSchema>>;
+export type DeckId = string;
+export type DeckFields = Readonly<{
+  id: DeckId;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}>;
 
 export class Deck {
   public readonly id: DeckId;

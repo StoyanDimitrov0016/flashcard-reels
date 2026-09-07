@@ -1,29 +1,19 @@
-import { z } from "zod";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
-import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
-import {
-  StudySessionStrategySchema,
-  type StudySessionStrategy,
-} from "@/features/study/domain/study-session-strategy";
-
-export const StudySessionScopeSchema = z.enum(["mixed", "focused"]);
-export type StudySessionScope = z.infer<typeof StudySessionScopeSchema>;
-
-const StudySessionFieldsSchema = z.compile(
-  z.object({
-    completedAt: z.string().nullable(),
-    aggregatedThroughReelPosition: z.number().int().gte(-1),
-    createdAt: z.string(),
-    currentReelPosition: z.number().int().nonnegative(),
-    deckId: DeckIdSchema.nullable(),
-    id: z.string(),
-    lastActiveAt: z.string(),
-    scope: StudySessionScopeSchema,
-    strategyState: z.string(),
-    strategy: StudySessionStrategySchema,
-  })
-);
-export type StudySessionFields = Readonly<z.infer<typeof StudySessionFieldsSchema>>;
+export type StudySessionScope = "mixed" | "focused";
+export type StudySessionFields = Readonly<{
+  completedAt: string | null;
+  aggregatedThroughReelPosition: number;
+  createdAt: string;
+  currentReelPosition: number;
+  deckId: DeckId | null;
+  id: string;
+  lastActiveAt: string;
+  scope: StudySessionScope;
+  strategyState: string;
+  strategy: StudySessionStrategy;
+}>;
 
 export class StudySession {
   public readonly id: string;

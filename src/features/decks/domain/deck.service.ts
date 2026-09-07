@@ -1,0 +1,10 @@
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
+
+export interface DeckService {
+  findById(id: DeckId): Promise<Deck | null>;
+  findByIds(ids: readonly DeckId[]): Promise<Deck[]>;
+  getAppearance(deckId: DeckId): Promise<DeckAppearance | null>;
+  getAppearances(deckIds: readonly DeckId[]): Promise<DeckAppearance[]>;
+  list(): Promise<Deck[]>;
+}

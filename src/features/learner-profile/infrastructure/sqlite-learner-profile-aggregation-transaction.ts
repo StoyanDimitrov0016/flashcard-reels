@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull, lte } from "drizzle-orm";
 
-import { AGGREGATION_CHUNK_SIZE } from "@/features/study/config/review-attempts";
+import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type {
   LearnerProfileAggregationResult,

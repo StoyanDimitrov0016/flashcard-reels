@@ -3,16 +3,19 @@ import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { BundledAnswerAudioRepository } from "@/features/audio/infrastructure/bundled-answer-audio.repository";
-import { AnswerAudioService } from "@/features/audio/services/answer-audio.service";
+import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
 import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
 import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { DeckService } from "@/features/decks/services/deck.service";
+import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
+import type { DeckService } from "@/features/decks/domain/deck.service";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
@@ -81,9 +84,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
 
     return {
-      answerAudioService: new AnswerAudioService(new BundledAnswerAudioRepository()),
-      deckService: new DeckService(deckRepository, deckAppearanceRepository),
-      flashcardService: new FlashcardService(flashcardRepository),
+      answerAudioService: new AnswerAudioServiceImpl(new BundledAnswerAudioRepository()),
+      deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
+      flashcardService: new FlashcardServiceImpl(flashcardRepository),
       learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),
       reelFeedService: new ReelFeedServiceImpl(studyService),
       studyService,

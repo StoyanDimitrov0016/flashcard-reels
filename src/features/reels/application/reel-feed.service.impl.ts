@@ -18,7 +18,7 @@ import type { StudySessionScope } from "@/features/study/domain/study-session.mo
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudyService } from "@/features/study/domain/study.service";
-import type { RandomSource } from "@/features/study/config/recurrences";
+import type { RandomSource } from "@/features/study/domain/recurrences";
 
 export class ReelFeedServiceImpl implements ReelFeedService {
   private readonly studyService: StudyService;

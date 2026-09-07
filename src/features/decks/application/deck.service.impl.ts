@@ -2,8 +2,9 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
+import type { DeckService } from "@/features/decks/domain/deck.service";
 
-export class DeckService {
+export class DeckServiceImpl implements DeckService {
   private readonly deckRepository: DeckRepository;
   private readonly deckAppearanceRepository: DeckAppearanceRepository;
 

@@ -1,6 +1,6 @@
 import type { FlashcardFields } from "@/features/flashcards/domain/flashcard.model";
-import { deckIdBySeedKey } from "@/features/decks/data/decks";
-import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
+import { deckIdBySeedKey } from "@/features/decks/infrastructure/seed-data/decks";
+import { flashcardIdBySeedKey } from "@/features/flashcards/infrastructure/seed-data/flashcard-ids";
 
 const POC_TIMESTAMP = "2026-09-04T00:00:00.000Z";
 

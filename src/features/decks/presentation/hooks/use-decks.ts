@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { DeckIdSchema, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
+import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
+import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type DecksState = Readonly<{

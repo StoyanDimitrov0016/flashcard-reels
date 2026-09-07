@@ -1,12 +1,11 @@
 import { and, asc, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 
 import { type DeckId } from "@/features/decks/domain/deck.model";
+import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import {
-  StudySession,
   StudySessionScopeSchema,
-  type StudySessionScope,
-} from "@/features/study/domain/study-session.model";
-import { StudySessionStrategySchema } from "@/features/study/domain/study-session-strategy";
+  StudySessionStrategySchema,
+} from "@/features/study/contracts/study-session.schema";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";

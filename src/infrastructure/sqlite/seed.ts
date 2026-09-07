@@ -1,6 +1,9 @@
-import { deckAppearanceSeedData, deckSeedData } from "@/features/decks/data/decks";
+import {
+  deckAppearanceSeedData,
+  deckSeedData,
+} from "@/features/decks/infrastructure/seed-data/decks";
 
-import { flashcardSeedData } from "@/features/flashcards/data/flashcards";
+import { flashcardSeedData } from "@/features/flashcards/infrastructure/seed-data/flashcards";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import {
   deckAppearances,

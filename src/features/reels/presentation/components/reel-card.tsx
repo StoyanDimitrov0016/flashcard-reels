@@ -4,7 +4,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-nativ
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import { AnswerAudioPlayer } from "@/features/audio/components/answer-audio-player";
+import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { flashcardSeedData } from "@/features/flashcards/data/flashcards";
+import { flashcardSeedData } from "@/features/flashcards/infrastructure/seed-data/flashcards";
 
 describe("flashcard deck ordering", () => {
   it("assigns contiguous positions to seeded cards in each deck", () => {

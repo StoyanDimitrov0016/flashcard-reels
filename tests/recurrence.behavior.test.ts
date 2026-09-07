@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   INTRA_SESSION_RECURRENCE_CONFIG,
   calculateRecurrenceTarget,
-} from "@/features/study/config/recurrences";
+} from "@/features/study/domain/recurrences";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import {
   createStudyHarness,

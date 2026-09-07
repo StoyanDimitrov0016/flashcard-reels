@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { persistPositionThenExtend } from "@/features/reels/application/reel-position-extension";
-import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
+import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
 import { OTHER_DECK_ID, createStudyHarness, makeFlashcard } from "./support/study-test-support";
 
 function first<T>(items: readonly T[]): T {

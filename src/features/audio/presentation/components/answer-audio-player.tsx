@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import type { AudioSource } from "expo-audio";
 
-import { useAnswerAudio } from "@/features/audio/hooks/use-answer-audio";
+import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 

@@ -1,6 +1,6 @@
 import type { AudioSource } from "expo-audio";
 
-import { flashcardIdBySeedKey } from "@/features/flashcards/data/flashcard-ids";
+import { flashcardIdBySeedKey } from "@/features/flashcards/infrastructure/seed-data/flashcard-ids";
 
 import sdAvailability from "../../../../assets/audio/system-design/sd-availability.mp3";
 import sdBlobStorage from "../../../../assets/audio/system-design/sd-blob-storage.mp3";

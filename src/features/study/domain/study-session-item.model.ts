@@ -1,17 +1,12 @@
-import { z } from "zod";
+import type { FlashcardId } from "@/features/flashcards/domain/flashcard.model";
 
-import { FlashcardIdSchema, type FlashcardId } from "@/features/flashcards/domain/flashcard.model";
-
-const StudySessionItemFieldsSchema = z.compile(
-  z.object({
-    flashcardId: FlashcardIdSchema,
-    id: z.string(),
-    baseFeedPosition: z.number().int().nonnegative(),
-    reelPosition: z.number().int().nonnegative(),
-    studySessionId: z.string(),
-  })
-);
-export type StudySessionItemFields = Readonly<z.infer<typeof StudySessionItemFieldsSchema>>;
+export type StudySessionItemFields = Readonly<{
+  flashcardId: FlashcardId;
+  id: string;
+  baseFeedPosition: number;
+  reelPosition: number;
+  studySessionId: string;
+}>;
 
 export class StudySessionItem {
   public readonly id: string;

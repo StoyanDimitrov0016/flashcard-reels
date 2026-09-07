@@ -1,14 +1,10 @@
-import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
-import { z } from "zod";
+import type { DeckId } from "@/features/decks/domain/deck.model";
 
-const DeckAppearanceFieldsSchema = z.compile(
-  z.object({
-    deckId: DeckIdSchema,
-    accentColor: z.string(),
-    backgroundColor: z.string(),
-  })
-);
-export type DeckAppearanceFields = Readonly<z.infer<typeof DeckAppearanceFieldsSchema>>;
+export type DeckAppearanceFields = Readonly<{
+  deckId: DeckId;
+  accentColor: string;
+  backgroundColor: string;
+}>;
 
 export class DeckAppearance {
   public readonly deckId: DeckId;

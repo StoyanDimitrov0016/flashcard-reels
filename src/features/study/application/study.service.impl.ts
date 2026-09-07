@@ -10,8 +10,8 @@ import {
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
   FOREGROUND_AGGREGATION_CHUNK_LIMIT,
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
-} from "@/features/study/config/review-attempts";
-import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
+} from "@/features/study/domain/review-attempts";
+import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";

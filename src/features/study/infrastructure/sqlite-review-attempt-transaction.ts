@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, isNull, ne } from "drizzle-orm";
 
-import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
+import { findNextFreeRecurrenceSlot } from "@/features/study/domain/recurrences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";

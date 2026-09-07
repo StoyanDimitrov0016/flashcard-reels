@@ -1,16 +1,13 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 
-import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
+import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import {
-  StudySession,
   StudySessionScopeSchema,
-  type StudySessionScope,
-} from "@/features/study/domain/study-session.model";
-import {
   StudySessionStrategySchema,
-  type StudySessionStrategy,
-} from "@/features/study/domain/study-session-strategy";
+} from "@/features/study/contracts/study-session.schema";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,

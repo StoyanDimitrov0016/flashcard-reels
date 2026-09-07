@@ -1,23 +1,16 @@
-import { z } from "zod";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 
-import { RecallLevelSchema, type RecallLevel } from "@/features/study/domain/recall-level";
-
-const FlashcardReviewAttemptFieldsSchema = z.compile(
-  z.object({
-    id: z.string(),
-    flashcardId: z.string(),
-    studySessionId: z.string(),
-    reelPosition: z.number().int().nonnegative(),
-    rating: RecallLevelSchema.nullable(),
-    createdAt: z.string(),
-    ratedAt: z.string().nullable().optional(),
-    updatedAt: z.string(),
-    finalizedAt: z.string().nullable(),
-  })
-);
-export type FlashcardReviewAttemptFields = Readonly<
-  z.infer<typeof FlashcardReviewAttemptFieldsSchema>
->;
+export type FlashcardReviewAttemptFields = Readonly<{
+  id: string;
+  flashcardId: string;
+  studySessionId: string;
+  reelPosition: number;
+  rating: RecallLevel | null;
+  createdAt: string;
+  ratedAt?: string | null;
+  updatedAt: string;
+  finalizedAt: string | null;
+}>;
 
 export class FlashcardReviewAttempt {
   public readonly id: string;

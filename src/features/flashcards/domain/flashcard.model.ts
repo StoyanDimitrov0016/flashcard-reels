@@ -1,21 +1,15 @@
-import { DeckIdSchema, type DeckId } from "@/features/decks/domain/deck.model";
-import { UuidSchema, type Uuid } from "@/shared/domain/uuid";
-import { z } from "zod";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { Uuid } from "@/shared/domain/uuid";
 
-export const FlashcardIdSchema = UuidSchema;
-
-const FlashcardFieldsSchema = z.compile(
-  z.object({
-    id: FlashcardIdSchema,
-    deckId: DeckIdSchema,
-    deckPosition: z.number().int().nonnegative(),
-    question: z.string(),
-    answer: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-  })
-);
-export type FlashcardFields = Readonly<z.infer<typeof FlashcardFieldsSchema>>;
+export type FlashcardFields = Readonly<{
+  id: Uuid;
+  deckId: DeckId;
+  deckPosition: number;
+  question: string;
+  answer: string;
+  createdAt: string;
+  updatedAt: string;
+}>;
 
 export type FlashcardId = Uuid;
 

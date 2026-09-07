@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
-import { useDeckAppearances } from "@/features/decks/hooks/use-deck-appearances";
-import { useDecks } from "@/features/decks/hooks/use-decks";
+import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
+import { useDecks } from "@/features/decks/presentation/hooks/use-decks";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/hooks/use-reel-controller";

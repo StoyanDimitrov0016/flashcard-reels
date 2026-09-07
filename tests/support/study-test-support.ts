@@ -1,7 +1,7 @@
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { findNextFreeRecurrenceSlot } from "@/features/study/config/recurrences";
-import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/config/review-attempts";
+import { findNextFreeRecurrenceSlot } from "@/features/study/domain/recurrences";
+import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
