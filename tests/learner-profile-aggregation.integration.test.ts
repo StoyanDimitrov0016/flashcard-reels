@@ -384,7 +384,7 @@ describe("SQLite learner-profile aggregation", () => {
     reelPosition: number,
     rating: "again" | "hard" | "good" | "easy" | null,
     finalizedAt: string | null,
-    ratedAt = finalizedAt
+    ratedAt = rating === null ? null : finalizedAt
   ): Promise<FlashcardReviewAttempt> {
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",

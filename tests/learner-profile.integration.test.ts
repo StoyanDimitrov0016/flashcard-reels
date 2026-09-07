@@ -45,7 +45,8 @@ describe("SQLite learner profiles", () => {
   it("resets one card, one deck, and all cards without deleting content", async () => {
     await profiles.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.runAsync(
-      "UPDATE learner_profiles SET again_count = 1, review_count = 1, last_reviewed_at = ?, updated_at = ? WHERE flashcard_id = ?",
+      "UPDATE learner_profiles SET again_count = 1, review_count = 1, first_reviewed_at = ?, last_reviewed_at = ?, updated_at = ? WHERE flashcard_id = ?",
+      "2026-01-01T00:00:00.000Z",
       "2026-01-01T00:00:00.000Z",
       "2026-01-01T00:00:00.000Z",
       makeFlashcard(1).id
