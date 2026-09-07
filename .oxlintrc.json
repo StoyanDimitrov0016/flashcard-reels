@@ -53,16 +53,12 @@
     "flashcards/no-service-locator-in-presentation": "error",
     "flashcards/no-engine-policy-in-presentation": "error",
     "flashcards/no-persistence-orchestration-in-react-effect": "warn",
-    "flashcards/no-ui-index-as-domain-position": "warn"
+    "flashcards/no-ui-index-as-domain-position": "warn",
+    "flashcards/no-zod-in-domain": "error"
   },
   "overrides": [
     {
-      "files": [
-        "src/features/**/components/**",
-        "src/features/**/screens/**",
-        "src/app/**/*.ts",
-        "src/app/**/*.tsx"
-      ],
+      "files": ["src/features/**/presentation/**", "src/app/**/*.ts", "src/app/**/*.tsx"],
       "excludeFiles": ["src/app/_layout.tsx"],
       "rules": {
         "no-restricted-imports": [
@@ -71,6 +67,7 @@
             "patterns": [
               { "group": ["@/infrastructure/sqlite/**"] },
               { "group": ["@/features/**/infrastructure/**"] },
+              { "group": ["drizzle-orm/**"] },
               { "group": ["expo-sqlite"] },
               { "group": ["better-sqlite3"] }
             ]
@@ -92,7 +89,11 @@
                   "expo-router",
                   "expo-status-bar",
                   "expo-sqlite",
-                  "@/features/**/components/**",
+                  "drizzle-orm/**",
+                  "zod",
+                  "@/features/**/presentation/**",
+                  "@/features/**/infrastructure/**",
+                  "@/infrastructure/**",
                   "@/shared/presentation/**"
                 ]
               },
@@ -103,25 +104,27 @@
       }
     },
     {
-      "files": ["src/infrastructure/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [{ "group": ["@/features/**/components/**", "@/features/**/hooks/**"] }]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["src/features/**/services/**"],
+      "files": ["src/features/**/application/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
-              { "group": ["@/features/**/infrastructure/**", "@/infrastructure/sqlite/**"] }
+              { "group": ["@/features/**/presentation/**"] },
+              { "group": ["@/features/**/infrastructure/**"] },
+              { "group": ["@/infrastructure/sqlite/**"] }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**/infrastructure/**", "src/infrastructure/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [{ "group": ["@/features/**/presentation/**"] }]
           }
         ]
       }

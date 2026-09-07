@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
@@ -84,9 +84,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
       const localIndex = currentFeed.occurrences.findIndex(
         (current) => current.key === occurrence.key
       );
-      const shouldExtend =
-        localIndex >= 0 &&
-        currentFeed.occurrences.length - localIndex <= FEED_ENGINE_CONFIG.extensionThreshold;
+      const shouldExtend = shouldExtendReelFeed(localIndex, currentFeed.occurrences.length);
 
       void startAttempt(occurrence).then(() =>
         Promise.all([

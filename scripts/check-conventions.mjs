@@ -24,11 +24,13 @@ function visit(directory) {
     const source = fs.readFileSync(entryPath, "utf8");
     const relativePath = path.relative(sourceDirectory, entryPath).replaceAll(path.sep, "/");
     const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
+    const isRootComposition = relativePath === "app/_layout.tsx";
     const isPresentation =
-      (/(^|\/)features\/[^/]+\/(components|screens)\//.test(relativePath) ||
+      (/(^|\/)features\/[^/]+\/presentation\//.test(relativePath) ||
         /(^|\/)app\/.+\.(ts|tsx)$/.test(relativePath)) &&
-      relativePath !== "app/_layout.tsx";
+      !isRootComposition;
     const isDomain = /(^|\/)features\/[^/]+\/domain\//.test(relativePath);
+    const isApplication = /(^|\/)features\/[^/]+\/application\//.test(relativePath);
     const isInfrastructure = /(^|\/)infrastructure\//.test(relativePath);
     if (
       isPresentation &&
@@ -36,6 +38,7 @@ function visit(directory) {
         (specifier) =>
           specifier.startsWith("@/infrastructure/sqlite/") ||
           (specifier.startsWith("@/features/") && specifier.includes("/infrastructure/")) ||
+          specifier.startsWith("drizzle-orm") ||
           specifier === "expo-sqlite" ||
           specifier === "better-sqlite3"
       )
@@ -49,6 +52,11 @@ function visit(directory) {
           ["react", "react-native", "expo-router", "expo-status-bar", "expo-sqlite"].includes(
             specifier
           ) ||
+          specifier === "zod" ||
+          specifier.startsWith("drizzle-orm") ||
+          (specifier.startsWith("@/features/") &&
+            (specifier.includes("/presentation/") || specifier.includes("/infrastructure/"))) ||
+          specifier.startsWith("@/infrastructure/") ||
           specifier.startsWith("@/shared/presentation/") ||
           specifier.includes("/components/")
       )
@@ -56,9 +64,22 @@ function visit(directory) {
       architectureViolations.push(`${relativePath}: domain imports presentation code`);
     }
     if (
+      isApplication &&
+      imports.some(
+        (specifier) =>
+          (specifier.startsWith("@/features/") &&
+            (specifier.includes("/presentation/") || specifier.includes("/infrastructure/"))) ||
+          specifier.startsWith("@/infrastructure/sqlite/")
+      )
+    ) {
+      architectureViolations.push(
+        `${relativePath}: application imports presentation or infrastructure code`
+      );
+    }
+    if (
       isInfrastructure &&
       imports.some(
-        (specifier) => specifier.includes("/components/") || specifier.includes("/hooks/")
+        (specifier) => specifier.startsWith("@/features/") && specifier.includes("/presentation/")
       )
     ) {
       architectureViolations.push(`${relativePath}: infrastructure imports presentation code`);

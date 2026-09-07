@@ -1,6 +1,13 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [".expo/**", "dist/**", "node_modules/**", "package-lock.json"],
+  "ignorePatterns": [
+    ".expo/**",
+    "dist/**",
+    "node_modules/**",
+    "package-lock.json",
+    "flashcard-reels-architecture-boundary-refactor-spec.md",
+    "luna-stage-3-final-correctness-fixes.md"
+  ],
   "printWidth": 100,
   "semi": true,
   "singleQuote": false,

@@ -1,7 +1,9 @@
 const presentationPath =
-  /[\\/]features[\\/][^\\/]+[\\/](components|screens)[\\/]|[\\/]app[\\/].+\.(ts|tsx)$/;
+  /[\\/]features[\\/][^\\/]+[\\/]presentation[\\/]|[\\/]app[\\/].+\.(ts|tsx)$/;
 const rootCompositionPath = /(?:^|[\\/])src[\\/]app[\\/]_layout\.tsx$/;
-const reelPresentationPath = /[\\/]features[\\/]reels[\\/]components[\\/]/;
+const presentationHookPath = /[\\/]features[\\/][^\\/]+[\\/]presentation[\\/]hooks[\\/]/;
+const reelPresentationPath = /[\\/]features[\\/]reels[\\/]presentation[\\/]components[\\/]/;
+const domainPath = /[\\/]features[\\/][^\\/]+[\\/]domain[\\/]/;
 const persistenceMethods = new Set([
   "startAttempt",
   "finalizeAttempt",
@@ -23,6 +25,10 @@ const localIndexNames = new Set(["index", "activeIndex", "itemIndex", "localInde
 
 function isPresentation(filename) {
   return presentationPath.test(filename) && !rootCompositionPath.test(filename);
+}
+
+function isPresentationHook(filename) {
+  return presentationHookPath.test(filename);
 }
 
 function contextFilename(context) {
@@ -80,7 +86,7 @@ const noServiceLocatorInPresentation = {
     },
   },
   create(context) {
-    if (!isPresentation(contextFilename(context))) {
+    if (!isPresentation(contextFilename(context)) || isPresentationHook(contextFilename(context))) {
       return {};
     }
     return {
@@ -111,11 +117,33 @@ const noEnginePolicyInPresentation = {
     return {
       ImportDeclaration(node) {
         if (
-          node.source.value === "@/features/reels/config/feed-engine" &&
+          node.source.value === "@/features/reels/domain/feed-engine" &&
           node.specifiers.some(
             (specifier) => specifier.imported && specifier.imported.name === "FEED_ENGINE_CONFIG"
           )
         ) {
+          context.report({ messageId: "forbidden", node });
+        }
+      },
+    };
+  },
+};
+
+const noZodInDomain = {
+  meta: {
+    type: "problem",
+    schema: [],
+    messages: {
+      forbidden: "Domain code must not import Zod; validate serialized boundaries in contracts.",
+    },
+  },
+  create(context) {
+    if (!domainPath.test(contextFilename(context))) {
+      return {};
+    }
+    return {
+      ImportDeclaration(node) {
+        if (node.source.value === "zod") {
           context.report({ messageId: "forbidden", node });
         }
       },
@@ -185,5 +213,6 @@ module.exports = {
     "no-engine-policy-in-presentation": noEnginePolicyInPresentation,
     "no-persistence-orchestration-in-react-effect": noPersistenceOrchestrationInReactEffect,
     "no-ui-index-as-domain-position": noUiIndexAsDomainPosition,
+    "no-zod-in-domain": noZodInDomain,
   },
 };
