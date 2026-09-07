@@ -12,8 +12,17 @@ tester.run(
         code: 'import { useReelController } from "./use-reel-controller";',
         filename: "src/features/reels/components/reel-feed.tsx",
       },
+      {
+        code: 'import { AppServicesProvider } from "@/infrastructure/app-services";',
+        filename: "src/app/_layout.tsx",
+      },
     ],
     invalid: [
+      {
+        code: 'import { useAppServices } from "@/infrastructure/app-services";',
+        filename: "src/app/(tabs)/progress.tsx",
+        errors: 1,
+      },
       {
         code: 'import { useAppServices } from "@/infrastructure/app-services";',
         filename: "src/features/reels/components/reel-feed.tsx",

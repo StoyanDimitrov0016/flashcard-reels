@@ -24,7 +24,10 @@ function visit(directory) {
     const source = fs.readFileSync(entryPath, "utf8");
     const relativePath = path.relative(sourceDirectory, entryPath).replaceAll(path.sep, "/");
     const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
-    const isPresentation = /(^|\/)features\/[^/]+\/(components|screens)\//.test(relativePath);
+    const isPresentation =
+      (/(^|\/)features\/[^/]+\/(components|screens)\//.test(relativePath) ||
+        /(^|\/)app\/.+\.(ts|tsx)$/.test(relativePath)) &&
+      relativePath !== "app/_layout.tsx";
     const isDomain = /(^|\/)features\/[^/]+\/domain\//.test(relativePath);
     const isInfrastructure = /(^|\/)infrastructure\//.test(relativePath);
     if (

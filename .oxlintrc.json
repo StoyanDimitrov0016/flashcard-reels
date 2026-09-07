@@ -57,7 +57,13 @@
   },
   "overrides": [
     {
-      "files": ["src/features/**/components/**", "src/features/**/screens/**"],
+      "files": [
+        "src/features/**/components/**",
+        "src/features/**/screens/**",
+        "src/app/**/*.ts",
+        "src/app/**/*.tsx"
+      ],
+      "excludeFiles": ["src/app/_layout.tsx"],
       "rules": {
         "no-restricted-imports": [
           "error",

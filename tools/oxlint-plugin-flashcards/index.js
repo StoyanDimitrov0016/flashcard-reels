@@ -1,4 +1,6 @@
-const presentationPath = /[\\/]features[\\/][^\\/]+[\\/](components|screens)[\\/]/;
+const presentationPath =
+  /[\\/]features[\\/][^\\/]+[\\/](components|screens)[\\/]|[\\/]app[\\/].+\.(ts|tsx)$/;
+const rootCompositionPath = /(?:^|[\\/])src[\\/]app[\\/]_layout\.tsx$/;
 const reelPresentationPath = /[\\/]features[\\/]reels[\\/]components[\\/]/;
 const persistenceMethods = new Set([
   "startAttempt",
@@ -20,7 +22,7 @@ const domainPositionMethods = new Set([
 const localIndexNames = new Set(["index", "activeIndex", "itemIndex", "localIndex"]);
 
 function isPresentation(filename) {
-  return presentationPath.test(filename);
+  return presentationPath.test(filename) && !rootCompositionPath.test(filename);
 }
 
 function contextFilename(context) {
