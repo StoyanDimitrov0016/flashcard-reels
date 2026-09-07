@@ -17,43 +17,46 @@ export function useDecks(deckIds: DeckId[]): DecksState {
   const [state, setState] = useState<DecksState>(initialState);
   const deckIdsKey = deckIds.join(",");
 
-  useEffect(() => {
-    let active = true;
+  useEffect(
+    function loadDecksById() {
+      let active = true;
 
-    async function loadDecks() {
-      try {
-        const requestedDeckIds = deckIdsKey
-          ? deckIdsKey.split(",").map((deckId) => DeckIdSchema.parse(deckId))
-          : [];
-        const loadedDecks = await deckService.findByIds(requestedDeckIds);
-        const decksById = new Map(loadedDecks.map((deck) => [deck.id, deck] as const));
-        const decks = requestedDeckIds.map((deckId) => {
-          const deck = decksById.get(deckId);
-          if (!deck) {
-            throw new Error(`Missing deck ${deckId}`);
-          }
-          return [deckId, deck] as const;
-        });
-
-        if (active) {
-          setState({ decks: new Map(decks), error: null, loading: false });
-        }
-      } catch (error) {
-        if (active) {
-          setState({
-            decks: new Map(),
-            error: error instanceof Error ? error : new Error("Could not load decks"),
-            loading: false,
+      const loadDecks = async () => {
+        try {
+          const requestedDeckIds = deckIdsKey
+            ? deckIdsKey.split(",").map((deckId) => DeckIdSchema.parse(deckId))
+            : [];
+          const loadedDecks = await deckService.findByIds(requestedDeckIds);
+          const decksById = new Map(loadedDecks.map((deck) => [deck.id, deck] as const));
+          const decks = requestedDeckIds.map((deckId) => {
+            const deck = decksById.get(deckId);
+            if (!deck) {
+              throw new Error(`Missing deck ${deckId}`);
+            }
+            return [deckId, deck] as const;
           });
-        }
-      }
-    }
 
-    void loadDecks();
-    return () => {
-      active = false;
-    };
-  }, [deckIdsKey, deckService]);
+          if (active) {
+            setState({ decks: new Map(decks), error: null, loading: false });
+          }
+        } catch (error) {
+          if (active) {
+            setState({
+              decks: new Map(),
+              error: error instanceof Error ? error : new Error("Could not load decks"),
+              loading: false,
+            });
+          }
+        }
+      };
+
+      void loadDecks();
+      return function cancelDeckLoad() {
+        active = false;
+      };
+    },
+    [deckIdsKey, deckService]
+  );
 
   if (state.error) {
     throw state.error;

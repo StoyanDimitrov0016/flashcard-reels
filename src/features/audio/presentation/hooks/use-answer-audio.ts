@@ -5,12 +5,15 @@ export function useAnswerAudio(source: AudioSource) {
   const player = useAudioPlayer(source, { updateInterval: 100 });
   const status = useAudioPlayerStatus(player);
 
-  useEffect(() => {
-    if (!source) {
-      player.pause();
-      void player.seekTo(0);
-    }
-  }, [player, source]);
+  useEffect(
+    function synchronizeEmptyAudioSource() {
+      if (!source) {
+        player.pause();
+        void player.seekTo(0);
+      }
+    },
+    [player, source]
+  );
 
   const togglePlayback = async () => {
     if (status.playing) {

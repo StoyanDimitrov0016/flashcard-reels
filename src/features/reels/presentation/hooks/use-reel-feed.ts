@@ -24,17 +24,20 @@ export function useReelFeed({
   const activeIndexReference = useRef(normalizedInitialIndex);
   const activeReelPositionReference = useRef(initialReelPosition);
 
-  useEffect(() => {
-    const nextIndex = getLocalReelIndex(
-      activeReelPositionReference.current,
-      loadedFromReelPosition,
-      itemCount
-    );
-    activeIndexReference.current = nextIndex;
-    activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
-    setActiveIndex(nextIndex);
-    setActiveReelPosition(activeReelPositionReference.current);
-  }, [itemCount, loadedFromReelPosition]);
+  useEffect(
+    function synchronizeRollingFeedWindow() {
+      const nextIndex = getLocalReelIndex(
+        activeReelPositionReference.current,
+        loadedFromReelPosition,
+        itemCount
+      );
+      activeIndexReference.current = nextIndex;
+      activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
+      setActiveIndex(nextIndex);
+      setActiveReelPosition(activeReelPositionReference.current);
+    },
+    [itemCount, loadedFromReelPosition]
+  );
 
   const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const nextIndex = Math.min(

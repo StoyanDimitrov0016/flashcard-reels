@@ -16,32 +16,39 @@ export function useRecallSession(
     () => new Map()
   );
 
-  useEffect(() => {
-    let active = true;
-    void studyService
-      .listReviewAttemptsInReelPositionRange(studySessionId, fromReelPosition, throughReelPosition)
-      .then((attempts) => {
-        if (!active) {
-          return;
-        }
-        const nextAttemptIds = new Map<number, string>();
-        const nextRecallLevels = new Map<number, RecallLevel>();
-        for (const attempt of attempts) {
-          nextAttemptIds.set(attempt.reelPosition, attempt.id);
-          if (attempt.rating !== null) {
-            nextRecallLevels.set(attempt.reelPosition, attempt.rating);
+  useEffect(
+    function loadRecallSessionAttempts() {
+      let active = true;
+      void studyService
+        .listReviewAttemptsInReelPositionRange(
+          studySessionId,
+          fromReelPosition,
+          throughReelPosition
+        )
+        .then((attempts) => {
+          if (!active) {
+            return;
           }
-        }
-        attemptIdsReference.current = nextAttemptIds;
-        setAttemptIds(nextAttemptIds);
-        setRecallLevels(nextRecallLevels);
-      })
-      .catch(() => undefined);
+          const nextAttemptIds = new Map<number, string>();
+          const nextRecallLevels = new Map<number, RecallLevel>();
+          for (const attempt of attempts) {
+            nextAttemptIds.set(attempt.reelPosition, attempt.id);
+            if (attempt.rating !== null) {
+              nextRecallLevels.set(attempt.reelPosition, attempt.rating);
+            }
+          }
+          attemptIdsReference.current = nextAttemptIds;
+          setAttemptIds(nextAttemptIds);
+          setRecallLevels(nextRecallLevels);
+        })
+        .catch(() => undefined);
 
-    return () => {
-      active = false;
-    };
-  }, [fromReelPosition, studyService, studySessionId, throughReelPosition]);
+      return function cancelRecallSessionAttemptLoad() {
+        active = false;
+      };
+    },
+    [fromReelPosition, studyService, studySessionId, throughReelPosition]
+  );
 
   const getAttemptId = useCallback(
     (reelPosition: number) => attemptIdsReference.current.get(reelPosition),

@@ -43,11 +43,14 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
   const { appearances } = useDeckAppearances(deckIds);
   const { decks } = useDecks(deckIds);
 
-  useEffect(() => {
-    if (activeOccurrenceReelPosition !== undefined) {
-      onOccurrenceBecameActive(activeOccurrenceReelPosition);
-    }
-  }, [activeOccurrenceReelPosition, onOccurrenceBecameActive]);
+  useEffect(
+    function synchronizeActiveOccurrence() {
+      if (activeOccurrenceReelPosition !== undefined) {
+        onOccurrenceBecameActive(activeOccurrenceReelPosition);
+      }
+    },
+    [activeOccurrenceReelPosition, onOccurrenceBecameActive]
+  );
 
   useLayoutEffect(() => {
     if (loadedFromReference.current === feed.loadedFromReelPosition) {

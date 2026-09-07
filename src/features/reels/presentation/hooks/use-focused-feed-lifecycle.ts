@@ -13,45 +13,47 @@ type FocusLifecycleState = Readonly<{
 const initialState: FocusLifecycleState = { resolved: false, revision: 0, session: null };
 
 export function useFocusedFeedLifecycle(): FocusLifecycleState {
-  const appServices = useAppServices();
+  const { studyService } = useAppServices();
   const [state, setState] = useState<FocusLifecycleState>(initialState);
 
-  useEffect(() => {
-    const studyService = appServices.studyService;
-    let disposed = false;
-    let evaluationInFlight = false;
+  useEffect(
+    function synchronizeFocusedFeedLifecycle() {
+      const sessionService = studyService;
+      let disposed = false;
+      let evaluationInFlight = false;
 
-    const evaluate = async () => {
-      if (evaluationInFlight) {
-        return;
-      }
-      evaluationInFlight = true;
-      try {
-        const resumed = await evaluateFocusedSession(studyService);
-        if (!disposed) {
-          setState((current) => ({
-            resolved: true,
-            revision: current.revision + 1,
-            session: resumed,
-          }));
+      const evaluate = async () => {
+        if (evaluationInFlight) {
+          return;
         }
-      } finally {
-        evaluationInFlight = false;
-      }
-    };
+        evaluationInFlight = true;
+        try {
+          const resumed = await evaluateFocusedSession(sessionService);
+          if (!disposed) {
+            setState((current) => ({
+              resolved: true,
+              revision: current.revision + 1,
+              session: resumed,
+            }));
+          }
+        } finally {
+          evaluationInFlight = false;
+        }
+      };
 
-    void evaluate();
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") {
-        void evaluate();
-      }
-    });
-    return () => {
-      disposed = true;
-      subscription.remove();
-    };
-    // eslint-disable-next-line react/exhaustive-effect-dependencies
-  }, [appServices]);
+      void evaluate();
+      const subscription = AppState.addEventListener("change", (nextState) => {
+        if (nextState === "active") {
+          void evaluate();
+        }
+      });
+      return function unsubscribeFromFocusedFeedLifecycle() {
+        disposed = true;
+        subscription.remove();
+      };
+    },
+    [studyService]
+  );
 
   return state;
 }
