@@ -11,17 +11,42 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLearnerProgress } from "@/features/learner-profile/hooks/use-learner-progress";
-import { useAppServices } from "@/infrastructure/app-services";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
 export default function ProgressScreen() {
-  const { loading, refresh, rows } = useLearnerProgress();
-  const { learnerProfileService } = useAppServices();
+  const { loading, refresh, resetAllProgress, resetCardProgress, resetDeckProgress, rows } =
+    useLearnerProgress();
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const deckFilters = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const visibleRows = selectedDeckId ? rows.filter((row) => row.deck.id === selectedDeckId) : rows;
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
+  const requestReset = (scope: string, reset: () => Promise<void>): void => {
+    if (resetting) {
+      return;
+    }
+    Alert.alert(
+      `Reset ${scope}?`,
+      "Learning progress will be reset, but cards and decks will not be deleted.",
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: () => {
+            setResetting(true);
+            void reset()
+              .then(() => refresh())
+              .catch(() => {
+                Alert.alert("Reset failed", "Your learning progress was not changed.");
+              })
+              .finally(() => setResetting(false));
+          },
+          style: "destructive",
+          text: "Reset",
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -61,32 +86,23 @@ export default function ProgressScreen() {
             <View style={styles.resetActions}>
               {selectedDeckId && (
                 <ResetButton
+                  disabled={resetting}
                   label="Reset selected deck"
-                  onPress={() =>
-                    confirmReset("this deck", () =>
-                      learnerProfileService.resetDeckProgress(selectedDeckId).then(refresh)
-                    )
-                  }
+                  onPress={() => requestReset("this deck", () => resetDeckProgress(selectedDeckId))}
                 />
               )}
               <ResetButton
+                disabled={resetting}
                 label="Reset all progress"
-                onPress={() =>
-                  confirmReset("all learning progress", () =>
-                    learnerProfileService.resetAllProgress().then(refresh)
-                  )
-                }
+                onPress={() => requestReset("all learning progress", resetAllProgress)}
               />
             </View>
             <View style={styles.list}>
               {visibleRows.map((row) => (
                 <ProgressRow
                   key={row.card.id}
-                  onReset={() =>
-                    confirmReset("this card", () =>
-                      learnerProfileService.resetCardProgress(row.card.id).then(refresh)
-                    )
-                  }
+                  resetting={resetting}
+                  onReset={() => requestReset("this card", () => resetCardProgress(row.card.id))}
                   row={row}
                 />
               ))}
@@ -122,19 +138,34 @@ function FilterButton({
   );
 }
 
-function ResetButton({ label, onPress }: Readonly<{ label: string; onPress: () => void }>) {
+function ResetButton({
+  disabled = false,
+  label,
+  onPress,
+}: Readonly<{
+  disabled?: boolean;
+  label: string;
+  onPress: () => void;
+}>) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.resetButton}>
-      <Text style={styles.resetLabel}>{label}</Text>
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.resetButton, disabled && styles.disabledButton]}
+    >
+      <Text style={styles.resetLabel}>{disabled ? "Resetting…" : label}</Text>
     </Pressable>
   );
 }
 
 function ProgressRow({
   onReset,
+  resetting,
   row,
 }: Readonly<{
   onReset: () => void;
+  resetting: boolean;
   row: ReturnType<typeof useLearnerProgress>["rows"][number];
 }>) {
   const { card, deck, explanation, profile } = row;
@@ -155,23 +186,8 @@ function ProgressRow({
           : "Not reviewed yet"}
       </Text>
       <Text style={styles.reason}>{explanation.reason}</Text>
-      <ResetButton label="Reset card progress" onPress={onReset} />
+      <ResetButton disabled={resetting} label="Reset card progress" onPress={onReset} />
     </View>
-  );
-}
-
-function confirmReset(scope: string, onConfirm: () => Promise<void>): void {
-  Alert.alert(
-    `Reset ${scope}?`,
-    "Learning progress will be reset, but cards and decks will not be deleted.",
-    [
-      { style: "cancel", text: "Cancel" },
-      {
-        onPress: () => void onConfirm().catch(() => undefined),
-        style: "destructive",
-        text: "Reset",
-      },
-    ]
   );
 }
 
@@ -208,6 +224,7 @@ const styles = StyleSheet.create({
   list: { gap: sizes.spacing.small },
   resetActions: { gap: sizes.spacing.small },
   resetButton: { alignSelf: "flex-start", paddingVertical: sizes.spacing.xSmall },
+  disabledButton: { opacity: 0.5 },
   resetLabel: { color: palette.danger, fontSize: 12, fontWeight: "700" },
   card: {
     backgroundColor: palette.surface,

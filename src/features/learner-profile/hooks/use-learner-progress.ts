@@ -24,11 +24,28 @@ type LearnerProgressState = Readonly<{
 
 const initialState: LearnerProgressState = { error: null, loading: true, rows: [] };
 
-export function useLearnerProgress(): LearnerProgressState & { refresh: () => void } {
+export function useLearnerProgress(): LearnerProgressState & {
+  refresh: () => void;
+  resetAllProgress: () => Promise<void>;
+  resetCardProgress: (flashcardId: string) => Promise<void>;
+  resetDeckProgress: (deckId: string) => Promise<void>;
+} {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
   const [state, setState] = useState<LearnerProgressState>(initialState);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => setRevision((current) => current + 1), []);
+  const resetCardProgress = useCallback(
+    (flashcardId: string) => learnerProfileService.resetCardProgress(flashcardId),
+    [learnerProfileService]
+  );
+  const resetDeckProgress = useCallback(
+    (deckId: string) => learnerProfileService.resetDeckProgress(deckId),
+    [learnerProfileService]
+  );
+  const resetAllProgress = useCallback(
+    () => learnerProfileService.resetAllProgress(),
+    [learnerProfileService]
+  );
 
   useEffect(() => {
     let active = true;
@@ -72,5 +89,5 @@ export function useLearnerProgress(): LearnerProgressState & { refresh: () => vo
   if (state.error) {
     throw state.error;
   }
-  return { ...state, refresh };
+  return { ...state, refresh, resetAllProgress, resetCardProgress, resetDeckProgress };
 }
