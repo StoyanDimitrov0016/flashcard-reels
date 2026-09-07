@@ -10,8 +10,8 @@ import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructur
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { NodeSqliteDatabase } from "./node-sqlite-database";
-import { SequenceIdGenerator, TestClock } from "./study-test-support";
+import type { NodeSqliteDatabase } from "./node-sqlite-database";
+import type { SequenceIdGenerator, TestClock } from "./study-test-support";
 
 export type ScenarioGraph = ReturnType<typeof createScenarioGraph>;
 
@@ -66,16 +66,18 @@ export async function seedDeck(
     timestamp,
     timestamp
   );
-  for (const [deckPosition, cardId] of cardIds.entries()) {
-    await database.runAsync(
-      "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      cardId,
-      deckId,
-      deckPosition,
-      `Question ${deckPosition}`,
-      `Answer ${deckPosition}`,
-      timestamp,
-      timestamp
-    );
-  }
+  await Promise.all(
+    cardIds.map((cardId, deckPosition) =>
+      database.runAsync(
+        "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        cardId,
+        deckId,
+        deckPosition,
+        `Question ${deckPosition}`,
+        `Answer ${deckPosition}`,
+        timestamp,
+        timestamp
+      )
+    )
+  );
 }

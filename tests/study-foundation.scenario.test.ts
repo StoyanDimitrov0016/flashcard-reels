@@ -28,6 +28,14 @@ function cards(deckId: string, count: number, firstId: number): Flashcard[] {
   );
 }
 
+function at<T>(values: readonly T[], index: number): T {
+  const value = values[index];
+  if (!value) {
+    throw new Error(`Missing scenario fixture at index ${index}`);
+  }
+  return value;
+}
+
 describe("study foundation learner journeys", () => {
   let database: NodeSqliteDatabase;
   let clock: TestClock;
@@ -60,19 +68,19 @@ describe("study foundation learner journeys", () => {
     expect(opened.occurrences.map((item) => item.reelPosition)).toEqual([0, 1, 2, 3, 4, 5]);
     const originalHistory = opened.occurrences.map((item) => item.card.id);
     const again = await graph.study.startAttempt(
-      opened.occurrences[0]!.card.id,
+      at(opened.occurrences, 0).card.id,
       0,
       opened.studySessionId
     );
     const good = await graph.study.startAttempt(
-      opened.occurrences[1]!.card.id,
+      at(opened.occurrences, 1).card.id,
       1,
       opened.studySessionId
     );
     expect(await graph.study.rateAttempt(again, "again")).toBe(true);
     expect(await graph.study.rateAttempt(good, "good")).toBe(true);
 
-    const recurrence = (await graph.recurrences.listBySessionId(opened.studySessionId))[0]!;
+    const recurrence = at(await graph.recurrences.listBySessionId(opened.studySessionId), 0);
     expect(recurrence.targetReelPosition).toBe(6);
     await graph.feed.extendFeed(focusCards, opened.studySessionId);
     expect(
@@ -87,7 +95,7 @@ describe("study foundation learner journeys", () => {
     await graph.study.updateSessionReelPosition(opened.studySessionId, 6);
     const atRecurrence = await graph.feed.refreshFeed(focusCards, opened.studySessionId);
     expect(atRecurrence.occurrences.find((item) => item.reelPosition === 6)).toMatchObject({
-      card: { id: opened.occurrences[0]!.card.id },
+      card: { id: at(opened.occurrences, 0).card.id },
       recurrenceId: recurrence.id,
     });
     await graph.study.consumeRecurrence(recurrence.id);
@@ -132,7 +140,7 @@ describe("study foundation learner journeys", () => {
     await graph.feed.extendFeed(focusCards, first.studySessionId);
     const wrapped = await graph.feed.refreshFeed(focusCards, first.studySessionId);
     expect(wrapped.occurrences.find((item) => item.reelPosition === 8)?.card.id).toBe(
-      focusCards[0]!.id
+      at(focusCards, 0).id
     );
     graph = createScenarioGraph(database, clock, ids);
     expect(
@@ -140,7 +148,7 @@ describe("study foundation learner journeys", () => {
         .studySessionId
     ).toBe(first.studySessionId);
 
-    const attemptId = await graph.study.startAttempt(focusCards[0]!.id, 0, first.studySessionId);
+    const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, first.studySessionId);
     await graph.study.rateAttempt(attemptId, "easy");
     clock.advance(FOCUS_SESSION_INACTIVITY_TIMEOUT_MS);
     const expiredReplacement = await graph.feed.prepareFeed(
@@ -169,7 +177,7 @@ describe("study foundation learner journeys", () => {
     expect(
       await database.getFirstAsync(
         "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
-        focusCards[0]!.id
+        at(focusCards, 0).id
       )
     ).toEqual({ review_count: 1 });
     expect(
@@ -180,15 +188,17 @@ describe("study foundation learner journeys", () => {
   it("keeps Discover persistent across reconstruction and independent Focus lifecycle", async () => {
     const allCards = [...focusCards, ...otherCards];
     const discover = await graph.feed.prepareFeed(allCards, "mixed", null, false);
-    for (const position of [0, 1]) {
-      const occurrence = discover.occurrences[position]!;
-      const attempt = await graph.study.startAttempt(
-        occurrence.card.id,
-        position,
-        discover.studySessionId
-      );
-      await graph.study.rateAttempt(attempt, position === 0 ? "hard" : "easy");
-    }
+    await Promise.all(
+      [0, 1].map(async (position) => {
+        const occurrence = at(discover.occurrences, position);
+        const attempt = await graph.study.startAttempt(
+          occurrence.card.id,
+          position,
+          discover.studySessionId
+        );
+        await graph.study.rateAttempt(attempt, position === 0 ? "hard" : "easy");
+      })
+    );
     await graph.study.updateSessionReelPosition(discover.studySessionId, 4);
     const positions = (await graph.items.listBySessionId(discover.studySessionId)).map(
       (item) => item.reelPosition
@@ -211,7 +221,7 @@ describe("study foundation learner journeys", () => {
   it("persists only the corrected final rating and cancels its recurrence", async () => {
     const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const attempt = await graph.study.startAttempt(
-      feed.occurrences[0]!.card.id,
+      at(feed.occurrences, 0).card.id,
       0,
       feed.studySessionId
     );
@@ -224,14 +234,14 @@ describe("study foundation learner journeys", () => {
     expect(
       await database.getFirstAsync(
         "SELECT review_count, again_count, good_count FROM learner_profiles WHERE flashcard_id = ?",
-        feed.occurrences[0]!.card.id
+        at(feed.occurrences, 0).card.id
       )
     ).toEqual({ again_count: 0, good_count: 1, review_count: 1 });
   });
 
   it("keeps pre-reset attempts behind the reset boundary", async () => {
     const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
-    const cardId = feed.occurrences[0]!.card.id;
+    const cardId = at(feed.occurrences, 0).card.id;
     const beforeReset = await graph.study.startAttempt(cardId, 0, feed.studySessionId);
     await graph.study.rateAttempt(beforeReset, "again");
     await graph.learnerProfiles.resetCardProgress(cardId);
