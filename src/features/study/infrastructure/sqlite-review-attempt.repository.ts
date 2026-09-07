@@ -21,6 +21,7 @@ export class SQLiteReviewAttemptRepository<
       flashcardId: attempt.flashcardId,
       id: attempt.id,
       rating: attempt.rating,
+      ratedAt: attempt.ratedAt,
       reelPosition: attempt.reelPosition,
       studySessionId: attempt.studySessionId,
       updatedAt: attempt.updatedAt,
@@ -126,6 +127,7 @@ export class SQLiteReviewAttemptRepository<
       id: row.id,
       reelPosition: row.reelPosition,
       rating: row.rating,
+      ratedAt: row.ratedAt,
       studySessionId: row.studySessionId,
       updatedAt: row.updatedAt,
     });

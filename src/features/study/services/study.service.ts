@@ -264,6 +264,7 @@ export class StudyService {
       id: this.idGenerator.generate(),
       reelPosition,
       rating: null,
+      ratedAt: null,
       studySessionId,
       updatedAt: createdAt,
     });

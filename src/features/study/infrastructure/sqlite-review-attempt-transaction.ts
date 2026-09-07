@@ -31,7 +31,7 @@ export class SQLiteReviewAttemptTransaction<
     return this.database.transaction((transaction) => {
       const updatedAttempts = transaction
         .update(flashcardReviewAttempts)
-        .set({ rating, updatedAt })
+        .set({ ratedAt: updatedAt, rating, updatedAt })
         .where(
           and(
             eq(flashcardReviewAttempts.id, attemptId),

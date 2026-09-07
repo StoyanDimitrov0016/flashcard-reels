@@ -10,6 +10,7 @@ const FlashcardReviewAttemptFieldsSchema = z.compile(
     reelPosition: z.number().int().nonnegative(),
     rating: RecallLevelSchema.nullable(),
     createdAt: z.string(),
+    ratedAt: z.string().nullable().optional(),
     updatedAt: z.string(),
     finalizedAt: z.string().nullable(),
   })
@@ -25,6 +26,7 @@ export class FlashcardReviewAttempt {
   public readonly reelPosition: number;
   public readonly rating: RecallLevel | null;
   public readonly createdAt: string;
+  public readonly ratedAt: string | null;
   public readonly updatedAt: string;
   public readonly finalizedAt: string | null;
 
@@ -35,6 +37,7 @@ export class FlashcardReviewAttempt {
     this.reelPosition = fields.reelPosition;
     this.rating = fields.rating;
     this.createdAt = fields.createdAt;
+    this.ratedAt = fields.ratedAt ?? null;
     this.updatedAt = fields.updatedAt;
     this.finalizedAt = fields.finalizedAt;
   }

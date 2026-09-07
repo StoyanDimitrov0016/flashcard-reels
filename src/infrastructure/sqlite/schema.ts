@@ -163,6 +163,7 @@ export const flashcardReviewAttempts = sqliteTable(
     reelPosition: integer("reel_position").notNull(),
     rating: text("rating", { enum: ["again", "hard", "good", "easy"] }),
     createdAt: text("created_at").notNull(),
+    ratedAt: text("rated_at"),
     updatedAt: text("updated_at").notNull(),
     finalizedAt: text("finalized_at"),
   },

@@ -70,7 +70,8 @@ export class SQLiteLearnerProfileAggregationTransaction<
             gt(flashcardReviewAttempts.reelPosition, session.aggregatedThroughReelPosition),
             lte(flashcardReviewAttempts.reelPosition, through),
             isNotNull(flashcardReviewAttempts.finalizedAt),
-            isNotNull(flashcardReviewAttempts.rating)
+            isNotNull(flashcardReviewAttempts.rating),
+            isNotNull(flashcardReviewAttempts.ratedAt)
           )
         )
         .orderBy(asc(flashcardReviewAttempts.reelPosition), asc(flashcardReviewAttempts.id))
@@ -91,24 +92,22 @@ export class SQLiteLearnerProfileAggregationTransaction<
       let aggregatedAttemptCount = 0;
 
       for (const attempt of attempts) {
-        const finalizedAt = attempt.finalizedAt;
+        const ratedAt = attempt.ratedAt;
         const rating = attempt.rating;
         const profile = profilesById.get(attempt.flashcardId);
         if (
-          finalizedAt === null ||
+          ratedAt === null ||
           rating === null ||
           (profile?.resetAt !== null &&
             profile?.resetAt !== undefined &&
-            finalizedAt <= profile.resetAt)
+            ratedAt <= profile.resetAt)
         ) {
           continue;
         }
         const current = contributions.get(attempt.flashcardId);
         contributions.set(
           attempt.flashcardId,
-          current
-            ? addContribution(current, rating, finalizedAt)
-            : newContribution(rating, finalizedAt)
+          current ? addContribution(current, rating, ratedAt) : newContribution(rating, ratedAt)
         );
         aggregatedAttemptCount += 1;
       }

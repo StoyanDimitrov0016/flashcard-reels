@@ -166,6 +166,63 @@ describe("SQLite learner-profile aggregation", () => {
     });
   });
 
+  it("uses the immutable rating time across editable finalization and reconstruction", async () => {
+    const session = makeSession(testId(535), "mixed");
+    await sessions.create(session);
+    const editable = await createAttempt(session.id, 0, null, null);
+    const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+    await ratingTransaction.rateAttempt(
+      editable.id,
+      "again",
+      "2026-01-01T00:01:00.000Z",
+      null,
+      null
+    );
+    await ratingTransaction.rateAttempt(
+      editable.id,
+      "good",
+      "2026-01-01T00:02:00.000Z",
+      null,
+      null
+    );
+    expect(await attempts.findById(editable.id)).toMatchObject({
+      ratedAt: "2026-01-01T00:02:00.000Z",
+      rating: "good",
+    });
+
+    await profiles.resetCard(makeFlashcard(1).id, "2026-01-01T00:03:00.000Z");
+    await attempts.finalize(editable.id, "2026-01-01T00:04:00.000Z", "2026-01-01T00:04:00.000Z");
+    await aggregation.aggregate(session.id, 0, "2026-01-01T00:05:00.000Z");
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      reviewCount: 0,
+      resetAt: "2026-01-01T00:03:00.000Z",
+    });
+
+    const reconstructedAttempts = new SQLiteReviewAttemptRepository(database.drizzle);
+    const reconstructedAggregation = new SQLiteLearnerProfileAggregationTransaction(
+      database.drizzle
+    );
+    const reconstructedProfiles = new SQLiteLearnerProfileRepository(database.drizzle);
+    const later = await createAttempt(session.id, 1, null, null);
+    await new SQLiteReviewAttemptTransaction(database.drizzle).rateAttempt(
+      later.id,
+      "easy",
+      "2026-01-01T00:06:00.000Z",
+      null,
+      null
+    );
+    await reconstructedAttempts.finalize(
+      later.id,
+      "2026-01-01T00:07:00.000Z",
+      "2026-01-01T00:07:00.000Z"
+    );
+    await reconstructedAggregation.aggregate(session.id, 1, "2026-01-01T00:08:00.000Z");
+    expect(await reconstructedProfiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      easyCount: 1,
+      reviewCount: 1,
+    });
+  });
+
   it("aggregates all remaining history when a Focus session completes", async () => {
     const service = createService();
     const opened = await service.openSession("focused", TEST_DECK_ID, false);
@@ -228,7 +285,8 @@ describe("SQLite learner-profile aggregation", () => {
     studySessionId: string,
     reelPosition: number,
     rating: "again" | "hard" | "good" | "easy" | null,
-    finalizedAt: string | null
+    finalizedAt: string | null,
+    ratedAt = finalizedAt
   ): Promise<FlashcardReviewAttempt> {
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -236,6 +294,7 @@ describe("SQLite learner-profile aggregation", () => {
       flashcardId: makeFlashcard(1).id,
       id: testId(600 + reelPosition),
       rating,
+      ratedAt,
       reelPosition,
       studySessionId,
       updatedAt: finalizedAt ?? "2026-01-01T00:00:00.000Z",
