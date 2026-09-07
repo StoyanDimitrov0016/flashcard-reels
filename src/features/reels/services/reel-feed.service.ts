@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { buildAdaptiveShuffleBag } from "@/features/learner-profile/domain/adaptive-shuffle-policy";
+import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/config/feed-engine";
@@ -118,6 +120,12 @@ export class ReelFeedService {
         session.currentReelPosition
       )
     );
+    const learnerProfiles =
+      session.strategy === "shuffle"
+        ? await this.studyService.findLearnerProfilesByFlashcardIds(
+            sourceCards.map((card) => card.id)
+          )
+        : new Map<string, LearnerProfile>();
     const materializeBatch = async (strategyState: StrategyState): Promise<void> => {
       const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
       if (materializedThrough >= targetPosition) {
@@ -151,6 +159,7 @@ export class ReelFeedService {
           sourceCards,
           session.strategy,
           strategyState,
+          learnerProfiles,
           pendingFutureRecurrenceCardIds
         );
         if (!nextCard.card) {
@@ -233,6 +242,7 @@ export class ReelFeedService {
     cards: readonly Flashcard[],
     strategy: StudySessionStrategy,
     state: StrategyState,
+    learnerProfiles: ReadonlyMap<string, LearnerProfile>,
     excludedCardIds: ReadonlySet<string> = new Set()
   ): Readonly<{ card: Flashcard | null; state: StrategyState }> {
     if (cards.length === 0) {
@@ -248,7 +258,7 @@ export class ReelFeedService {
     let cycle = [...state.cycle];
     let cursor = state.cursor;
     if (cursor >= cycle.length || cycle.length === 0) {
-      cycle = this.shuffle(cards).map((card) => card.id);
+      cycle = buildAdaptiveShuffleBag(cards, learnerProfiles, this.random);
       cursor = 0;
     }
 
@@ -347,21 +357,6 @@ export class ReelFeedService {
       }
     }
     return orderedCards;
-  }
-
-  private shuffle(cards: readonly Flashcard[]): Flashcard[] {
-    const feed = [...cards];
-    for (let index = feed.length - 1; index > 0; index -= 1) {
-      const swapIndex = Math.floor(this.random() * (index + 1));
-      const currentCard = feed[index];
-      const swapCard = feed[swapIndex];
-      if (!currentCard || !swapCard) {
-        continue;
-      }
-      feed[index] = swapCard;
-      feed[swapIndex] = currentCard;
-    }
-    return feed;
   }
 }
 

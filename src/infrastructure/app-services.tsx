@@ -4,6 +4,8 @@ import { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { BundledAnswerAudioRepository } from "@/features/audio/infrastructure/bundled-answer-audio.repository";
 import { AnswerAudioService } from "@/features/audio/services/answer-audio.service";
+import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
+import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { DeckService } from "@/features/decks/services/deck.service";
@@ -11,7 +13,6 @@ import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/
 import { FlashcardService } from "@/features/flashcards/services/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
-import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
@@ -44,6 +45,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
+    const learnerProfileRepository = new SQLiteLearnerProfileRepository(drizzleDatabase);
     const learnerProfileAggregationTransaction = new SQLiteLearnerProfileAggregationTransaction(
       drizzleDatabase
     );
@@ -69,7 +71,8 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       studySessionFeedTransaction,
       studySessionLifecycleTransaction,
       Math.random,
-      learnerProfileAggregationTransaction
+      learnerProfileAggregationTransaction,
+      learnerProfileRepository
     );
 
     return {

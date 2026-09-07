@@ -1,5 +1,7 @@
 import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
 import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/services/learner-profile-aggregation-transaction";
 import {
   AGGREGATION_CHECK_INTERVAL,
@@ -40,6 +42,7 @@ export class StudyService {
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
   private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
+  private readonly learnerProfileRepository: LearnerProfileRepository | null;
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -52,7 +55,8 @@ export class StudyService {
     studySessionFeedTransaction: StudySessionFeedTransaction,
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     random: RandomSource = Math.random,
-    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null
+    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null,
+    learnerProfileRepository: LearnerProfileRepository | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -65,6 +69,7 @@ export class StudyService {
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
     this.learnerProfileAggregationTransaction = learnerProfileAggregationTransaction;
+    this.learnerProfileRepository = learnerProfileRepository;
   }
 
   async openSession(
@@ -108,6 +113,15 @@ export class StudyService {
 
   async findSessionByScope(scope: StudySessionScope): Promise<StudySession | null> {
     return this.studySessionRepository.findActiveByScope(scope);
+  }
+
+  async findLearnerProfilesByFlashcardIds(
+    flashcardIds: readonly string[]
+  ): Promise<ReadonlyMap<string, LearnerProfile>> {
+    if (!this.learnerProfileRepository) {
+      return new Map();
+    }
+    return this.learnerProfileRepository.findByFlashcardIds(flashcardIds);
   }
 
   /** Returns aggregation eligibility; it never advances the durable checkpoint. */
