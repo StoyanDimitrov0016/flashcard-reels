@@ -178,6 +178,13 @@ export const flashcardReviewAttempts = sqliteTable(
       table.reelPosition
     ),
     index("review_attempts_flashcard_id_idx").on(table.flashcardId),
+    index("review_attempts_session_position_aggregation_idx").on(
+      table.studySessionId,
+      table.reelPosition,
+      table.finalizedAt,
+      table.rating,
+      table.ratedAt
+    ),
   ]
 );
 

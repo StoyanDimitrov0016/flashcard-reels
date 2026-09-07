@@ -275,6 +275,17 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
     );
   }
 
+  async findCompletedSessionsPendingAggregation(limit: number): Promise<StudySession[]> {
+    return ordered(
+      [...this.sessions.values()].filter(
+        (session) => session.completedAt !== null && session.aggregatedThroughReelPosition < 0
+      ),
+      (left, right) =>
+        (left.completedAt ?? "").localeCompare(right.completedAt ?? "") ||
+        left.id.localeCompare(right.id)
+    ).slice(0, Math.max(0, limit));
+  }
+
   async updateCurrentReelPosition(
     sessionId: string,
     currentReelPosition: number,

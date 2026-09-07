@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
+import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/services/learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
@@ -265,19 +266,76 @@ describe("SQLite learner-profile aggregation", () => {
     });
   });
 
-  function createService(): StudyService {
+  it("rediscovers a replaced completed Focus session after aggregation failure and reconstruction", async () => {
+    const idGenerator = new SequenceIdGenerator();
+    const service = createService(aggregation, sessions, idGenerator);
+    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    await createAttempt(first.session.id, 0, "easy", null, "2026-01-01T00:01:00.000Z");
+    const replacementService = createService(
+      {
+        aggregate: async () => {
+          throw new Error("simulated aggregation interruption");
+        },
+      },
+      sessions,
+      idGenerator
+    );
+
+    await expect(replacementService.openSession("focused", TEST_DECK_ID, true)).rejects.toThrow(
+      "simulated aggregation interruption"
+    );
+    expect((await sessions.findById(first.session.id))?.completedAt).not.toBeNull();
+    expect((await sessions.findActiveByScope("focused"))?.id).not.toBe(first.session.id);
+
+    const reconstructedSessions = new SQLiteStudySessionRepository(database.drizzle);
+    const recovered = createService(
+      new SQLiteLearnerProfileAggregationTransaction(database.drizzle),
+      reconstructedSessions
+    );
+    await recovered.openSession("focused", TEST_DECK_ID, false);
+
+    expect(await reconstructedSessions.findCompletedSessionsPendingAggregation(10)).toEqual([]);
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      easyCount: 1,
+      reviewCount: 1,
+    });
+    expect((await reconstructedSessions.findActiveByScope("focused"))?.id).not.toBe(
+      first.session.id
+    );
+  });
+
+  it("limits completed-session recovery results", async () => {
+    const first = makeSession(testId(540), "focused");
+    const second = makeSession(testId(541), "focused");
+    await sessions.create(first);
+    await createAttempt(first.id, 0, "good", "2026-01-01T00:01:00.000Z");
+    await sessions.complete(first.id, "2026-01-01T00:03:00.000Z");
+    await sessions.create(second);
+    await createAttempt(second.id, 1, "hard", "2026-01-01T00:02:00.000Z");
+    await sessions.complete(second.id, "2026-01-01T00:04:00.000Z");
+
+    expect(await sessions.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
+    expect((await sessions.findCompletedSessionsPendingAggregation(1))[0]?.id).toBe(first.id);
+    expect(await sessions.findCompletedSessionsPendingAggregation(2)).toHaveLength(2);
+  });
+
+  function createService(
+    aggregationTransaction: LearnerProfileAggregationTransaction | null = aggregation,
+    sessionRepository: SQLiteStudySessionRepository = sessions,
+    idGenerator: SequenceIdGenerator = new SequenceIdGenerator()
+  ): StudyService {
     return new StudyService(
       attempts,
-      sessions,
+      sessionRepository,
       new SQLiteStudySessionItemRepository(database.drizzle),
       new SQLiteStudySessionRecurrenceRepository(database.drizzle),
       new TestClock(),
-      new SequenceIdGenerator(),
+      idGenerator,
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
       () => 0,
-      aggregation
+      aggregationTransaction
     );
   }
 

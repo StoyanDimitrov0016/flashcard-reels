@@ -7,6 +7,7 @@ export interface StudySessionRepository {
   findById(sessionId: string): Promise<StudySession | null>;
   findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null>;
   findActiveByScope(scope: StudySessionScope): Promise<StudySession | null>;
+  findCompletedSessionsPendingAggregation(limit: number): Promise<StudySession[]>;
   updateCurrentReelPosition(
     sessionId: string,
     currentReelPosition: number,

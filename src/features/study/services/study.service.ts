@@ -7,6 +7,8 @@ import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
+  FOREGROUND_AGGREGATION_CHUNK_LIMIT,
+  PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
 } from "@/features/study/config/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/config/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
@@ -85,6 +87,8 @@ export class StudyService {
       throw new Error("Mixed sessions only support the shuffle strategy");
     }
 
+    await this.recoverPendingCompletedSessionAggregation();
+
     const createdAt = this.clock.now();
     const opened = await this.studySessionLifecycleTransaction.open(
       scope,
@@ -113,6 +117,25 @@ export class StudyService {
 
   async findSessionByScope(scope: StudySessionScope): Promise<StudySession | null> {
     return this.studySessionRepository.findActiveByScope(scope);
+  }
+
+  async recoverPendingCompletedSessionAggregation(
+    limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+  ): Promise<void> {
+    if (!this.learnerProfileAggregationTransaction) {
+      return;
+    }
+    const pending =
+      await this.studySessionRepository.findCompletedSessionsPendingAggregation(limit);
+    const recoverNext = async (index: number): Promise<void> => {
+      const session = pending[index];
+      if (!session) {
+        return;
+      }
+      await this.aggregateCompletedSession(session.id);
+      await recoverNext(index + 1);
+    };
+    await recoverNext(0);
   }
 
   async findLearnerProfilesByFlashcardIds(
@@ -388,8 +411,15 @@ export class StudyService {
       return;
     }
 
-    const aggregateNextChunk = async (session: StudySession | null): Promise<void> => {
-      if (!session || session.aggregatedThroughReelPosition >= maximumAttemptPosition) {
+    const aggregateNextChunk = async (
+      remainingChunks: number,
+      session: StudySession | null
+    ): Promise<void> => {
+      if (
+        remainingChunks <= 0 ||
+        !session ||
+        session.aggregatedThroughReelPosition >= maximumAttemptPosition
+      ) {
         return;
       }
       const result = await aggregation.aggregate(
@@ -400,8 +430,14 @@ export class StudyService {
       if (result.throughReelPosition <= session.aggregatedThroughReelPosition) {
         return;
       }
-      return aggregateNextChunk(await this.studySessionRepository.findById(studySessionId));
+      await aggregateNextChunk(
+        remainingChunks - 1,
+        await this.studySessionRepository.findById(studySessionId)
+      );
     };
-    await aggregateNextChunk(await this.studySessionRepository.findById(studySessionId));
+    await aggregateNextChunk(
+      FOREGROUND_AGGREGATION_CHUNK_LIMIT,
+      await this.studySessionRepository.findById(studySessionId)
+    );
   }
 }
