@@ -75,6 +75,23 @@ export default function TabLayout() {
             title: "Library",
           }}
         />
+        <TopTabs.Screen
+          name="progress"
+          options={{
+            tabBarIcon: ({ color }: TabIconProps) => (
+              <SymbolView
+                name={{
+                  android: "insights",
+                  ios: "chart.bar.xaxis",
+                  web: "insights",
+                }}
+                size={sizes.icon.medium}
+                tintColor={color}
+              />
+            ),
+            title: "Progress",
+          }}
+        />
       </TopTabs>
     </FeedScopeProvider>
   );
