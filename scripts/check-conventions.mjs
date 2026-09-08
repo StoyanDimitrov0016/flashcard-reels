@@ -106,12 +106,17 @@ function visit(directory) {
 visit(sourceDirectory);
 
 if (violations.length > 0 || architectureViolations.length > 0) {
-  console.error("Zod schemas must use PascalCase names ending in Schema:");
-  for (const violation of violations) {
-    console.error(`- ${violation}`);
+  if (violations.length > 0) {
+    console.error("Zod schema naming failed (expected PascalCase names ending in `Schema`):");
+    for (const violation of violations) {
+      console.error(`- ${violation}`);
+    }
   }
-  for (const violation of architectureViolations) {
-    console.error(`- ${violation}`);
+  if (architectureViolations.length > 0) {
+    console.error("Architecture boundaries failed:");
+    for (const violation of architectureViolations) {
+      console.error(`- ${violation}`);
+    }
   }
   process.exitCode = 1;
 } else {
