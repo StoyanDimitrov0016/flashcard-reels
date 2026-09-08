@@ -61,7 +61,10 @@ export default function RootLayout() {
             }}
           >
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="decks/[deckId]" />
+            <Stack.Screen
+              name="decks/[deckId]"
+              options={{ animation: "none", contentStyle: styles.appBackground }}
+            />
           </Stack>
         </ThemeProvider>
       </AppServicesProvider>
