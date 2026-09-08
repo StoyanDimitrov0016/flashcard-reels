@@ -176,12 +176,12 @@ export function ReelCard({
       </View>
       <View style={styles.hintRow}>
         <GestureHint
-          label="Double tap"
-          symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
-        />
-        <GestureHint
           label="Swipe up"
           symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
+        />
+        <GestureHint
+          label="Double tap"
+          symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
         />
         {!showMainFeedLink ? (
           <GestureHint
@@ -252,12 +252,12 @@ export function ReelCard({
             </Pressable>
             <View style={styles.hintRow}>
               <GestureHint
-                label="Double tap"
-                symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
-              />
-              <GestureHint
                 label="Swipe up"
                 symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
+              />
+              <GestureHint
+                label="Double tap"
+                symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
               />
               {!showMainFeedLink ? (
                 <GestureHint
@@ -357,10 +357,13 @@ const styles = StyleSheet.create({
   },
   hintRow: {
     alignItems: "center",
+    alignSelf: "center",
+    columnGap: sizes.spacing.section,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: sizes.spacing.small,
     justifyContent: "center",
+    rowGap: sizes.spacing.small,
+    width: "100%",
   },
   gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
   holdCue: {
