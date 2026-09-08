@@ -51,10 +51,6 @@ export default function ProgressScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Progress</Text>
-          <Text style={styles.subtitle}>Retained learning history across your cards.</Text>
-        </View>
         {loading ? (
           <ActivityIndicator color={palette.textPrimary} size="large" />
         ) : (
@@ -198,9 +194,6 @@ function formatDate(value: string): string {
 const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background, flex: 1 },
   content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
-  header: { gap: sizes.spacing.small },
-  title: { color: palette.textPrimary, fontSize: 38, fontWeight: "800", letterSpacing: -1 },
-  subtitle: { color: palette.textSecondary, fontSize: 15 },
   summaryRow: { flexDirection: "row", gap: sizes.spacing.small },
   summaryFact: {
     backgroundColor: palette.surface,

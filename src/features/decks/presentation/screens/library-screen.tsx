@@ -162,7 +162,6 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.title}>Library</Text>
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -284,5 +283,4 @@ const styles = StyleSheet.create({
     height: 21,
     width: "55%",
   },
-  title: { color: palette.textPrimary, fontSize: 38, fontWeight: "800", letterSpacing: -1 },
 });

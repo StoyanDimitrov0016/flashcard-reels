@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { SegmentedControl } from "@expo/ui/community/segmented-control";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -105,29 +106,19 @@ export default function FocusedFeedScreen() {
     content = (
       <>
         <View style={styles.strategySwitcher}>
-          {(["shuffle", "ordered"] as const).map((strategy) => (
-            <Pressable
-              key={strategy}
-              onPress={() => {
-                if (focusedFeed.strategy !== strategy) {
-                  startFocusedFeed(focusedFeed.deckId, strategy);
-                }
-              }}
-              style={[
-                styles.strategyButton,
-                focusedFeed.strategy === strategy && styles.activeButton,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.strategyLabel,
-                  focusedFeed.strategy === strategy && styles.activeLabel,
-                ]}
-              >
-                {strategy === "shuffle" ? "Shuffle" : "Ordered"}
-              </Text>
-            </Pressable>
-          ))}
+          <SegmentedControl
+            appearance="dark"
+            onValueChange={(value) => {
+              const nextStrategy = value === "Ordered" ? "ordered" : "shuffle";
+              if (focusedFeed.strategy !== nextStrategy) {
+                startFocusedFeed(focusedFeed.deckId, nextStrategy);
+              }
+            }}
+            selectedIndex={focusedFeed.strategy === "shuffle" ? 0 : 1}
+            style={styles.strategyControl}
+            tintColor={palette.accent}
+            values={["Shuffle", "Ordered"]}
+          />
         </View>
         <ReadyFocusedFeed
           focusedFeed={focusedFeed}
@@ -150,18 +141,7 @@ const styles = StyleSheet.create({
   loading: { alignItems: "center", flex: 1, justifyContent: "center" },
   strategySwitcher: {
     backgroundColor: palette.background,
-    flexDirection: "row",
-    gap: sizes.spacing.small,
     padding: sizes.spacing.content,
   },
-  strategyButton: {
-    borderColor: palette.border,
-    borderRadius: sizes.radius.medium,
-    borderWidth: sizes.border,
-    flex: 1,
-    padding: sizes.spacing.small,
-  },
-  activeButton: { backgroundColor: palette.surface, borderColor: palette.accent },
-  strategyLabel: { color: palette.textMuted, fontSize: 13, textAlign: "center" },
-  activeLabel: { color: palette.textPrimary, fontWeight: "700" },
+  strategyControl: { width: "100%" },
 });
