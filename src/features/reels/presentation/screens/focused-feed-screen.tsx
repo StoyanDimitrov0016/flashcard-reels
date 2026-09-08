@@ -94,45 +94,53 @@ export default function FocusedFeedScreen() {
     startFocusedFeed,
   } = useFeedScope();
 
+  let content: React.ReactNode;
   if (focusedFeed.status === "empty") {
-    if (focusRestoring) {
-      return <LoadingState />;
-    }
-    return <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />;
+    content = focusRestoring ? (
+      <LoadingState />
+    ) : (
+      <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />
+    );
+  } else {
+    content = (
+      <>
+        <View style={styles.strategySwitcher}>
+          {(["shuffle", "ordered"] as const).map((strategy) => (
+            <Pressable
+              key={strategy}
+              onPress={() => {
+                if (focusedFeed.strategy !== strategy) {
+                  startFocusedFeed(focusedFeed.deckId, strategy);
+                }
+              }}
+              style={[
+                styles.strategyButton,
+                focusedFeed.strategy === strategy && styles.activeButton,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.strategyLabel,
+                  focusedFeed.strategy === strategy && styles.activeLabel,
+                ]}
+              >
+                {strategy === "shuffle" ? "Shuffle" : "Ordered"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <ReadyFocusedFeed
+          focusedFeed={focusedFeed}
+          key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
+          onSessionStarted={consumeFocusedFeedReplacement}
+        />
+      </>
+    );
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.screen}>
-      <View style={styles.strategySwitcher}>
-        {(["shuffle", "ordered"] as const).map((strategy) => (
-          <Pressable
-            key={strategy}
-            onPress={() => {
-              if (focusedFeed.strategy !== strategy) {
-                startFocusedFeed(focusedFeed.deckId, strategy);
-              }
-            }}
-            style={[
-              styles.strategyButton,
-              focusedFeed.strategy === strategy && styles.activeButton,
-            ]}
-          >
-            <Text
-              style={[
-                styles.strategyLabel,
-                focusedFeed.strategy === strategy && styles.activeLabel,
-              ]}
-            >
-              {strategy === "shuffle" ? "Shuffle" : "Ordered"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <ReadyFocusedFeed
-        focusedFeed={focusedFeed}
-        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
-        onSessionStarted={consumeFocusedFeedReplacement}
-      />
+    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
+      {content}
     </SafeAreaView>
   );
 }

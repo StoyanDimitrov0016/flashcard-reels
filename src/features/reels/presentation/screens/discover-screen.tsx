@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
@@ -31,9 +32,9 @@ export default function DiscoverScreen() {
   const { cards, loading } = useFlashcards(null);
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       {loading ? <LoadingState /> : <ReadyMixedFeed cards={cards} />}
-    </View>
+    </SafeAreaView>
   );
 }
 

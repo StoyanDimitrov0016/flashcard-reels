@@ -160,7 +160,7 @@ export default function LibraryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>Library</Text>
         <View style={styles.searchShell}>

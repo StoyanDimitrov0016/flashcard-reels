@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import type { AudioSource } from "expo-audio";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
@@ -31,23 +30,14 @@ type ReelCardProps = Readonly<{
 }>;
 type CardPageProps = Readonly<{
   backgroundColor: string;
-  bottomInset: number;
   children: React.ReactNode;
   height: number;
-  topInset: number;
   width: number;
 }>;
 
 const DOUBLE_TAP_WINDOW_MS = 450;
 
-function CardPage({
-  backgroundColor,
-  bottomInset,
-  children,
-  height,
-  topInset,
-  width,
-}: CardPageProps) {
+function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
   return (
     <View
       style={[
@@ -55,8 +45,6 @@ function CardPage({
         {
           backgroundColor,
           height,
-          paddingBottom: Math.max(bottomInset, sizes.spacing.screen),
-          paddingTop: Math.max(topInset, sizes.spacing.screen),
           width,
         },
       ]}
@@ -82,7 +70,6 @@ export function ReelCard({
   total,
   width,
 }: ReelCardProps) {
-  const insets = useSafeAreaInsets();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
   const flipCount = useRef(revealed ? 1 : 0);
   const lastTapAt = useRef(0);
@@ -142,13 +129,7 @@ export function ReelCard({
           { transform: [{ rotateY: frontRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage
-          backgroundColor={appearance.backgroundColor}
-          bottomInset={insets.bottom}
-          height={height}
-          topInset={insets.top}
-          width={width}
-        >
+        <CardPage backgroundColor={appearance.backgroundColor} height={height} width={width}>
           <ReelHeader
             appearance={appearance}
             card={card}
@@ -168,13 +149,7 @@ export function ReelCard({
           { transform: [{ rotateY: backRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage
-          backgroundColor={appearance.backgroundColor}
-          bottomInset={insets.bottom}
-          height={height}
-          topInset={insets.top}
-          width={width}
-        >
+        <CardPage backgroundColor={appearance.backgroundColor} height={height} width={width}>
           <ReelHeader
             appearance={appearance}
             card={card}
@@ -213,7 +188,12 @@ export function ReelCard({
 const styles = StyleSheet.create({
   card: { overflow: "hidden" },
   face: { backfaceVisibility: "hidden", position: "absolute" },
-  page: { justifyContent: "space-between", paddingHorizontal: sizes.spacing.spacious },
+  page: {
+    justifyContent: "space-between",
+    paddingBottom: sizes.spacing.screen,
+    paddingHorizontal: sizes.spacing.spacious,
+    paddingTop: sizes.spacing.screen,
+  },
   answerContent: { flex: 1 },
   copy: { gap: 22, paddingRight: 56 },
   rule: { borderRadius: sizes.radius.small, height: 4, width: 44 },

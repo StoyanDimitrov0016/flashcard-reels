@@ -49,7 +49,7 @@ export default function ProgressScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Progress</Text>
