@@ -39,6 +39,7 @@ type CardPageProps = Readonly<{
 
 const DOUBLE_TAP_WINDOW_MS = 450;
 const FOCUS_HOLD_DURATION_MS = 900;
+const HOLD_FEEDBACK_DELAY_MS = 150;
 
 type GestureHintProps = Readonly<{
   label: string;
@@ -50,6 +51,27 @@ function GestureHint({ label, symbol }: GestureHintProps) {
     <View accessible accessibilityLabel={label} style={styles.gestureHint}>
       <SymbolView name={symbol} size={sizes.icon.small} tintColor={palette.textSubtle} />
       <Text style={styles.hint}>{label}</Text>
+    </View>
+  );
+}
+
+function GestureFooter({ showMainFeedLink }: Readonly<{ showMainFeedLink: boolean }>) {
+  return (
+    <View style={styles.gestureFooter}>
+      <GestureHint
+        label="Swipe up"
+        symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
+      />
+      <GestureHint
+        label="Double tap"
+        symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
+      />
+      {!showMainFeedLink ? (
+        <GestureHint
+          label="Hold"
+          symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -92,6 +114,8 @@ export function ReelCard({
   const [holdProgress] = useState(() => new Animated.Value(0));
   const flipCount = useRef(revealed ? 1 : 0);
   const holdCompleted = useRef(false);
+  const holdFeedbackStarted = useRef(false);
+  const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
 
   const handleCardPress = () => {
@@ -122,15 +146,27 @@ export function ReelCard({
       return;
     }
     holdCompleted.current = false;
-    Animated.timing(holdProgress, {
-      duration: FOCUS_HOLD_DURATION_MS,
-      easing: Easing.linear,
-      toValue: 1,
-      useNativeDriver: false,
-    }).start();
+    holdFeedbackStarted.current = false;
+    holdFeedbackTimer.current = setTimeout(() => {
+      holdFeedbackStarted.current = true;
+      Animated.timing(holdProgress, {
+        duration: FOCUS_HOLD_DURATION_MS - HOLD_FEEDBACK_DELAY_MS,
+        easing: Easing.linear,
+        toValue: 1,
+        useNativeDriver: false,
+      }).start();
+    }, HOLD_FEEDBACK_DELAY_MS);
   };
 
   const cancelFocusHold = () => {
+    if (holdFeedbackTimer.current !== null) {
+      clearTimeout(holdFeedbackTimer.current);
+      holdFeedbackTimer.current = null;
+    }
+    if (!holdFeedbackStarted.current) {
+      return;
+    }
+    holdFeedbackStarted.current = false;
     holdProgress.stopAnimation();
     Animated.timing(holdProgress, {
       duration: 120,
@@ -174,22 +210,6 @@ export function ReelCard({
         <Text style={styles.prompt}>{card.question}</Text>
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
-      <View style={styles.hintRow}>
-        <GestureHint
-          label="Swipe up"
-          symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
-        />
-        <GestureHint
-          label="Double tap"
-          symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
-        />
-        {!showMainFeedLink ? (
-          <GestureHint
-            label="Hold"
-            symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
-          />
-        ) : null}
-      </View>
     </Pressable>
   );
 
@@ -213,6 +233,7 @@ export function ReelCard({
             total={total}
           />
           {questionTapArea}
+          <GestureFooter showMainFeedLink={showMainFeedLink} />
         </CardPage>
       </Animated.View>
       <Animated.View
@@ -250,23 +271,8 @@ export function ReelCard({
                 <Text style={styles.answer}>{card.answer}</Text>
               </View>
             </Pressable>
-            <View style={styles.hintRow}>
-              <GestureHint
-                label="Swipe up"
-                symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
-              />
-              <GestureHint
-                label="Double tap"
-                symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
-              />
-              {!showMainFeedLink ? (
-                <GestureHint
-                  label="Hold"
-                  symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
-                />
-              ) : null}
-            </View>
           </View>
+          <GestureFooter showMainFeedLink={showMainFeedLink} />
           <View style={styles.controlRail}>
             <RecallControls onSelect={onRate} selectedLevel={recallLevel} />
             <AnswerAudioPlayer isActive={isActive} source={audioSource} />
@@ -364,6 +370,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     rowGap: sizes.spacing.small,
     width: "100%",
+  },
+  gestureFooter: {
+    alignItems: "center",
+    bottom: sizes.spacing.screen,
+    columnGap: sizes.spacing.section,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    left: sizes.spacing.spacious,
+    position: "absolute",
+    right: sizes.spacing.spacious,
+    rowGap: sizes.spacing.small,
   },
   gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
   holdCue: {
