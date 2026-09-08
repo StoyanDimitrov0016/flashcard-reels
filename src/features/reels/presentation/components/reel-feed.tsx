@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useDecks } from "@/features/decks/presentation/hooks/use-decks";
@@ -40,8 +40,12 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     ? activeReelPosition
     : undefined;
   const deckIds = [...new Set(feed.occurrences.map(({ card }) => card.deckId))];
-  const { appearances } = useDeckAppearances(deckIds);
-  const { decks } = useDecks(deckIds);
+  const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
+  const { decks, loading: decksLoading } = useDecks(deckIds);
+  const metadataReady =
+    !appearancesLoading &&
+    !decksLoading &&
+    deckIds.every((deckId) => appearances.has(deckId) && decks.has(deckId));
 
   useEffect(
     function synchronizeActiveOccurrence() {
@@ -105,7 +109,12 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
 
   return (
     <View onLayout={handleLayout} style={styles.feed}>
-      {height > 0 && width > 0 && (
+      {!metadataReady ? (
+        <View accessibilityLabel="Preparing cards" style={styles.loading}>
+          <ActivityIndicator color={palette.textPrimary} size="large" />
+        </View>
+      ) : null}
+      {metadataReady && height > 0 && width > 0 ? (
         <FlatList
           data={feed.occurrences}
           decelerationRate="fast"
@@ -117,6 +126,7 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
           }}
           getItemLayout={getItemLayout}
           initialScrollIndex={feed.occurrences.length > 0 ? activeIndex : undefined}
+          key={`reel-feed-${height}-${width}`}
           keyExtractor={(occurrence) => occurrence.key}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
@@ -124,9 +134,12 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
         />
-      )}
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({ feed: { backgroundColor: palette.background, flex: 1 } });
+const styles = StyleSheet.create({
+  feed: { backgroundColor: palette.background, flex: 1 },
+  loading: { alignItems: "center", flex: 1, justifyContent: "center" },
+});
