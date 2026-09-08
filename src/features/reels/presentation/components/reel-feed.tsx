@@ -39,9 +39,13 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
   )
     ? activeReelPosition
     : undefined;
-  const deckIds = [...new Set(feed.occurrences.map(({ card }) => card.deckId))];
+  const deckIds = [...new Set(sourceCards.map((card) => card.deckId))];
   const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
   const { decks, loading: decksLoading } = useDecks(deckIds);
+  const cardCountsByDeckId = new Map<Flashcard["deckId"], number>();
+  for (const card of sourceCards) {
+    cardCountsByDeckId.set(card.deckId, (cardCountsByDeckId.get(card.deckId) ?? 0) + 1);
+  }
   const metadataReady =
     !appearancesLoading &&
     !decksLoading &&
@@ -93,15 +97,14 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
         audioSource={answerAudioService.findSourceForFlashcard(item.card.id)}
         card={item.card}
         deck={deck}
+        deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}
         height={height}
-        index={item.reelPosition}
         isActive={item.reelPosition === activeReelPosition}
         onFlip={() => controller.toggleCard(item.reelPosition)}
         onRate={(level) => onRatingSelected(item, level)}
         recallLevel={controller.recallLevels.get(item.reelPosition) ?? null}
         revealed={controller.revealedPositions.has(item.reelPosition)}
         showMainFeedLink={showMainFeedLink}
-        total={feed.materializedThroughReelPosition + 1}
         width={width}
       />
     );

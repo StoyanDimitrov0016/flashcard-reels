@@ -18,16 +18,15 @@ type ReelCardProps = Readonly<{
   audioSource: AudioSource;
   card: Flashcard;
   deck: Deck;
+  deckCardCount: number;
   appearance: DeckAppearance;
   height: number;
-  index: number;
   isActive: boolean;
   onFlip: () => void;
   onRate: (level: RecallLevel) => void;
   recallLevel: RecallLevel | null;
   revealed: boolean;
   showMainFeedLink: boolean;
-  total: number;
   width: number;
 }>;
 type CardPageProps = Readonly<{
@@ -97,16 +96,15 @@ export function ReelCard({
   audioSource,
   card,
   deck,
+  deckCardCount,
   appearance,
   height,
-  index,
   isActive,
   onFlip,
   onRate,
   recallLevel,
   revealed,
   showMainFeedLink,
-  total,
   width,
 }: ReelCardProps) {
   const openFocusedFeed = useOpenFocusedFeed();
@@ -206,7 +204,6 @@ export function ReelCard({
       style={styles.tapArea}
     >
       <View style={styles.copy}>
-        <View style={[styles.rule, { backgroundColor: appearance.accentColor }]} />
         <Text style={styles.prompt}>{card.question}</Text>
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
@@ -228,9 +225,8 @@ export function ReelCard({
             appearance={appearance}
             card={card}
             deck={deck}
-            index={index}
+            deckCardCount={deckCardCount}
             showMainFeedLink={showMainFeedLink}
-            total={total}
           />
           {questionTapArea}
           <GestureFooter showMainFeedLink={showMainFeedLink} />
@@ -249,9 +245,8 @@ export function ReelCard({
             appearance={appearance}
             card={card}
             deck={deck}
-            index={index}
+            deckCardCount={deckCardCount}
             showMainFeedLink={showMainFeedLink}
-            total={total}
           />
           <View style={styles.answerContent}>
             <Pressable
@@ -266,7 +261,6 @@ export function ReelCard({
               style={styles.tapArea}
             >
               <View style={styles.copy}>
-                <View style={[styles.rule, { backgroundColor: appearance.accentColor }]} />
                 <Text style={styles.answerPrompt}>{card.question}</Text>
                 <Text style={styles.answer}>{card.answer}</Text>
               </View>
@@ -327,7 +321,6 @@ const styles = StyleSheet.create({
     right: sizes.spacing.section,
     top: "32%",
   },
-  rule: { borderRadius: sizes.radius.small, height: 4, width: 44 },
   prompt: {
     color: palette.textPrimary,
     fontSize: 40,
