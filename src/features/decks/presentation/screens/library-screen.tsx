@@ -37,7 +37,7 @@ function DeckRow({
 }>) {
   const { appearance, cardCount, deck } = entry;
   return (
-    <View style={styles.deck}>
+    <View style={[styles.deck, { backgroundColor: appearance.backgroundColor }]}>
       <Pressable
         accessibilityHint="Opens the Focus tab in Shuffle mode"
         accessibilityLabel={`Focus on ${deck.title}`}
@@ -136,11 +136,11 @@ export default function LibraryScreen() {
     if (!selectedEntry) {
       return;
     }
-    void savePreset(selectedEntry.deck.id, preset).then((appearance) => {
+    const deckId = selectedEntry.deck.id;
+    void savePreset(deckId, preset).then((appearance) => {
       if (appearance) {
-        setAppearanceOverrides((current) =>
-          new Map(current).set(selectedEntry.deck.id, appearance)
-        );
+        setAppearanceOverrides((current) => new Map(current).set(deckId, appearance));
+        setSelectedEntry(null);
       }
     });
   };

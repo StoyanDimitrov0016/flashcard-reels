@@ -7,6 +7,18 @@ import { AppServicesProvider } from "@/infrastructure/app-services";
 import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+// oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
+import "../../global.css";
+
+const appTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: palette.background,
+    border: palette.border,
+    card: palette.background,
+  },
+};
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
@@ -39,9 +51,18 @@ export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeDatabase}>
       <AppServicesProvider>
-        <ThemeProvider value={DarkTheme}>
+        <ThemeProvider value={appTheme}>
           <StatusBar style="light" />
-          <Stack screenOptions={{ contentStyle: styles.appBackground, headerShown: false }} />
+          <Stack
+            screenOptions={{
+              animation: "fade",
+              contentStyle: styles.appBackground,
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="decks/[deckId]" />
+          </Stack>
         </ThemeProvider>
       </AppServicesProvider>
     </SQLiteProvider>

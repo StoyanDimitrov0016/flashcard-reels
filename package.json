@@ -27,7 +27,6 @@
     "verify": "npm run check && npm run lint:report && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.16",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.20",
     "expo-asset": "~57.0.16",
