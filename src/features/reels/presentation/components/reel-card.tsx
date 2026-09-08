@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { AudioSource } from "expo-audio";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
@@ -38,6 +39,20 @@ type CardPageProps = Readonly<{
 
 const DOUBLE_TAP_WINDOW_MS = 450;
 const FOCUS_HOLD_DURATION_MS = 900;
+
+type GestureHintProps = Readonly<{
+  label: string;
+  symbol: SymbolViewProps["name"];
+}>;
+
+function GestureHint({ label, symbol }: GestureHintProps) {
+  return (
+    <View accessible accessibilityLabel={label} style={styles.gestureHint}>
+      <SymbolView name={symbol} size={sizes.icon.small} tintColor={palette.textSubtle} />
+      <Text style={styles.hint}>{label}</Text>
+    </View>
+  );
+}
 
 function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
   return (
@@ -160,8 +175,20 @@ export function ReelCard({
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
       <View style={styles.hintRow}>
-        <Text style={styles.hint}>Swipe up for the next card</Text>
-        {!showMainFeedLink ? <Text style={styles.hint}>Hold for Focus</Text> : null}
+        <GestureHint
+          label="Double tap"
+          symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
+        />
+        <GestureHint
+          label="Swipe up"
+          symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
+        />
+        {!showMainFeedLink ? (
+          <GestureHint
+            label="Hold"
+            symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
+          />
+        ) : null}
       </View>
     </Pressable>
   );
@@ -224,9 +251,20 @@ export function ReelCard({
               </View>
             </Pressable>
             <View style={styles.hintRow}>
-              <Text style={styles.hint}>Double tap to return</Text>
-              <Text style={styles.hint}>Swipe up for the next card</Text>
-              {!showMainFeedLink ? <Text style={styles.hint}>Hold for Focus</Text> : null}
+              <GestureHint
+                label="Double tap"
+                symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
+              />
+              <GestureHint
+                label="Swipe up"
+                symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
+              />
+              {!showMainFeedLink ? (
+                <GestureHint
+                  label="Hold"
+                  symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
+                />
+              ) : null}
             </View>
           </View>
           <View style={styles.controlRail}>
@@ -324,6 +362,7 @@ const styles = StyleSheet.create({
     gap: sizes.spacing.small,
     justifyContent: "center",
   },
+  gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
   holdCue: {
     alignItems: "center",
     backgroundColor: palette.controlOverlay,
