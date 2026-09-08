@@ -7,6 +7,7 @@ import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answ
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { palette } from "@/shared/presentation/palette";
@@ -36,6 +37,7 @@ type CardPageProps = Readonly<{
 }>;
 
 const DOUBLE_TAP_WINDOW_MS = 450;
+const FOCUS_HOLD_DURATION_MS = 900;
 
 function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
   return (
@@ -70,11 +72,18 @@ export function ReelCard({
   total,
   width,
 }: ReelCardProps) {
+  const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
+  const [holdProgress] = useState(() => new Animated.Value(0));
   const flipCount = useRef(revealed ? 1 : 0);
+  const holdCompleted = useRef(false);
   const lastTapAt = useRef(0);
 
   const handleCardPress = () => {
+    if (holdCompleted.current) {
+      holdCompleted.current = false;
+      return;
+    }
     const now = Date.now();
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
@@ -93,6 +102,37 @@ export function ReelCard({
     lastTapAt.current = now;
   };
 
+  const startFocusHold = () => {
+    if (showMainFeedLink) {
+      return;
+    }
+    holdCompleted.current = false;
+    Animated.timing(holdProgress, {
+      duration: FOCUS_HOLD_DURATION_MS,
+      easing: Easing.linear,
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const cancelFocusHold = () => {
+    holdProgress.stopAnimation();
+    Animated.timing(holdProgress, {
+      duration: 120,
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const completeFocusHold = () => {
+    if (showMainFeedLink) {
+      return;
+    }
+    holdCompleted.current = true;
+    lastTapAt.current = 0;
+    openFocusedFeed(card.deckId);
+  };
+
   const frontRotation = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "180deg"],
@@ -107,7 +147,11 @@ export function ReelCard({
       accessibilityHint="Double tap to reveal the answer"
       accessibilityLabel={`Flashcard question: ${card.question}`}
       accessibilityRole="button"
+      delayLongPress={FOCUS_HOLD_DURATION_MS}
+      onLongPress={completeFocusHold}
       onPress={handleCardPress}
+      onPressIn={startFocusHold}
+      onPressOut={cancelFocusHold}
       style={styles.tapArea}
     >
       <View style={styles.copy}>
@@ -163,7 +207,11 @@ export function ReelCard({
               accessibilityHint="Double tap to return to the question"
               accessibilityLabel={`Flashcard answer: ${card.answer}`}
               accessibilityRole="button"
+              delayLongPress={FOCUS_HOLD_DURATION_MS}
+              onLongPress={completeFocusHold}
               onPress={handleCardPress}
+              onPressIn={startFocusHold}
+              onPressOut={cancelFocusHold}
               style={styles.tapArea}
             >
               <View style={styles.copy}>
@@ -172,15 +220,38 @@ export function ReelCard({
                 <Text style={styles.answer}>{card.answer}</Text>
               </View>
             </Pressable>
-            <AnswerAudioPlayer isActive={isActive} source={audioSource} />
             <View style={styles.hintRow}>
               <Text style={styles.hint}>Double tap to return</Text>
               <Text style={styles.hint}>Swipe up for the next card</Text>
             </View>
           </View>
-          <RecallControls onSelect={onRate} selectedLevel={recallLevel} />
+          <View style={styles.controlRail}>
+            <RecallControls onSelect={onRate} selectedLevel={recallLevel} />
+            <AnswerAudioPlayer isActive={isActive} source={audioSource} />
+          </View>
         </CardPage>
       </Animated.View>
+      {!showMainFeedLink ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.holdCue,
+            {
+              opacity: holdProgress,
+              transform: [
+                {
+                  scaleX: holdProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.08, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.holdLabel}>Hold to Focus</Text>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
@@ -196,6 +267,13 @@ const styles = StyleSheet.create({
   },
   answerContent: { flex: 1 },
   copy: { gap: 22, paddingRight: 56 },
+  controlRail: {
+    alignItems: "center",
+    gap: sizes.spacing.xLarge,
+    position: "absolute",
+    right: sizes.spacing.section,
+    top: "32%",
+  },
   rule: { borderRadius: sizes.radius.small, height: 4, width: 44 },
   prompt: {
     color: palette.textPrimary,
@@ -236,4 +314,17 @@ const styles = StyleSheet.create({
     gap: sizes.spacing.small,
     justifyContent: "center",
   },
+  holdCue: {
+    alignItems: "center",
+    backgroundColor: palette.textPrimary,
+    borderRadius: sizes.radius.pill,
+    left: sizes.spacing.spacious,
+    paddingHorizontal: sizes.spacing.section,
+    paddingVertical: sizes.spacing.medium,
+    position: "absolute",
+    right: sizes.spacing.spacious,
+    top: sizes.spacing.wide,
+    zIndex: 2,
+  },
+  holdLabel: { color: palette.ink, fontSize: 12, fontWeight: "800" },
 });

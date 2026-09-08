@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     borderRadius: sizes.radius.pill,
     height: 48,
     justifyContent: "center",
-    marginBottom: sizes.spacing.section,
     width: 48,
   },
   disabled: { opacity: 0.45 },

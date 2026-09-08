@@ -86,9 +86,6 @@ const styles = StyleSheet.create({
     gap: sizes.spacing.xxLarge,
     paddingHorizontal: sizes.spacing.medium,
     paddingVertical: sizes.spacing.xxLarge,
-    position: "absolute",
-    right: sizes.spacing.section,
-    top: "32%",
   },
   action: { alignItems: "center", gap: sizes.spacing.xSmall },
   iconCircle: {
