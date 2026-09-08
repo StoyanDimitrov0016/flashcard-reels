@@ -113,7 +113,9 @@ export default function ProgressScreen() {
   );
 }
 
-function SummaryFact({ label, value }: Readonly<{ label: string; value: number }>) {
+type SummaryFactProps = Readonly<{ label: string; value: number }>;
+
+function SummaryFact({ label, value }: SummaryFactProps) {
   return (
     <View style={styles.summaryFact}>
       <Text style={styles.summaryValue}>{value}</Text>
@@ -122,11 +124,9 @@ function SummaryFact({ label, value }: Readonly<{ label: string; value: number }
   );
 }
 
-function FilterButton({
-  label,
-  onPress,
-  selected,
-}: Readonly<{ label: string; onPress: () => void; selected: boolean }>) {
+type FilterButtonProps = Readonly<{ label: string; onPress: () => void; selected: boolean }>;
+
+function FilterButton({ label, onPress, selected }: FilterButtonProps) {
   return (
     <Pressable onPress={onPress} style={[styles.filter, selected && styles.selectedFilter]}>
       <Text style={[styles.filterLabel, selected && styles.selectedFilterLabel]}>{label}</Text>
@@ -134,15 +134,13 @@ function FilterButton({
   );
 }
 
-function ResetButton({
-  disabled = false,
-  label,
-  onPress,
-}: Readonly<{
+type ResetButtonProps = Readonly<{
   disabled?: boolean;
   label: string;
   onPress: () => void;
-}>) {
+}>;
+
+function ResetButton({ disabled = false, label, onPress }: ResetButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -155,16 +153,15 @@ function ResetButton({
   );
 }
 
-function ProgressRow({
-  onReset,
-  resetting,
-  row,
-}: Readonly<{
+type ProgressRowProps = Readonly<{
   onReset: () => void;
   resetting: boolean;
   row: ReturnType<typeof useLearnerProgress>["rows"][number];
-}>) {
+}>;
+
+function ProgressRow({ onReset, resetting, row }: ProgressRowProps) {
   const { card, deck, explanation, profile } = row;
+
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>

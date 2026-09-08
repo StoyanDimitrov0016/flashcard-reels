@@ -7,9 +7,12 @@ type DeckAppearanceContextValue = Readonly<{
 
 const DeckAppearanceContext = createContext<DeckAppearanceContextValue | null>(null);
 
-export function DeckAppearanceProvider({ children }: Readonly<{ children: ReactNode }>) {
+type DeckAppearanceProviderProps = Readonly<{ children: ReactNode }>;
+
+export function DeckAppearanceProvider({ children }: DeckAppearanceProviderProps) {
   const [appearanceRevision, setAppearanceRevision] = useState(0);
   const invalidateAppearances = () => setAppearanceRevision((revision) => revision + 1);
+
   return (
     <DeckAppearanceContext.Provider value={{ appearanceRevision, invalidateAppearances }}>
       {children}

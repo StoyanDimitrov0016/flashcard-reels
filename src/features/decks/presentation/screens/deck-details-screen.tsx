@@ -16,7 +16,9 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-function CardRow({ card }: Readonly<{ card: Flashcard }>) {
+type CardRowProps = Readonly<{ card: Flashcard }>;
+
+function CardRow({ card }: CardRowProps) {
   return (
     <View style={styles.cardRow}>
       <Text style={styles.position}>{card.deckPosition + 1}</Text>

@@ -54,7 +54,9 @@ function GestureHint({ label, symbol }: GestureHintProps) {
   );
 }
 
-function GestureFooter({ showMainFeedLink }: Readonly<{ showMainFeedLink: boolean }>) {
+type GestureFooterProps = Readonly<{ showMainFeedLink: boolean }>;
+
+function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
   return (
     <View style={styles.gestureFooter}>
       <GestureHint

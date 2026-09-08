@@ -68,6 +68,7 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
     focusRestoring: !focusLifecycle.resolved,
     startFocusedFeed,
   };
+
   return <FeedScopeContext.Provider value={contextValue}>{children}</FeedScopeContext.Provider>;
 }
 

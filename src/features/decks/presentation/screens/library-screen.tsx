@@ -23,19 +23,16 @@ import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
 type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];
-
-function DeckRow({
-  entry,
-  onAppearance,
-  onFocus,
-  onViewCards,
-}: Readonly<{
+type DeckRowProps = Readonly<{
   entry: CatalogEntry;
   onAppearance: () => void;
   onFocus: () => void;
   onViewCards: () => void;
-}>) {
+}>;
+
+function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
   const { appearance, cardCount, deck } = entry;
+
   return (
     <View style={[styles.deck, { backgroundColor: appearance.backgroundColor }]}>
       <Pressable

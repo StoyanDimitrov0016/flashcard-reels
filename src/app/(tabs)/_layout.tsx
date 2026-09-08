@@ -12,6 +12,7 @@ type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
+
   return (
     <View style={styles.errorScreen}>
       <Text style={styles.errorTitle}>This area could not load</Text>

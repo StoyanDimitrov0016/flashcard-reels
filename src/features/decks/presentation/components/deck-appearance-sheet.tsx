@@ -39,6 +39,7 @@ type PresetItemProps = Readonly<{
 function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemProps) {
   const selected = appearance ? isCurrentPreset(preset, appearance) : false;
   const pending = pendingPreset === preset;
+
   return (
     <Pressable
       accessibilityHint="Applies this theme immediately"

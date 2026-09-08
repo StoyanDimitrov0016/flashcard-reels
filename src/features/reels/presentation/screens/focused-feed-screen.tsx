@@ -60,14 +60,12 @@ function ReadyFocusedFeedContent({
     />
   );
 }
-
-function ReadyFocusedFeed({
-  focusedFeed,
-  onSessionStarted,
-}: Readonly<{
+type ReadyFocusedFeedProps = Readonly<{
   focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
   onSessionStarted: () => void;
-}>) {
+}>;
+
+function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedProps) {
   const { cards, loading } = useFlashcards(focusedFeed.deckId);
 
   if (loading) {
