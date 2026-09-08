@@ -1,10 +1,9 @@
-import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { useFeedScope } from "@/features/reels/presentation/context/feed-scope-context";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
@@ -25,8 +24,7 @@ export function ReelHeader({
   showMainFeedLink,
   total,
 }: ReelHeaderProps) {
-  const router = useRouter();
-  const { startFocusedFeed } = useFeedScope();
+  const openFocusedFeed = useOpenFocusedFeed();
 
   return (
     <View style={styles.header}>
@@ -38,11 +36,10 @@ export function ReelHeader({
         </View>
       ) : (
         <Pressable
-          accessibilityLabel={`Start focused ${deck.title} feed`}
-          onPress={() => {
-            startFocusedFeed(card.deckId);
-            router.navigate("/(tabs)/(discover)");
-          }}
+          accessibilityHint="Opens the Focus tab in Shuffle mode"
+          accessibilityLabel={`Focus on ${deck.title}`}
+          accessibilityRole="button"
+          onPress={() => openFocusedFeed(card.deckId)}
           style={[styles.deckChip, { borderColor: appearance.accentColor }]}
         >
           <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{deck.title}</Text>

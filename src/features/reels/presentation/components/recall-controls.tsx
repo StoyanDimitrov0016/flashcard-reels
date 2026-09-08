@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { palette } from "@/shared/presentation/palette";
+import { selectAction } from "@/shared/presentation/haptics";
 import { sizes } from "@/shared/presentation/sizes";
 
 type RecallOption = Readonly<{
@@ -55,7 +56,10 @@ export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps)
             accessibilityRole="button"
             accessibilityState={{ selected }}
             key={level}
-            onPress={() => onSelect(level)}
+            onPress={() => {
+              selectAction();
+              onSelect(level);
+            }}
             style={styles.action}
           >
             <View style={[styles.iconCircle, selected && { backgroundColor: color }]}>

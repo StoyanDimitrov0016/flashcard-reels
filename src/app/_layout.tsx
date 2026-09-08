@@ -8,14 +8,14 @@ import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/datab
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
 
   return (
     <View style={styles.stateScreen}>
       <Text style={styles.stateEyebrow}>Something went wrong</Text>
       <Text style={styles.stateTitle}>The next card could not load.</Text>
-      <Text style={styles.errorMessage}>{error.message}</Text>
+      <Text style={styles.errorMessage}>Your study data is safe. Try loading the app again.</Text>
       <Pressable onPress={retry} style={styles.retryButton}>
         <Text style={styles.retryLabel}>Try again</Text>
       </Pressable>

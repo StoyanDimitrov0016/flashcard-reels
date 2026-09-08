@@ -28,10 +28,5 @@ export function useAnswerAudio(source: AudioSource) {
     player.play();
   };
 
-  const replay = async () => {
-    await player.seekTo(0);
-    player.play();
-  };
-
-  return { player, replay, status, togglePlayback };
+  return { player, status, togglePlayback };
 }
