@@ -6,5 +6,6 @@ export interface DeckService {
   findByIds(ids: readonly DeckId[]): Promise<Deck[]>;
   getAppearance(deckId: DeckId): Promise<DeckAppearance | null>;
   getAppearances(deckIds: readonly DeckId[]): Promise<DeckAppearance[]>;
+  saveAppearance(appearance: DeckAppearance): Promise<void>;
   list(): Promise<Deck[]>;
 }

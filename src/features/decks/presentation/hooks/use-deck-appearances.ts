@@ -4,6 +4,7 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useAppServices } from "@/infrastructure/app-services";
+import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
 
 type DeckAppearancesState = Readonly<{
   appearances: ReadonlyMap<DeckId, DeckAppearance>;
@@ -15,6 +16,7 @@ const initialState: DeckAppearancesState = { appearances: new Map(), error: null
 
 export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
   const { deckService } = useAppServices();
+  const { appearanceRevision } = useDeckAppearanceRevision();
   const [state, setState] = useState<DeckAppearancesState>(initialState);
   const deckIdsKey = deckIds.join(",");
 
@@ -58,7 +60,7 @@ export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
         active = false;
       };
     },
-    [deckIdsKey, deckService]
+    [appearanceRevision, deckIdsKey, deckService]
   );
 
   if (state.error) {

@@ -32,4 +32,8 @@ export class DeckServiceImpl implements DeckService {
   async list(): Promise<Deck[]> {
     return this.deckRepository.list();
   }
+
+  async saveAppearance(appearance: DeckAppearance): Promise<void> {
+    return this.deckAppearanceRepository.save(appearance);
+  }
 }
