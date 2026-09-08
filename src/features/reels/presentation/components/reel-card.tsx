@@ -111,7 +111,7 @@ export function ReelCard({
       duration: FOCUS_HOLD_DURATION_MS,
       easing: Easing.linear,
       toValue: 1,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
@@ -120,7 +120,7 @@ export function ReelCard({
     Animated.timing(holdProgress, {
       duration: 120,
       toValue: 0,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
@@ -159,7 +159,10 @@ export function ReelCard({
         <Text style={styles.prompt}>{card.question}</Text>
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
-      <Text style={styles.hint}>Swipe up for the next card</Text>
+      <View style={styles.hintRow}>
+        <Text style={styles.hint}>Swipe up for the next card</Text>
+        {!showMainFeedLink ? <Text style={styles.hint}>Hold for Focus</Text> : null}
+      </View>
     </Pressable>
   );
 
@@ -223,6 +226,7 @@ export function ReelCard({
             <View style={styles.hintRow}>
               <Text style={styles.hint}>Double tap to return</Text>
               <Text style={styles.hint}>Swipe up for the next card</Text>
+              {!showMainFeedLink ? <Text style={styles.hint}>Hold for Focus</Text> : null}
             </View>
           </View>
           <View style={styles.controlRail}>
@@ -238,18 +242,23 @@ export function ReelCard({
             styles.holdCue,
             {
               opacity: holdProgress,
-              transform: [
-                {
-                  scaleX: holdProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.08, 1],
-                  }),
-                },
-              ],
             },
           ]}
         >
           <Text style={styles.holdLabel}>Hold to Focus</Text>
+          <View style={styles.holdTrack}>
+            <Animated.View
+              style={[
+                styles.holdProgress,
+                {
+                  width: holdProgress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
+              ]}
+            />
+          </View>
         </Animated.View>
       ) : null}
     </View>
@@ -311,20 +320,33 @@ const styles = StyleSheet.create({
   hintRow: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: sizes.spacing.small,
     justifyContent: "center",
   },
   holdCue: {
     alignItems: "center",
-    backgroundColor: palette.textPrimary,
-    borderRadius: sizes.radius.pill,
-    left: sizes.spacing.spacious,
+    backgroundColor: palette.controlOverlay,
+    borderBottomColor: palette.controlBorder,
+    borderBottomWidth: sizes.border,
+    borderTopColor: palette.controlBorder,
+    borderTopWidth: sizes.border,
+    gap: sizes.spacing.medium,
+    left: 0,
     paddingHorizontal: sizes.spacing.section,
-    paddingVertical: sizes.spacing.medium,
+    paddingVertical: sizes.spacing.xLarge,
     position: "absolute",
-    right: sizes.spacing.spacious,
-    top: sizes.spacing.wide,
+    right: 0,
+    top: 72,
     zIndex: 2,
   },
-  holdLabel: { color: palette.ink, fontSize: 12, fontWeight: "800" },
+  holdLabel: { color: palette.textPrimary, fontSize: 12, fontWeight: "800" },
+  holdProgress: { backgroundColor: palette.accent, height: "100%" },
+  holdTrack: {
+    backgroundColor: palette.controlBorder,
+    borderRadius: sizes.radius.pill,
+    height: 4,
+    overflow: "hidden",
+    width: "100%",
+  },
 });
