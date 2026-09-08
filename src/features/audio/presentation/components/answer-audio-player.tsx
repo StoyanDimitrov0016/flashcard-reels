@@ -44,7 +44,7 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
       ]}
     >
       {isLoading ? (
-        <ActivityIndicator color={palette.ink} size="small" />
+        <ActivityIndicator color={palette.textPrimary} size="small" />
       ) : (
         <SymbolView
           name={
@@ -53,7 +53,7 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
               : { android: "play_arrow", ios: "play.fill", web: "play_arrow" }
           }
           size={sizes.icon.medium}
-          tintColor={palette.ink}
+          tintColor={palette.textPrimary}
         />
       )}
     </Pressable>
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     alignSelf: "center",
-    backgroundColor: palette.info,
+    backgroundColor: palette.borderStrong,
     borderRadius: sizes.radius.pill,
     height: 48,
     justifyContent: "center",
