@@ -1,5 +1,7 @@
 # Technical flashcard audio generation
 
+The bundled question-and-answer audio is generated with [Audiofier TTS](https://github.com/StoyanDimitrov0016/audiofier-tts), a separate text-to-speech application created by Stoyan Dimitrov.
+
 This app bundles generated MP3 files into the APK. The phone does not run the
 Python service and does not need network access for playback.
 
