@@ -1,7 +1,7 @@
 import type { AudioSource } from "expo-audio";
 
-import { answerAudioAssets } from "@/features/audio/infrastructure/answer-audio-assets";
 import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
+import { answerAudioAssets } from "@/features/audio/infrastructure/audio-assets";
 
 export class BundledAnswerAudioRepository implements AnswerAudioRepository {
   findSourceByFlashcardId(flashcardId: string): AudioSource {

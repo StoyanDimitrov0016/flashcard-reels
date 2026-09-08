@@ -1,3 +1,4 @@
+import { notInArray } from "drizzle-orm";
 import {
   deckAppearanceSeedData,
   deckSeedData,
@@ -16,6 +17,11 @@ export async function seedDatabase<TRunResult>(
   database: DrizzleDatabase<TRunResult>
 ): Promise<void> {
   database.transaction((transaction) => {
+    const seedDeckIds = deckSeedData.map((deck) => deck.id);
+    if (seedDeckIds.length > 0) {
+      transaction.delete(decks).where(notInArray(decks.id, seedDeckIds)).run();
+    }
+
     if (deckSeedData.length > 0) {
       transaction
         .insert(decks)

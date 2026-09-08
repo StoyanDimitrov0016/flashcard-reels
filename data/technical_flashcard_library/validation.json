@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-09-06T13:26:00Z",
+  "deckCounts": {
+    "JavaScript": 116,
+    "React": 117,
+    "System Design": 112,
+    "Databases": 111,
+    "Computer Science": 109,
+    "Operating Systems and Hardware": 109
+  },
+  "totalCards": 674,
+  "checks": [
+    "valid JSON",
+    "exact field names and no extra fields",
+    "unique UUIDv4 IDs",
+    "valid deck references",
+    "deckPosition starts at 0 and is contiguous per deck",
+    "no duplicate questions",
+    "consistent parseable ISO-8601 timestamps",
+    "answer-length guard (<=70 words)",
+    "vague-answer blacklist"
+  ]
+}
