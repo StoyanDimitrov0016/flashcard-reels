@@ -7,15 +7,27 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { explainLearnerProfile } from "@/features/learner-profile/domain/adaptive-shuffle-policy";
+import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
-type CardRowProps = Readonly<{ card: Flashcard }>;
+type CardRowProps = Readonly<{
+  accentColor: string;
+  card: Flashcard;
+  profile: LearnerProfile | null;
+}>;
 
-function CardRow({ card }: CardRowProps) {
+function CardRow({ accentColor, card, profile }: CardRowProps) {
   const [expanded, setExpanded] = useState(false);
+  const explanation = explainLearnerProfile(profile);
+  const reviewed = (profile?.reviewCount ?? 0) > 0;
+  const progress =
+    explanation.averageRecallScore === null
+      ? 0
+      : Math.round((explanation.averageRecallScore / 3) * 100);
 
   return (
     <Pressable
@@ -29,8 +41,41 @@ function CardRow({ card }: CardRowProps) {
         <Text style={styles.position}>{card.deckPosition + 1}</Text>
       </View>
       <View style={styles.cardCopy}>
-        <Text style={styles.question}>{card.question}</Text>
-        {expanded ? <Text style={styles.answer}>{card.answer}</Text> : null}
+        <View style={styles.questionRow}>
+          <Text style={styles.question}>{card.question}</Text>
+          <Text style={[styles.status, { color: reviewed ? accentColor : palette.textMuted }]}>
+            {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
+          </Text>
+        </View>
+        <View style={styles.cardProgressTrack}>
+          <View
+            style={[
+              styles.cardProgressFill,
+              { backgroundColor: accentColor, width: `${progress}%` },
+            ]}
+          />
+        </View>
+        <Text style={styles.progressCaption}>
+          {reviewed
+            ? `${progress}% recall · ${explanation.priority} practice priority`
+            : "Not reviewed yet"}
+        </Text>
+        {expanded ? (
+          <View style={styles.expandedContent}>
+            <Text style={styles.answer}>{card.answer}</Text>
+            <View style={styles.ratingRow}>
+              <RatingFact color={palette.danger} label="Again" value={profile?.againCount ?? 0} />
+              <RatingFact color={palette.warning} label="Hard" value={profile?.hardCount ?? 0} />
+              <RatingFact color={palette.success} label="Good" value={profile?.goodCount ?? 0} />
+              <RatingFact color={palette.recallEasy} label="Easy" value={profile?.easyCount ?? 0} />
+            </View>
+            <Text style={styles.lastReviewed}>
+              {profile?.lastReviewedAt
+                ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
+                : "No review history"}
+            </Text>
+          </View>
+        ) : null}
       </View>
       <SymbolView
         name={{
@@ -45,7 +90,16 @@ function CardRow({ card }: CardRowProps) {
   );
 }
 
-const renderCard: ListRenderItem<Flashcard> = ({ item }) => <CardRow card={item} />;
+type RatingFactProps = Readonly<{ color: string; label: string; value: number }>;
+
+function RatingFact({ color, label, value }: RatingFactProps) {
+  return (
+    <View style={styles.ratingFact}>
+      <Text style={[styles.ratingValue, { color }]}>{value}</Text>
+      <Text style={styles.ratingLabel}>{label}</Text>
+    </View>
+  );
+}
 
 function EmptyCardList() {
   return <Text style={styles.empty}>This deck has no cards.</Text>;
@@ -54,8 +108,11 @@ function EmptyCardList() {
 export default function DeckDetailsScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
-  const { appearance, cards, deck, loading } = useDeckDetails(deckId);
+  const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
   const accentColor = appearance?.accentColor ?? palette.actionPrimary;
+  const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
+    <CardRow accentColor={accentColor} card={item} profile={profiles.get(item.id) ?? null} />
+  );
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -113,6 +170,13 @@ const styles = StyleSheet.create({
   },
   backButton: { alignItems: "center", height: 48, justifyContent: "center", width: 48 },
   cardCopy: { flex: 1, gap: sizes.spacing.medium },
+  cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
+  cardProgressTrack: {
+    backgroundColor: palette.borderStrong,
+    borderRadius: sizes.radius.pill,
+    height: 5,
+    overflow: "hidden",
+  },
   cardRow: {
     alignItems: "flex-start",
     backgroundColor: palette.surface,
@@ -131,6 +195,13 @@ const styles = StyleSheet.create({
     marginTop: sizes.spacing.xSmall,
   },
   empty: { color: palette.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
+  expandedContent: {
+    borderTopColor: palette.border,
+    borderTopWidth: sizes.border,
+    gap: sizes.spacing.medium,
+    marginTop: sizes.spacing.xSmall,
+    paddingTop: sizes.spacing.xLarge,
+  },
   header: {
     alignItems: "center",
     flexDirection: "row",
@@ -153,12 +224,18 @@ const styles = StyleSheet.create({
     minHeight: 30,
     minWidth: 30,
   },
+  progressCaption: { color: palette.textMuted, fontSize: fontSize.caption },
   question: {
     color: palette.textPrimary,
     fontSize: fontSize.subhead,
     fontWeight: fontWeight.bold,
     lineHeight: lineHeight.subhead,
   },
+  questionRow: { alignItems: "flex-start", flexDirection: "row", gap: sizes.spacing.medium },
+  ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
+  ratingLabel: { color: palette.textMuted, fontSize: fontSize.caption },
+  ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
+  ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
   screen: { backgroundColor: palette.background, flex: 1 },
   tabs: {
     borderBottomColor: palette.border,
@@ -173,5 +250,7 @@ const styles = StyleSheet.create({
     paddingVertical: sizes.spacing.medium,
   },
   activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
+  lastReviewed: { color: palette.textMuted, fontSize: fontSize.caption },
+  status: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
   title: { color: palette.textPrimary, ...textStyles.screenTitle },
 });
