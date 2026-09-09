@@ -11,7 +11,6 @@ import {
   deckAppearances,
   flashcardReviewAttempts,
   flashcards,
-  learnerProfiles,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -36,20 +35,20 @@ export class SQLiteDeckPackageInstallationTransaction<
       const existingDeck = transaction
         .select()
         .from(decks)
-        .where(eq(decks.id, deckPackage.manifest.id))
+        .where(eq(decks.id, deckPackage.id))
         .limit(1)
         .all()[0];
 
-      if (existingDeck && existingDeck.version === deckPackage.manifest.version) {
+      if (existingDeck && existingDeck.version === deckPackage.version) {
         return {
-          deckId: deckPackage.manifest.id,
+          deckId: deckPackage.id,
           status: "no-op",
           version: existingDeck.version,
         };
       }
-      if (existingDeck && existingDeck.version > deckPackage.manifest.version) {
+      if (existingDeck && existingDeck.version > deckPackage.version) {
         throw new DeckPackageVersionError(
-          `Deck ${deckPackage.manifest.id} version ${deckPackage.manifest.version} is older than installed version ${existingDeck.version}`
+          `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${existingDeck.version}`
         );
       }
 
@@ -59,7 +58,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           ? []
           : transaction.select().from(flashcards).where(inArray(flashcards.id, incomingIds)).all();
       for (const card of cardsWithMatchingIds) {
-        if (card.deckId !== deckPackage.manifest.id) {
+        if (card.deckId !== deckPackage.id) {
           throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
         }
       }
@@ -68,12 +67,12 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .insert(decks)
           .values({
-            createdAt: deckPackage.manifest.createdAt,
-            description: deckPackage.manifest.description,
-            id: deckPackage.manifest.id,
-            title: deckPackage.manifest.title,
-            updatedAt: deckPackage.manifest.updatedAt,
-            version: deckPackage.manifest.version,
+            createdAt: deckPackage.createdAt,
+            description: deckPackage.description,
+            id: deckPackage.id,
+            title: deckPackage.title,
+            updatedAt: deckPackage.updatedAt,
+            version: deckPackage.version,
           })
           .run();
         transaction
@@ -81,7 +80,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .values({
             accentColor: "#4FD1C5",
             backgroundColor: "#0B151A",
-            deckId: deckPackage.manifest.id,
+            deckId: deckPackage.id,
           })
           .onConflictDoNothing()
           .run();
@@ -89,26 +88,30 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .update(decks)
           .set({
-            description: deckPackage.manifest.description,
-            title: deckPackage.manifest.title,
-            updatedAt: deckPackage.manifest.updatedAt,
-            version: deckPackage.manifest.version,
+            description: deckPackage.description,
+            title: deckPackage.title,
+            updatedAt: deckPackage.updatedAt,
+            version: deckPackage.version,
           })
-          .where(eq(decks.id, deckPackage.manifest.id))
+          .where(eq(decks.id, deckPackage.id))
           .run();
       }
 
       const existingCards = transaction
         .select()
         .from(flashcards)
-        .where(eq(flashcards.deckId, deckPackage.manifest.id))
+        .where(eq(flashcards.deckId, deckPackage.id))
         .all();
-      const offset = existingCards.length + deckPackage.cards.length + 1;
+      const maximumExistingOrder = existingCards.reduce(
+        (maximum, card) => Math.max(maximum, card.order),
+        -1
+      );
+      const offset = maximumExistingOrder + deckPackage.cards.length + 1;
       if (existingCards.length > 0) {
         transaction
           .update(flashcards)
           .set({ order: sql`${flashcards.order} + ${offset}` })
-          .where(eq(flashcards.deckId, deckPackage.manifest.id))
+          .where(eq(flashcards.deckId, deckPackage.id))
           .run();
       }
 
@@ -133,21 +136,12 @@ export class SQLiteDeckPackageInstallationTransaction<
               active: true,
               answer: card.answer,
               createdAt: card.createdAt,
-              deckId: card.deckId,
+              deckId: deckPackage.id,
               id: card.id,
               order: card.order,
               question: card.question,
               updatedAt: card.updatedAt,
             })
-            .run();
-          transaction
-            .insert(learnerProfiles)
-            .values({
-              createdAt: card.createdAt,
-              flashcardId: card.id,
-              updatedAt: card.updatedAt,
-            })
-            .onConflictDoNothing()
             .run();
         }
       }
@@ -156,7 +150,7 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .update(flashcards)
           .set({ active: false })
-          .where(eq(flashcards.deckId, deckPackage.manifest.id))
+          .where(eq(flashcards.deckId, deckPackage.id))
           .run();
       } else {
         transaction
@@ -164,7 +158,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .set({ active: false })
           .where(
             and(
-              eq(flashcards.deckId, deckPackage.manifest.id),
+              eq(flashcards.deckId, deckPackage.id),
               notInArray(flashcards.id, incomingIds)
             )
           )
@@ -182,7 +176,7 @@ export class SQLiteDeckPackageInstallationTransaction<
                   eq(studySessions.scope, "mixed"),
                   and(
                     eq(studySessions.scope, "focused"),
-                    eq(studySessions.deckId, deckPackage.manifest.id)
+                    eq(studySessions.deckId, deckPackage.id)
                   )
                 )
               : eq(studySessions.scope, "mixed")
@@ -208,9 +202,9 @@ export class SQLiteDeckPackageInstallationTransaction<
       }
 
       return {
-        deckId: deckPackage.manifest.id,
+        deckId: deckPackage.id,
         status: existingDeck ? "updated" : "installed",
-        version: deckPackage.manifest.version,
+        version: deckPackage.version,
       };
     });
   }
