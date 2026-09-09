@@ -119,7 +119,7 @@ export default function DeckDetailsScreen() {
           accessibilityLabel="Back to Library"
           accessibilityRole="button"
           onPress={() => router.back()}
-          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
+          style={styles.backButton}
         >
           <SymbolView
             name={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
@@ -176,7 +176,6 @@ const styles = StyleSheet.create({
     height: "100%",
     paddingHorizontal: sizes.spacing.xSmall,
   },
-  backButtonPressed: { opacity: 0.45 },
   backLabel: { color: palette.textPrimary, fontSize: fontSize.body },
   cardCopy: { flex: 1, gap: sizes.spacing.medium },
   cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },

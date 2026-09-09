@@ -1,7 +1,8 @@
 html,
 body,
 #root {
-  background-color: #090a0d;
+  background-color: #090d11;
+  color-scheme: dark;
   height: 100%;
   margin: 0;
   overflow: hidden;
