@@ -12,7 +12,6 @@ import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrast
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
-import { seedDatabase } from "@/infrastructure/sqlite/seed";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
 import {
   OTHER_DECK_ID,
@@ -733,20 +732,12 @@ describe("SQLite study persistence", () => {
     expect(legacyTable).toBeNull();
   });
 
-  it("adds bundled deck covers without deleting a future user deck", async () => {
-    await seedDatabase(database.drizzle);
-
+  it("keeps the application-owned default cover for a future deck", async () => {
     expect(
       await database.getFirstAsync(
         "SELECT cover_asset AS coverAsset FROM decks WHERE id = ?",
         TEST_DECK_ID
       )
     ).toEqual({ coverAsset: "cards" });
-    expect(
-      await database.getFirstAsync(
-        "SELECT cover_asset AS coverAsset FROM decks WHERE id = ?",
-        "4e4c5ba0-51d0-4619-9c88-920e6ff12d6e"
-      )
-    ).toEqual({ coverAsset: "javascript" });
   });
 });

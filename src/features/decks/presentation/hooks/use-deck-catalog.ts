@@ -18,9 +18,10 @@ type DeckCatalogState = Readonly<{
 
 const initialState: DeckCatalogState = { entries: [], error: null, loading: true };
 
-export function useDeckCatalog(): DeckCatalogState {
+export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
   const { deckService, flashcardService } = useAppServices();
   const [state, setState] = useState<DeckCatalogState>(initialState);
+  const [revision, setRevision] = useState(0);
 
   useEffect(
     function loadDeckCatalog() {
@@ -63,11 +64,11 @@ export function useDeckCatalog(): DeckCatalogState {
         active = false;
       };
     },
-    [deckService, flashcardService]
+    [deckService, flashcardService, revision]
   );
 
   if (state.error) {
     throw state.error;
   }
-  return state;
+  return { ...state, refresh: () => setRevision((current) => current + 1) };
 }

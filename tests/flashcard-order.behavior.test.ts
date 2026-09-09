@@ -1,12 +1,43 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath, URL as NodeURL } from "node:url";
 
-import { flashcardSeedData } from "@/features/flashcards/infrastructure/seed-data/flashcards";
+type SourceFlashcard = Readonly<{ deckId: string; position: number }>;
+
+const parsedFlashcardSourceData: unknown = JSON.parse(
+  readFileSync(
+    fileURLToPath(
+      new NodeURL("../data/technical_flashcard_library/flashcards.json", import.meta.url)
+    ),
+    "utf8"
+  )
+);
+
+function isSourceFlashcard(value: unknown): value is SourceFlashcard {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "deckId" in value &&
+    typeof value.deckId === "string" &&
+    "position" in value &&
+    typeof value.position === "number"
+  );
+}
+
+if (
+  !Array.isArray(parsedFlashcardSourceData) ||
+  !parsedFlashcardSourceData.every(isSourceFlashcard)
+) {
+  throw new Error("Invalid technical flashcard source");
+}
+
+const flashcardSourceData = parsedFlashcardSourceData;
 
 describe("flashcard deck ordering", () => {
   it("assigns contiguous positions to seeded cards in each deck", () => {
     const positionsByDeck = new Map<string, number[]>();
 
-    for (const flashcard of flashcardSeedData) {
+    for (const flashcard of flashcardSourceData) {
       const positions = positionsByDeck.get(flashcard.deckId) ?? [];
       positions.push(flashcard.position);
       positionsByDeck.set(flashcard.deckId, positions);

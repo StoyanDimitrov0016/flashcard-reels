@@ -2,7 +2,8 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
-import { BundledAnswerAudioRepository } from "@/features/audio/infrastructure/bundled-answer-audio.repository";
+import { DeckPackageImportService } from "@/features/decks/application/deck-package-import.service";
+import { InstalledAudioStorage } from "@/features/audio/infrastructure/installed-audio-storage";
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
@@ -30,9 +31,13 @@ import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service"
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
+import { ArchiveDeckPackageReader } from "@/features/decks/infrastructure/archive-deck-package.reader";
+import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/infrastructure/sqlite-deck-package-installation.transaction";
+import { ExpoDeckPackageFileReader } from "@/features/decks/infrastructure/expo-deck-package-file.reader";
 
 type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
+  deckPackageImportService: DeckPackageImportService;
   deckService: DeckService;
   flashcardService: FlashcardService;
   learnerProfileService: LearnerProfileService;
@@ -67,6 +72,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase
     );
     const clock = new SystemClock();
+    const installedAudioStorage = new InstalledAudioStorage();
     const idGenerator = new UuidGenerator();
     const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
@@ -84,7 +90,14 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
 
     return {
-      answerAudioService: new AnswerAudioServiceImpl(new BundledAnswerAudioRepository()),
+      answerAudioService: new AnswerAudioServiceImpl(installedAudioStorage),
+      deckPackageImportService: new DeckPackageImportService(
+        new ArchiveDeckPackageReader(),
+        new SQLiteDeckPackageInstallationTransaction(drizzleDatabase),
+        installedAudioStorage,
+        clock,
+        new ExpoDeckPackageFileReader()
+      ),
       deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardServiceImpl(flashcardRepository),
       learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),

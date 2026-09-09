@@ -19,6 +19,7 @@ import { DeckAppearanceSheet } from "@/features/decks/presentation/components/de
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
 import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
+import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
@@ -119,7 +120,8 @@ function EmptyLibrarySearch() {
 export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
-  const { entries, loading } = useDeckCatalog();
+  const { entries, loading, refresh } = useDeckCatalog();
+  const { error: importError, importPackage, importing } = useImportDeckPackage();
   const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
   const [query, setQuery] = useState("");
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
@@ -135,6 +137,13 @@ export default function LibraryScreen() {
   const sheetAppearance = selectedEntry
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
     : null;
+
+  const handleImport = async () => {
+    const result = await importPackage();
+    if (result) {
+      refresh();
+    }
+  };
 
   const selectPreset = (preset: DeckAppearancePreset) => {
     if (!selectedEntry) {
@@ -166,9 +175,21 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.screenTitle}>
-          Library
-        </Text>
+        <View style={styles.headerTitleRow}>
+          <Text accessibilityRole="header" style={styles.screenTitle}>
+            Library
+          </Text>
+          <Pressable
+            accessibilityLabel="Import deck package"
+            accessibilityRole="button"
+            disabled={importing}
+            onPress={() => void handleImport()}
+            style={styles.importButton}
+          >
+            <Text style={styles.importButtonLabel}>{importing ? "Importing…" : "Import"}</Text>
+          </Pressable>
+        </View>
+        {importError ? <Text style={styles.importError}>{importError.message}</Text> : null}
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -288,6 +309,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.spacing.content,
     paddingVertical: sizes.spacing.section,
   },
+  headerTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  importButton: {
+    borderColor: palette.controlBorder,
+    borderRadius: sizes.radius.pill,
+    borderWidth: sizes.border,
+    paddingHorizontal: sizes.spacing.large,
+    paddingVertical: sizes.spacing.small,
+  },
+  importButtonLabel: {
+    color: palette.textPrimary,
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
+  },
+  importError: { color: palette.danger, fontSize: fontSize.caption },
   iconButton: {
     alignItems: "center",
     borderColor: palette.controlBorder,
