@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
+import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
@@ -16,6 +17,11 @@ export default function ProgressScreen() {
   const router = useRouter();
   const { loading, refresh, resetAllProgress, resetDeckProgress, rows } = useLearnerProgress();
   const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [pendingReset, setPendingReset] = useState<Readonly<{
+    reset: () => Promise<void>;
+    scope: string;
+  }> | null>(null);
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
@@ -30,24 +36,27 @@ export default function ProgressScreen() {
     if (resetting) {
       return;
     }
-    Alert.alert(
-      `Reset ${scope}?`,
-      "Learning progress will be reset, but cards and decks will not be deleted.",
-      [
-        { style: "cancel", text: "Cancel" },
-        {
-          onPress: () => {
-            setResetting(true);
-            void reset()
-              .then(refresh)
-              .catch(() => Alert.alert("Reset failed", "Your learning progress was not changed."))
-              .finally(() => setResetting(false));
-          },
-          style: "destructive",
-          text: "Reset",
-        },
-      ]
-    );
+    setResetError(null);
+    setPendingReset({ reset, scope });
+  };
+
+  const confirmReset = () => {
+    const request = pendingReset;
+    if (!request || resetting) {
+      return;
+    }
+    setResetting(true);
+    setResetError(null);
+    void request
+      .reset()
+      .then(() => {
+        refresh();
+        setPendingReset(null);
+      })
+      .catch(() =>
+        setResetError("The reset could not be completed. Your progress was not changed.")
+      )
+      .finally(() => setResetting(false));
   };
 
   return (
@@ -154,6 +163,18 @@ export default function ProgressScreen() {
           </>
         )}
       </ScrollView>
+      <ResetProgressSheet
+        busy={resetting}
+        error={resetError}
+        isPresented={pendingReset !== null}
+        onCancel={() => {
+          if (!resetting) {
+            setPendingReset(null);
+          }
+        }}
+        onConfirm={confirmReset}
+        scope={pendingReset?.scope ?? "progress"}
+      />
     </SafeAreaView>
   );
 }
