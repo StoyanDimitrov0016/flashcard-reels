@@ -37,32 +37,30 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
       onPress={() => setExpanded((current) => !current)}
       style={styles.cardRow}
     >
-      <View style={styles.positionBadge}>
-        <Text style={styles.position}>{card.deckPosition + 1}</Text>
-      </View>
+      <Text style={styles.position}>{card.deckPosition + 1}</Text>
       <View style={styles.cardCopy}>
-        <View style={styles.questionRow}>
-          <Text style={styles.question}>{card.question}</Text>
-          <Text style={[styles.status, { color: reviewed ? accentColor : palette.textMuted }]}>
-            {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
-          </Text>
-        </View>
-        <View style={styles.cardProgressTrack}>
-          <View
-            style={[
-              styles.cardProgressFill,
-              { backgroundColor: accentColor, width: `${progress}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressCaption}>
-          {reviewed
-            ? `${progress}% recall · ${explanation.priority} practice priority`
-            : "Not reviewed yet"}
-        </Text>
+        <Text style={styles.question}>{card.question}</Text>
         {expanded ? (
           <View style={styles.expandedContent}>
             <Text style={styles.answer}>{card.answer}</Text>
+            <View style={styles.progressHeading}>
+              <Text style={[styles.status, { color: reviewed ? accentColor : palette.textMuted }]}>
+                {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
+              </Text>
+              <Text style={styles.progressCaption}>
+                {reviewed
+                  ? `${progress}% recall · ${explanation.priority} priority`
+                  : "Not reviewed yet"}
+              </Text>
+            </View>
+            <View style={styles.cardProgressTrack}>
+              <View
+                style={[
+                  styles.cardProgressFill,
+                  { backgroundColor: accentColor, width: `${progress}%` },
+                ]}
+              />
+            </View>
             <View style={styles.ratingRow}>
               <RatingFact color={palette.danger} label="Again" value={profile?.againCount ?? 0} />
               <RatingFact color={palette.warning} label="Hard" value={profile?.hardCount ?? 0} />
@@ -116,19 +114,22 @@ export default function DeckDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.header}>
+      <View style={styles.navigationRow}>
         <Pressable
           accessibilityLabel="Back to Library"
           accessibilityRole="button"
           onPress={() => router.back()}
-          style={styles.backButton}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
         >
           <SymbolView
             name={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
             size={sizes.icon.medium}
             tintColor={palette.textPrimary}
           />
+          <Text style={styles.backLabel}>Back</Text>
         </Pressable>
+      </View>
+      <View style={styles.header}>
         {deck ? <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" /> : null}
         <View style={styles.headingCopy}>
           <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
@@ -168,7 +169,15 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyLarge,
     lineHeight: lineHeight.bodyLarge,
   },
-  backButton: { alignItems: "center", height: 48, justifyContent: "center", width: 48 },
+  backButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: sizes.spacing.xSmall,
+    height: 36,
+    paddingHorizontal: sizes.spacing.xSmall,
+  },
+  backButtonPressed: { opacity: 0.45 },
+  backLabel: { color: palette.textPrimary, fontSize: fontSize.body },
   cardCopy: { flex: 1, gap: sizes.spacing.medium },
   cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
   cardProgressTrack: {
@@ -184,8 +193,9 @@ const styles = StyleSheet.create({
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
-    gap: sizes.spacing.section,
-    padding: sizes.spacing.content,
+    gap: sizes.spacing.medium,
+    paddingHorizontal: sizes.spacing.xLarge,
+    paddingVertical: sizes.spacing.xLarge,
   },
   count: { color: palette.textMuted, fontSize: fontSize.footnote },
   description: {
@@ -206,32 +216,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: sizes.spacing.medium,
-    padding: sizes.spacing.content,
+    paddingBottom: sizes.spacing.section,
+    paddingHorizontal: sizes.spacing.content,
+    paddingTop: sizes.spacing.small,
   },
   headingCopy: { flex: 1 },
   list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
+  navigationRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    paddingHorizontal: sizes.spacing.xLarge,
+    paddingTop: sizes.spacing.small,
+  },
   position: {
     color: palette.textMuted,
     fontSize: fontSize.footnote,
     fontVariant: ["tabular-nums"],
     fontWeight: fontWeight.heavy,
+    textAlign: "center",
+    width: 22,
   },
-  positionBadge: {
+  progressHeading: {
     alignItems: "center",
-    backgroundColor: palette.surfaceRaised,
-    borderRadius: sizes.radius.medium,
-    justifyContent: "center",
-    minHeight: 30,
-    minWidth: 30,
+    flexDirection: "row",
+    gap: sizes.spacing.medium,
+    justifyContent: "space-between",
   },
-  progressCaption: { color: palette.textMuted, fontSize: fontSize.caption },
+  progressCaption: {
+    color: palette.textMuted,
+    flex: 1,
+    fontSize: fontSize.caption,
+    textAlign: "right",
+  },
   question: {
     color: palette.textPrimary,
-    fontSize: fontSize.subhead,
+    flex: 1,
+    fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
     lineHeight: lineHeight.subhead,
   },
-  questionRow: { alignItems: "flex-start", flexDirection: "row", gap: sizes.spacing.medium },
   ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
   ratingLabel: { color: palette.textMuted, fontSize: fontSize.caption },
   ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
@@ -251,6 +274,6 @@ const styles = StyleSheet.create({
   },
   activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
   lastReviewed: { color: palette.textMuted, fontSize: fontSize.caption },
-  status: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
+  status: { flexShrink: 0, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
   title: { color: palette.textPrimary, ...textStyles.screenTitle },
 });

@@ -109,15 +109,6 @@ export default function ProgressScreen() {
                           />
                         </View>
                       </View>
-                      <SymbolView
-                        name={{
-                          android: "chevron_right",
-                          ios: "chevron.right",
-                          web: "chevron_right",
-                        }}
-                        size={sizes.icon.small}
-                        tintColor={palette.textMuted}
-                      />
                     </Pressable>
                     <Pressable
                       accessibilityLabel={`Reset ${deck.title} progress`}
@@ -135,7 +126,7 @@ export default function ProgressScreen() {
                           web: "restart_alt",
                         }}
                         size={sizes.icon.small}
-                        tintColor={palette.textMuted}
+                        tintColor={palette.danger}
                       />
                     </Pressable>
                   </View>
