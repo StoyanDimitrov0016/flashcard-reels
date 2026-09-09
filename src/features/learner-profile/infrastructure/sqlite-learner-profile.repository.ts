@@ -1,10 +1,16 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import { flashcards, learnerProfiles } from "@/infrastructure/sqlite/schema";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
+import {
+  flashcardReviewAttempts,
+  flashcards,
+  learnerProfiles,
+  studySessions,
+} from "@/infrastructure/sqlite/schema";
 
 export class SQLiteLearnerProfileRepository<
   TRunResult = unknown,
@@ -32,6 +38,55 @@ export class SQLiteLearnerProfileRepository<
       .where(inArray(learnerProfiles.flashcardId, flashcardIds))
       .orderBy(asc(learnerProfiles.flashcardId));
     return new Map(rows.map((row) => [row.flashcardId, this.toModel(row)] as const));
+  }
+
+  async findCurrentByFlashcardIds(
+    flashcardIds: readonly string[]
+  ): Promise<ReadonlyMap<string, LearnerProfile>> {
+    if (flashcardIds.length === 0) {
+      return new Map();
+    }
+    const stored = await this.findByFlashcardIds(flashcardIds);
+    const cards = await this.database
+      .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+      .from(flashcards)
+      .where(inArray(flashcards.id, flashcardIds));
+    const pending = await this.database
+      .select({
+        flashcardId: flashcardReviewAttempts.flashcardId,
+        ratedAt: flashcardReviewAttempts.ratedAt,
+        rating: flashcardReviewAttempts.rating,
+      })
+      .from(flashcardReviewAttempts)
+      .innerJoin(studySessions, eq(studySessions.id, flashcardReviewAttempts.studySessionId))
+      .where(
+        and(
+          inArray(flashcardReviewAttempts.flashcardId, flashcardIds),
+          isNotNull(flashcardReviewAttempts.rating),
+          isNotNull(flashcardReviewAttempts.ratedAt),
+          gt(flashcardReviewAttempts.reelPosition, studySessions.aggregatedThroughReelPosition)
+        )
+      );
+    const createdAtById = new Map(cards.map((card) => [card.id, card.createdAt] as const));
+    const current = new Map(stored);
+    for (const attempt of pending) {
+      if (!attempt.rating || !attempt.ratedAt) {
+        continue;
+      }
+      const profile = current.get(attempt.flashcardId);
+      if (profile?.resetAt && attempt.ratedAt <= profile.resetAt) {
+        continue;
+      }
+      const createdAt = profile?.createdAt ?? createdAtById.get(attempt.flashcardId);
+      if (!createdAt) {
+        continue;
+      }
+      current.set(
+        attempt.flashcardId,
+        addPendingRating(profile, attempt.flashcardId, attempt.rating, attempt.ratedAt, createdAt)
+      );
+    }
+    return current;
   }
 
   async resetCard(flashcardId: string, resetAt: string): Promise<void> {
@@ -141,4 +196,36 @@ export class SQLiteLearnerProfileRepository<
       updatedAt: resetAt,
     };
   }
+}
+
+function addPendingRating(
+  profile: LearnerProfile | undefined,
+  flashcardId: string,
+  rating: RecallLevel,
+  ratedAt: string,
+  createdAt: string
+): LearnerProfile {
+  const againCount = (profile?.againCount ?? 0) + (rating === "again" ? 1 : 0);
+  const hardCount = (profile?.hardCount ?? 0) + (rating === "hard" ? 1 : 0);
+  const goodCount = (profile?.goodCount ?? 0) + (rating === "good" ? 1 : 0);
+  const easyCount = (profile?.easyCount ?? 0) + (rating === "easy" ? 1 : 0);
+  return new LearnerProfile({
+    againCount,
+    createdAt,
+    easyCount,
+    firstReviewedAt:
+      profile?.firstReviewedAt && profile.firstReviewedAt < ratedAt
+        ? profile.firstReviewedAt
+        : ratedAt,
+    flashcardId,
+    goodCount,
+    hardCount,
+    lastReviewedAt:
+      profile?.lastReviewedAt && profile.lastReviewedAt > ratedAt
+        ? profile.lastReviewedAt
+        : ratedAt,
+    resetAt: profile?.resetAt ?? null,
+    reviewCount: againCount + hardCount + goodCount + easyCount,
+    updatedAt: ratedAt,
+  });
 }

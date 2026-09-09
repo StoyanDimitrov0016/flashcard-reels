@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
@@ -19,6 +19,12 @@ export default function ProgressScreen() {
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const requestReset = (scope: string, reset: () => Promise<void>): void => {
     if (resetting) {
@@ -46,18 +52,30 @@ export default function ProgressScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.headingRow}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Progress
-          </Text>
+      <View style={styles.headingRow}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Progress
+        </Text>
+        <Pressable
+          accessibilityLabel="Reset all progress"
+          accessibilityRole="button"
+          disabled={resetting}
+          hitSlop={8}
+          onPress={() => requestReset("all learning progress", resetAllProgress)}
+          style={styles.headerAction}
+        >
           <SymbolView
-            name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }}
+            name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
             size={sizes.icon.medium}
-            tintColor={palette.textMuted}
+            tintColor={palette.danger}
           />
-        </View>
-        {loading ? (
+        </Pressable>
+      </View>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={renderRefreshControl(loading && rows.length > 0, refresh)}
+      >
+        {loading && rows.length === 0 ? (
           <LoadingState fill={false} />
         ) : (
           <>
@@ -133,17 +151,22 @@ export default function ProgressScreen() {
                 );
               })}
             </View>
-            <View style={styles.actions}>
-              <ActionButton
-                label="Reset all progress"
-                onPress={() => requestReset("all learning progress", resetAllProgress)}
-              />
-              <ActionButton label="Refresh progress" onPress={refresh} primary />
-            </View>
           </>
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function renderRefreshControl(refreshing: boolean, onRefresh: () => void) {
+  return (
+    <RefreshControl
+      colors={[palette.actionPrimary]}
+      onRefresh={onRefresh}
+      progressBackgroundColor={palette.surfaceRaised}
+      refreshing={refreshing}
+      tintColor={palette.actionPrimary}
+    />
   );
 }
 
@@ -170,37 +193,7 @@ function SummaryFact({ icon, label, value }: SummaryFactProps) {
   );
 }
 
-type ActionButtonProps = Readonly<{ label: string; onPress: () => void; primary?: boolean }>;
-
-function ActionButton({ label, onPress, primary = false }: ActionButtonProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={[styles.actionButton, primary && styles.primaryAction]}
-    >
-      <Text style={[styles.actionLabel, primary && styles.primaryActionLabel]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: "center",
-    borderColor: palette.actionPrimary,
-    borderRadius: sizes.radius.pill,
-    borderWidth: sizes.border,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: sizes.spacing.medium,
-  },
-  actionLabel: {
-    color: palette.actionPrimary,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-  },
-  actions: { flexDirection: "row", gap: sizes.spacing.medium },
   content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
   deckAccent: { alignSelf: "stretch", width: 4 },
   deckCard: {
@@ -231,15 +224,22 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
   },
-  headingRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  headerAction: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+  headingRow: {
+    alignItems: "center",
+    borderBottomColor: palette.border,
+    borderBottomWidth: sizes.border,
+    flexDirection: "row",
+    height: 56,
+    justifyContent: "space-between",
+    paddingHorizontal: sizes.spacing.content,
+  },
   moreButton: { alignItems: "center", height: 36, justifyContent: "center", width: 32 },
   percentage: {
     color: palette.textSecondary,
     fontSize: fontSize.caption,
     fontWeight: fontWeight.bold,
   },
-  primaryAction: { backgroundColor: palette.actionPrimary },
-  primaryActionLabel: { color: palette.actionPrimaryText },
   pressed: { opacity: 0.72 },
   progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
   progressTrack: {

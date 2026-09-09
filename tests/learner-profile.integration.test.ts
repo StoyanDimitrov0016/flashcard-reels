@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
 import { NodeSqliteDatabase } from "./support/node-sqlite-database";
-import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard } from "./support/study-test-support";
+import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "./support/study-test-support";
 
 describe("SQLite learner profiles", () => {
   let database: NodeSqliteDatabase;
@@ -40,6 +40,39 @@ describe("SQLite learner profiles", () => {
       reviewCount: 0,
     });
     expect(await profiles.findByFlashcardId(makeFlashcard(2).id)).toBeNull();
+  });
+
+  it("includes saved ratings that have not reached the aggregation window", async () => {
+    const sessionId = testId(80);
+    await database.runAsync(
+      "INSERT INTO study_sessions (id, scope, strategy, deck_id, current_reel_position, created_at, last_active_at, strategy_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      sessionId,
+      "mixed",
+      "shuffle",
+      null,
+      0,
+      "2026-01-02T00:00:00.000Z",
+      "2026-01-02T00:00:00.000Z",
+      "{}"
+    );
+    await database.runAsync(
+      "INSERT INTO flashcard_review_attempts (id, study_session_id, flashcard_id, reel_position, rating, created_at, rated_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      testId(81),
+      sessionId,
+      makeFlashcard(1).id,
+      0,
+      "good",
+      "2026-01-02T00:00:00.000Z",
+      "2026-01-02T00:01:00.000Z",
+      "2026-01-02T00:01:00.000Z"
+    );
+
+    expect(
+      (await profiles.findCurrentByFlashcardIds([makeFlashcard(1).id])).get(makeFlashcard(1).id)
+    ).toMatchObject({
+      goodCount: 1,
+      reviewCount: 1,
+    });
   });
 
   it("resets one card, one deck, and all cards without deleting content", async () => {

@@ -16,7 +16,7 @@ export class LearnerProfileServiceImpl implements LearnerProfileService {
   async findByFlashcardIds(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, LearnerProfile>> {
-    return this.repository.findByFlashcardIds(flashcardIds);
+    return this.repository.findCurrentByFlashcardIds(flashcardIds);
   }
 
   async resetCardProgress(flashcardId: string): Promise<void> {

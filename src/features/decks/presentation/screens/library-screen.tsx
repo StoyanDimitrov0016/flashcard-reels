@@ -282,6 +282,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   header: {
+    borderBottomColor: palette.border,
+    borderBottomWidth: sizes.border,
     gap: sizes.spacing.xLarge,
     paddingHorizontal: sizes.spacing.content,
     paddingVertical: sizes.spacing.section,

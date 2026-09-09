@@ -25,7 +25,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     feed.loadedFromReelPosition,
     feed.loadedThroughReelPosition
   );
-  const { getAttemptId, rateCard, setAttemptId } = recallSession;
+  const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
 
   const replaceFeed = useCallback((nextFeed: PreparedReelFeed) => {
     feedReference.current = nextFeed;
@@ -111,19 +111,23 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
 
   const onRatingSelected = useCallback(
     (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
+      const previousLevel = getRecallLevel(occurrence.reelPosition);
       void startAttempt(occurrence)
         .then((attemptId) => studyService.rateAttempt(attemptId, level))
         .then((updated) => {
           if (updated) {
             rateCard(occurrence.reelPosition, level);
-            void reelFeedService
-              .refreshFeed(sourceCards, initialFeed.studySessionId)
-              .then(replaceFeed);
+            if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
+              void reelFeedService
+                .refreshFeed(sourceCards, initialFeed.studySessionId)
+                .then(replaceFeed);
+            }
           }
         });
     },
     [
       initialFeed.studySessionId,
+      getRecallLevel,
       rateCard,
       reelFeedService,
       replaceFeed,
@@ -140,4 +144,8 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     onRatingSelected,
     ...recallSession,
   };
+}
+
+function hasRecurrence(level: RecallLevel | undefined): boolean {
+  return level === "again" || level === "hard";
 }

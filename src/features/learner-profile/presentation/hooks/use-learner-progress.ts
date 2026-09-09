@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -33,7 +33,10 @@ export function useLearnerProgress(): LearnerProgressState & {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
   const [state, setState] = useState<LearnerProgressState>(initialState);
   const [revision, setRevision] = useState(0);
-  const refresh = () => setRevision((current) => current + 1);
+  const refresh = useCallback(() => {
+    setState((current) => ({ ...current, loading: true }));
+    setRevision((current) => current + 1);
+  }, []);
   const resetCardProgress = (flashcardId: string) =>
     learnerProfileService.resetCardProgress(flashcardId);
   const resetDeckProgress = (deckId: string) => learnerProfileService.resetDeckProgress(deckId);

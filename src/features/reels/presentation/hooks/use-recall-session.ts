@@ -15,6 +15,7 @@ export function useRecallSession(
   const [recallLevels, setRecallLevels] = useState<ReadonlyMap<number, RecallLevel>>(
     () => new Map()
   );
+  const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(new Map());
 
   useEffect(
     function loadRecallSessionAttempts() {
@@ -39,6 +40,7 @@ export function useRecallSession(
           }
           attemptIdsReference.current = nextAttemptIds;
           setAttemptIds(nextAttemptIds);
+          recallLevelsReference.current = nextRecallLevels;
           setRecallLevels(nextRecallLevels);
         })
         .catch(() => undefined);
@@ -70,8 +72,15 @@ export function useRecallSession(
   }, []);
 
   const rateCard = useCallback((reelPosition: number, level: RecallLevel) => {
-    setRecallLevels((currentLevels) => new Map(currentLevels).set(reelPosition, level));
+    const nextLevels = new Map(recallLevelsReference.current).set(reelPosition, level);
+    recallLevelsReference.current = nextLevels;
+    setRecallLevels(nextLevels);
   }, []);
+
+  const getRecallLevel = useCallback(
+    (reelPosition: number) => recallLevelsReference.current.get(reelPosition),
+    []
+  );
 
   const setAttemptId = useCallback((reelPosition: number, attemptId: string) => {
     const nextAttemptIds = new Map(attemptIdsReference.current).set(reelPosition, attemptId);
@@ -82,6 +91,7 @@ export function useRecallSession(
   return {
     attemptIds,
     getAttemptId,
+    getRecallLevel,
     rateCard,
     recallLevels,
     revealedPositions,

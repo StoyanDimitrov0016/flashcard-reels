@@ -54,7 +54,7 @@ export default function RootLayout() {
           <StatusBar style="light" />
           <Stack
             screenOptions={{
-              animation: "fade",
+              animation: "none",
               contentStyle: styles.appBackground,
               headerShown: false,
             }}
