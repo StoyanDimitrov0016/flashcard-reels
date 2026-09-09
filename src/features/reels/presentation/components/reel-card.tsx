@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AudioSource } from "expo-audio";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
@@ -115,9 +115,29 @@ export function ReelCard({
   const [holdProgress] = useState(() => new Animated.Value(0));
   const flipCount = useRef(revealed ? 1 : 0);
   const holdCompleted = useRef(false);
-  const holdFeedbackStarted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
+
+  const resetHoldFeedback = () => {
+    if (holdFeedbackTimer.current !== null) {
+      clearTimeout(holdFeedbackTimer.current);
+      holdFeedbackTimer.current = null;
+    }
+    holdProgress.stopAnimation();
+    holdProgress.setValue(0);
+  };
+
+  useEffect(
+    function cleanUpHoldFeedback() {
+      return function cancelHoldFeedbackOnUnmount() {
+        if (holdFeedbackTimer.current !== null) {
+          clearTimeout(holdFeedbackTimer.current);
+        }
+        holdProgress.stopAnimation();
+      };
+    },
+    [holdProgress]
+  );
 
   const handleCardPress = () => {
     if (holdCompleted.current) {
@@ -143,13 +163,13 @@ export function ReelCard({
   };
 
   const startFocusHold = () => {
-    if (showMainFeedLink) {
+    if (!isActive || showMainFeedLink) {
       return;
     }
+    resetHoldFeedback();
     holdCompleted.current = false;
-    holdFeedbackStarted.current = false;
     holdFeedbackTimer.current = setTimeout(() => {
-      holdFeedbackStarted.current = true;
+      holdFeedbackTimer.current = null;
       Animated.timing(holdProgress, {
         duration: FOCUS_HOLD_DURATION_MS - HOLD_FEEDBACK_DELAY_MS,
         easing: Easing.linear,
@@ -160,26 +180,14 @@ export function ReelCard({
   };
 
   const cancelFocusHold = () => {
-    if (holdFeedbackTimer.current !== null) {
-      clearTimeout(holdFeedbackTimer.current);
-      holdFeedbackTimer.current = null;
-    }
-    if (!holdFeedbackStarted.current) {
-      return;
-    }
-    holdFeedbackStarted.current = false;
-    holdProgress.stopAnimation();
-    Animated.timing(holdProgress, {
-      duration: 120,
-      toValue: 0,
-      useNativeDriver: false,
-    }).start();
+    resetHoldFeedback();
   };
 
   const completeFocusHold = () => {
-    if (showMainFeedLink) {
+    if (!isActive || showMainFeedLink) {
       return;
     }
+    resetHoldFeedback();
     holdCompleted.current = true;
     lastTapAt.current = 0;
     openFocusedFeed(card.deckId);

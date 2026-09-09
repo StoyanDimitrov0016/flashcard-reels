@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background, flex: 1 },
   strategySwitcher: {
     backgroundColor: palette.background,
-    padding: sizes.spacing.content,
+    paddingHorizontal: sizes.spacing.content,
+    paddingVertical: sizes.spacing.medium,
   },
 });
