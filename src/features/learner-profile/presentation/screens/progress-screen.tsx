@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +13,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {
+  const router = useRouter();
   const { loading, refresh, resetAllProgress, resetDeckProgress, rows } = useLearnerProgress();
   const [resetting, setResetting] = useState(false);
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
@@ -75,26 +77,48 @@ export default function ProgressScreen() {
                 return (
                   <View key={deck.id} style={styles.deckCard}>
                     <View style={[styles.deckAccent, { backgroundColor: accent }]} />
-                    <DeckCover accentColor={accent} asset={deck.coverAsset} />
-                    <View style={styles.deckCopy}>
-                      <View style={styles.deckHeading}>
-                        <Text numberOfLines={1} style={styles.deckTitle}>
-                          {deck.title}
+                    <Pressable
+                      accessibilityHint="Opens the cards in this deck"
+                      accessibilityLabel={`View ${deck.title} cards and progress`}
+                      accessibilityRole="button"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/decks/[deckId]",
+                          params: { deckId: deck.id },
+                        })
+                      }
+                      style={({ pressed }) => [styles.deckLink, pressed && styles.pressed]}
+                    >
+                      <DeckCover accentColor={accent} asset={deck.coverAsset} />
+                      <View style={styles.deckCopy}>
+                        <View style={styles.deckHeading}>
+                          <Text numberOfLines={1} style={styles.deckTitle}>
+                            {deck.title}
+                          </Text>
+                          <Text style={styles.percentage}>{percentage}%</Text>
+                        </View>
+                        <Text style={styles.reviewed}>
+                          {reviewed} / {deckRows.length} reviewed
                         </Text>
-                        <Text style={styles.percentage}>{percentage}%</Text>
+                        <View style={styles.progressTrack}>
+                          <View
+                            style={[
+                              styles.progressFill,
+                              { backgroundColor: accent, width: `${percentage}%` },
+                            ]}
+                          />
+                        </View>
                       </View>
-                      <Text style={styles.reviewed}>
-                        {reviewed} / {deckRows.length} reviewed
-                      </Text>
-                      <View style={styles.progressTrack}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            { backgroundColor: accent, width: `${percentage}%` },
-                          ]}
-                        />
-                      </View>
-                    </View>
+                      <SymbolView
+                        name={{
+                          android: "chevron_right",
+                          ios: "chevron.right",
+                          web: "chevron_right",
+                        }}
+                        size={sizes.icon.small}
+                        tintColor={palette.textMuted}
+                      />
+                    </Pressable>
                     <Pressable
                       accessibilityLabel={`Reset ${deck.title} progress`}
                       disabled={resetting}
@@ -203,6 +227,13 @@ const styles = StyleSheet.create({
   deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
   deckHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.small },
   deckList: { gap: sizes.spacing.medium },
+  deckLink: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: sizes.spacing.xLarge,
+    minHeight: 80,
+  },
   deckTitle: {
     color: palette.textPrimary,
     flex: 1,
@@ -218,6 +249,7 @@ const styles = StyleSheet.create({
   },
   primaryAction: { backgroundColor: palette.actionPrimary },
   primaryActionLabel: { color: palette.actionPrimaryText },
+  pressed: { opacity: 0.72 },
   progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
   progressTrack: {
     backgroundColor: palette.borderStrong,
