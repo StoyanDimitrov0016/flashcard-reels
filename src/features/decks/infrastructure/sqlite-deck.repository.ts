@@ -45,6 +45,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         id: deck.id,
         coverAsset: deck.coverAsset,
         title: deck.title,
+        version: deck.version,
         updatedAt: deck.updatedAt,
       })
       .onConflictDoUpdate({
@@ -53,6 +54,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
           description: deck.description,
           title: deck.title,
           coverAsset: deck.coverAsset,
+          version: deck.version,
           updatedAt: deck.updatedAt,
         },
       });
@@ -64,6 +66,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       id: row.id,
       title: row.title,
       coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
+      version: row.version,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

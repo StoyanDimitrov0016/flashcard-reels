@@ -135,10 +135,10 @@ describe("SQLite learner profiles", () => {
 
   async function insertFlashcard(card: ReturnType<typeof makeFlashcard>): Promise<void> {
     await database.runAsync(
-      "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO flashcards (id, deck_id, position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
       card.id,
       card.deckId,
-      card.deckPosition,
+      card.position,
       card.question,
       card.answer,
       card.createdAt,

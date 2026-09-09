@@ -4,6 +4,7 @@ import {
 } from "@/features/decks/infrastructure/seed-data/decks";
 
 import { flashcardSeedData } from "@/features/flashcards/infrastructure/seed-data/flashcards";
+import { sql } from "drizzle-orm";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import {
   deckAppearances,
@@ -27,6 +28,7 @@ export async function seedDatabase<TRunResult>(
             coverAsset: deck.coverAsset,
             title: deck.title,
             updatedAt: deck.updatedAt,
+            version: deck.version,
           }))
         )
         .onConflictDoUpdate({
@@ -36,6 +38,7 @@ export async function seedDatabase<TRunResult>(
             description: sql`excluded.description`,
             title: sql`excluded.title`,
             updatedAt: sql`excluded.updated_at`,
+            version: sql`excluded.version`,
           },
         })
         .run();
@@ -63,7 +66,8 @@ export async function seedDatabase<TRunResult>(
             answer: flashcard.answer,
             createdAt: flashcard.createdAt,
             deckId: flashcard.deckId,
-            deckPosition: flashcard.deckPosition,
+            position: flashcard.position,
+            active: flashcard.active,
             id: flashcard.id,
             question: flashcard.question,
             updatedAt: flashcard.updatedAt,
@@ -85,4 +89,3 @@ export async function seedDatabase<TRunResult>(
     }
   });
 }
-import { sql } from "drizzle-orm";

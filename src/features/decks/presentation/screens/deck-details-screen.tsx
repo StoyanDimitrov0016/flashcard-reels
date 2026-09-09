@@ -37,7 +37,7 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
       onPress={() => setExpanded((current) => !current)}
       style={styles.cardRow}
     >
-      <Text style={styles.position}>{card.deckPosition + 1}</Text>
+      <Text style={styles.position}>{card.position + 1}</Text>
       <View style={styles.cardCopy}>
         <Text style={styles.question}>{card.question}</Text>
         {expanded ? (

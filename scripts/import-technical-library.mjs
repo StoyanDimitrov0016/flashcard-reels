@@ -16,6 +16,14 @@ const deckColors = [
   ["#B8A5FF", "#131020"],
   ["#D7A7FF", "#1A1020"],
 ];
+const coverAssets = [
+  "javascript",
+  "react",
+  "system-design",
+  "database",
+  "computer-science",
+  "operating-systems",
+];
 
 if (
   !Array.isArray(decks) ||
@@ -46,7 +54,15 @@ const renderObject = (value, indent = "  ") => {
   return `{\n${entries.join(",\n")}\n${indent.slice(0, -2)}}`;
 };
 
-const deckSource = decks.map((deck) => `  ${renderObject(deck)}`).join(",\n");
+const deckSource = decks
+  .map((deck, index) =>
+    `  ${renderObject({
+      ...deck,
+      coverAsset: coverAssets[index] ?? "cards",
+      version: deck.version ?? 1,
+    })}`
+  )
+  .join(",\n");
 const appearanceSource = decks
   .map((deck, index) => {
     const [accentColor, backgroundColor] = deckColors[index % deckColors.length];
@@ -54,7 +70,9 @@ const appearanceSource = decks
   })
   .join(",\n");
 
-const flashcardSource = flashcards.map((flashcard) => `  ${renderObject(flashcard)}`).join(",\n");
+const flashcardSource = flashcards
+  .map((flashcard) => `  ${renderObject({ ...flashcard, active: true })}`)
+  .join(",\n");
 
 const decksModule = `import type { DeckAppearanceFields } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckFields } from "@/features/decks/domain/deck.model";

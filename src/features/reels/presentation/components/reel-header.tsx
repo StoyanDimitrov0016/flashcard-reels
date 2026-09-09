@@ -24,7 +24,7 @@ export function ReelHeader({
   showMainFeedLink,
 }: ReelHeaderProps) {
   const openFocusedFeed = useOpenFocusedFeed();
-  const label = `${deck.title} ${card.deckPosition + 1}/${deckCardCount}`;
+  const label = `${deck.title} ${card.position + 1}/${deckCardCount}`;
 
   return (
     <View style={styles.header}>

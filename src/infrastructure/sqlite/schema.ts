@@ -14,6 +14,7 @@ export const decks = sqliteTable("decks", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   coverAsset: text("cover_asset").notNull().default("cards"),
+  version: integer("version").notNull().default(1),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -34,16 +35,17 @@ export const flashcards = sqliteTable(
     deckId: text("deck_id")
       .notNull()
       .references(() => decks.id, { onDelete: "cascade" }),
-    deckPosition: integer("deck_position").notNull(),
+    position: integer("position").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    check("flashcards_deck_position_check", sql`${table.deckPosition} >= 0`),
+    check("flashcards_position_check", sql`${table.position} >= 0`),
     index("flashcards_deck_id_idx").on(table.deckId),
-    unique("flashcards_deck_position_unique").on(table.deckId, table.deckPosition),
+    unique("flashcards_position_unique").on(table.deckId, table.position),
   ]
 );
 

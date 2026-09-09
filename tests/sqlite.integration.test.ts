@@ -57,10 +57,10 @@ describe("SQLite study persistence", () => {
         makeFlashcard(3, OTHER_DECK_ID),
       ].map((card) =>
         database.runAsync(
-          "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO flashcards (id, deck_id, position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
           card.id,
           card.deckId,
-          card.deckPosition,
+          card.position,
           card.question,
           card.answer,
           card.createdAt,
@@ -159,14 +159,14 @@ describe("SQLite study persistence", () => {
 
   it("reads Focus cards by explicit deck position and enforces deck-position uniqueness", async () => {
     const cards = await flashcards.listByDeckId(TEST_DECK_ID);
-    expect(cards.map((card) => [card.id, card.deckPosition])).toEqual([
+    expect(cards.map((card) => [card.id, card.position])).toEqual([
       [makeFlashcard(2).id, 0],
       [makeFlashcard(1).id, 1],
     ]);
 
     await expect(
       database.runAsync(
-        "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flashcards (id, deck_id, position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
         testId(270),
         TEST_DECK_ID,
         0,
@@ -178,7 +178,7 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
     await expect(
       database.runAsync(
-        "INSERT INTO flashcards (id, deck_id, deck_position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flashcards (id, deck_id, position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
         testId(271),
         TEST_DECK_ID,
         -1,

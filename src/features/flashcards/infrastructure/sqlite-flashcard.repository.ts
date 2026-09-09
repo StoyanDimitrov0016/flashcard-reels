@@ -1,4 +1,4 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -23,7 +23,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
     const rows = await this.database
       .select({ cardCount, deckId: flashcards.deckId })
       .from(flashcards)
-      .where(inArray(flashcards.deckId, deckIds))
+      .where(and(inArray(flashcards.deckId, deckIds), eq(flashcards.active, true)))
       .groupBy(flashcards.deckId)
       .orderBy(asc(flashcards.deckId));
     for (const row of rows) {
@@ -46,6 +46,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
     const rows = await this.database
       .select()
       .from(flashcards)
+      .where(eq(flashcards.active, true))
       .orderBy(asc(flashcards.createdAt), asc(flashcards.id));
     return rows.map((row) => this.toModel(row));
   }
@@ -54,8 +55,8 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
     const rows = await this.database
       .select()
       .from(flashcards)
-      .where(eq(flashcards.deckId, deckId))
-      .orderBy(asc(flashcards.deckPosition), asc(flashcards.id));
+      .where(and(eq(flashcards.deckId, deckId), eq(flashcards.active, true)))
+      .orderBy(asc(flashcards.position), asc(flashcards.id));
     return rows.map((row) => this.toModel(row));
   }
 
@@ -66,7 +67,8 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         answer: flashcard.answer,
         createdAt: flashcard.createdAt,
         deckId: flashcard.deckId,
-        deckPosition: flashcard.deckPosition,
+        position: flashcard.position,
+        active: flashcard.active,
         id: flashcard.id,
         question: flashcard.question,
         updatedAt: flashcard.updatedAt,
@@ -76,7 +78,8 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         set: {
           answer: flashcard.answer,
           deckId: flashcard.deckId,
-          deckPosition: flashcard.deckPosition,
+          position: flashcard.position,
+          active: flashcard.active,
           question: flashcard.question,
           updatedAt: flashcard.updatedAt,
         },
@@ -88,7 +91,8 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       answer: row.answer,
       createdAt: row.createdAt,
       deckId: row.deckId,
-      deckPosition: row.deckPosition,
+      position: row.position,
+      active: row.active,
       id: row.id,
       question: row.question,
       updatedAt: row.updatedAt,

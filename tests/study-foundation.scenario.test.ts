@@ -15,14 +15,15 @@ import {
 function cards(deckId: string, count: number, firstId: number): Flashcard[] {
   return Array.from(
     { length: count },
-    (_, deckPosition) =>
+    (_, position) =>
       new Flashcard({
-        answer: `Answer ${deckPosition}`,
+        answer: `Answer ${position}`,
         createdAt: "2026-01-01T00:00:00.000Z",
         deckId,
-        deckPosition,
-        id: testId(firstId + deckPosition),
-        question: `Question ${deckPosition}`,
+        position,
+        id: testId(firstId + position),
+        question: `Question ${position}`,
+        active: true,
         updatedAt: "2026-01-01T00:00:00.000Z",
       })
   );

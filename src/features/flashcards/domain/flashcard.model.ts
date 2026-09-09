@@ -4,7 +4,8 @@ import type { Uuid } from "@/shared/domain/uuid";
 export type FlashcardFields = Readonly<{
   id: Uuid;
   deckId: DeckId;
-  deckPosition: number;
+  position: number;
+  active: boolean;
   question: string;
   answer: string;
   createdAt: string;
@@ -16,7 +17,8 @@ export type FlashcardId = Uuid;
 export class Flashcard {
   public readonly id: FlashcardId;
   public readonly deckId: DeckId;
-  public readonly deckPosition: number;
+  public readonly position: number;
+  public readonly active: boolean;
   public readonly question: string;
   public readonly answer: string;
   public readonly createdAt: string;
@@ -25,7 +27,8 @@ export class Flashcard {
   constructor(fields: FlashcardFields) {
     this.id = fields.id;
     this.deckId = fields.deckId;
-    this.deckPosition = fields.deckPosition;
+    this.position = fields.position;
+    this.active = fields.active;
     this.question = fields.question;
     this.answer = fields.answer;
     this.createdAt = fields.createdAt;

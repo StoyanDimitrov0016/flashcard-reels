@@ -8,7 +8,7 @@ describe("flashcard deck ordering", () => {
 
     for (const flashcard of flashcardSeedData) {
       const positions = positionsByDeck.get(flashcard.deckId) ?? [];
-      positions.push(flashcard.deckPosition);
+      positions.push(flashcard.position);
       positionsByDeck.set(flashcard.deckId, positions);
     }
 
