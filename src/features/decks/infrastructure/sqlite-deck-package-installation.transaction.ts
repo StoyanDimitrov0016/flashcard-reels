@@ -156,12 +156,7 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .update(flashcards)
           .set({ active: false })
-          .where(
-            and(
-              eq(flashcards.deckId, deckPackage.id),
-              notInArray(flashcards.id, incomingIds)
-            )
-          )
+          .where(and(eq(flashcards.deckId, deckPackage.id), notInArray(flashcards.id, incomingIds)))
           .run();
       }
 
@@ -174,10 +169,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             existingDeck
               ? or(
                   eq(studySessions.scope, "mixed"),
-                  and(
-                    eq(studySessions.scope, "focused"),
-                    eq(studySessions.deckId, deckPackage.id)
-                  )
+                  and(eq(studySessions.scope, "focused"), eq(studySessions.deckId, deckPackage.id))
                 )
               : eq(studySessions.scope, "mixed")
           )

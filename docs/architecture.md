@@ -21,7 +21,7 @@ Within a feature, the layers have distinct responsibilities:
 - **Infrastructure** implements persistence and platform integrations.
 - **Presentation** contains React components, screens, hooks, and UI state.
 
-`src/infrastructure/app-services.tsx` is the composition root. It connects application services to SQLite repositories, package storage, installed audio, and the UI. Convention checks prevent presentation and domain code from importing persistence details directly.
+`src/infrastructure/app-services.tsx` is the composition root. It connects application services to SQLite repositories, package storage, installed audio, and the UI. Expo document picking, package file access, and audio filesystem access are isolated in feature infrastructure. Convention checks prevent presentation and domain code from importing persistence details directly.
 
 ## Deck packages
 
@@ -31,13 +31,13 @@ Bundled packages are generated from `data/technical_flashcard_library` and check
 
 ## Local persistence
 
-Expo SQLite stores decks, flashcards, appearance settings, study sessions, feed positions, review attempts, recurrences, and learner profiles. Drizzle ORM defines the schema in `src/infrastructure/sqlite/schema.ts`; migrations live in `drizzle/`. Decks store a package version; flashcards use canonical `position` ordering and an `active` flag.
+Expo SQLite stores decks, flashcards, appearance settings, study sessions, feed positions, review attempts, recurrences, and learner profiles. Drizzle ORM defines the schema in `src/infrastructure/sqlite/schema.ts`; the reset migration baseline lives in `drizzle/`. Decks store a package version; flashcards use canonical `order` ordering and an `active` flag.
 
 The database uses constraints and transactions to preserve invariants such as one active session per scope, one card per reel position, valid recall ratings, internally consistent learner-profile counters, and collision-free package reordering. Normal flashcard lists and counts return active cards only; direct ID lookups can still resolve inactive historical rows.
 
 Package updates keep flashcard rows instead of deleting them. This preserves foreign-key references from learner profiles, review attempts, and materialized study sessions. Affected active focused/mixed sessions are completed so the next study entry rebuilds from current active content.
 
-Installed package audio is staged in temporary application-owned storage, committed to SQLite, then promoted to a replaceable per-deck directory. Playback resolves those files by stable deck/card identity and does not know whether the source was bundled or imported.
+Installed package audio is staged in temporary application-owned storage, activated before SQLite, and stored at `deck-audio/<deck-id>/<deck-version>/`. Playback resolves `audio/<card-id>.answer.mp3` directly from the deck/version location and does not scan unrelated decks.
 
 ## Study behavior
 

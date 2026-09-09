@@ -156,7 +156,7 @@ describe("SQLite study persistence", () => {
     ).toEqual({ count: 1 });
   });
 
-  it("reads Focus cards by explicit deck position and enforces deck-position uniqueness", async () => {
+  it("reads Focus cards by explicit deck order and enforces deck-order uniqueness", async () => {
     const cards = await flashcards.listByDeckId(TEST_DECK_ID);
     expect(cards.map((card) => [card.id, card.order])).toEqual([
       [makeFlashcard(2).id, 0],

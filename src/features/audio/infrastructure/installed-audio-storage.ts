@@ -79,12 +79,7 @@ export class InstalledAudioStorage implements DeckAudioStorage, AnswerAudioRepos
     if (version === undefined) {
       return null;
     }
-    const file = new File(
-      this.audioRoot(),
-      deckId,
-      String(version),
-      `${flashcardId}.answer.mp3`
-    );
+    const file = new File(this.audioRoot(), deckId, String(version), `${flashcardId}.answer.mp3`);
     return file.exists ? { uri: file.uri } : null;
   }
 

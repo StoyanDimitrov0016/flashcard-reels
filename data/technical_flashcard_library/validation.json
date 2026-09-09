@@ -14,7 +14,7 @@
     "exact field names and no extra fields",
     "unique UUIDv4 IDs",
     "valid deck references",
-    "position starts at 0 and is contiguous per deck",
+    "order starts at 0 and is contiguous per deck",
     "no duplicate questions",
     "consistent parseable ISO-8601 timestamps",
     "answer-length guard (<=70 words)",

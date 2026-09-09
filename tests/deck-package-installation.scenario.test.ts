@@ -105,8 +105,11 @@ function card(id: string, order: number, answer = `Answer ${id}`) {
   };
 }
 
-function archive(rawDeck: unknown, audio: Readonly<Record<string, Uint8Array>> = {}): Uint8Array {
-  return zipSync({ "deck.json": strToU8(JSON.stringify(rawDeck)), ...audio });
+function archive(
+  packageDocument: unknown,
+  audio: Readonly<Record<string, Uint8Array>> = {}
+): Uint8Array {
+  return zipSync({ "deck.json": strToU8(JSON.stringify(packageDocument)), ...audio });
 }
 
 function validArchive(
@@ -125,8 +128,9 @@ function createImporter(
   database: NodeSqliteDatabase,
   clock: TestClock,
   audio = new MemoryAudioStorage(),
-  installation: DeckPackageInstallationTransaction =
-    new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+  installation: DeckPackageInstallationTransaction = new SQLiteDeckPackageInstallationTransaction(
+    database.drizzle
+  )
 ) {
   const deckRepository = new SQLiteDeckRepository(database.drizzle);
   return {
@@ -200,7 +204,10 @@ describe("deck package installation", () => {
       )
     ).toEqual({ review_count: 1 });
     expect(
-      await database.getFirstAsync("SELECT COUNT(*) AS count FROM learner_profiles WHERE flashcard_id = ?", cardC.id)
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM learner_profiles WHERE flashcard_id = ?",
+        cardC.id
+      )
     ).toEqual({ count: 0 });
   });
 
@@ -215,14 +222,23 @@ describe("deck package installation", () => {
     await reviewCard(graph, database, removedCard.id);
     await graph.study.recoverPendingCompletedSessionAggregation();
     await importer.import(validArchive(2, []));
-    expect(await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)).toEqual({ active: 0 });
+    expect(
+      await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)
+    ).toEqual({ active: 0 });
     const stagedBeforeNoOp = audio.staged.length;
     expect((await importer.import(validArchive(2, [removedCard]))).status).toBe("no-op");
     expect(audio.staged).toHaveLength(stagedBeforeNoOp);
     await expect(importer.import(validArchive(1, [removedCard]))).rejects.toThrow("older");
     await importer.import(validArchive(3, [removedCard]));
-    expect(await new SQLiteFlashcardRepository(database.drizzle).findById(removedCard.id)).toMatchObject({ active: true });
-    expect(await database.getFirstAsync("SELECT review_count FROM learner_profiles WHERE flashcard_id = ?", removedCard.id)).toEqual({ review_count: 1 });
+    expect(
+      await new SQLiteFlashcardRepository(database.drizzle).findById(removedCard.id)
+    ).toMatchObject({ active: true });
+    expect(
+      await database.getFirstAsync(
+        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        removedCard.id
+      )
+    ).toEqual({ review_count: 1 });
   });
 
   it("activates new audio before SQLite and removes it when installation fails", async () => {
@@ -237,8 +253,10 @@ describe("deck package installation", () => {
     await expect(failing.importer.import(validArchive(2, [existingCard]))).rejects.toThrow(
       "database installation failed"
     );
-    expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]))
-    expect(await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)).toEqual({ version: 1 });
+    expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]));
+    expect(
+      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ version: 1 });
   });
 
   it("completes active focused and mixed sessions when an installed deck changes", async () => {
@@ -253,7 +271,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false, "ordered");
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      "ordered"
+    );
     const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, "shuffle");
 
     await importer.import(validArchive(2, [card(existingCard.id, 0, "Updated")]));
@@ -268,7 +292,9 @@ describe("deck package installation", () => {
     const { importer } = createImporter(database, clock);
     const sourceCard = card(testId(14), 0);
     await importer.import(validArchive(1, [sourceCard]));
-    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(sourceCard.id);
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      sourceCard.id
+    );
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
@@ -282,15 +308,28 @@ describe("deck package installation", () => {
     ["malformed deck", archive({ id: "not-a-uuid" })],
     ["duplicate IDs", archive(rawDeck(1, [card(testId(5), 0), card(testId(5), 1)]))],
     ["non-contiguous order", archive(rawDeck(1, [card(testId(6), 1)]))],
-    ["unexpected audio filename", archive(deck(1, [card(testId(7), 0)]), { "audio/a.mp3": new Uint8Array([1]) })],
-    ["unknown audio card", archive(deck(1, [card(testId(8), 0)]), { [`audio/${testId(9)}.answer.mp3`]: new Uint8Array([1]) })],
-    ["unsafe archive path", archive(deck(1, [card(testId(10), 0)]), { "../escape.mp3": new Uint8Array([1]) })],
+    [
+      "unexpected audio filename",
+      archive(deck(1, [card(testId(7), 0)]), { "audio/a.mp3": new Uint8Array([1]) }),
+    ],
+    [
+      "unknown audio card",
+      archive(deck(1, [card(testId(8), 0)]), {
+        [`audio/${testId(9)}.answer.mp3`]: new Uint8Array([1]),
+      }),
+    ],
+    [
+      "unsafe archive path",
+      archive(deck(1, [card(testId(10), 0)]), { "../escape.mp3": new Uint8Array([1]) }),
+    ],
   ])("rejects %s before changing installed state", async (_name, bytes) => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const { importer } = createImporter(database, clock);
     await importer.import(validArchive(1, [card(testId(11), 0)]));
     await expect(importer.import(bytes)).rejects.toThrow();
-    expect(await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)).toEqual({ version: 1 });
+    expect(
+      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ version: 1 });
   });
 });

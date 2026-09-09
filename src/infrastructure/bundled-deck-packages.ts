@@ -72,7 +72,9 @@ export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>
   },
 };
 
-export async function readBundledDeckPackage(definition: BundledDeckDefinition): Promise<Uint8Array> {
+export async function readBundledDeckPackage(
+  definition: BundledDeckDefinition
+): Promise<Uint8Array> {
   const asset = Asset.fromModule(definition.asset);
   await asset.downloadAsync();
   if (!asset.localUri) {

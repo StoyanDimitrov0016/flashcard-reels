@@ -35,7 +35,7 @@ npm run db:generate    # generate a Drizzle migration
 npm run db:check       # validate schema and migrations
 ```
 
-Commit generated migration files with the schema change. During development, remove an outdated local app database or reinstall the app when testing a deliberately reset migration baseline.
+The repository intentionally uses one clean baseline migration because the pre-refinement database has no production data to preserve. After this migration reset, delete or recreate local development databases before launching the app; the old migration chain is not compatible with the new local baseline. Commit the generated baseline and metadata with future schema changes.
 
 ## Android preview builds
 
@@ -49,7 +49,7 @@ Share the resulting Expo build page with testers. Internal build URLs are access
 
 ## Bundled study content and audio
 
-The source library is stored under `data/technical_flashcard_library`. Audio files remain source inputs, while generated `.fcrdeck` archives under `assets/decks` are the application content transport. The app installs those packages at database startup, so bundled decks and user-selected packages share one validation and update path.
+The source library is stored under `data/technical_flashcard_library`. Audio files remain source inputs, while generated `.fcrdeck` archives under `assets/decks` are the application content transport. The app checks the keyed bundled registry's deck ID/version before reading each archive, then installs only packages that need work. Bundled decks and user-selected packages share one validation, audio, and update path.
 
 After changing the source library or recordings, run:
 

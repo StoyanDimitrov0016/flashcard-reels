@@ -5,12 +5,12 @@ Flashcard Reels uses `.fcrdeck` as a portable local deck format. It is a ZIP-com
 ## Structure
 
 ```text
-manifest.json
-cards.json
-audio/
+<deck-id>.fcrdeck
+├── deck.json
+└── audio/
 ```
 
-`manifest.json` contains:
+`deck.json` is the single canonical package document:
 
 ```json
 {
@@ -19,52 +19,52 @@ audio/
   "title": "Deck title",
   "description": "Deck description",
   "createdAt": "2026-01-01T00:00:00.000Z",
-  "updatedAt": "2026-01-01T00:00:00.000Z"
-}
-```
-
-The deck ID is a stable UUID. Increment `version` whenever the deck metadata or card snapshot changes. Keep the same ID when publishing an update.
-
-Each entry in `cards.json` contains the stable flashcard ID, the owning deck ID, question, answer, ISO timestamps, and `position`. Optional `questionAudio` and `answerAudio` values are relative paths beginning with `audio/`.
-
-```json
-{
-  "id": "stable-card-uuid",
-  "deckId": "stable-deck-uuid",
-  "question": "Question",
-  "answer": "Answer",
-  "createdAt": "2026-01-01T00:00:00.000Z",
   "updatedAt": "2026-01-01T00:00:00.000Z",
-  "position": 0,
-  "answerAudio": "audio/stable-card-uuid.mp3"
+  "cards": [
+    {
+      "id": "stable-card-uuid",
+      "order": 0,
+      "question": "Question",
+      "answer": "Answer",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ]
 }
 ```
 
-The package reader validates the complete archive before changing SQLite or audio state. It rejects malformed JSON or records, invalid UUIDs/timestamps/versions, duplicate card IDs or positions, missing audio references, unexpected entries, and unsafe archive paths.
+The deck ID is stable. Increment `version` whenever the deck metadata or complete card snapshot changes. Card orders must be contiguous integers from `0` through `cards.length - 1`; card IDs are stable and identify content across updates. Card records do not repeat `deckId` because the enclosing document owns them.
+
+Audio is optional and is inferred from archive entries. Supported files are:
+
+```text
+audio/<card-id>.answer.mp3
+audio/<card-id>.question.mp3
+```
+
+The package reader validates `deck.json`, duplicate IDs, contiguous orders, safe archive paths, and every audio filename/card reference before changing SQLite or the filesystem. Package generation and reading use the same Zod contract.
 
 ## Installation and updates
 
-The Library screen selects a local `.fcrdeck` file through the system document picker. A new deck is inserted with active cards and fresh learner profiles. Existing deck appearance is never overwritten; a new deck receives the application default appearance.
+The Library screen selects a local `.fcrdeck` file through a feature-owned document-picker boundary. A new deck is inserted with active cards and an application-default appearance. Learner profiles are created later by the study flow, when a card is actually learned.
 
-Importing the same version is a no-op. A lower version is rejected. A higher version is treated as the complete deck snapshot:
+An already installed version is a no-op and does not stage audio. A lower version is rejected. A higher version is treated as the complete deck snapshot:
 
-- matching card IDs receive new content and positions while retaining `createdAt`, learner state, and review history;
-- new IDs become active cards with the normal new-card learner state;
+- matching IDs retain `createdAt`, learner state, and review history while their mutable content, `updatedAt`, `order`, and active state are updated;
+- new IDs become active cards without a fabricated learner profile;
 - missing IDs remain persisted but become inactive;
-- a card that returns with its original ID is reactivated with its existing history.
+- a reappearing ID is reactivated with its existing history.
 
-Active study sessions affected by an update are completed so the next study entry prepares from current active content. Completed sessions and review history remain available for aggregation and reporting.
+Audio is staged and fully activated before SQLite changes. Installed files use `deck-audio/<deck-id>/<deck-version>/`. If the database transaction fails, the newly activated version is removed and the previous version remains available. Successful updates remove obsolete audio versions; a cleanup failure may leave unused files but must not make installed database state point at missing audio.
 
-Audio is copied from the archive into application-owned per-deck storage. Playback resolves the installed copy by flashcard identity; it does not depend on the package's temporary extraction location or on whether the deck was bundled with the app.
+Updating a deck completes its active focused session and the active mixed session. Installing a new deck completes the active mixed session. Unfinished review attempts are finalized using the normal session lifecycle; completed sessions and historical attempts remain untouched.
 
-Learner profiles, review attempts, session items, and recurrences are application state, not package content. Stable deck and flashcard IDs are the link that lets content updates preserve that state.
+## Bundled decks
 
-## Technical decks
+The checked-in technical source remains under `data/technical_flashcard_library`. The keyed registry in `src/infrastructure/bundled-deck-packages.ts` holds each bundled deck's ID, version, package asset, appearance, and cover asset. Database startup checks that metadata before reading the large archive, then uses the same importer as user-selected packages. Fresh bundled installation applies its local appearance and cover; package updates do not overwrite user-customized appearance.
 
-The checked-in technical source remains under `data/technical_flashcard_library`. Regenerate bundled packages with:
+Regenerate bundled packages with:
 
 ```powershell
 npm.cmd run decks:packages
 ```
-
-The resulting archives in `assets/decks` are installed at startup through the same importer used by local packages.

@@ -67,14 +67,14 @@ export async function seedDeck(
     timestamp
   );
   await Promise.all(
-    cardIds.map((cardId, position) =>
+    cardIds.map((cardId, order) =>
       database.runAsync(
         'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
         cardId,
         deckId,
-        position,
-        `Question ${position}`,
-        `Answer ${position}`,
+        order,
+        `Question ${order}`,
+        `Answer ${order}`,
         timestamp,
         timestamp
       )

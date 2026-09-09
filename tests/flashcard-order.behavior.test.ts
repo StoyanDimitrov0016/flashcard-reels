@@ -34,7 +34,7 @@ if (
 const flashcardSourceData = parsedFlashcardSourceData;
 
 describe("flashcard deck ordering", () => {
-  it("assigns contiguous positions to seeded cards in each deck", () => {
+  it("assigns contiguous orders to seeded cards in each deck", () => {
     const positionsByDeck = new Map<string, number[]>();
 
     for (const flashcard of flashcardSourceData) {

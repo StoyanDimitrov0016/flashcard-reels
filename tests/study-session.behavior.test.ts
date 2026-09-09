@@ -187,7 +187,7 @@ describe("study session behavior", () => {
     );
   });
 
-  it("persists the ordered Focus strategy and wraps by deck position", async () => {
+  it("persists the ordered Focus strategy and wraps by deck order", async () => {
     const harness = createStudyHarness();
     const feedService = new ReelFeedServiceImpl(harness.service, () => 0.999);
     const cards = [makeFlashcard(3), makeFlashcard(1), makeFlashcard(2)];

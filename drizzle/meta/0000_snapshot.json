@@ -35,12 +35,8 @@
           "name": "deck_appearances_deck_id_decks_id_fk",
           "tableFrom": "deck_appearances",
           "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deck_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -180,28 +176,17 @@
       "indexes": {
         "review_attempts_flashcard_id_idx": {
           "name": "review_attempts_flashcard_id_idx",
-          "columns": [
-            "flashcard_id"
-          ],
+          "columns": ["flashcard_id"],
           "isUnique": false
         },
         "review_attempts_session_position_aggregation_idx": {
           "name": "review_attempts_session_position_aggregation_idx",
-          "columns": [
-            "study_session_id",
-            "reel_position",
-            "finalized_at",
-            "rating",
-            "rated_at"
-          ],
+          "columns": ["study_session_id", "reel_position", "finalized_at", "rating", "rated_at"],
           "isUnique": false
         },
         "review_attempts_session_reel_position_unique": {
           "name": "review_attempts_session_reel_position_unique",
-          "columns": [
-            "study_session_id",
-            "reel_position"
-          ],
+          "columns": ["study_session_id", "reel_position"],
           "isUnique": true
         }
       },
@@ -210,12 +195,8 @@
           "name": "flashcard_review_attempts_study_session_id_study_sessions_id_fk",
           "tableFrom": "flashcard_review_attempts",
           "tableTo": "study_sessions",
-          "columnsFrom": [
-            "study_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["study_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -223,12 +204,8 @@
           "name": "flashcard_review_attempts_flashcard_id_flashcards_id_fk",
           "tableFrom": "flashcard_review_attempts",
           "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["flashcard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -314,17 +291,12 @@
       "indexes": {
         "flashcards_deck_id_idx": {
           "name": "flashcards_deck_id_idx",
-          "columns": [
-            "deck_id"
-          ],
+          "columns": ["deck_id"],
           "isUnique": false
         },
         "flashcards_order_unique": {
           "name": "flashcards_order_unique",
-          "columns": [
-            "deck_id",
-            "order"
-          ],
+          "columns": ["deck_id", "order"],
           "isUnique": true
         }
       },
@@ -333,12 +305,8 @@
           "name": "flashcards_deck_id_decks_id_fk",
           "tableFrom": "flashcards",
           "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deck_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -441,9 +409,7 @@
       "indexes": {
         "learner_profiles_reset_at_idx": {
           "name": "learner_profiles_reset_at_idx",
-          "columns": [
-            "reset_at"
-          ],
+          "columns": ["reset_at"],
           "isUnique": false
         }
       },
@@ -452,12 +418,8 @@
           "name": "learner_profiles_flashcard_id_flashcards_id_fk",
           "tableFrom": "learner_profiles",
           "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["flashcard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -541,25 +503,17 @@
       "indexes": {
         "study_session_items_flashcard_id_idx": {
           "name": "study_session_items_flashcard_id_idx",
-          "columns": [
-            "flashcard_id"
-          ],
+          "columns": ["flashcard_id"],
           "isUnique": false
         },
         "study_session_items_session_position_unique": {
           "name": "study_session_items_session_position_unique",
-          "columns": [
-            "study_session_id",
-            "base_feed_position"
-          ],
+          "columns": ["study_session_id", "base_feed_position"],
           "isUnique": true
         },
         "study_session_items_session_reel_position_unique": {
           "name": "study_session_items_session_reel_position_unique",
-          "columns": [
-            "study_session_id",
-            "reel_position"
-          ],
+          "columns": ["study_session_id", "reel_position"],
           "isUnique": true
         }
       },
@@ -568,12 +522,8 @@
           "name": "study_session_items_study_session_id_study_sessions_id_fk",
           "tableFrom": "study_session_items",
           "tableTo": "study_sessions",
-          "columnsFrom": [
-            "study_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["study_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -581,12 +531,8 @@
           "name": "study_session_items_flashcard_id_flashcards_id_fk",
           "tableFrom": "study_session_items",
           "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["flashcard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -660,35 +606,23 @@
       "indexes": {
         "study_session_recurrences_session_position_idx": {
           "name": "study_session_recurrences_session_position_idx",
-          "columns": [
-            "study_session_id",
-            "target_reel_position",
-            "created_at",
-            "id"
-          ],
+          "columns": ["study_session_id", "target_reel_position", "created_at", "id"],
           "isUnique": false
         },
         "study_session_recurrences_flashcard_id_idx": {
           "name": "study_session_recurrences_flashcard_id_idx",
-          "columns": [
-            "flashcard_id"
-          ],
+          "columns": ["flashcard_id"],
           "isUnique": false
         },
         "study_session_recurrences_pending_target_idx": {
           "name": "study_session_recurrences_pending_target_idx",
-          "columns": [
-            "study_session_id",
-            "target_reel_position"
-          ],
+          "columns": ["study_session_id", "target_reel_position"],
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
         },
         "study_session_recurrences_pending_source_attempt_idx": {
           "name": "study_session_recurrences_pending_source_attempt_idx",
-          "columns": [
-            "source_attempt_id"
-          ],
+          "columns": ["source_attempt_id"],
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
         }
@@ -698,12 +632,8 @@
           "name": "study_session_recurrences_study_session_id_study_sessions_id_fk",
           "tableFrom": "study_session_recurrences",
           "tableTo": "study_sessions",
-          "columnsFrom": [
-            "study_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["study_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -711,12 +641,8 @@
           "name": "study_session_recurrences_flashcard_id_flashcards_id_fk",
           "tableFrom": "study_session_recurrences",
           "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["flashcard_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -724,12 +650,8 @@
           "name": "study_session_recurrences_source_attempt_id_flashcard_review_attempts_id_fk",
           "tableFrom": "study_session_recurrences",
           "tableTo": "flashcard_review_attempts",
-          "columnsFrom": [
-            "source_attempt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_attempt_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -821,20 +743,12 @@
       "indexes": {
         "study_sessions_active_scope_idx": {
           "name": "study_sessions_active_scope_idx",
-          "columns": [
-            "scope",
-            "completed_at",
-            "deck_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["scope", "completed_at", "deck_id", "created_at", "id"],
           "isUnique": false
         },
         "study_sessions_one_active_per_scope_idx": {
           "name": "study_sessions_one_active_per_scope_idx",
-          "columns": [
-            "scope"
-          ],
+          "columns": ["scope"],
           "isUnique": true,
           "where": "\"study_sessions\".\"completed_at\" IS NULL"
         }
@@ -844,12 +758,8 @@
           "name": "study_sessions_deck_id_decks_id_fk",
           "tableFrom": "study_sessions",
           "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deck_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

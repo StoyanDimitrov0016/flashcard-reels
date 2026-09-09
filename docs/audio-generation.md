@@ -109,7 +109,7 @@ npm.cmd run decks:packages
 npm.cmd run format
 ```
 
-The package generator validates the manifest and card contract, embeds each card's optional answer audio under `audio/`, and writes one `.fcrdeck` archive per technical deck. The app copies audio into persistent application-owned storage during installation.
+The package generator validates the canonical `deck.json` contract, embeds each card's optional answer audio as `audio/<card-id>.answer.mp3`, and writes one `.fcrdeck` archive per technical deck. The app copies audio into versioned persistent application-owned storage during installation.
 
 ## Verify and build
 
