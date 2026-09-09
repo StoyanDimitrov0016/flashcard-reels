@@ -2,6 +2,7 @@ import { TopTabs } from "expo-router/js-top-tabs";
 import { useRouter, type ErrorBoundaryProps } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import type { ColorValue } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
@@ -29,6 +30,8 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 export default function TabLayout() {
   "use no memo";
 
+  const { bottom } = useSafeAreaInsets();
+
   return (
     <DeckAppearanceProvider>
       <FeedScopeProvider>
@@ -39,11 +42,14 @@ export default function TabLayout() {
             tabBarActiveTintColor: palette.actionPrimary,
             tabBarIndicatorStyle: { height: 0 },
             tabBarInactiveTintColor: palette.textMuted,
+            tabBarPressColor: "transparent",
+            tabBarPressOpacity: 1,
             tabBarShowIcon: true,
             tabBarStyle: {
               backgroundColor: palette.background,
               borderTopColor: palette.border,
               elevation: 0,
+              paddingBottom: bottom,
             },
             swipeEnabled: true,
           }}
