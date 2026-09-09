@@ -95,7 +95,11 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
     return (
       <ReelCard
         appearance={appearance}
-        audioSource={answerAudioService.findSourceForFlashcard(item.card.id)}
+        audioSource={answerAudioService.findSourceForFlashcard(
+          item.card.deckId,
+          item.card.id,
+          deck.version
+        )}
         card={item.card}
         deck={deck}
         deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}

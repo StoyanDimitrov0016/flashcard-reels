@@ -1,99 +1,103 @@
 import { Directory, File, Paths } from "expo-file-system";
 import type { AudioSource } from "expo-audio";
 
+import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
 import type {
   DeckAudioStorage,
   DeckPackage,
-  PreparedDeckAudio,
+  StagedDeckAudio,
 } from "@/features/decks/domain/deck-package.model";
-import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
 
 const AUDIO_ROOT_NAME = "deck-audio";
 
 export class InstalledAudioStorage implements DeckAudioStorage, AnswerAudioRepository {
-  private readonly preparedDirectories = new Map<string, Directory>();
+  private readonly stagedDirectories = new Map<string, Directory>();
 
-  async prepare(deckPackage: DeckPackage): Promise<PreparedDeckAudio> {
+  async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     const root = this.audioRoot();
     root.create({ idempotent: true, intermediates: true });
-    const token = `${deckPackage.manifest.id}-${deckPackage.manifest.version}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const token = `${deckPackage.id}-${deckPackage.version}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const temporary = new Directory(root, `.tmp-${token}`);
     temporary.create({ intermediates: true });
-    for (const card of deckPackage.cards) {
-      this.writeAudio(temporary, card.id, "question", card.questionAudio, deckPackage.audioFiles);
-      this.writeAudio(temporary, card.id, "answer", card.answerAudio, deckPackage.audioFiles);
+    try {
+      for (const [path, bytes] of deckPackage.audioFiles) {
+        const fileName = path.slice("audio/".length);
+        new File(temporary, fileName).write(bytes);
+      }
+    } catch (error) {
+      if (temporary.exists) {
+        temporary.delete();
+      }
+      throw error;
     }
-    this.preparedDirectories.set(token, temporary);
-    return { deckId: deckPackage.manifest.id, token, version: deckPackage.manifest.version };
+    this.stagedDirectories.set(token, temporary);
+    return { deckId: deckPackage.id, token, version: deckPackage.version };
   }
 
-  async promote(prepared: PreparedDeckAudio): Promise<void> {
-    const temporary = this.takePrepared(prepared);
-    const root = this.audioRoot();
-    const finalDirectory = new Directory(root, prepared.deckId);
-    if (finalDirectory.exists) {
-      finalDirectory.delete();
+  async activate(staged: StagedDeckAudio): Promise<void> {
+    const temporary = this.takeStaged(staged);
+    const deckDirectory = new Directory(this.audioRoot(), staged.deckId);
+    deckDirectory.create({ idempotent: true, intermediates: true });
+    const versionDirectory = new Directory(deckDirectory, String(staged.version));
+    try {
+      if (versionDirectory.exists) {
+        throw new Error(`Audio for deck ${staged.deckId} version ${staged.version} already exists`);
+      }
+      await temporary.move(versionDirectory);
+    } catch (error) {
+      if (temporary.exists) {
+        temporary.delete();
+      }
+      throw error;
     }
-    temporary.rename(prepared.deckId);
   }
 
-  async discard(prepared: PreparedDeckAudio): Promise<void> {
-    const temporary = this.preparedDirectories.get(prepared.token);
-    this.preparedDirectories.delete(prepared.token);
-    if (temporary?.exists) {
-      temporary.delete();
+  async removeVersion(deckId: string, version: number): Promise<void> {
+    const directory = new Directory(this.audioRoot(), deckId, String(version));
+    if (directory.exists) {
+      directory.delete();
     }
   }
 
-  findSourceByFlashcardId(flashcardId: string): AudioSource {
-    const root = this.audioRoot();
-    if (!root.exists) {
+  async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+    const deckDirectory = new Directory(this.audioRoot(), deckId);
+    if (!deckDirectory.exists) {
+      return;
+    }
+    for (const entry of deckDirectory.list()) {
+      if (
+        entry instanceof Directory &&
+        entry.name !== String(keepVersion) &&
+        !entry.name.startsWith(".tmp-")
+      ) {
+        entry.delete();
+      }
+    }
+  }
+
+  findSourceForFlashcard(deckId: string, flashcardId: string, version?: number): AudioSource {
+    if (version === undefined) {
       return null;
     }
-    for (const entry of root.list()) {
-      if (!(entry instanceof Directory) || !entry.exists) {
-        continue;
-      }
-      for (const audioFile of entry.list()) {
-        if (audioFile instanceof File && audioFile.name.startsWith(`${flashcardId}-answer.`)) {
-          return { uri: audioFile.uri };
-        }
-      }
-    }
-    return null;
+    const file = new File(
+      this.audioRoot(),
+      deckId,
+      String(version),
+      `${flashcardId}.answer.mp3`
+    );
+    return file.exists ? { uri: file.uri } : null;
   }
 
   private audioRoot(): Directory {
     return new Directory(Paths.document, AUDIO_ROOT_NAME);
   }
 
-  private takePrepared(prepared: PreparedDeckAudio): Directory {
-    const temporary = this.preparedDirectories.get(prepared.token);
+  private takeStaged(staged: StagedDeckAudio): Directory {
+    const temporary = this.stagedDirectories.get(staged.token);
     if (!temporary) {
-      throw new Error(`Prepared audio ${prepared.token} is no longer available`);
+      throw new Error(`Staged audio ${staged.token} is no longer available`);
     }
-    this.preparedDirectories.delete(prepared.token);
+    this.stagedDirectories.delete(staged.token);
     return temporary;
-  }
-
-  private writeAudio(
-    directory: Directory,
-    flashcardId: string,
-    side: "question" | "answer",
-    reference: string | undefined,
-    audioFiles: ReadonlyMap<string, Uint8Array>
-  ): void {
-    if (!reference) {
-      return;
-    }
-    const bytes = audioFiles.get(reference);
-    if (!bytes) {
-      throw new Error(`Missing validated audio file ${reference}`);
-    }
-    const sourceName = reference.split("/").at(-1) ?? "audio.bin";
-    const extension = sourceName.includes(".")
-      ? sourceName.slice(sourceName.lastIndexOf("."))
-      : ".bin";
-    new File(directory, `${flashcardId}-${side}${extension}`).write(bytes);
   }
 }

@@ -10,7 +10,7 @@ export class AnswerAudioServiceImpl implements AnswerAudioService {
     this.answerAudioRepository = answerAudioRepository;
   }
 
-  findSourceForFlashcard(flashcardId: string): AudioSource {
-    return this.answerAudioRepository.findSourceByFlashcardId(flashcardId);
+  findSourceForFlashcard(deckId: string, flashcardId: string, version?: number): AudioSource {
+    return this.answerAudioRepository.findSourceForFlashcard(deckId, flashcardId, version);
   }
 }

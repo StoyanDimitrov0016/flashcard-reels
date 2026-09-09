@@ -1,5 +1,5 @@
 import type { AudioSource } from "expo-audio";
 
 export interface AnswerAudioRepository {
-  findSourceByFlashcardId(flashcardId: string): AudioSource;
+  findSourceForFlashcard(deckId: string, flashcardId: string, version?: number): AudioSource;
 }

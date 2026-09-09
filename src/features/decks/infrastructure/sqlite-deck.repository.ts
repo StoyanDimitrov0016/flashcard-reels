@@ -60,6 +60,15 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       });
   }
 
+  async findVersion(id: DeckId): Promise<number | null> {
+    const rows = await this.database
+      .select({ version: decks.version })
+      .from(decks)
+      .where(eq(decks.id, id))
+      .limit(1);
+    return rows[0]?.version ?? null;
+  }
+
   private toModel(row: typeof decks.$inferSelect): Deck {
     return new DeckModel({
       description: row.description,
