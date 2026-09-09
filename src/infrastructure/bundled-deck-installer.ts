@@ -36,8 +36,13 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
     if (deck) {
       await deckRepository.save(
         new Deck({
-          ...deck,
           coverAsset: definition.appearance.coverAsset,
+          createdAt: deck.createdAt,
+          description: deck.description,
+          id: deck.id,
+          title: deck.title,
+          updatedAt: deck.updatedAt,
+          version: deck.version,
         })
       );
     }
