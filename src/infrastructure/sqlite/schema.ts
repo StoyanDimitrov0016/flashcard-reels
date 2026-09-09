@@ -35,7 +35,7 @@ export const flashcards = sqliteTable(
     deckId: text("deck_id")
       .notNull()
       .references(() => decks.id, { onDelete: "cascade" }),
-    position: integer("position").notNull(),
+    order: integer("order").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
@@ -43,9 +43,9 @@ export const flashcards = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    check("flashcards_position_check", sql`${table.position} >= 0`),
+    check("flashcards_order_check", sql`${table.order} >= 0`),
     index("flashcards_deck_id_idx").on(table.deckId),
-    unique("flashcards_position_unique").on(table.deckId, table.position),
+    unique("flashcards_order_unique").on(table.deckId, table.order),
   ]
 );
 
