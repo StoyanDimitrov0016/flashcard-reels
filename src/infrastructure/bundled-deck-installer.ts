@@ -1,9 +1,10 @@
-// oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in asset order.
+// oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
 import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import { Deck } from "@/features/decks/domain/deck.model";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
-import { bundledDeckAppearanceData } from "@/features/decks/infrastructure/bundled-deck-appearance";
+import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
-  bundledDeckPackageAssets,
+  bundledDeckRegistry,
   readBundledDeckPackage,
 } from "@/infrastructure/bundled-deck-packages";
 import {
@@ -13,17 +14,32 @@ import {
 import type { Clock } from "@/shared/domain/clock";
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
-  const { deckPackageImportService } = createDeckPackageServices(database, clock);
+  const deckRepository = new SQLiteDeckRepository(database);
+  const { deckPackageImportService } = createDeckPackageServices(database, clock, deckRepository);
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
-  for (let index = 0; index < bundledDeckPackageAssets.length; index += 1) {
-    const assetModule = bundledDeckPackageAssets[index];
-    if (assetModule === undefined) {
+  for (const definition of Object.values(bundledDeckRegistry)) {
+    if ((await deckRepository.findVersion(definition.id)) === definition.version) {
       continue;
     }
-    const result = await deckPackageImportService.import(await readBundledDeckPackage(assetModule));
-    const appearance = bundledDeckAppearanceData[index];
-    if (result.status === "installed" && appearance) {
-      await appearanceRepository.save(new DeckAppearance(appearance));
+    const result = await deckPackageImportService.import(await readBundledDeckPackage(definition));
+    if (result.status !== "installed") {
+      continue;
+    }
+    await appearanceRepository.save(
+      new DeckAppearance({
+        accentColor: definition.appearance.accentColor,
+        backgroundColor: definition.appearance.backgroundColor,
+        deckId: definition.id,
+      })
+    );
+    const deck = await deckRepository.findById(definition.id);
+    if (deck) {
+      await deckRepository.save(
+        new Deck({
+          ...deck,
+          coverAsset: definition.appearance.coverAsset,
+        })
+      );
     }
   }
 }
