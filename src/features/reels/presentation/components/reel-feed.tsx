@@ -126,13 +126,18 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
           }}
           getItemLayout={getItemLayout}
           initialScrollIndex={feed.occurrences.length > 0 ? activeIndex : undefined}
+          initialNumToRender={2}
           key={`reel-feed-${height}-${width}`}
           keyExtractor={(occurrence) => occurrence.key}
+          maxToRenderPerBatch={3}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
           ref={feedListReference}
+          removeClippedSubviews
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
+          updateCellsBatchingPeriod={32}
+          windowSize={3}
         />
       ) : null}
     </View>

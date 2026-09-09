@@ -156,7 +156,12 @@ export default function DeckDetailsScreen() {
           data={cards}
           keyExtractor={(card) => card.id}
           ListEmptyComponent={EmptyCardList}
+          initialNumToRender={12}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
           renderItem={renderCard}
+          updateCellsBatchingPeriod={32}
+          windowSize={7}
         />
       )}
     </SafeAreaView>
