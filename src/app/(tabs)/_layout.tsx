@@ -36,13 +36,14 @@ export default function TabLayout() {
           tabBarPosition="bottom"
           screenOptions={{
             sceneStyle: { backgroundColor: palette.background },
-            tabBarActiveTintColor: palette.textPrimary,
+            tabBarActiveTintColor: palette.actionPrimary,
             tabBarIndicatorStyle: { height: 0 },
             tabBarInactiveTintColor: palette.textMuted,
             tabBarShowIcon: true,
             tabBarStyle: {
               backgroundColor: palette.background,
               borderTopColor: palette.border,
+              elevation: 0,
             },
             swipeEnabled: true,
           }}

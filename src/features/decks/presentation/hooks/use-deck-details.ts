@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type DeckDetailsState = Readonly<{
   cards: Flashcard[];
+  appearance: DeckAppearance | null;
   deck: Deck | null;
   error: Error | null;
   loading: boolean;
@@ -14,6 +16,7 @@ type DeckDetailsState = Readonly<{
 export function useDeckDetails(deckId: DeckId): DeckDetailsState {
   const { deckService, flashcardService } = useAppServices();
   const [state, setState] = useState<DeckDetailsState>({
+    appearance: null,
     cards: [],
     deck: null,
     error: null,
@@ -23,18 +26,23 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
   useEffect(
     function loadDeckDetails() {
       let active = true;
-      void Promise.all([deckService.findById(deckId), flashcardService.listByDeckId(deckId)])
-        .then(([deck, cards]) => {
+      void Promise.all([
+        deckService.findById(deckId),
+        flashcardService.listByDeckId(deckId),
+        deckService.getAppearance(deckId),
+      ])
+        .then(([deck, cards, appearance]) => {
           if (!deck) {
             throw new Error("Deck not found");
           }
           if (active) {
-            setState({ cards, deck, error: null, loading: false });
+            setState({ appearance, cards, deck, error: null, loading: false });
           }
         })
         .catch((error: unknown) => {
           if (active) {
             setState({
+              appearance: null,
               cards: [],
               deck: null,
               error: error instanceof Error ? error : new Error("Could not load deck cards"),

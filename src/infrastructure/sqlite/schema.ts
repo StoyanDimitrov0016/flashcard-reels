@@ -13,6 +13,7 @@ export const decks = sqliteTable("decks", {
   id: text("id").primaryKey().notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  coverAsset: text("cover_asset").notNull().default("cards"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

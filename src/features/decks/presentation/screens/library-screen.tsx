@@ -16,6 +16,7 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
 import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
@@ -35,7 +36,8 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
   const { appearance, cardCount, deck } = entry;
 
   return (
-    <View style={[styles.deck, { backgroundColor: appearance.backgroundColor }]}>
+    <View style={styles.deck}>
+      <View style={[styles.accent, { backgroundColor: appearance.accentColor }]} />
       <Pressable
         accessibilityHint="Opens the Focus tab in Shuffle mode"
         accessibilityLabel={`Focus on ${deck.title}`}
@@ -43,12 +45,16 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
         onPress={onFocus}
         style={styles.deckBody}
       >
-        <View style={[styles.accent, { backgroundColor: appearance.accentColor }]} />
+        <DeckCover accentColor={appearance.accentColor} asset={deck.coverAsset} />
         <View style={styles.deckCopy}>
-          <Text style={styles.deckTitle}>{deck.title}</Text>
-          <Text style={styles.description}>{deck.description}</Text>
-          <Text style={[styles.cardCount, { color: appearance.accentColor }]}>
-            {cardCount} cards
+          <View style={styles.deckHeading}>
+            <Text numberOfLines={1} style={styles.deckTitle}>
+              {deck.title}
+            </Text>
+            <Text style={styles.cardCount}>{cardCount} cards</Text>
+          </View>
+          <Text numberOfLines={2} style={styles.description}>
+            {deck.description}
           </Text>
         </View>
       </Pressable>
@@ -62,8 +68,8 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
         >
           <SymbolView
             name={{ android: "palette", ios: "paintpalette.fill", web: "palette" }}
-            size={sizes.icon.medium}
-            tintColor={palette.textPrimary}
+            size={sizes.icon.small}
+            tintColor={palette.textSecondary}
           />
         </Pressable>
         <Pressable
@@ -74,9 +80,9 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
           style={styles.iconButton}
         >
           <SymbolView
-            name={{ android: "view_list", ios: "list.bullet.rectangle", web: "view_list" }}
-            size={sizes.icon.medium}
-            tintColor={palette.textPrimary}
+            name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
+            size={sizes.icon.small}
+            tintColor={palette.textMuted}
           />
         </Pressable>
       </View>
@@ -160,6 +166,9 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <View style={styles.header}>
+        <Text accessibilityRole="header" style={styles.screenTitle}>
+          Library
+        </Text>
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -171,7 +180,7 @@ export default function LibraryScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setQuery}
-            placeholder="Search decks"
+            placeholder="Search decks…"
             placeholderTextColor={palette.textMuted}
             style={styles.searchInput}
             value={query}
@@ -221,40 +230,49 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
-  accent: { borderRadius: sizes.radius.medium, height: 72, width: 6 },
-  actions: { gap: sizes.spacing.medium, paddingRight: sizes.spacing.xLarge },
+  accent: { alignSelf: "stretch", width: 4 },
+  actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
   cardCount: {
+    color: palette.textMuted,
     fontSize: fontSize.caption,
-    fontWeight: fontWeight.heavy,
-    textTransform: "uppercase",
   },
   clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   deck: {
     alignItems: "center",
     backgroundColor: palette.surface,
-    borderRadius: sizes.radius.card,
+    borderColor: palette.border,
+    borderRadius: sizes.radius.row,
+    borderWidth: sizes.border,
     flexDirection: "row",
-    minHeight: 132,
+    minHeight: 84,
     overflow: "hidden",
   },
   deckBody: {
     alignItems: "center",
     flex: 1,
     flexDirection: "row",
-    gap: sizes.spacing.section,
-    minHeight: 132,
-    padding: sizes.spacing.content,
+    gap: sizes.spacing.xLarge,
+    minHeight: 84,
+    paddingHorizontal: sizes.spacing.xLarge,
+    paddingVertical: sizes.spacing.large,
   },
-  deckCopy: { flex: 1, gap: sizes.spacing.small },
+  deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
+  deckHeading: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: sizes.spacing.small,
+    justifyContent: "space-between",
+  },
   deckTitle: {
     color: palette.textPrimary,
-    fontSize: fontSize.deckTitle,
+    flex: 1,
+    fontSize: fontSize.callout,
     fontWeight: fontWeight.bold,
   },
   description: {
     color: palette.textSecondary,
-    fontSize: fontSize.body,
-    lineHeight: lineHeight.body,
+    fontSize: fontSize.caption,
+    lineHeight: lineHeight.footnote,
   },
   empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
   emptyCopy: { color: palette.textSecondary, fontSize: fontSize.body },
@@ -263,24 +281,36 @@ const styles = StyleSheet.create({
     fontSize: fontSize.title2,
     fontWeight: fontWeight.bold,
   },
-  header: { gap: sizes.spacing.section, padding: sizes.spacing.screen },
+  header: {
+    gap: sizes.spacing.xLarge,
+    paddingHorizontal: sizes.spacing.content,
+    paddingVertical: sizes.spacing.section,
+  },
   iconButton: {
     alignItems: "center",
     borderColor: palette.controlBorder,
-    borderRadius: sizes.radius.control,
-    borderWidth: sizes.border,
-    height: 44,
+    borderRadius: sizes.radius.pill,
+    height: 36,
     justifyContent: "center",
-    width: 44,
+    width: 36,
   },
-  list: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
+  list: {
+    gap: sizes.spacing.medium,
+    paddingBottom: sizes.spacing.content,
+    paddingHorizontal: sizes.spacing.content,
+  },
+  screenTitle: {
+    color: palette.textPrimary,
+    fontSize: fontSize.title1,
+    fontWeight: fontWeight.heavy,
+  },
   screen: { backgroundColor: palette.background, flex: 1 },
   searchInput: { color: palette.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
   searchShell: {
     alignItems: "center",
     backgroundColor: palette.surface,
     borderColor: palette.border,
-    borderRadius: sizes.radius.card,
+    borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
     paddingLeft: sizes.spacing.section,

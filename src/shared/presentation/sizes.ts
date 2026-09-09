@@ -9,6 +9,7 @@ export const sizes = {
     small: 2,
     medium: 4,
     control: 19,
+    row: 14,
     card: 22,
     panel: 24,
     island: 28,

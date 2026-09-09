@@ -56,7 +56,9 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.swatch, { backgroundColor: preset.accentColor }]} />
+      <View style={[styles.swatch, { backgroundColor: preset.backgroundColor }]}>
+        <View style={[styles.swatchAccent, { backgroundColor: preset.accentColor }]} />
+      </View>
       <Text style={styles.presetName}>{preset.name}</Text>
       {pending && <ActivityIndicator color={preset.accentColor} size="small" />}
       {!pending && selected ? (
@@ -79,7 +81,7 @@ export function DeckAppearanceSheet({
   pendingPreset,
 }: DeckAppearanceSheetProps) {
   const { width } = useWindowDimensions();
-  const columnCount = width >= 520 ? 2 : 1;
+  const columnCount = width >= 680 ? 4 : 3;
   const renderPreset: ListRenderItem<DeckAppearancePreset> = ({ item }) => (
     <PresetItem
       appearance={appearance}
@@ -128,7 +130,7 @@ export function DeckAppearanceSheet({
             </Pressable>
           </View>
           <FlatList
-            columnWrapperStyle={columnCount === 2 ? styles.row : undefined}
+            columnWrapperStyle={styles.row}
             contentContainerStyle={styles.list}
             data={deckAppearancePresets}
             extraData={{ appearance, pendingPreset }}
@@ -178,14 +180,13 @@ const styles = StyleSheet.create({
     borderRadius: sizes.radius.card,
     borderWidth: 2,
     flex: 1,
-    flexDirection: "row",
-    gap: sizes.spacing.large,
-    minHeight: 64,
-    padding: sizes.spacing.xLarge,
+    gap: sizes.spacing.medium,
+    minHeight: 104,
+    padding: sizes.spacing.medium,
   },
   presetName: {
     color: palette.textPrimary,
-    flex: 1,
+    textAlign: "center",
     fontSize: fontSize.footnote,
     fontWeight: fontWeight.bold,
   },
@@ -210,6 +211,14 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   subtitle: { color: palette.textSecondary, fontSize: fontSize.body },
-  swatch: { borderRadius: sizes.radius.pill, height: 24, width: 24 },
+  swatch: {
+    borderColor: palette.borderStrong,
+    borderRadius: sizes.radius.medium,
+    borderWidth: sizes.border,
+    height: 52,
+    overflow: "hidden",
+    width: "100%",
+  },
+  swatchAccent: { height: "100%", opacity: 0.88, width: "55%" },
   title: { color: palette.textPrimary, ...textStyles.screenTitle },
 });

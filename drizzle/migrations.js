@@ -13,6 +13,7 @@ import m0008 from "./0008_next_zarek.sql";
 import m0009 from "./0009_nostalgic_lady_mastermind.sql";
 import m0010 from "./0010_magenta_corsair.sql";
 import m0011 from "./0011_oval_sauron.sql";
+import m0012 from "./0012_dear_tempest.sql";
 
 export default {
   journal,
@@ -29,5 +30,6 @@ export default {
     m0009,
     m0010,
     m0011,
+    m0012,
   },
 };

@@ -39,5 +39,6 @@ describe("deck appearance persistence", () => {
 
     expect(await service.getAppearance(TEST_DECK_ID)).toEqual(appearance);
     expect((await service.findById(TEST_DECK_ID))?.description).toBe("Untouched content");
+    expect((await service.findById(TEST_DECK_ID))?.coverAsset).toBe("cards");
   });
 });

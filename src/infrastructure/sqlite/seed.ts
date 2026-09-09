@@ -1,4 +1,3 @@
-import { notInArray } from "drizzle-orm";
 import {
   deckAppearanceSeedData,
   deckSeedData,
@@ -17,11 +16,6 @@ export async function seedDatabase<TRunResult>(
   database: DrizzleDatabase<TRunResult>
 ): Promise<void> {
   database.transaction((transaction) => {
-    const seedDeckIds = deckSeedData.map((deck) => deck.id);
-    if (seedDeckIds.length > 0) {
-      transaction.delete(decks).where(notInArray(decks.id, seedDeckIds)).run();
-    }
-
     if (deckSeedData.length > 0) {
       transaction
         .insert(decks)
@@ -30,11 +24,20 @@ export async function seedDatabase<TRunResult>(
             createdAt: deck.createdAt,
             description: deck.description,
             id: deck.id,
+            coverAsset: deck.coverAsset,
             title: deck.title,
             updatedAt: deck.updatedAt,
           }))
         )
-        .onConflictDoNothing()
+        .onConflictDoUpdate({
+          target: decks.id,
+          set: {
+            coverAsset: sql`excluded.cover_asset`,
+            description: sql`excluded.description`,
+            title: sql`excluded.title`,
+            updatedAt: sql`excluded.updated_at`,
+          },
+        })
         .run();
     }
 
@@ -82,3 +85,4 @@ export async function seedDatabase<TRunResult>(
     }
   });
 }
+import { sql } from "drizzle-orm";

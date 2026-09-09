@@ -1,5 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
+import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
 import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
@@ -42,6 +43,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         createdAt: deck.createdAt,
         description: deck.description,
         id: deck.id,
+        coverAsset: deck.coverAsset,
         title: deck.title,
         updatedAt: deck.updatedAt,
       })
@@ -50,6 +52,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         set: {
           description: deck.description,
           title: deck.title,
+          coverAsset: deck.coverAsset,
           updatedAt: deck.updatedAt,
         },
       });
@@ -60,6 +63,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       description: row.description,
       id: row.id,
       title: row.title,
+      coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

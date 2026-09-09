@@ -1,8 +1,9 @@
 export const palette = {
   // App surfaces
-  background: "#090A0D",
-  surface: "#14151A",
-  surfaceRaised: "#191A20",
+  background: "#090D11",
+  surface: "#11171C",
+  surfaceRaised: "#171D23",
+  surfaceSubtle: "#0D1217",
   border: "rgba(255, 255, 255, 0.1)",
   borderStrong: "rgba(255, 255, 255, 0.18)",
 
@@ -20,8 +21,8 @@ export const palette = {
   scrim: "rgba(0, 0, 0, 0.62)",
 
   // Actions and semantic feedback
-  actionPrimary: "#29B6F6",
-  actionPrimaryText: "#090A0D",
+  actionPrimary: "#168CFF",
+  actionPrimaryText: "#FFFFFF",
   danger: "#FF6B7A",
   warning: "#F8C15C",
   success: "#72D6AE",

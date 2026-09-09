@@ -1,21 +1,23 @@
 import { useState } from "react";
+import { SymbolView } from "expo-symbols";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {
-  const { loading, refresh, resetAllProgress, resetCardProgress, resetDeckProgress, rows } =
-    useLearnerProgress();
-  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const { loading, refresh, resetAllProgress, resetDeckProgress, rows } = useLearnerProgress();
   const [resetting, setResetting] = useState(false);
-  const deckFilters = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
-  const visibleRows = selectedDeckId ? rows.filter((row) => row.deck.id === selectedDeckId) : rows;
+  const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
+  const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
+
   const requestReset = (scope: string, reset: () => Promise<void>): void => {
     if (resetting) {
       return;
@@ -29,10 +31,8 @@ export default function ProgressScreen() {
           onPress: () => {
             setResetting(true);
             void reset()
-              .then(() => refresh())
-              .catch(() => {
-                Alert.alert("Reset failed", "Your learning progress was not changed.");
-              })
+              .then(refresh)
+              .catch(() => Alert.alert("Reset failed", "Your learning progress was not changed."))
               .finally(() => setResetting(false));
           },
           style: "destructive",
@@ -45,61 +45,86 @@ export default function ProgressScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.headingRow}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Progress
+          </Text>
+          <SymbolView
+            name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }}
+            size={sizes.icon.medium}
+            tintColor={palette.textMuted}
+          />
+        </View>
         {loading ? (
           <LoadingState fill={false} />
         ) : (
           <>
             <View style={styles.summaryRow}>
-              <SummaryFact label="Cards" value={rows.length} />
-              <SummaryFact label="Reviewed" value={reviewedCount} />
-              <SummaryFact label="New" value={rows.length - reviewedCount} />
+              <SummaryFact icon="cards" label="Cards" value={rows.length} />
+              <SummaryFact icon="reviewed" label="Reviewed" value={reviewedCount} />
+              <SummaryFact icon="new" label="New" value={rows.length - reviewedCount} />
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filters}
-            >
-              <FilterButton
-                label="All decks"
-                selected={selectedDeckId === null}
-                onPress={() => setSelectedDeckId(null)}
-              />
-              {deckFilters.map((deck) => (
-                <FilterButton
-                  key={deck.id}
-                  label={deck.title}
-                  selected={selectedDeckId === deck.id}
-                  onPress={() => setSelectedDeckId(deck.id)}
-                />
-              ))}
-            </ScrollView>
-            <View style={styles.resetActions}>
-              {selectedDeckId && (
-                <ResetButton
-                  disabled={resetting}
-                  label="Reset selected deck"
-                  onPress={() => requestReset("this deck", () => resetDeckProgress(selectedDeckId))}
-                />
-              )}
-              <ResetButton
-                disabled={resetting}
+            <View style={styles.deckList}>
+              {decks.map((deck) => {
+                const deckRows = rows.filter((row) => row.deck.id === deck.id);
+                const reviewed = deckRows.filter((row) => row.explanation.reviewCount > 0).length;
+                const percentage = deckRows.length
+                  ? Math.round((reviewed / deckRows.length) * 100)
+                  : 0;
+                const accent = appearances.get(deck.id)?.accentColor ?? palette.actionPrimary;
+                return (
+                  <View key={deck.id} style={styles.deckCard}>
+                    <View style={[styles.deckAccent, { backgroundColor: accent }]} />
+                    <DeckCover accentColor={accent} asset={deck.coverAsset} />
+                    <View style={styles.deckCopy}>
+                      <View style={styles.deckHeading}>
+                        <Text numberOfLines={1} style={styles.deckTitle}>
+                          {deck.title}
+                        </Text>
+                        <Text style={styles.percentage}>{percentage}%</Text>
+                      </View>
+                      <Text style={styles.reviewed}>
+                        {reviewed} / {deckRows.length} reviewed
+                      </Text>
+                      <View style={styles.progressTrack}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            { backgroundColor: accent, width: `${percentage}%` },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                    <Pressable
+                      accessibilityLabel={`Reset ${deck.title} progress`}
+                      disabled={resetting}
+                      hitSlop={8}
+                      onPress={() =>
+                        requestReset(`${deck.title} progress`, () => resetDeckProgress(deck.id))
+                      }
+                      style={styles.moreButton}
+                    >
+                      <SymbolView
+                        name={{
+                          android: "restart_alt",
+                          ios: "arrow.counterclockwise",
+                          web: "restart_alt",
+                        }}
+                        size={sizes.icon.small}
+                        tintColor={palette.textMuted}
+                      />
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
+            <View style={styles.actions}>
+              <ActionButton
                 label="Reset all progress"
                 onPress={() => requestReset("all learning progress", resetAllProgress)}
               />
+              <ActionButton label="Refresh progress" onPress={refresh} primary />
             </View>
-            <View style={styles.list}>
-              {visibleRows.map((row) => (
-                <ProgressRow
-                  key={row.card.id}
-                  resetting={resetting}
-                  onReset={() => requestReset("this card", () => resetCardProgress(row.card.id))}
-                  row={row}
-                />
-              ))}
-            </View>
-            <Pressable accessibilityRole="button" onPress={refresh} style={styles.refreshButton}>
-              <Text style={styles.refreshLabel}>Refresh progress</Text>
-            </Pressable>
           </>
         )}
       </ScrollView>
@@ -107,152 +132,117 @@ export default function ProgressScreen() {
   );
 }
 
-type SummaryFactProps = Readonly<{ label: string; value: number }>;
+type SummaryFactProps = Readonly<{
+  icon: "cards" | "new" | "reviewed";
+  label: string;
+  value: number;
+}>;
 
-function SummaryFact({ label, value }: SummaryFactProps) {
+function SummaryFact({ icon, label, value }: SummaryFactProps) {
+  const colors = { cards: palette.actionPrimary, new: palette.warning, reviewed: palette.success };
+  const symbols = {
+    cards: { android: "library_books", ios: "books.vertical.fill", web: "library_books" },
+    new: { android: "auto_awesome", ios: "sparkles", web: "auto_awesome" },
+    reviewed: { android: "check_box", ios: "checkmark.square.fill", web: "check_box" },
+  } as const;
+
   return (
     <View style={styles.summaryFact}>
+      <SymbolView name={symbols[icon]} size={sizes.icon.medium} tintColor={colors[icon]} />
       <Text style={styles.summaryValue}>{value}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
   );
 }
 
-type FilterButtonProps = Readonly<{ label: string; onPress: () => void; selected: boolean }>;
+type ActionButtonProps = Readonly<{ label: string; onPress: () => void; primary?: boolean }>;
 
-function FilterButton({ label, onPress, selected }: FilterButtonProps) {
-  return (
-    <Pressable onPress={onPress} style={[styles.filter, selected && styles.selectedFilter]}>
-      <Text style={[styles.filterLabel, selected && styles.selectedFilterLabel]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-type ResetButtonProps = Readonly<{
-  disabled?: boolean;
-  label: string;
-  onPress: () => void;
-}>;
-
-function ResetButton({ disabled = false, label, onPress }: ResetButtonProps) {
+function ActionButton({ label, onPress, primary = false }: ActionButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={disabled}
       onPress={onPress}
-      style={[styles.resetButton, disabled && styles.disabledButton]}
+      style={[styles.actionButton, primary && styles.primaryAction]}
     >
-      <Text style={styles.resetLabel}>{disabled ? "Resetting…" : label}</Text>
+      <Text style={[styles.actionLabel, primary && styles.primaryActionLabel]}>{label}</Text>
     </Pressable>
   );
 }
 
-type ProgressRowProps = Readonly<{
-  onReset: () => void;
-  resetting: boolean;
-  row: ReturnType<typeof useLearnerProgress>["rows"][number];
-}>;
-
-function ProgressRow({ onReset, resetting, row }: ProgressRowProps) {
-  const { card, deck, explanation, profile } = row;
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardQuestion}>{card.question}</Text>
-        <Text style={styles.priority}>{explanation.priority}</Text>
-      </View>
-      <Text style={styles.deck}>{deck.title}</Text>
-      <Text style={styles.counts}>
-        Reviews {explanation.reviewCount} · Again {profile?.againCount ?? 0} · Hard{" "}
-        {profile?.hardCount ?? 0} · Good {profile?.goodCount ?? 0} · Easy {profile?.easyCount ?? 0}
-      </Text>
-      <Text style={styles.lastReviewed}>
-        {profile?.lastReviewedAt
-          ? `Last reviewed ${formatDate(profile.lastReviewedAt)}`
-          : "Not reviewed yet"}
-      </Text>
-      <Text style={styles.reason}>{explanation.reason}</Text>
-      <ResetButton disabled={resetting} label="Reset card progress" onPress={onReset} />
-    </View>
-  );
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString();
-}
-
 const styles = StyleSheet.create({
-  screen: { backgroundColor: palette.background, flex: 1 },
-  content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
-  summaryRow: { flexDirection: "row", gap: sizes.spacing.small },
-  summaryFact: {
-    backgroundColor: palette.surface,
-    borderRadius: sizes.radius.medium,
-    flex: 1,
-    padding: sizes.spacing.content,
-  },
-  summaryValue: {
-    color: palette.textPrimary,
-    fontSize: fontSize.title1,
-    fontWeight: fontWeight.heavy,
-  },
-  summaryLabel: {
-    color: palette.textMuted,
-    fontSize: fontSize.caption,
-    marginTop: sizes.spacing.xSmall,
-  },
-  filters: { gap: sizes.spacing.small },
-  filter: {
-    borderColor: palette.border,
+  actionButton: {
+    alignItems: "center",
+    borderColor: palette.actionPrimary,
     borderRadius: sizes.radius.pill,
     borderWidth: sizes.border,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.small,
-  },
-  selectedFilter: {
-    backgroundColor: palette.controlSelected,
-    borderColor: palette.controlSelected,
-  },
-  filterLabel: { color: palette.textMuted, fontSize: fontSize.footnote },
-  selectedFilterLabel: { color: palette.textPrimary, fontWeight: fontWeight.bold },
-  list: { gap: sizes.spacing.small },
-  resetActions: { gap: sizes.spacing.small },
-  resetButton: { alignSelf: "flex-start", paddingVertical: sizes.spacing.xSmall },
-  disabledButton: { opacity: 0.5 },
-  resetLabel: { color: palette.danger, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
-  card: {
-    backgroundColor: palette.surface,
-    borderRadius: sizes.radius.card,
-    gap: sizes.spacing.small,
-    padding: sizes.spacing.content,
-  },
-  cardHeader: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: sizes.spacing.small,
-    justifyContent: "space-between",
-  },
-  cardQuestion: {
-    color: palette.textPrimary,
     flex: 1,
-    fontSize: fontSize.title3,
-    fontWeight: fontWeight.bold,
+    justifyContent: "center",
+    minHeight: 40,
+    paddingHorizontal: sizes.spacing.medium,
   },
-  priority: {
+  actionLabel: {
     color: palette.actionPrimary,
     fontSize: fontSize.caption,
-    fontWeight: fontWeight.heavy,
-    textTransform: "uppercase",
+    fontWeight: fontWeight.bold,
   },
-  deck: { color: palette.textSecondary, fontSize: fontSize.footnote },
-  counts: { color: palette.textPrimary, fontSize: fontSize.footnote, lineHeight: lineHeight.body },
-  lastReviewed: { color: palette.textMuted, fontSize: fontSize.caption },
-  reason: {
-    color: palette.textMuted,
+  actions: { flexDirection: "row", gap: sizes.spacing.medium },
+  content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
+  deckAccent: { alignSelf: "stretch", width: 4 },
+  deckCard: {
+    alignItems: "center",
+    backgroundColor: palette.surface,
+    borderColor: palette.border,
+    borderRadius: sizes.radius.row,
+    borderWidth: sizes.border,
+    flexDirection: "row",
+    gap: sizes.spacing.xLarge,
+    minHeight: 82,
+    overflow: "hidden",
+    paddingRight: sizes.spacing.medium,
+  },
+  deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
+  deckHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.small },
+  deckList: { gap: sizes.spacing.medium },
+  deckTitle: {
+    color: palette.textPrimary,
+    flex: 1,
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+  },
+  headingRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  moreButton: { alignItems: "center", height: 36, justifyContent: "center", width: 32 },
+  percentage: {
+    color: palette.textSecondary,
     fontSize: fontSize.caption,
-    lineHeight: lineHeight.footnote,
+    fontWeight: fontWeight.bold,
   },
-  refreshButton: { alignItems: "center", padding: sizes.spacing.content },
-  refreshLabel: { color: palette.actionPrimary, fontWeight: fontWeight.bold },
+  primaryAction: { backgroundColor: palette.actionPrimary },
+  primaryActionLabel: { color: palette.actionPrimaryText },
+  progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
+  progressTrack: {
+    backgroundColor: palette.borderStrong,
+    borderRadius: sizes.radius.pill,
+    height: 5,
+    overflow: "hidden",
+  },
+  reviewed: { color: palette.textMuted, fontSize: fontSize.caption },
+  screen: { backgroundColor: palette.background, flex: 1 },
+  summaryFact: {
+    alignItems: "center",
+    backgroundColor: palette.surface,
+    borderColor: palette.border,
+    borderRadius: sizes.radius.row,
+    borderWidth: sizes.border,
+    flex: 1,
+    gap: sizes.spacing.xSmall,
+    padding: sizes.spacing.xLarge,
+  },
+  summaryLabel: { color: palette.textMuted, fontSize: fontSize.caption },
+  summaryRow: { flexDirection: "row", gap: sizes.spacing.medium },
+  summaryValue: {
+    color: palette.textPrimary,
+    fontSize: fontSize.title2,
+    fontWeight: fontWeight.heavy,
+  },
+  title: { color: palette.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
 });

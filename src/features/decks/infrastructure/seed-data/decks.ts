@@ -7,6 +7,7 @@ export const deckSeedData = [
     title: "JavaScript",
     description:
       "Core language semantics, objects, functions, async behavior, modules, memory, and practical runtime reasoning.",
+    coverAsset: "javascript",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },
@@ -15,6 +16,7 @@ export const deckSeedData = [
     title: "React",
     description:
       "Components, rendering, state, effects, hooks, reconciliation, performance, forms, concurrency, and modern React behavior.",
+    coverAsset: "react",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },
@@ -23,6 +25,7 @@ export const deckSeedData = [
     title: "System Design",
     description:
       "Scalability, reliability, data flow, distributed systems, APIs, caching, messaging, storage, and operational trade-offs.",
+    coverAsset: "system-design",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },
@@ -31,6 +34,7 @@ export const deckSeedData = [
     title: "Databases",
     description:
       "Relational modeling, SQL, indexes, transactions, isolation, query planning, replication, partitioning, and distributed data.",
+    coverAsset: "database",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },
@@ -39,6 +43,7 @@ export const deckSeedData = [
     title: "Computer Science",
     description:
       "Algorithms, data structures, complexity, graphs, trees, hashing, concurrency fundamentals, networking, and computation.",
+    coverAsset: "computer-science",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },
@@ -47,6 +52,7 @@ export const deckSeedData = [
     title: "Operating Systems and Hardware",
     description:
       "Processes, threads, memory, virtual memory, filesystems, scheduling, synchronization, CPU caches, storage, and I/O.",
+    coverAsset: "operating-systems",
     createdAt: "2026-09-06T13:26:00Z",
     updatedAt: "2026-09-06T13:26:00Z",
   },

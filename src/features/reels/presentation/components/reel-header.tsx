@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { sizes } from "@/shared/presentation/sizes";
@@ -28,9 +29,12 @@ export function ReelHeader({
   return (
     <View style={styles.header}>
       {showMainFeedLink ? (
-        <View style={styles.labelStack}>
-          <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{label}</Text>
-          <View style={[styles.accentLine, { backgroundColor: appearance.accentColor }]} />
+        <View style={styles.focusedIdentity}>
+          <DeckCover accentColor={appearance.accentColor} asset={deck.coverAsset} />
+          <View style={styles.labelStack}>
+            <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{label}</Text>
+            <View style={[styles.accentLine, { backgroundColor: appearance.accentColor }]} />
+          </View>
         </View>
       ) : (
         <Pressable
@@ -60,6 +64,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.heavy,
     letterSpacing: letterSpacing.wide,
   },
+  focusedIdentity: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xLarge },
   header: { alignItems: "center", flexDirection: "row" },
   labelStack: { alignItems: "center", paddingVertical: 4 },
 });
