@@ -6,7 +6,7 @@ import {
 } from "@/features/decks/contracts/deck-package.schema";
 import type { DeckPackage, DeckPackageReader } from "@/features/decks/domain/deck-package.model";
 
-export class DeckPackageValidationError extends Error {
+class DeckPackageValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "DeckPackageValidationError";

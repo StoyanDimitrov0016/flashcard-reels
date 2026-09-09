@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const UuidSchema = z.uuid();
 
-export const DeckPackageCardSchema = z
+const DeckPackageCardSchema = z
   .object({
     id: UuidSchema,
     order: z.number().int().nonnegative(),
@@ -57,7 +57,6 @@ export const DeckPackageSchema = z
     }
   });
 
-export type DeckPackageCard = z.infer<typeof DeckPackageCardSchema>;
 export type DeckPackageDocument = z.infer<typeof DeckPackageSchema>;
 
 export function isSafeDeckPackagePath(path: string): boolean {
