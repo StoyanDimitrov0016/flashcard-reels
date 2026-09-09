@@ -42,10 +42,10 @@ describe("SQLite learner-profile aggregation", () => {
     await Promise.all(
       [makeFlashcard(1), makeFlashcard(2)].map((card) =>
         database.runAsync(
-          "INSERT INTO flashcards (id, deck_id, position, question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
           card.id,
           card.deckId,
-          card.position,
+          card.order,
           card.question,
           card.answer,
           card.createdAt,

@@ -20,7 +20,7 @@ function cards(deckId: string, count: number, firstId: number): Flashcard[] {
         answer: `Answer ${position}`,
         createdAt: "2026-01-01T00:00:00.000Z",
         deckId,
-        position,
+        order: position,
         id: testId(firstId + position),
         question: `Question ${position}`,
         active: true,

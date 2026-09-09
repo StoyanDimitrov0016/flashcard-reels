@@ -330,8 +330,8 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     for (const card of cards) {
       const insertionIndex = orderedCards.findIndex(
         (current) =>
-          card.position < current.position ||
-          (card.position === current.position && card.id.localeCompare(current.id) < 0)
+          card.order < current.order ||
+          (card.order === current.order && card.id.localeCompare(current.id) < 0)
       );
       if (insertionIndex < 0) {
         orderedCards.push(card);

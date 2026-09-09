@@ -56,7 +56,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       .select()
       .from(flashcards)
       .where(and(eq(flashcards.deckId, deckId), eq(flashcards.active, true)))
-      .orderBy(asc(flashcards.position), asc(flashcards.id));
+      .orderBy(asc(flashcards.order), asc(flashcards.id));
     return rows.map((row) => this.toModel(row));
   }
 
@@ -67,7 +67,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         answer: flashcard.answer,
         createdAt: flashcard.createdAt,
         deckId: flashcard.deckId,
-        position: flashcard.position,
+        order: flashcard.order,
         active: flashcard.active,
         id: flashcard.id,
         question: flashcard.question,
@@ -78,7 +78,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         set: {
           answer: flashcard.answer,
           deckId: flashcard.deckId,
-          position: flashcard.position,
+          order: flashcard.order,
           active: flashcard.active,
           question: flashcard.question,
           updatedAt: flashcard.updatedAt,
@@ -91,7 +91,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       answer: row.answer,
       createdAt: row.createdAt,
       deckId: row.deckId,
-      position: row.position,
+      order: row.order,
       active: row.active,
       id: row.id,
       question: row.question,

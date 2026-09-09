@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath, URL as NodeURL } from "node:url";
 
-type SourceFlashcard = Readonly<{ deckId: string; position: number }>;
+type SourceFlashcard = Readonly<{ deckId: string; order: number }>;
 
 const parsedFlashcardSourceData: unknown = JSON.parse(
   readFileSync(
@@ -19,8 +19,8 @@ function isSourceFlashcard(value: unknown): value is SourceFlashcard {
     value !== null &&
     "deckId" in value &&
     typeof value.deckId === "string" &&
-    "position" in value &&
-    typeof value.position === "number"
+    "order" in value &&
+    typeof value.order === "number"
   );
 }
 
@@ -39,7 +39,7 @@ describe("flashcard deck ordering", () => {
 
     for (const flashcard of flashcardSourceData) {
       const positions = positionsByDeck.get(flashcard.deckId) ?? [];
-      positions.push(flashcard.position);
+      positions.push(flashcard.order);
       positionsByDeck.set(flashcard.deckId, positions);
     }
 

@@ -54,14 +54,14 @@ function manifest(version: number): DeckPackageManifest {
   };
 }
 
-function card(id: string, position: number, answer = `Answer ${id}`): DeckPackageCard {
+function card(id: string, order: number, answer = `Answer ${id}`): DeckPackageCard {
   return {
     answer,
     answerAudio: `audio/${id}.mp3`,
     createdAt: timestamp,
     deckId: TEST_DECK_ID,
     id,
-    position,
+    order,
     question: `Question ${id}`,
     updatedAt: timestamp,
   };
@@ -161,8 +161,8 @@ describe("external deck package installation", () => {
 
     const repository = new SQLiteFlashcardRepository(database.drizzle);
     expect(await repository.listByDeckId(TEST_DECK_ID)).toMatchObject([
-      { id: cardC.id, active: true, position: 0 },
-      { id: cardA.id, active: true, answer: "Changed answer", position: 1 },
+      { id: cardC.id, active: true, order: 0 },
+      { id: cardA.id, active: true, answer: "Changed answer", order: 1 },
     ]);
     expect(await repository.findById(cardB.id)).toMatchObject({ active: false });
     expect(

@@ -107,7 +107,7 @@ export class SQLiteDeckPackageInstallationTransaction<
       if (existingCards.length > 0) {
         transaction
           .update(flashcards)
-          .set({ position: sql`${flashcards.position} + ${offset}` })
+          .set({ order: sql`${flashcards.order} + ${offset}` })
           .where(eq(flashcards.deckId, deckPackage.manifest.id))
           .run();
       }
@@ -120,7 +120,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             .set({
               active: true,
               answer: card.answer,
-              position: card.position,
+              order: card.order,
               question: card.question,
               updatedAt: card.updatedAt,
             })
@@ -135,7 +135,7 @@ export class SQLiteDeckPackageInstallationTransaction<
               createdAt: card.createdAt,
               deckId: card.deckId,
               id: card.id,
-              position: card.position,
+              order: card.order,
               question: card.question,
               updatedAt: card.updatedAt,
             })

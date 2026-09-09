@@ -1,1 +1,0 @@
-CREATE INDEX `review_attempts_session_position_aggregation_idx` ON `flashcard_review_attempts` (`study_session_id`,`reel_position`,`finalized_at`,`rating`,`rated_at`);

@@ -68,16 +68,16 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
     });
 
     const ids = new Set<string>();
-    const positions = new Set<number>();
+    const orders = new Set<number>();
     for (const card of cards) {
       if (ids.has(card.id)) {
         throw new DeckPackageValidationError(`Duplicate flashcard ID: ${card.id}`);
       }
-      if (positions.has(card.position)) {
-        throw new DeckPackageValidationError(`Duplicate flashcard position: ${card.position}`);
+      if (orders.has(card.order)) {
+        throw new DeckPackageValidationError(`Duplicate flashcard order: ${card.order}`);
       }
       ids.add(card.id);
-      positions.add(card.position);
+      orders.add(card.order);
       for (const reference of [card.questionAudio, card.answerAudio]) {
         if (reference === undefined) {
           continue;

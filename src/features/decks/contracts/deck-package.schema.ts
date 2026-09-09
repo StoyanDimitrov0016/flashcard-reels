@@ -21,7 +21,7 @@ export const DeckPackageCardSchema = z
     answer: z.string().min(1),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
-    position: z.number().int().nonnegative(),
+    order: z.number().int().nonnegative(),
     questionAudio: z.string().optional(),
     answerAudio: z.string().optional(),
   })

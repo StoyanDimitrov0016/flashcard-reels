@@ -31,13 +31,13 @@ export function testId(index: number): string {
 export function makeFlashcard(
   index: number,
   deckId: string = TEST_DECK_ID,
-  position = index - 1
+  order = index - 1
 ): Flashcard {
   return new Flashcard({
     answer: `Answer ${index}`,
     createdAt: "2026-01-01T00:00:00.000Z",
     deckId,
-    position,
+    order,
     id: testId(index),
     question: `Question ${index}`,
     active: true,
