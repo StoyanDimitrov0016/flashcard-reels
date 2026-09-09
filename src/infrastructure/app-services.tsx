@@ -2,9 +2,8 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
-import { DeckPackageImportService } from "@/features/decks/application/deck-package-import.service";
-import { InstalledAudioStorage } from "@/features/audio/infrastructure/installed-audio-storage";
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import type { DeckPackageImportService } from "@/features/decks/application/deck-package-import.service";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
@@ -31,13 +30,14 @@ import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service"
 import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
-import { ArchiveDeckPackageReader } from "@/features/decks/infrastructure/archive-deck-package.reader";
-import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/infrastructure/sqlite-deck-package-installation.transaction";
-import { ExpoDeckPackageFileReader } from "@/features/decks/infrastructure/expo-deck-package-file.reader";
+import { createDeckPackageServices } from "@/infrastructure/deck-package-services";
+import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
+import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
 
 type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
   deckPackageImportService: DeckPackageImportService;
+  deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
   flashcardService: FlashcardService;
   learnerProfileService: LearnerProfileService;
@@ -72,8 +72,12 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase
     );
     const clock = new SystemClock();
-    const installedAudioStorage = new InstalledAudioStorage();
     const idGenerator = new UuidGenerator();
+    const { answerAudioRepository, deckPackageImportService } = createDeckPackageServices(
+      drizzleDatabase,
+      clock,
+      deckRepository
+    );
     const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
       studySessionRepository,
@@ -90,14 +94,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
 
     return {
-      answerAudioService: new AnswerAudioServiceImpl(installedAudioStorage),
-      deckPackageImportService: new DeckPackageImportService(
-        new ArchiveDeckPackageReader(),
-        new SQLiteDeckPackageInstallationTransaction(drizzleDatabase),
-        installedAudioStorage,
-        clock,
-        new ExpoDeckPackageFileReader()
-      ),
+      answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
+      deckPackageImportService,
+      deckPackagePicker: new ExpoDeckPackagePicker(),
       deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardServiceImpl(flashcardRepository),
       learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),

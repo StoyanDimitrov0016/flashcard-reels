@@ -1,4 +1,3 @@
-import * as DocumentPicker from "expo-document-picker";
 import { useState } from "react";
 
 import type { DeckPackageInstallResult } from "@/features/decks/domain/deck-package.model";
@@ -9,26 +8,18 @@ type ImportState = Readonly<{ error: Error | null; importing: boolean }>;
 export function useImportDeckPackage(): ImportState & {
   importPackage: () => Promise<DeckPackageInstallResult | null>;
 } {
-  const { deckPackageImportService } = useAppServices();
+  const { deckPackageImportService, deckPackagePicker } = useAppServices();
   const [state, setState] = useState<ImportState>({ error: null, importing: false });
 
   const importPackage = async (): Promise<DeckPackageInstallResult | null> => {
     setState({ error: null, importing: true });
     try {
-      const selection = await DocumentPicker.getDocumentAsync({
-        copyToCacheDirectory: true,
-        multiple: false,
-        type: "*/*",
-      });
-      if (selection.canceled) {
+      const selection = await deckPackagePicker.pick();
+      if (!selection) {
         setState({ error: null, importing: false });
         return null;
       }
-      const asset = selection.assets[0];
-      if (!asset) {
-        throw new Error("No deck package was selected");
-      }
-      const result = await deckPackageImportService.importFile(asset.uri);
+      const result = await deckPackageImportService.importFile(selection.uri);
       setState({ error: null, importing: false });
       return result;
     } catch (error) {
