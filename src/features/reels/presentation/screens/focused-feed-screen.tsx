@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
-import { SegmentedControl } from "@expo/ui/community/segmented-control";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -8,21 +7,15 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
+import { StudyStrategySwitch } from "@/features/reels/presentation/components/study-strategy-switch";
 import {
   useFeedScope,
   type FocusedFeedState,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
-
-function LoadingState() {
-  return (
-    <View style={styles.loading}>
-      <ActivityIndicator color={palette.textPrimary} size="large" />
-    </View>
-  );
-}
 
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
@@ -104,18 +97,13 @@ export default function FocusedFeedScreen() {
     content = (
       <>
         <View style={styles.strategySwitcher}>
-          <SegmentedControl
-            appearance="dark"
-            onValueChange={(value) => {
-              const nextStrategy = value === "Ordered" ? "ordered" : "shuffle";
-              if (focusedFeed.strategy !== nextStrategy) {
-                startFocusedFeed(focusedFeed.deckId, nextStrategy);
+          <StudyStrategySwitch
+            onChange={(strategy) => {
+              if (focusedFeed.strategy !== strategy) {
+                startFocusedFeed(focusedFeed.deckId, strategy);
               }
             }}
-            selectedIndex={focusedFeed.strategy === "shuffle" ? 0 : 1}
-            style={styles.strategyControl}
-            tintColor={palette.accent}
-            values={["Shuffle", "Ordered"]}
+            value={focusedFeed.strategy}
           />
         </View>
         <ReadyFocusedFeed
@@ -136,10 +124,8 @@ export default function FocusedFeedScreen() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background, flex: 1 },
-  loading: { alignItems: "center", flex: 1, justifyContent: "center" },
   strategySwitcher: {
     backgroundColor: palette.background,
     padding: sizes.spacing.content,
   },
-  strategyControl: { width: "100%" },
 });

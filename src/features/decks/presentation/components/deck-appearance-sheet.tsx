@@ -19,6 +19,7 @@ import {
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 
 type DeckAppearanceSheetProps = Readonly<{
   appearance: DeckAppearance | null;
@@ -149,7 +150,11 @@ export function DeckAppearanceSheet({
 
 const styles = StyleSheet.create({
   closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-  error: { color: palette.danger, fontSize: 13, paddingHorizontal: sizes.spacing.content },
+  error: {
+    color: palette.danger,
+    fontSize: fontSize.footnote,
+    paddingHorizontal: sizes.spacing.content,
+  },
   handle: {
     alignSelf: "center",
     backgroundColor: palette.textMuted,
@@ -178,11 +183,16 @@ const styles = StyleSheet.create({
     minHeight: 64,
     padding: sizes.spacing.xLarge,
   },
-  presetName: { color: palette.textPrimary, flex: 1, fontSize: 13, fontWeight: "700" },
+  presetName: {
+    color: palette.textPrimary,
+    flex: 1,
+    fontSize: fontSize.footnote,
+    fontWeight: fontWeight.bold,
+  },
   pressed: { opacity: 0.72 },
   row: { gap: sizes.spacing.medium },
   scrim: {
-    backgroundColor: "rgba(0, 0, 0, 0.62)",
+    backgroundColor: palette.scrim,
     bottom: 0,
     left: 0,
     position: "absolute",
@@ -199,7 +209,7 @@ const styles = StyleSheet.create({
     paddingBottom: sizes.spacing.content,
     width: "100%",
   },
-  subtitle: { color: palette.textSecondary, fontSize: 14 },
+  subtitle: { color: palette.textSecondary, fontSize: fontSize.body },
   swatch: { borderRadius: sizes.radius.pill, height: 24, width: 24 },
-  title: { color: palette.textPrimary, fontSize: 24, fontWeight: "800" },
+  title: { color: palette.textPrimary, ...textStyles.screenTitle },
 });

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 export default function NotFoundScreen() {
   const router = useRouter();
@@ -27,8 +28,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: sizes.spacing.spacious,
   },
-  eyebrow: { color: palette.warning, fontSize: 13, fontWeight: "800", letterSpacing: 1.4 },
-  title: { color: palette.textPrimary, fontSize: 30, fontWeight: "700", textAlign: "center" },
+  eyebrow: {
+    color: palette.warning,
+    fontSize: fontSize.footnote,
+    fontWeight: fontWeight.heavy,
+    letterSpacing: letterSpacing.eyebrow,
+  },
+  title: {
+    color: palette.textPrimary,
+    fontSize: fontSize.display,
+    fontWeight: fontWeight.bold,
+    textAlign: "center",
+  },
   button: {
     backgroundColor: palette.textPrimary,
     borderRadius: sizes.radius.pill,
@@ -36,5 +47,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.spacing.content,
     paddingVertical: sizes.spacing.xLarge,
   },
-  buttonLabel: { color: palette.background, fontSize: 14, fontWeight: "800" },
+  buttonLabel: { color: palette.background, fontSize: fontSize.body, fontWeight: fontWeight.heavy },
 });

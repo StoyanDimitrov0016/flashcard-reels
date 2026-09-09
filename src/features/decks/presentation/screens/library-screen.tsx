@@ -21,6 +21,7 @@ import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-s
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];
 type DeckRowProps = Readonly<{
@@ -222,7 +223,11 @@ export default function LibraryScreen() {
 const styles = StyleSheet.create({
   accent: { borderRadius: sizes.radius.medium, height: 72, width: 6 },
   actions: { gap: sizes.spacing.medium, paddingRight: sizes.spacing.xLarge },
-  cardCount: { fontSize: 12, fontWeight: "800", textTransform: "uppercase" },
+  cardCount: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.heavy,
+    textTransform: "uppercase",
+  },
   clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   deck: {
     alignItems: "center",
@@ -241,11 +246,23 @@ const styles = StyleSheet.create({
     padding: sizes.spacing.content,
   },
   deckCopy: { flex: 1, gap: sizes.spacing.small },
-  deckTitle: { color: palette.textPrimary, fontSize: 21, fontWeight: "700" },
-  description: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },
+  deckTitle: {
+    color: palette.textPrimary,
+    fontSize: fontSize.deckTitle,
+    fontWeight: fontWeight.bold,
+  },
+  description: {
+    color: palette.textSecondary,
+    fontSize: fontSize.body,
+    lineHeight: lineHeight.body,
+  },
   empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
-  emptyCopy: { color: palette.textSecondary, fontSize: 14 },
-  emptyTitle: { color: palette.textPrimary, fontSize: 20, fontWeight: "700" },
+  emptyCopy: { color: palette.textSecondary, fontSize: fontSize.body },
+  emptyTitle: {
+    color: palette.textPrimary,
+    fontSize: fontSize.title2,
+    fontWeight: fontWeight.bold,
+  },
   header: { gap: sizes.spacing.section, padding: sizes.spacing.screen },
   iconButton: {
     alignItems: "center",
@@ -258,7 +275,7 @@ const styles = StyleSheet.create({
   },
   list: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
   screen: { backgroundColor: palette.background, flex: 1 },
-  searchInput: { color: palette.textPrimary, flex: 1, fontSize: 16, height: 48 },
+  searchInput: { color: palette.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
   searchShell: {
     alignItems: "center",
     backgroundColor: palette.surface,

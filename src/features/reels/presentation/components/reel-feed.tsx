@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { ActivityIndicator, FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
+import { FlatList, type ListRenderItem, StyleSheet, View } from "react-native";
 
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useDecks } from "@/features/decks/presentation/hooks/use-decks";
@@ -9,6 +9,7 @@ import { useReelController } from "@/features/reels/presentation/hooks/use-reel-
 import { getLocalReelIndex, useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 
 type ReelFeedProps = Readonly<{
@@ -112,11 +113,7 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
 
   return (
     <View onLayout={handleLayout} style={styles.feed}>
-      {!metadataReady ? (
-        <View accessibilityLabel="Preparing cards" style={styles.loading}>
-          <ActivityIndicator color={palette.textPrimary} size="large" />
-        </View>
-      ) : null}
+      {!metadataReady ? <LoadingState accessibilityLabel="Preparing cards" /> : null}
       {metadataReady && height > 0 && width > 0 ? (
         <FlatList
           data={feed.occurrences}
@@ -144,5 +141,4 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
 
 const styles = StyleSheet.create({
   feed: { backgroundColor: palette.background, flex: 1 },
-  loading: { alignItems: "center", flex: 1, justifyContent: "center" },
 });

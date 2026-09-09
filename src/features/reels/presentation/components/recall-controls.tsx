@@ -5,6 +5,7 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { palette } from "@/shared/presentation/palette";
 import { selectAction } from "@/shared/presentation/haptics";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type RecallOption = Readonly<{
   color: string;
@@ -33,7 +34,7 @@ const recallOptions: RecallOption[] = [
     symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },
   },
   {
-    color: palette.easy,
+    color: palette.recallEasy,
     label: "Easy",
     level: "easy",
     symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
@@ -66,7 +67,7 @@ export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps)
               <SymbolView
                 name={symbol}
                 size={sizes.icon.medium}
-                tintColor={selected ? palette.ink : color}
+                tintColor={selected ? palette.actionPrimaryText : color}
               />
             </View>
             <Text style={[styles.label, { color }]}>{label}</Text>
@@ -96,5 +97,5 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     width: 40,
   },
-  label: { fontSize: 9, fontWeight: "700" },
+  label: { fontSize: fontSize.micro, fontWeight: fontWeight.bold },
 });

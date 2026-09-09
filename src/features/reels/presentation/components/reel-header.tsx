@@ -5,6 +5,7 @@ import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 type ReelHeaderProps = Readonly<{
   appearance: DeckAppearance;
@@ -54,7 +55,11 @@ const styles = StyleSheet.create({
     height: 3,
     marginTop: 5,
   },
-  deckLabel: { fontSize: 14, fontWeight: "800", letterSpacing: 0.3 },
+  deckLabel: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.heavy,
+    letterSpacing: letterSpacing.wide,
+  },
   header: { alignItems: "center", flexDirection: "row" },
   labelStack: { alignItems: "center", paddingVertical: 4 },
 });

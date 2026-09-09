@@ -13,6 +13,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type ReelCardProps = Readonly<{
   audioSource: AudioSource;
@@ -48,7 +49,7 @@ type GestureHintProps = Readonly<{
 function GestureHint({ label, symbol }: GestureHintProps) {
   return (
     <View accessible accessibilityLabel={label} style={styles.gestureHint}>
-      <SymbolView name={symbol} size={sizes.icon.small} tintColor={palette.textSubtle} />
+      <SymbolView name={symbol} size={sizes.icon.small} tintColor={palette.textMuted} />
       <Text style={styles.hint}>{label}</Text>
     </View>
   );
@@ -325,26 +326,30 @@ const styles = StyleSheet.create({
   },
   prompt: {
     color: palette.textPrimary,
-    fontSize: 40,
-    fontWeight: "700",
-    letterSpacing: -1.4,
-    lineHeight: 45,
+    fontSize: fontSize.hero,
+    fontWeight: fontWeight.bold,
+    letterSpacing: letterSpacing.tightest,
+    lineHeight: lineHeight.hero,
   },
   answerPrompt: {
-    color: palette.textTertiary,
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 26,
+    color: palette.textSecondary,
+    fontSize: fontSize.title3,
+    fontWeight: fontWeight.semibold,
+    lineHeight: lineHeight.title3,
   },
   answer: {
     color: palette.textPrimary,
-    fontSize: 27,
-    fontWeight: "600",
-    letterSpacing: -0.5,
-    lineHeight: 36,
+    fontSize: fontSize.heading1,
+    fontWeight: fontWeight.semibold,
+    letterSpacing: letterSpacing.tight,
+    lineHeight: lineHeight.heading1,
     maxWidth: 480,
   },
-  revealInstruction: { color: palette.textHint, fontSize: 16, lineHeight: 24 },
+  revealInstruction: {
+    color: palette.textMuted,
+    fontSize: fontSize.callout,
+    lineHeight: lineHeight.subhead,
+  },
   tapArea: {
     flex: 1,
     justifyContent: "space-between",
@@ -352,9 +357,9 @@ const styles = StyleSheet.create({
     paddingTop: sizes.spacing.screen,
   },
   hint: {
-    color: palette.textSubtle,
-    fontSize: 12,
-    letterSpacing: 0.5,
+    color: palette.textMuted,
+    fontSize: fontSize.caption,
+    letterSpacing: letterSpacing.wider,
   },
   hintRow: {
     alignItems: "center",
@@ -395,8 +400,12 @@ const styles = StyleSheet.create({
     top: 72,
     zIndex: 2,
   },
-  holdLabel: { color: palette.textPrimary, fontSize: 12, fontWeight: "800" },
-  holdProgress: { backgroundColor: palette.accent, height: "100%" },
+  holdLabel: {
+    color: palette.textPrimary,
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.heavy,
+  },
+  holdProgress: { backgroundColor: palette.actionPrimary, height: "100%" },
   holdTrack: {
     backgroundColor: palette.controlBorder,
     borderRadius: sizes.radius.pill,

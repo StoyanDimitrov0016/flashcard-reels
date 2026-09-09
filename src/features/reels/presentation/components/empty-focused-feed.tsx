@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 type EmptyFocusedFeedProps = Readonly<{ onChooseDeck: () => void }>;
 
@@ -13,7 +14,7 @@ export function EmptyFocusedFeed({ onChooseDeck }: EmptyFocusedFeedProps) {
         <SymbolView
           name={{ android: "book_2", ios: "rectangle.stack.fill", web: "book_2" }}
           size={sizes.icon.large}
-          tintColor={palette.info}
+          tintColor={palette.actionPrimary}
         />
       </View>
       <Text style={styles.title}>Build a focused feed</Text>
@@ -45,11 +46,16 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     width: 76,
   },
-  title: { color: palette.textPrimary, fontSize: 25, fontWeight: "800", textAlign: "center" },
+  title: {
+    color: palette.textPrimary,
+    fontSize: fontSize.heading2,
+    fontWeight: fontWeight.heavy,
+    textAlign: "center",
+  },
   copy: {
     color: palette.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: fontSize.bodyLarge,
+    lineHeight: lineHeight.bodyLarge,
     marginTop: 10,
     maxWidth: 300,
     textAlign: "center",
@@ -61,5 +67,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 13,
   },
-  buttonLabel: { color: palette.background, fontSize: 15, fontWeight: "800" },
+  buttonLabel: {
+    color: palette.background,
+    fontSize: fontSize.bodyLarge,
+    fontWeight: fontWeight.heavy,
+  },
 });

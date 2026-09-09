@@ -1,10 +1,11 @@
 import { TopTabs } from "expo-router/js-top-tabs";
 import { useRouter, type ErrorBoundaryProps } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, Text, View, type ColorValue } from "react-native";
+import type { ColorValue } from "react-native";
 
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
+import { ErrorState } from "@/shared/presentation/components/error-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
@@ -14,20 +15,14 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
 
   return (
-    <View style={styles.errorScreen}>
-      <Text style={styles.errorTitle}>This area could not load</Text>
-      <Text style={styles.errorCopy}>Try again, or return to Discover.</Text>
-      <Pressable accessibilityRole="button" onPress={retry} style={styles.primaryButton}>
-        <Text style={styles.primaryLabel}>Try again</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.replace("/(tabs)/(discover)")}
-        style={styles.secondaryButton}
-      >
-        <Text style={styles.secondaryLabel}>Back to Discover</Text>
-      </Pressable>
-    </View>
+    <ErrorState
+      message="Try again, or return to Discover."
+      onPrimaryAction={retry}
+      onSecondaryAction={() => router.replace("/(tabs)/(discover)")}
+      primaryActionLabel="Try again"
+      secondaryActionLabel="Back to Discover"
+      title="This area could not load"
+    />
   );
 }
 
@@ -121,25 +116,3 @@ export default function TabLayout() {
     </DeckAppearanceProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  errorCopy: { color: palette.textSecondary, textAlign: "center" },
-  errorScreen: {
-    alignItems: "center",
-    backgroundColor: palette.background,
-    flex: 1,
-    gap: sizes.spacing.section,
-    justifyContent: "center",
-    padding: sizes.spacing.spacious,
-  },
-  errorTitle: { color: palette.textPrimary, fontSize: 24, fontWeight: "800" },
-  primaryButton: {
-    backgroundColor: palette.textPrimary,
-    borderRadius: sizes.radius.pill,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.xLarge,
-  },
-  primaryLabel: { color: palette.ink, fontWeight: "800" },
-  secondaryButton: { padding: sizes.spacing.medium },
-  secondaryLabel: { color: palette.textLink, fontWeight: "700" },
-});

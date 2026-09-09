@@ -1,18 +1,12 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {
   const { loading, refresh, resetAllProgress, resetCardProgress, resetDeckProgress, rows } =
@@ -52,7 +46,7 @@ export default function ProgressScreen() {
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         {loading ? (
-          <ActivityIndicator color={palette.textPrimary} size="large" />
+          <LoadingState fill={false} />
         ) : (
           <>
             <View style={styles.summaryRow}>
@@ -198,8 +192,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: sizes.spacing.content,
   },
-  summaryValue: { color: palette.textPrimary, fontSize: 24, fontWeight: "800" },
-  summaryLabel: { color: palette.textMuted, fontSize: 12, marginTop: sizes.spacing.xSmall },
+  summaryValue: {
+    color: palette.textPrimary,
+    fontSize: fontSize.title1,
+    fontWeight: fontWeight.heavy,
+  },
+  summaryLabel: {
+    color: palette.textMuted,
+    fontSize: fontSize.caption,
+    marginTop: sizes.spacing.xSmall,
+  },
   filters: { gap: sizes.spacing.small },
   filter: {
     borderColor: palette.border,
@@ -208,14 +210,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.spacing.content,
     paddingVertical: sizes.spacing.small,
   },
-  selectedFilter: { backgroundColor: palette.accent, borderColor: palette.accent },
-  filterLabel: { color: palette.textMuted, fontSize: 13 },
-  selectedFilterLabel: { color: palette.ink, fontWeight: "700" },
+  selectedFilter: {
+    backgroundColor: palette.controlSelected,
+    borderColor: palette.controlSelected,
+  },
+  filterLabel: { color: palette.textMuted, fontSize: fontSize.footnote },
+  selectedFilterLabel: { color: palette.textPrimary, fontWeight: fontWeight.bold },
   list: { gap: sizes.spacing.small },
   resetActions: { gap: sizes.spacing.small },
   resetButton: { alignSelf: "flex-start", paddingVertical: sizes.spacing.xSmall },
   disabledButton: { opacity: 0.5 },
-  resetLabel: { color: palette.danger, fontSize: 12, fontWeight: "700" },
+  resetLabel: { color: palette.danger, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
   card: {
     backgroundColor: palette.surface,
     borderRadius: sizes.radius.card,
@@ -228,12 +233,26 @@ const styles = StyleSheet.create({
     gap: sizes.spacing.small,
     justifyContent: "space-between",
   },
-  cardQuestion: { color: palette.textPrimary, flex: 1, fontSize: 18, fontWeight: "700" },
-  priority: { color: palette.accent, fontSize: 12, fontWeight: "800", textTransform: "uppercase" },
-  deck: { color: palette.textSecondary, fontSize: 13 },
-  counts: { color: palette.textPrimary, fontSize: 13, lineHeight: 20 },
-  lastReviewed: { color: palette.textMuted, fontSize: 12 },
-  reason: { color: palette.textSubtle, fontSize: 12, lineHeight: 18 },
+  cardQuestion: {
+    color: palette.textPrimary,
+    flex: 1,
+    fontSize: fontSize.title3,
+    fontWeight: fontWeight.bold,
+  },
+  priority: {
+    color: palette.actionPrimary,
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.heavy,
+    textTransform: "uppercase",
+  },
+  deck: { color: palette.textSecondary, fontSize: fontSize.footnote },
+  counts: { color: palette.textPrimary, fontSize: fontSize.footnote, lineHeight: lineHeight.body },
+  lastReviewed: { color: palette.textMuted, fontSize: fontSize.caption },
+  reason: {
+    color: palette.textMuted,
+    fontSize: fontSize.caption,
+    lineHeight: lineHeight.footnote,
+  },
   refreshButton: { alignItems: "center", padding: sizes.spacing.content },
-  refreshLabel: { color: palette.accent, fontWeight: "700" },
+  refreshLabel: { color: palette.actionPrimary, fontWeight: fontWeight.bold },
 });

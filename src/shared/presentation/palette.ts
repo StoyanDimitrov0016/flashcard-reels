@@ -1,24 +1,29 @@
 export const palette = {
+  // App surfaces
   background: "#090A0D",
   surface: "#14151A",
-  surfaceRaised: "#151B20",
-  border: "#202127",
-  borderStrong: "#26333A",
+  surfaceRaised: "#191A20",
+  border: "rgba(255, 255, 255, 0.1)",
+  borderStrong: "rgba(255, 255, 255, 0.18)",
+
+  // Content hierarchy
   textPrimary: "#FFFFFF",
-  textMuted: "#777982",
-  textSecondary: "rgba(255, 255, 255, 0.55)",
-  textTertiary: "rgba(255, 255, 255, 0.48)",
-  textHint: "rgba(255, 255, 255, 0.46)",
-  textSubtle: "rgba(255, 255, 255, 0.38)",
-  textLoading: "rgba(255, 255, 255, 0.62)",
-  textLink: "rgba(255, 255, 255, 0.72)",
+  textSecondary: "rgba(255, 255, 255, 0.62)",
+  textMuted: "rgba(255, 255, 255, 0.42)",
+  textDisabled: "rgba(255, 255, 255, 0.28)",
+
+  // Neutral controls
   controlOverlay: "rgba(8, 8, 10, 0.72)",
   controlBorder: "rgba(255, 255, 255, 0.1)",
-  ink: "#101010",
-  accent: "#29B6F6",
-  info: "#73D9FF",
+  controlSelected: "#565960",
+  controlPressed: "#686B73",
+  scrim: "rgba(0, 0, 0, 0.62)",
+
+  // Actions and semantic feedback
+  actionPrimary: "#29B6F6",
+  actionPrimaryText: "#090A0D",
   danger: "#FF6B7A",
   warning: "#F8C15C",
   success: "#72D6AE",
-  easy: "#AFA0FF",
+  recallEasy: "#AFA0FF",
 } as const;

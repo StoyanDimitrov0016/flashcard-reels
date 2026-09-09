@@ -1,19 +1,12 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
-
-function LoadingState() {
-  return (
-    <View style={styles.loading}>
-      <ActivityIndicator color={palette.textPrimary} size="large" />
-    </View>
-  );
-}
 
 type ReadyMixedFeedProps = Readonly<{ cards: Flashcard[] }>;
 
@@ -40,5 +33,4 @@ export default function DiscoverScreen() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background, flex: 1 },
-  loading: { alignItems: "center", flex: 1, justifyContent: "center" },
 });

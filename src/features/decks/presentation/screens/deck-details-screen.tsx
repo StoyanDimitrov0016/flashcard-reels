@@ -1,20 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ListRenderItem,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
 type CardRowProps = Readonly<{ card: Flashcard }>;
 
@@ -64,9 +58,7 @@ export default function DeckDetailsScreen() {
         </View>
       </View>
       {loading ? (
-        <View accessibilityLabel="Loading deck cards" style={styles.loading}>
-          <ActivityIndicator color={palette.textPrimary} size="large" />
-        </View>
+        <LoadingState accessibilityLabel="Loading deck cards" />
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
@@ -81,7 +73,11 @@ export default function DeckDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  answer: { color: palette.textSecondary, fontSize: 15, lineHeight: 22 },
+  answer: {
+    color: palette.textSecondary,
+    fontSize: fontSize.bodyLarge,
+    lineHeight: lineHeight.bodyLarge,
+  },
   backButton: { alignItems: "center", height: 48, justifyContent: "center", width: 48 },
   cardCopy: { flex: 1, gap: sizes.spacing.medium },
   cardRow: {
@@ -93,7 +89,7 @@ const styles = StyleSheet.create({
     gap: sizes.spacing.section,
     padding: sizes.spacing.content,
   },
-  count: { color: palette.textTertiary, fontSize: 13 },
+  count: { color: palette.textMuted, fontSize: fontSize.footnote },
   empty: { color: palette.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
   header: {
     alignItems: "center",
@@ -103,14 +99,18 @@ const styles = StyleSheet.create({
   },
   headingCopy: { flex: 1 },
   list: { gap: sizes.spacing.xLarge, padding: sizes.spacing.content },
-  loading: { alignItems: "center", flex: 1, justifyContent: "center" },
   position: {
     color: palette.textMuted,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     fontVariant: ["tabular-nums"],
-    fontWeight: "800",
+    fontWeight: fontWeight.heavy,
   },
-  question: { color: palette.textPrimary, fontSize: 17, fontWeight: "700", lineHeight: 24 },
+  question: {
+    color: palette.textPrimary,
+    fontSize: fontSize.subhead,
+    fontWeight: fontWeight.bold,
+    lineHeight: lineHeight.subhead,
+  },
   screen: { backgroundColor: palette.background, flex: 1 },
-  title: { color: palette.textPrimary, fontSize: 24, fontWeight: "800" },
+  title: { color: palette.textPrimary, ...textStyles.screenTitle },
 });
