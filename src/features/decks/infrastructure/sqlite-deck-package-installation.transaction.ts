@@ -15,7 +15,7 @@ import {
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
-export class DeckPackageVersionError extends Error {
+class DeckPackageVersionError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "DeckPackageVersionError";

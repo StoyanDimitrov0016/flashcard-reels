@@ -102,20 +102,14 @@ $env:AUDIO_START = "100"     # start at a zero-based card index
 $env:AUDIO_FORCE = "1"       # regenerate existing files
 ```
 
-After all files exist, generate the static Expo imports and maps:
+After all files exist, generate the bundled deck packages:
 
 ```powershell
-node scripts/generate-audio-assets-module.mjs
+npm.cmd run decks:packages
 npm.cmd run format
 ```
 
-The generated module maps the combined audio by flashcard UUID.
-
-## Replace an installed app's old database contents
-
-`src/infrastructure/sqlite/seed.ts` removes deck rows that are not part of the
-current seed set before inserting the new seeds. This matters when an APK is
-installed over an older build whose SQLite database is retained by Android.
+The package generator validates the manifest and card contract, embeds each card's optional answer audio under `audio/`, and writes one `.fcrdeck` archive per technical deck. The app copies audio into persistent application-owned storage during installation.
 
 ## Verify and build
 
@@ -126,5 +120,4 @@ npm.cmd run db:check
 npm.cmd run check:android
 ```
 
-Then build the APK using the repository's normal Expo/EAS workflow. Audio is
-bundled because the generated MP3s are statically imported by the asset module.
+Then build the APK using the repository's normal Expo/EAS workflow. Audio is bundled inside the `.fcrdeck` assets and installed through the normal package pipeline.

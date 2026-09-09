@@ -49,6 +49,13 @@ Share the resulting Expo build page with testers. Internal build URLs are access
 
 ## Bundled study content and audio
 
-The source library is stored under `data/technical_flashcard_library`. Generated TypeScript seed data and bundled audio assets are checked into the application so studying and playback work offline.
+The source library is stored under `data/technical_flashcard_library`. Audio files remain source inputs, while generated `.fcrdeck` archives under `assets/decks` are the application content transport. The app installs those packages at database startup, so bundled decks and user-selected packages share one validation and update path.
+
+After changing the source library or recordings, run:
+
+```powershell
+npm.cmd run audio:generate
+npm.cmd run decks:packages
+```
 
 See [Audio generation](audio-generation.md) before changing the source content or rebuilding recordings.
