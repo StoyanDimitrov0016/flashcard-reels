@@ -11,6 +11,7 @@ import {
   createDeckPackageServices,
   type AppDatabase,
 } from "@/infrastructure/deck-package-services";
+import { shouldInstallBundledDeck } from "@/infrastructure/bundled-deck-version";
 import type { Clock } from "@/shared/domain/clock";
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
@@ -18,7 +19,8 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
   const { deckPackageImportService } = createDeckPackageServices(database, clock, deckRepository);
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
-    if ((await deckRepository.findVersion(definition.id)) === definition.version) {
+    const installedVersion = await deckRepository.findVersion(definition.id);
+    if (!shouldInstallBundledDeck(installedVersion, definition.version)) {
       continue;
     }
     const result = await deckPackageImportService.import(await readBundledDeckPackage(definition));
