@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: sizes.spacing.xSmall,
-    height: 36,
+    height: "100%",
     paddingHorizontal: sizes.spacing.xSmall,
   },
   backButtonPressed: { opacity: 0.45 },
@@ -224,9 +224,11 @@ const styles = StyleSheet.create({
   list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
   navigationRow: {
     alignItems: "center",
+    borderBottomColor: palette.border,
+    borderBottomWidth: sizes.border,
     flexDirection: "row",
+    height: 56,
     paddingHorizontal: sizes.spacing.xLarge,
-    paddingTop: sizes.spacing.small,
   },
   position: {
     color: palette.textMuted,
