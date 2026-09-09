@@ -9,7 +9,7 @@ export const palette = {
 
   // Content hierarchy
   textPrimary: "#FFFFFF",
-  textSecondary: "rgba(255, 255, 255, 0.62)",
+  textSecondary: "#A5ABB4",
   textMuted: "rgba(255, 255, 255, 0.42)",
   textDisabled: "rgba(255, 255, 255, 0.28)",
 
@@ -21,8 +21,8 @@ export const palette = {
   scrim: "rgba(0, 0, 0, 0.62)",
 
   // Actions and semantic feedback
-  actionPrimary: "#168CFF",
-  actionPrimaryText: "#FFFFFF",
+  actionPrimary: "#F2F3F5",
+  actionPrimaryText: "#111418",
   danger: "#FF6B7A",
   warning: "#F8C15C",
   success: "#72D6AE",
