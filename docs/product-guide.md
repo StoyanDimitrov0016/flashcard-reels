@@ -9,26 +9,27 @@ The **Discover** feed mixes cards from every deck. Swipe up for the next card, d
 Ratings shape later study:
 
 - **Again** and **Hard** cards return later in the current session.
-- Cards with weaker review history receive higher priority in future shuffled feeds.
+- Cards keep a review history that supports the Progress screen and future scheduling decisions.
 - **Good** and **Easy** cards remain in progress history but are selected less often.
 
 Hold a card in Discover to start a focused session for its deck.
 
 ## Deck library
 
-The **Library** lists the six bundled technical decks and their card counts. From there you can:
+The **Library** starts with one small offline demo deck. Import `.fcrdeck` files there to add larger libraries. From there you can:
 
 - search by title or description;
 - start a focused study session;
 - inspect every question and answer in a deck;
 - choose a color palette for each deck.
+- import a local deck package.
 
 ## Progress
 
-The **Progress** screen explains the app's current priority for every reviewed card. It includes review counts, the distribution of recall ratings, average recall score, and the reason for the card's priority.
+The **Progress** screen explains each card's review history. It includes review counts, the distribution of recall ratings, average recall score, and a plain-language history band.
 
-Progress can be reset for one card, one deck, or the entire library without deleting the bundled cards or decks.
+Progress can be reset for one card, one deck, or the entire library without deleting deck content.
 
 ## Data and privacy
 
-Decks, study sessions, review history, and appearance preferences are stored in SQLite on the device. The bundled cards and audio remain available offline. The current app does not require an account or synchronize learning data to a remote service.
+Decks, study sessions, review history, and appearance preferences are stored in SQLite on the device. Imported and demo audio is installed into application-owned storage and remains available offline. The current app does not require an account or synchronize learning data to a remote service.
