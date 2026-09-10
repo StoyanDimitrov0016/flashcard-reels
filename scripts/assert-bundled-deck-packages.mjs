@@ -1,21 +1,34 @@
-import { access, readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
+import { ArchiveDeckPackageReader } from "../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts";
+
 const root = process.cwd();
-const sourceDirectory = path.join(root, "data", "technical_flashcard_library");
-const decks = JSON.parse(await readFile(path.join(sourceDirectory, "decks.json"), "utf8"));
-
-await Promise.all(
-  decks.map(async (deck) => {
-    const packagePath = path.join(root, "assets", "decks", `${deck.id}.fcrdeck`);
-    try {
-      await access(packagePath);
-    } catch {
-      throw new Error(
-        `Missing bundled deck package ${path.relative(root, packagePath)}; run npm run decks:packages`
-      );
-    }
-  })
+const registry = JSON.parse(
+  await readFile(path.join(root, "src", "infrastructure", "bundled-deck-registry.json"), "utf8")
 );
+if (!Array.isArray(registry) || registry.length === 0) {
+  throw new Error("Bundled deck registry must contain at least one entry");
+}
 
-console.log(`Verified ${decks.length} bundled deck packages.`);
+const packageDirectory = path.join(root, "assets", "decks");
+const runtimePackages = (await readdir(packageDirectory))
+  .filter((file) => file.endsWith(".fcrdeck"))
+  .sort();
+const registeredPackages = registry.map((entry) => entry.packageAsset).sort();
+if (runtimePackages.join("\n") !== registeredPackages.join("\n")) {
+  throw new Error("Runtime .fcrdeck files do not match bundled-deck-registry.json");
+}
+
+for (const entry of registry) {
+  const bytes = await readFile(path.join(packageDirectory, entry.packageAsset));
+  const document = new ArchiveDeckPackageReader().read(new Uint8Array(bytes));
+  if (
+    document.id !== entry.id ||
+    document.version !== entry.version ||
+    entry.packageAsset !== `${entry.id}.fcrdeck`
+  ) {
+    throw new Error(`Bundled registry/package mismatch for ${entry.packageAsset}`);
+  }
+}
+console.log(`Verified ${registry.length} runtime deck package(s) without authoring inputs.`);

@@ -42,7 +42,3 @@ example
 /ios
 /android
 
-# local audio generation scratch
-/data/generated_audio/
-/data/*.log
-/technical_flashcard_library.zip

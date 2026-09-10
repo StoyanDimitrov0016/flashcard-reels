@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "564dbb54-a042-4806-8139-7d349d69e64a",
+  "id": "ba3e2e69-a1b2-424f-92c0-04253782db08",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_appearances": {
@@ -105,6 +105,138 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
+    },
+    "flashcard_memory_states": {
+      "name": "flashcard_memory_states",
+      "columns": {
+        "flashcard_id": {
+          "name": "flashcard_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "due_at": {
+          "name": "due_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stability": {
+          "name": "stability",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "difficulty": {
+          "name": "difficulty",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "elapsed_days": {
+          "name": "elapsed_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scheduled_days": {
+          "name": "scheduled_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reps": {
+          "name": "reps",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lapses": {
+          "name": "lapses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "learning_steps": {
+          "name": "learning_steps",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_review_at": {
+          "name": "last_review_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "flashcard_memory_states_flashcard_id_flashcards_id_fk": {
+          "name": "flashcard_memory_states_flashcard_id_flashcards_id_fk",
+          "tableFrom": "flashcard_memory_states",
+          "tableTo": "flashcards",
+          "columnsFrom": ["flashcard_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "flashcard_memory_states_elapsed_days_check": {
+          "name": "flashcard_memory_states_elapsed_days_check",
+          "value": "\"flashcard_memory_states\".\"elapsed_days\" >= 0"
+        },
+        "flashcard_memory_states_scheduled_days_check": {
+          "name": "flashcard_memory_states_scheduled_days_check",
+          "value": "\"flashcard_memory_states\".\"scheduled_days\" >= 0"
+        },
+        "flashcard_memory_states_reps_check": {
+          "name": "flashcard_memory_states_reps_check",
+          "value": "\"flashcard_memory_states\".\"reps\" >= 0"
+        },
+        "flashcard_memory_states_lapses_check": {
+          "name": "flashcard_memory_states_lapses_check",
+          "value": "\"flashcard_memory_states\".\"lapses\" >= 0"
+        },
+        "flashcard_memory_states_learning_steps_check": {
+          "name": "flashcard_memory_states_learning_steps_check",
+          "value": "\"flashcard_memory_states\".\"learning_steps\" >= 0"
+        }
+      }
     },
     "flashcard_review_attempts": {
       "name": "flashcard_review_attempts",
@@ -682,13 +814,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "strategy": {
-          "name": "strategy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "deck_id": {
           "name": "deck_id",
           "type": "text",
@@ -732,8 +857,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "strategy_state": {
-          "name": "strategy_state",
+        "feed_state": {
+          "name": "feed_state",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -770,10 +895,6 @@
         "study_sessions_scope_deck_check": {
           "name": "study_sessions_scope_deck_check",
           "value": "(\"study_sessions\".\"scope\" = 'mixed' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focused' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"
-        },
-        "study_sessions_strategy_check": {
-          "name": "study_sessions_strategy_check",
-          "value": "\"study_sessions\".\"strategy\" IN ('shuffle', 'ordered')"
         },
         "study_sessions_current_reel_position_check": {
           "name": "study_sessions_current_reel_position_check",

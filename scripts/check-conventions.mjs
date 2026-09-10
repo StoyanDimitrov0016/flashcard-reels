@@ -32,6 +32,58 @@ function visit(directory) {
     const isDomain = /(^|\/)features\/[^/]+\/domain\//.test(relativePath);
     const isApplication = /(^|\/)features\/[^/]+\/application\//.test(relativePath);
     const isInfrastructure = /(^|\/)infrastructure\//.test(relativePath);
+    const isDeckInstallerInternal = relativePath.startsWith(
+      "features/decks/deck-installer/internal/"
+    );
+    const isLearningEngineInternal = relativePath.startsWith("features/learning-engine/internal/");
+    const isLearningEngineDomain = relativePath.startsWith("features/learning-engine/domain/");
+    const isDeckInstallerComposition = relativePath === "infrastructure/deck-package-services.ts";
+    if (
+      !isDeckInstallerInternal &&
+      !isDeckInstallerComposition &&
+      imports.some((specifier) => specifier.includes("/deck-installer/internal/"))
+    ) {
+      architectureViolations.push(
+        `${relativePath}: imports deck-installer internals instead of its public surface`
+      );
+    }
+    if (imports.includes("ts-fsrs") && !isLearningEngineInternal) {
+      architectureViolations.push(
+        `${relativePath}: imports ts-fsrs outside learning-engine/internal`
+      );
+    }
+    if (
+      isLearningEngineDomain &&
+      imports.some(
+        (specifier) =>
+          specifier === "react" ||
+          specifier === "react-native" ||
+          specifier === "expo-sqlite" ||
+          specifier === "drizzle-orm" ||
+          specifier.startsWith("@/infrastructure/") ||
+          specifier.includes("/presentation/")
+      )
+    ) {
+      architectureViolations.push(`${relativePath}: learning-engine domain imports platform code`);
+    }
+    if (
+      relativePath.includes("/reels/") &&
+      relativePath.includes("/application/") &&
+      imports.some(
+        (specifier) =>
+          specifier.startsWith("@/infrastructure/sqlite/") ||
+          specifier.startsWith("drizzle-orm") ||
+          specifier === "expo-sqlite"
+      )
+    ) {
+      architectureViolations.push(`${relativePath}: feed composer imports SQLite directly`);
+    }
+    if (
+      relativePath.includes("/study/domain/recurrences") &&
+      imports.some((specifier) => specifier === "ts-fsrs")
+    ) {
+      architectureViolations.push(`${relativePath}: immediate recurrence imports FSRS types`);
+    }
     if (
       isPresentation &&
       imports.some(

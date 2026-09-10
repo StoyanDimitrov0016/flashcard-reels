@@ -23,6 +23,7 @@
     "no-debugger": "error",
     "no-duplicate-imports": "error",
     "no-nested-ternary": "error",
+    "unicorn/no-await-expression-member": "error",
     "no-restricted-imports": [
       "error",
       {
@@ -59,7 +60,8 @@
     "flashcards/no-zod-in-domain": "error",
     "flashcards/require-local-const-arrow-functions": "error",
     "flashcards/require-named-react-effect-callback": "error",
-    "flashcards/require-named-react-effect-cleanup": "error"
+    "flashcards/require-named-react-effect-cleanup": "error",
+    "flashcards/no-await-in-conditional-expression": "error"
   },
   "overrides": [
     {

@@ -19,8 +19,9 @@
     "check:dead-code": "knip",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
-    "audio:generate": "node scripts/generate-technical-audio.mjs",
-    "decks:packages": "node --experimental-strip-types scripts/generate-technical-deck-packages.mjs",
+    "decks:packages": "node --experimental-strip-types scripts/generate-demo-deck-package.mjs",
+    "decks:inspect": "node --experimental-strip-types scripts/inspect-deck-package.mjs",
+    "decks:test:generate": "node --experimental-strip-types scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
     "test": "vitest",
     "test:run": "vitest run",
@@ -56,6 +57,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-tab-view": "^4.3.2",
     "react-native-web": "~0.21.0",
+    "ts-fsrs": "5.4.2",
     "zod": "^4.5.4"
   },
   "devDependencies": {

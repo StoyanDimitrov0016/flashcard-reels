@@ -22,11 +22,5 @@ yarn-error.*
 example
 /ios
 /android
-/data/generated_audio/
-/data/*.log
-/technical_flashcard_library.zip
-
-# Authoring inputs are not runtime build assets. Generated .fcrdeck files remain under assets/decks.
-/data/technical_flashcard_library/
-/flashcard-reels-*.md
-/flashcard-reels-clone.zip
+# Demo authoring inputs are development-only. The generated package remains under assets/decks.
+/data/
