@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { useAudioPlayer, useAudioPlayerStatus, type AudioSource } from "expo-audio";
 
-export function useAnswerAudio(source: AudioSource) {
+import type { AudioReference } from "@/features/audio/domain/audio-reference";
+
+export function useAnswerAudio(reference: AudioReference) {
+  const source: AudioSource = reference;
   const player = useAudioPlayer(source, { updateInterval: 100 });
   const status = useAudioPlayerStatus(player);
 

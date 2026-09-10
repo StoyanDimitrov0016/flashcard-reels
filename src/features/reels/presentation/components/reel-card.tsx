@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import type { AudioSource } from "expo-audio";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
@@ -16,7 +16,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type ReelCardProps = Readonly<{
-  audioSource: AudioSource;
+  audioSource: AudioReference;
   card: Flashcard;
   deck: Deck;
   deckCardCount: number;

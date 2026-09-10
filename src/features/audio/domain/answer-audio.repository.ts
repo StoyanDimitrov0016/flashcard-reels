@@ -1,5 +1,10 @@
-import type { AudioSource } from "expo-audio";
+import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
 
 export interface AnswerAudioRepository {
-  findSourceForFlashcard(deckId: string, flashcardId: string, version?: number): AudioSource;
+  findSourceForFlashcard(
+    deckId: string,
+    version: number,
+    flashcardId: string,
+    side: AudioSide
+  ): AudioReference;
 }

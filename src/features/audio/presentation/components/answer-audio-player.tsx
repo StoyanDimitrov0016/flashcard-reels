@@ -1,12 +1,12 @@
-import type { AudioSource } from "expo-audio";
 import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 
 import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
+import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
 
-type AnswerAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioSource }>;
+type AnswerAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
 
 export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) {
   const { status, togglePlayback } = useAnswerAudio(isActive ? source : null);

@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from "expo-file-system";
-import type { AudioSource } from "expo-audio";
 
 import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
+import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
 import type {
   DeckAudioStorage,
   DeckPackage,
@@ -75,11 +75,13 @@ export class InstalledAudioStorage implements DeckAudioStorage, AnswerAudioRepos
     }
   }
 
-  findSourceForFlashcard(deckId: string, flashcardId: string, version?: number): AudioSource {
-    if (version === undefined) {
-      return null;
-    }
-    const file = new File(this.audioRoot(), deckId, String(version), `${flashcardId}.answer.mp3`);
+  findSourceForFlashcard(
+    deckId: string,
+    version: number,
+    flashcardId: string,
+    side: AudioSide
+  ): AudioReference {
+    const file = new File(this.audioRoot(), deckId, String(version), `${flashcardId}.${side}.mp3`);
     return file.exists ? { uri: file.uri } : null;
   }
 
