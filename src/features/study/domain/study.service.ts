@@ -1,12 +1,10 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
 type OpenStudySession = Readonly<{
   created: boolean;
@@ -18,16 +16,12 @@ export interface StudyService {
   openSession(
     scope: StudySessionScope,
     deckId: DeckId | null,
-    replaceExisting: boolean,
-    strategy?: StudySessionStrategy
+    replaceExisting: boolean
   ): Promise<OpenStudySession>;
   completeSession(sessionId: string): Promise<void>;
   findSession(sessionId: string): Promise<StudySession | null>;
   findSessionByScope(scope: StudySessionScope): Promise<StudySession | null>;
   recoverPendingCompletedSessionAggregation(limit?: number): Promise<void>;
-  findLearnerProfilesByFlashcardIds(
-    flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerProfile>>;
   getAggregationEligibility(sessionId: string): Promise<Readonly<{
     shouldCheck: boolean;
     safeThroughReelPosition: number;
@@ -35,10 +29,11 @@ export interface StudyService {
   appendSessionItems(
     sessionId: string,
     cards: readonly Flashcard[],
-    strategyState: string,
+    feedState: string,
     baseFeedPositionStart?: number,
     reelPositions?: number[]
   ): Promise<void>;
+  updateSessionFeedState(sessionId: string, feedState: string): Promise<void>;
   listSessionItems(sessionId: string): Promise<StudySessionItem[]>;
   findMaxSessionBaseFeedPosition(sessionId: string): Promise<number | null>;
   findMaxSessionReelPosition(sessionId: string): Promise<number | null>;

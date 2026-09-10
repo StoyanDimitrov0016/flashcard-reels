@@ -1,5 +1,4 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
 export type StudySessionScope = "mixed" | "focused";
 export type StudySessionFields = Readonly<{
@@ -11,16 +10,14 @@ export type StudySessionFields = Readonly<{
   id: string;
   lastActiveAt: string;
   scope: StudySessionScope;
-  strategyState: string;
-  strategy: StudySessionStrategy;
+  feedState: string;
 }>;
 
 export class StudySession {
   public readonly id: string;
   public readonly lastActiveAt: string;
   public readonly scope: StudySessionScope;
-  public readonly strategy: StudySessionStrategy;
-  public readonly strategyState: string;
+  public readonly feedState: string;
   public readonly deckId: DeckId | null;
   public readonly currentReelPosition: number;
   public readonly createdAt: string;
@@ -36,7 +33,6 @@ export class StudySession {
     this.id = fields.id;
     this.lastActiveAt = fields.lastActiveAt;
     this.scope = fields.scope;
-    this.strategy = fields.strategy;
-    this.strategyState = fields.strategyState;
+    this.feedState = fields.feedState;
   }
 }

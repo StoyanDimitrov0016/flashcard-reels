@@ -3,11 +3,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
-import {
-  StudySessionScopeSchema,
-  StudySessionStrategySchema,
-} from "@/features/study/contracts/study-session.schema";
+import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
@@ -28,7 +24,6 @@ export class SQLiteStudySessionLifecycleTransaction<
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExisting: boolean,
-    strategy: StudySessionStrategy,
     now: string,
     sessionId: string
   ): Promise<OpenStudySessionResult> {
@@ -47,9 +42,7 @@ export class SQLiteStudySessionLifecycleTransaction<
         Date.parse(now) - Date.parse(activeRow.lastActiveAt) >= FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
       const shouldReplace =
         activeRow &&
-        (replaceExisting ||
-          (scope === "focused" &&
-            (activeRow.deckId !== deckId || activeRow.strategy !== strategy || focusExpired)));
+        (replaceExisting || (scope === "focused" && (activeRow.deckId !== deckId || focusExpired)));
 
       if (activeRow && !shouldReplace) {
         transaction
@@ -81,8 +74,7 @@ export class SQLiteStudySessionLifecycleTransaction<
         id: sessionId,
         lastActiveAt: now,
         scope,
-        strategy,
-        strategyState: "{}",
+        feedState: "{}",
       });
       transaction
         .insert(studySessions)
@@ -95,8 +87,7 @@ export class SQLiteStudySessionLifecycleTransaction<
           id: session.id,
           lastActiveAt: session.lastActiveAt,
           scope: session.scope,
-          strategy: session.strategy,
-          strategyState: session.strategyState,
+          feedState: session.feedState,
         })
         .run();
       return { created: true, replacedSessionId: activeRow?.id ?? null, session };
@@ -113,8 +104,7 @@ export class SQLiteStudySessionLifecycleTransaction<
       id: row.id,
       lastActiveAt: row.lastActiveAt,
       scope: StudySessionScopeSchema.parse(row.scope),
-      strategy: StudySessionStrategySchema.parse(row.strategy),
-      strategyState: row.strategyState,
+      feedState: row.feedState,
     });
   }
 }

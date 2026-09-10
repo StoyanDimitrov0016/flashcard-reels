@@ -3,6 +3,7 @@ import {
   check,
   index,
   integer,
+  real,
   sqliteTable,
   text,
   unique,
@@ -89,12 +90,40 @@ export const learnerProfiles = sqliteTable(
   ]
 );
 
+export const flashcardMemoryStates = sqliteTable(
+  "flashcard_memory_states",
+  {
+    flashcardId: text("flashcard_id")
+      .primaryKey()
+      .notNull()
+      .references(() => flashcards.id, { onDelete: "cascade" }),
+    state: text("state", { enum: ["new", "learning", "review", "relearning"] }).notNull(),
+    dueAt: text("due_at").notNull(),
+    stability: real("stability").notNull(),
+    difficulty: real("difficulty").notNull(),
+    elapsedDays: integer("elapsed_days").notNull(),
+    scheduledDays: integer("scheduled_days").notNull(),
+    reps: integer("reps").notNull(),
+    lapses: integer("lapses").notNull(),
+    learningSteps: integer("learning_steps").notNull(),
+    lastReviewAt: text("last_review_at"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    check("flashcard_memory_states_elapsed_days_check", sql`${table.elapsedDays} >= 0`),
+    check("flashcard_memory_states_scheduled_days_check", sql`${table.scheduledDays} >= 0`),
+    check("flashcard_memory_states_reps_check", sql`${table.reps} >= 0`),
+    check("flashcard_memory_states_lapses_check", sql`${table.lapses} >= 0`),
+    check("flashcard_memory_states_learning_steps_check", sql`${table.learningSteps} >= 0`),
+  ]
+);
+
 export const studySessions = sqliteTable(
   "study_sessions",
   {
     id: text("id").primaryKey().notNull(),
     scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
-    strategy: text("strategy", { enum: ["shuffle", "ordered"] }).notNull(),
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
     currentReelPosition: integer("current_reel_position").notNull(),
     createdAt: text("created_at").notNull(),
@@ -103,14 +132,13 @@ export const studySessions = sqliteTable(
       .notNull()
       .default(-1),
     lastActiveAt: text("last_active_at").notNull(),
-    strategyState: text("strategy_state").notNull(),
+    feedState: text("feed_state").notNull(),
   },
   (table) => [
     check(
       "study_sessions_scope_deck_check",
       sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
     ),
-    check("study_sessions_strategy_check", sql`${table.strategy} IN ('shuffle', 'ordered')`),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
     check(
       "study_sessions_aggregated_through_reel_position_check",
@@ -242,6 +270,7 @@ export const databaseSchema = {
   deckAppearances,
   flashcards,
   learnerProfiles,
+  flashcardMemoryStates,
   studySessions,
   studySessionItems,
   flashcardReviewAttempts,

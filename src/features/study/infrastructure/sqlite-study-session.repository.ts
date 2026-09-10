@@ -2,10 +2,7 @@ import { and, asc, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
-import {
-  StudySessionScopeSchema,
-  StudySessionStrategySchema,
-} from "@/features/study/contracts/study-session.schema";
+import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
@@ -34,8 +31,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: session.id,
       lastActiveAt: session.lastActiveAt,
       scope: session.scope,
-      strategyState: session.strategyState,
-      strategy: session.strategy,
+      feedState: session.feedState,
     });
   }
 
@@ -121,8 +117,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       id: row.id,
       lastActiveAt: row.lastActiveAt,
       scope: StudySessionScopeSchema.parse(row.scope),
-      strategyState: row.strategyState,
-      strategy: StudySessionStrategySchema.parse(row.strategy),
+      feedState: row.feedState,
     });
   }
 }

@@ -2,7 +2,6 @@ import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-r
 
 export interface ReviewAttemptRepository {
   create(attempt: FlashcardReviewAttempt): Promise<void>;
-  finalize(attemptId: string, finalizedAt: string, updatedAt: string): Promise<void>;
   findById(attemptId: string): Promise<FlashcardReviewAttempt | null>;
   findBySessionAndReelPosition(
     studySessionId: string,
@@ -14,6 +13,7 @@ export interface ReviewAttemptRepository {
     throughReelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;
   findMaxReelPosition(studySessionId: string): Promise<number | null>;
+  listUnfinalizedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]>;
   listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number

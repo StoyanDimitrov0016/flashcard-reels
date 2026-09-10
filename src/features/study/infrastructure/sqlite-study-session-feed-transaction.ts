@@ -17,7 +17,7 @@ export class SQLiteStudySessionFeedTransaction<
   async append(
     sessionId: string,
     items: readonly StudySessionItem[],
-    strategyState: string
+    feedState: string
   ): Promise<void> {
     this.database.transaction((transaction) => {
       if (items.length > 0) {
@@ -37,7 +37,7 @@ export class SQLiteStudySessionFeedTransaction<
 
       const updated = transaction
         .update(studySessions)
-        .set({ strategyState })
+        .set({ feedState })
         .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
         .returning({ id: studySessions.id })
         .all();
@@ -45,5 +45,16 @@ export class SQLiteStudySessionFeedTransaction<
         throw new Error(`Could not update active study session ${sessionId}`);
       }
     });
+  }
+
+  async updateState(sessionId: string, feedState: string): Promise<void> {
+    const updated = await this.database
+      .update(studySessions)
+      .set({ feedState })
+      .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
+      .returning({ id: studySessions.id });
+    if (updated.length === 0) {
+      throw new Error(`Could not update active study session ${sessionId}`);
+    }
   }
 }

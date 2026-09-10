@@ -28,15 +28,6 @@ export class SQLiteReviewAttemptRepository<
     });
   }
 
-  async finalize(attemptId: string, finalizedAt: string, updatedAt: string): Promise<void> {
-    await this.database
-      .update(flashcardReviewAttempts)
-      .set({ finalizedAt, updatedAt })
-      .where(
-        and(eq(flashcardReviewAttempts.id, attemptId), isNull(flashcardReviewAttempts.finalizedAt))
-      );
-  }
-
   async findById(attemptId: string): Promise<FlashcardReviewAttempt | null> {
     const rows = await this.database
       .select()
@@ -95,6 +86,24 @@ export class SQLiteReviewAttemptRepository<
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.studySessionId, studySessionId));
     return rows[0]?.reelPosition ?? null;
+  }
+
+  async listUnfinalizedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]> {
+    const rows = await this.database
+      .select()
+      .from(flashcardReviewAttempts)
+      .where(
+        and(
+          eq(flashcardReviewAttempts.studySessionId, studySessionId),
+          isNull(flashcardReviewAttempts.finalizedAt)
+        )
+      )
+      .orderBy(
+        asc(flashcardReviewAttempts.reelPosition),
+        asc(flashcardReviewAttempts.createdAt),
+        asc(flashcardReviewAttempts.id)
+      );
+    return rows.map((row) => this.toModel(row));
   }
 
   async listUnfinalizedBeforeReelPosition(
