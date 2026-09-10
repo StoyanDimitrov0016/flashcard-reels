@@ -1,6 +1,7 @@
 import type { Clock } from "@/shared/domain/clock";
 import type {
   DeckAudioStorage,
+  DeckPackage,
   DeckPackageInstallationTransaction,
   DeckPackageInstallResult,
   DeckPackageFileReader,
@@ -9,6 +10,7 @@ import type {
 } from "@/features/decks/domain/deck-package.model";
 
 export class DeckPackageImportService {
+  private readonly deckImportTails = new Map<string, Promise<void>>();
   private readonly reader: DeckPackageReader;
   private readonly installation: DeckPackageInstallationTransaction;
   private readonly audioStorage: DeckAudioStorage;
@@ -38,6 +40,10 @@ export class DeckPackageImportService {
 
   async import(bytes: Uint8Array): Promise<DeckPackageInstallResult> {
     const deckPackage = this.reader.read(bytes);
+    return this.withDeckImportGuard(deckPackage.id, () => this.install(deckPackage));
+  }
+
+  private async install(deckPackage: DeckPackage): Promise<DeckPackageInstallResult> {
     const installedVersion = await this.versionRepository.findVersion(deckPackage.id);
     if (installedVersion === deckPackage.version) {
       return { deckId: deckPackage.id, status: "no-op", version: installedVersion };
@@ -73,6 +79,24 @@ export class DeckPackageImportService {
         }
       }
       throw error;
+    }
+  }
+
+  private async withDeckImportGuard<T>(deckId: string, operation: () => Promise<T>): Promise<T> {
+    const previous = this.deckImportTails.get(deckId) ?? Promise.resolve();
+    let release!: () => void;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.deckImportTails.set(deckId, current);
+    await previous.catch(() => {});
+    try {
+      return await operation();
+    } finally {
+      release();
+      if (this.deckImportTails.get(deckId) === current) {
+        this.deckImportTails.delete(deckId);
+      }
     }
   }
 }

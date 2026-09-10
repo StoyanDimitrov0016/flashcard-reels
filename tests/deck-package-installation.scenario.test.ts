@@ -70,6 +70,38 @@ class FailingInstallation implements DeckPackageInstallationTransaction {
   }
 }
 
+class GatedInstallation implements DeckPackageInstallationTransaction {
+  readonly entered: Promise<void>;
+  private signalEntered = () => {};
+  private releaseGate = () => {};
+  private readonly gate: Promise<void>;
+  private readonly delegate: DeckPackageInstallationTransaction;
+  private readonly gatedDeckId: string;
+
+  constructor(delegate: DeckPackageInstallationTransaction, gatedDeckId = TEST_DECK_ID) {
+    this.delegate = delegate;
+    this.gatedDeckId = gatedDeckId;
+    this.entered = new Promise((resolve) => {
+      this.signalEntered = resolve;
+    });
+    this.gate = new Promise((resolve) => {
+      this.releaseGate = resolve;
+    });
+  }
+
+  async install(deckPackage: DeckPackage, now: string): Promise<DeckPackageInstallResult> {
+    if (deckPackage.id === this.gatedDeckId) {
+      this.signalEntered();
+      await this.gate;
+    }
+    return this.delegate.install(deckPackage, now);
+  }
+
+  release(): void {
+    this.releaseGate();
+  }
+}
+
 function rawDeck(
   version: number,
   cards: readonly DeckPackage["cards"][number][] = [],
@@ -257,6 +289,61 @@ describe("deck package installation", () => {
     expect(
       await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
     ).toEqual({ version: 1 });
+  });
+
+  it("serializes same-deck imports and rechecks the winning version inside the guard", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const audio = new MemoryAudioStorage();
+    const initial = createImporter(database, clock, audio);
+    const existingCard = card(testId(16), 0);
+    await initial.importer.import(validArchive(1, [existingCard]));
+    await reviewCard(graph, database, existingCard.id);
+    await graph.study.recoverPendingCompletedSessionAggregation();
+    const gate = new GatedInstallation(
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+    );
+    const { importer } = createImporter(database, clock, audio, gate);
+    const update = validArchive(2, [card(existingCard.id, 0, "Concurrent winner")]);
+
+    const first = importer.import(update);
+    await gate.entered;
+    const second = importer.import(update);
+    await Promise.resolve();
+    expect(audio.staged.filter((entry) => entry.version === 2)).toHaveLength(1);
+    gate.release();
+
+    expect(new Set((await Promise.all([first, second])).map((result) => result.status))).toEqual(
+      new Set(["no-op", "updated"])
+    );
+    expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:2`]));
+    expect(
+      await new SQLiteFlashcardRepository(database.drizzle).findById(existingCard.id)
+    ).toMatchObject({ active: true, answer: "Concurrent winner" });
+    expect(
+      await database.getFirstAsync(
+        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        existingCard.id
+      )
+    ).toEqual({ review_count: 1 });
+  });
+
+  it("allows imports for different deck IDs to proceed independently", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const gate = new GatedInstallation(
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+    );
+    const { importer } = createImporter(database, clock, new MemoryAudioStorage(), gate);
+    const blocked = importer.import(validArchive(1, [card(testId(17), 0)]));
+    await gate.entered;
+
+    await expect(
+      importer.import(validArchive(1, [card(testId(18), 0)], OTHER_DECK_ID))
+    ).resolves.toMatchObject({ deckId: OTHER_DECK_ID, status: "installed" });
+    gate.release();
+    await expect(blocked).resolves.toMatchObject({ deckId: TEST_DECK_ID, status: "installed" });
   });
 
   it("completes active focused and mixed sessions when an installed deck changes", async () => {
