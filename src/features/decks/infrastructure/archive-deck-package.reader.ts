@@ -5,18 +5,19 @@ import {
   isSafeDeckPackagePath,
 } from "@/features/decks/contracts/deck-package.schema";
 import type { DeckPackage, DeckPackageReader } from "@/features/decks/domain/deck-package.model";
-
-class DeckPackageValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DeckPackageValidationError";
-  }
-}
+import {
+  DeckPackageValidationError,
+  validateAudioResources,
+  validateCardCount,
+  validateCompressedPackageSize,
+  validateUncompressedPackageSize,
+} from "@/features/decks/domain/deck-package-limits";
 
 const audioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
 
 export class ArchiveDeckPackageReader implements DeckPackageReader {
   read(bytes: Uint8Array): DeckPackage {
+    validateCompressedPackageSize(bytes.byteLength);
     let files: Record<string, Uint8Array>;
     try {
       files = unzipSync(bytes);
@@ -27,6 +28,14 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
     }
 
     const entries = Object.entries(files);
+    validateUncompressedPackageSize(
+      entries.reduce((total, [, content]) => total + content.byteLength, 0)
+    );
+    const audioEntries = entries.filter(([path]) => path.startsWith("audio/"));
+    validateAudioResources(
+      audioEntries.length,
+      audioEntries.map(([, content]) => content.byteLength)
+    );
     for (const [path, content] of entries) {
       if (!isSafeDeckPackagePath(path) || path.endsWith("/")) {
         throw new DeckPackageValidationError(`Unsafe archive path: ${path}`);
@@ -47,6 +56,7 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       throw new DeckPackageValidationError(`Invalid deck.json: ${parsedDeck.error.message}`);
     }
     const deck = parsedDeck.data;
+    validateCardCount(deck.cards.length);
     const audioFiles = new Map<string, Uint8Array>();
     for (const [path, content] of entries) {
       if (!path.startsWith("audio/")) {
