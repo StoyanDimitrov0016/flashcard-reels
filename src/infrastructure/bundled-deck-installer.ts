@@ -11,7 +11,10 @@ import {
   createDeckPackageServices,
   type AppDatabase,
 } from "@/infrastructure/deck-package-services";
-import { shouldInstallBundledDeck } from "@/infrastructure/bundled-deck-version";
+import {
+  shouldApplyBundledAppearance,
+  shouldInstallBundledDeck,
+} from "@/infrastructure/bundled-deck-version";
 import type { Clock } from "@/shared/domain/clock";
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
@@ -24,7 +27,7 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
       continue;
     }
     const result = await deckPackageImportService.import(await readBundledDeckPackage(definition));
-    if (result.status !== "installed") {
+    if (!shouldApplyBundledAppearance(result.status)) {
       continue;
     }
     await appearanceRepository.save(

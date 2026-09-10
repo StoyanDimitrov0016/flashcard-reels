@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { shouldInstallBundledDeck } from "@/infrastructure/bundled-deck-version";
+import {
+  shouldApplyBundledAppearance,
+  shouldInstallBundledDeck,
+} from "@/infrastructure/bundled-deck-version";
 
 describe("bundled deck startup version behavior", () => {
   it.each([
@@ -14,4 +17,10 @@ describe("bundled deck startup version behavior", () => {
       expect(shouldInstallBundledDeck(installedVersion, bundledVersion)).toBe(expected);
     }
   );
+
+  it("applies bundled appearance only to a fresh installation", () => {
+    expect(shouldApplyBundledAppearance("installed")).toBe(true);
+    expect(shouldApplyBundledAppearance("updated")).toBe(false);
+    expect(shouldApplyBundledAppearance("no-op")).toBe(false);
+  });
 });
