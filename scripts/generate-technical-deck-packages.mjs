@@ -1,8 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { strToU8, zipSync } from "fflate";
-
-import { DeckPackageSchema } from "../src/features/decks/contracts/deck-package.schema.ts";
+import { DeckPackageSchema } from "../src/features/decks/deck-installer/internal/deck-package.schema.ts";
+import { createDeckPackageArchive } from "../src/features/decks/deck-installer/internal/deck-package-writer.ts";
 
 const root = process.cwd();
 const sourceDirectory = path.join(root, "data", "technical_flashcard_library");
@@ -33,14 +32,12 @@ for (const deck of decks) {
     updatedAt: deck.updatedAt,
     version: deck.version ?? 1,
   });
-  const archive = {
-    "deck.json": strToU8(JSON.stringify(deckPackage, null, 2)),
-  };
+  const audioFiles = {};
   for (const card of deckPackage.cards) {
     const audioPath = path.join(audioDirectory, `${card.id}.mp3`);
-    archive[`audio/${card.id}.answer.mp3`] = new Uint8Array(await readFile(audioPath));
+    audioFiles[`audio/${card.id}.answer.mp3`] = new Uint8Array(await readFile(audioPath));
   }
   const outputPath = path.join(outputDirectory, `${deck.id}.fcrdeck`);
-  await writeFile(outputPath, zipSync(archive, { level: 6 }));
+  await writeFile(outputPath, createDeckPackageArchive(deckPackage, audioFiles));
   console.log(`Generated ${path.relative(root, outputPath)} (${deckPackage.cards.length} cards).`);
 }
