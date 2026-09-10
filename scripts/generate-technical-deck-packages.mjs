@@ -6,7 +6,7 @@ import { DeckPackageSchema } from "../src/features/decks/contracts/deck-package.
 
 const root = process.cwd();
 const sourceDirectory = path.join(root, "data", "technical_flashcard_library");
-const audioDirectory = path.join(root, "assets", "audio", "technical");
+const audioDirectory = path.join(sourceDirectory, "audio");
 const outputDirectory = path.join(root, "assets", "decks");
 const decks = JSON.parse(await readFile(path.join(sourceDirectory, "decks.json"), "utf8"));
 const flashcards = JSON.parse(

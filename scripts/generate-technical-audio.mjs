@@ -4,7 +4,7 @@ import path from "node:path";
 const root = process.cwd();
 const sourceDirectory = path.join(root, "data", "technical_flashcard_library");
 const stagingDirectory = path.join(root, "data", "generated_audio");
-const assetDirectory = path.join(root, "assets", "audio", "technical");
+const assetDirectory = path.join(root, "data", "technical_flashcard_library", "audio");
 const apiUrl = (process.env.AUDIO_GENERATOR_URL ?? "http://127.0.0.1:8765").replace(/\/$/, "");
 const limit = Number.parseInt(process.env.AUDIO_LIMIT ?? "0", 10);
 const startAt = Number.parseInt(process.env.AUDIO_START ?? "0", 10);

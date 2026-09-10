@@ -1,0 +1,32 @@
+# .easignore replaces .gitignore for EAS uploads, so retain the relevant project ignores here.
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+.env*.local
+*.tsbuildinfo
+example
+/ios
+/android
+/data/generated_audio/
+/data/*.log
+/technical_flashcard_library.zip
+
+# Authoring inputs are not runtime build assets. Generated .fcrdeck files remain under assets/decks.
+/data/technical_flashcard_library/
+/flashcard-reels-*.md
+/flashcard-reels-clone.zip

@@ -21,11 +21,12 @@
     "db:check": "drizzle-kit check",
     "audio:generate": "node scripts/generate-technical-audio.mjs",
     "decks:packages": "node --experimental-strip-types scripts/generate-technical-deck-packages.mjs",
+    "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
-    "check:android": "expo export --platform android",
+    "check:android": "npm run decks:check && expo export --platform android",
     "verify": "npm run check && npm run lint:report && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
   },
   "dependencies": {
