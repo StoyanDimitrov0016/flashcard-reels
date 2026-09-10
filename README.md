@@ -8,7 +8,7 @@ Importing external `.fcrdeck` files is the normal path for larger libraries. The
 
 ## Try the Android app
 
-[Install the Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/1e6914f5-d040-49bc-8896-20dc185ac001)
+[Install the Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/e9d91528-d45a-4476-88f2-8c9c6b945539)
 
 This is a preview build distributed outside Google Play. Android will ask you to approve installation from your browser or file manager. The build link is accessible to anyone who has it.
 
