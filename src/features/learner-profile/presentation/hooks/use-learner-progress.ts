@@ -5,7 +5,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import {
   explainLearnerProfile,
   type LearnerProfileExplanation,
-} from "@/features/learner-profile/domain/adaptive-shuffle-policy";
+} from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
