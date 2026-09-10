@@ -1,0 +1,27 @@
+{
+  "id": "a1000000-0000-4000-8000-000000000001",
+  "version": 2,
+  "title": "Versioned Test Deck",
+  "description": "A tiny deck for import update testing.",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-02T00:00:00.000Z",
+  "cards": [
+    {
+      "id": "b1000000-0000-4000-8000-000000000001",
+      "question": "What stays unchanged?",
+      "answer": "This card stays unchanged.",
+      "answerAudio": "audio/unchanged.answer.mp3"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000002",
+      "question": "What is edited?",
+      "answer": "The second version answer.",
+      "questionAudio": "audio/edited.question.mp3"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000004",
+      "question": "What is new?",
+      "answer": "This card is new in version two."
+    }
+  ]
+}
