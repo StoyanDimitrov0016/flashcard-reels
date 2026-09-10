@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { DeckPackageImportService } from "@/features/decks/application/deck-package-import.service";
 import { DeckPackageSchema } from "@/features/decks/contracts/deck-package.schema";
+import { DECK_PACKAGE_LIMITS } from "@/features/decks/domain/deck-package-limits";
 import type {
   DeckAudioStorage,
   DeckPackage,
@@ -67,6 +68,27 @@ class MemoryAudioStorage implements DeckAudioStorage {
 class FailingInstallation implements DeckPackageInstallationTransaction {
   async install(_deckPackage: DeckPackage, _now: string): Promise<DeckPackageInstallResult> {
     throw new Error("database installation failed");
+  }
+}
+
+class CountingInstallation implements DeckPackageInstallationTransaction {
+  calls = 0;
+  private readonly delegate: DeckPackageInstallationTransaction;
+
+  constructor(delegate: DeckPackageInstallationTransaction) {
+    this.delegate = delegate;
+  }
+
+  async install(deckPackage: DeckPackage, now: string): Promise<DeckPackageInstallResult> {
+    this.calls += 1;
+    return this.delegate.install(deckPackage, now);
+  }
+}
+
+class CleanupFailingAudioStorage extends MemoryAudioStorage {
+  override async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+    this.removedOtherVersions.push(`${deckId}:${keepVersion}`);
+    throw new Error("obsolete audio cleanup failed");
   }
 }
 
@@ -257,11 +279,25 @@ describe("deck package installation", () => {
     expect(
       await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)
     ).toEqual({ active: 0 });
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM flashcard_review_attempts WHERE flashcard_id = ?",
+        removedCard.id
+      )
+    ).toEqual({ count: 1 });
     const stagedBeforeNoOp = audio.staged.length;
     expect((await importer.import(validArchive(2, [removedCard]))).status).toBe("no-op");
     expect(audio.staged).toHaveLength(stagedBeforeNoOp);
     await expect(importer.import(validArchive(1, [removedCard]))).rejects.toThrow("older");
-    await importer.import(validArchive(3, [removedCard]));
+    const replacementCard = card(testId(21), 0);
+    await importer.import(validArchive(3, [replacementCard]));
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM learner_profiles WHERE flashcard_id = ?",
+        replacementCard.id
+      )
+    ).toEqual({ count: 0 });
+    await importer.import(validArchive(4, [removedCard]));
     expect(
       await new SQLiteFlashcardRepository(database.drizzle).findById(removedCard.id)
     ).toMatchObject({ active: true });
@@ -289,6 +325,66 @@ describe("deck package installation", () => {
     expect(
       await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
     ).toEqual({ version: 1 });
+  });
+
+  it("keeps a successful install when obsolete-audio cleanup fails", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const audio = new CleanupFailingAudioStorage();
+    const { importer } = createImporter(database, clock, audio);
+    const existingCard = card(testId(19), 0);
+
+    await importer.import(validArchive(1, [existingCard]));
+    await expect(
+      importer.import(validArchive(2, [card(existingCard.id, 0, "Still usable")]))
+    ).resolves.toMatchObject({ status: "updated", version: 2 });
+    expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${TEST_DECK_ID}:2`]));
+    expect(
+      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ version: 2 });
+  });
+
+  it("performs no permanent work or session invalidation for a same-version import", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const audio = new MemoryAudioStorage();
+    const delegate = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new CountingInstallation(delegate);
+    const { importer } = createImporter(database, clock, audio, installation);
+    const existingCard = card(testId(20), 0);
+    const bytes = validArchive(1, [existingCard]);
+    await importer.import(bytes);
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      existingCard.id
+    );
+    if (!installedCard) {
+      throw new Error("Missing installed card");
+    }
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      "ordered"
+    );
+    const countsBefore = {
+      activated: audio.activated.length,
+      installation: installation.calls,
+      removedOtherVersions: audio.removedOtherVersions.length,
+      removedVersions: audio.removedVersions.length,
+      staged: audio.staged.length,
+    };
+
+    await expect(importer.import(bytes)).resolves.toMatchObject({ status: "no-op" });
+    expect({
+      activated: audio.activated.length,
+      installation: installation.calls,
+      removedOtherVersions: audio.removedOtherVersions.length,
+      removedVersions: audio.removedVersions.length,
+      staged: audio.staged.length,
+    }).toEqual(countsBefore);
+    expect((await graph.sessions.findById(focused.studySessionId))?.completedAt).toBeNull();
   });
 
   it("serializes same-deck imports and rechecks the winning version inside the guard", async () => {
@@ -358,6 +454,15 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
+    const historicalSessionId = await reviewCard(graph, database, existingCard.id);
+    const historicalBefore = await database.getFirstAsync(
+      "SELECT completed_at FROM study_sessions WHERE id = ?",
+      historicalSessionId
+    );
+    const finalizedAttemptBefore = await database.getFirstAsync(
+      "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
+      historicalSessionId
+    );
     const focused = await graph.feed.prepareFeed(
       [installedCard],
       "focused",
@@ -370,6 +475,18 @@ describe("deck package installation", () => {
     await importer.import(validArchive(2, [card(existingCard.id, 0, "Updated")]));
     expect((await graph.sessions.findById(focused.studySessionId))?.completedAt).not.toBeNull();
     expect((await graph.sessions.findById(mixed.studySessionId))?.completedAt).not.toBeNull();
+    expect(
+      await database.getFirstAsync(
+        "SELECT completed_at FROM study_sessions WHERE id = ?",
+        historicalSessionId
+      )
+    ).toEqual(historicalBefore);
+    expect(
+      await database.getFirstAsync(
+        "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
+        historicalSessionId
+      )
+    ).toEqual(finalizedAttemptBefore);
   });
 
   it("completes the active mixed session when a new deck is installed", async () => {
@@ -386,13 +503,24 @@ describe("deck package installation", () => {
       throw new Error("Missing installed card");
     }
     const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, "shuffle");
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      "ordered"
+    );
 
     await importer.import(validArchive(1, [card(testId(15), 0)], OTHER_DECK_ID));
     expect((await graph.sessions.findById(mixed.studySessionId))?.completedAt).not.toBeNull();
+    expect((await graph.sessions.findById(focused.studySessionId))?.completedAt).toBeNull();
   });
 
   it.each([
-    ["malformed deck", archive({ id: "not-a-uuid" })],
+    ["malformed deck.json", zipSync({ "deck.json": strToU8("{") })],
+    ["invalid deck ID", archive({ ...rawDeck(1), id: "not-a-uuid" })],
+    ["invalid card ID", archive(rawDeck(1, [{ ...card(testId(5), 0), id: "bad" }]))],
+    ["invalid deck version", archive({ ...rawDeck(1), version: 0 })],
     ["duplicate IDs", archive(rawDeck(1, [card(testId(5), 0), card(testId(5), 1)]))],
     ["non-contiguous order", archive(rawDeck(1, [card(testId(6), 1)]))],
     [
@@ -406,17 +534,40 @@ describe("deck package installation", () => {
       }),
     ],
     [
+      "unsupported audio extension",
+      archive(deck(1, [card(testId(8), 0)]), {
+        [`audio/${testId(8)}.answer.wav`]: new Uint8Array([1]),
+      }),
+    ],
+    [
       "unsafe archive path",
       archive(deck(1, [card(testId(10), 0)]), { "../escape.mp3": new Uint8Array([1]) }),
+    ],
+    ["missing required package file", zipSync({ "audio/orphan.answer.mp3": new Uint8Array([1]) })],
+    [
+      "oversized audio resource",
+      archive(deck(2, [card(testId(10), 0)]), {
+        [`audio/${testId(10)}.answer.mp3`]: new Uint8Array(
+          DECK_PACKAGE_LIMITS.maximumAudioFileBytes + 1
+        ),
+      }),
     ],
   ])("rejects %s before changing installed state", async (_name, bytes) => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
-    const { importer } = createImporter(database, clock);
+    const { audio, importer } = createImporter(database, clock);
     await importer.import(validArchive(1, [card(testId(11), 0)]));
+    const audioBefore = {
+      activeVersions: new Set(audio.activeVersions),
+      activated: audio.activated.length,
+      staged: audio.staged.length,
+    };
     await expect(importer.import(bytes)).rejects.toThrow();
     expect(
       await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
     ).toEqual({ version: 1 });
+    expect(audio.activeVersions).toEqual(audioBefore.activeVersions);
+    expect(audio.activated).toHaveLength(audioBefore.activated);
+    expect(audio.staged).toHaveLength(audioBefore.staged);
   });
 });
