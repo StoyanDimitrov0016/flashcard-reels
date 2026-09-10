@@ -1,15 +1,20 @@
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import {
+  createLearningScheduler,
+  type FlashcardMemoryStateRepository,
+} from "@/features/learning-engine";
+import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { findNextFreeRecurrenceSlot } from "@/features/study/domain/recurrences";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
+import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import { StudySession } from "@/features/study/domain/study-session.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type {
@@ -49,8 +54,7 @@ export function makeSession(
   id: string,
   scope: "mixed" | "focused",
   deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
-  currentReelPosition = 0,
-  strategy: StudySessionStrategy = "shuffle"
+  currentReelPosition = 0
 ): StudySession {
   return new StudySession({
     completedAt: null,
@@ -61,8 +65,7 @@ export function makeSession(
     id,
     lastActiveAt: "2026-01-01T00:00:00.000Z",
     scope,
-    strategyState: "{}",
-    strategy,
+    feedState: "{}",
   });
 }
 
@@ -188,6 +191,15 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
     return positions.length > 0 ? Math.max(...positions) : null;
   }
 
+  async listUnfinalizedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]> {
+    return ordered(
+      [...this.attempts.values()].filter(
+        (attempt) => attempt.studySessionId === studySessionId && attempt.finalizedAt === null
+      ),
+      (left, right) => left.reelPosition - right.reelPosition
+    );
+  }
+
   async listUnfinalizedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number
@@ -215,6 +227,27 @@ export class InMemoryReviewAttemptRepository implements ReviewAttemptRepository 
   }
 }
 
+export class InMemoryReviewAttemptFinalizationTransaction implements ReviewAttemptFinalizationTransaction {
+  private readonly attempts: InMemoryReviewAttemptRepository;
+
+  constructor(attempts: InMemoryReviewAttemptRepository) {
+    this.attempts = attempts;
+  }
+
+  async finalizeAttempt(
+    attemptId: string,
+    finalizedAt: string,
+    updatedAt: string
+  ): Promise<boolean> {
+    const attempt = await this.attempts.findById(attemptId);
+    if (!attempt || attempt.finalizedAt !== null) {
+      return false;
+    }
+    await this.attempts.finalize(attemptId, finalizedAt, updatedAt);
+    return true;
+  }
+}
+
 export class InMemoryStudySessionRepository implements StudySessionRepository {
   private readonly sessions = new Map<string, StudySession>();
 
@@ -232,8 +265,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           id: session.id,
           lastActiveAt: session.lastActiveAt,
           scope: session.scope,
-          strategyState: session.strategyState,
-          strategy: session.strategy,
+          feedState: session.feedState,
         })
       );
     }
@@ -307,14 +339,13 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         id: session.id,
         lastActiveAt,
         scope: session.scope,
-        strategyState: session.strategyState,
-        strategy: session.strategy,
+        feedState: session.feedState,
       })
     );
     return true;
   }
 
-  async setStrategyState(sessionId: string, strategyState: string): Promise<boolean> {
+  async setFeedState(sessionId: string, feedState: string): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session || session.completedAt !== null) {
       return false;
@@ -330,8 +361,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         id: session.id,
         lastActiveAt: session.lastActiveAt,
         scope: session.scope,
-        strategyState,
-        strategy: session.strategy,
+        feedState,
       })
     );
     return true;
@@ -353,7 +383,6 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
     scope: "mixed" | "focused",
     deckId: string | null,
     replaceExisting: boolean,
-    strategy: StudySessionStrategy,
     now: string,
     sessionId: string
   ): Promise<OpenStudySessionResult> {
@@ -366,10 +395,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
     const shouldReplace =
       activeSession &&
       (replaceExisting ||
-        (scope === "focused" &&
-          (activeSession.deckId !== deckId ||
-            activeSession.strategy !== strategy ||
-            focusExpired)));
+        (scope === "focused" && (activeSession.deckId !== deckId || focusExpired)));
 
     if (activeSession && !shouldReplace) {
       await this.sessions.updateCurrentReelPosition(
@@ -389,8 +415,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
           id: activeSession.id,
           lastActiveAt: now,
           scope: activeSession.scope,
-          strategy: activeSession.strategy,
-          strategyState: activeSession.strategyState,
+          feedState: activeSession.feedState,
         }),
       };
     }
@@ -406,8 +431,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
       id: sessionId,
       lastActiveAt: now,
       scope,
-      strategy,
-      strategyState: "{}",
+      feedState: "{}",
     });
     await this.sessions.create(session);
     return { created: true, replacedSessionId: activeSession?.id ?? null, session };
@@ -502,22 +526,29 @@ export class InMemoryStudySessionFeedTransaction implements StudySessionFeedTran
   async append(
     sessionId: string,
     items: readonly StudySessionItem[],
-    strategyState: string
+    feedState: string
   ): Promise<void> {
     const itemSnapshot = this.items.all();
     const session = await this.sessions.findById(sessionId);
     try {
       await this.items.createMany(items);
-      const updated = await this.sessions.setStrategyState(sessionId, strategyState);
+      const updated = await this.sessions.setFeedState(sessionId, feedState);
       if (!updated) {
         throw new Error(`Could not update study session ${sessionId}`);
       }
     } catch (error) {
       this.items.restore(itemSnapshot);
       if (session) {
-        await this.sessions.setStrategyState(sessionId, session.strategyState);
+        await this.sessions.setFeedState(sessionId, session.feedState);
       }
       throw error;
+    }
+  }
+
+  async updateState(sessionId: string, feedState: string): Promise<void> {
+    const updated = await this.sessions.setFeedState(sessionId, feedState);
+    if (!updated) {
+      throw new Error(`Could not update study session ${sessionId}`);
     }
   }
 }
@@ -552,7 +583,8 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
     studySessionId: string,
     fromTargetReelPosition: number
   ): Promise<string[]> {
-    return (await this.listBySessionId(studySessionId))
+    const recurrences = await this.listBySessionId(studySessionId);
+    return recurrences
       .filter(
         (recurrence) =>
           recurrence.consumedAt === null && recurrence.targetReelPosition > fromTargetReelPosition
@@ -605,8 +637,9 @@ export class InMemoryStudySessionRecurrenceRepository implements StudySessionRec
       (current) =>
         current.sourceAttemptId === recurrence.sourceAttemptId && current.consumedAt === null
     );
+    const sessionRecurrences = await this.listBySessionId(recurrence.studySessionId);
     const occupiedReelPositions = new Set(
-      (await this.listBySessionId(recurrence.studySessionId))
+      sessionRecurrences
         .filter((current) => current.consumedAt === null && current.id !== existing?.id)
         .map((current) => current.targetReelPosition)
     );
@@ -738,6 +771,24 @@ export type StudyHarness = Readonly<{
   sessions: InMemoryStudySessionRepository;
 }>;
 
+const emptyMemoryStates: FlashcardMemoryStateRepository = {
+  findByFlashcardId: async () => null,
+  findByFlashcardIds: async () => new Map(),
+};
+
+export function createTestReelFeedService(
+  harness: StudyHarness,
+  random: () => number = () => 0
+): ReelFeedServiceImpl {
+  return new ReelFeedServiceImpl(
+    harness.service,
+    emptyMemoryStates,
+    createLearningScheduler(),
+    harness.clock,
+    random
+  );
+}
+
 export function createStudyHarness(random: () => number = () => 0): StudyHarness {
   const attempts = new InMemoryReviewAttemptRepository();
   const sessions = new InMemoryStudySessionRepository();
@@ -757,6 +808,7 @@ export function createStudyHarness(random: () => number = () => 0): StudyHarness
     transaction,
     feedTransaction,
     lifecycleTransaction,
+    new InMemoryReviewAttemptFinalizationTransaction(attempts),
     random
   );
   return { attempts, clock, items, recurrences, service, sessions };

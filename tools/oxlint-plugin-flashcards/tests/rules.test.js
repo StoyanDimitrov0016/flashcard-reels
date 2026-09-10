@@ -92,7 +92,7 @@ tester.run("no-zod-in-domain", plugin.rules["no-zod-in-domain"], {
   valid: [
     {
       code: 'import { z } from "zod";',
-      filename: "src/features/reels/contracts/feed-strategy-state.schema.ts",
+      filename: "src/features/reels/contracts/feed-state.schema.ts",
     },
   ],
   invalid: [
@@ -131,6 +131,30 @@ tester.run(
     invalid: [
       { code: "useEffect(function subscribe() { return () => {}; });", errors: 1 },
       { code: "useEffect(function subscribe() { return function() {}; });", errors: 1 },
+    ],
+  }
+);
+
+tester.run(
+  "no-await-in-conditional-expression",
+  plugin.rules["no-await-in-conditional-expression"],
+  {
+    valid: [
+      { code: "async function load() { const value = await loadValue(); return value; }" },
+      { code: "const value = condition ? loadValue() : fallback;" },
+      {
+        code: "async function load() { const value = condition ? async () => await loadValue() : fallback; return value; }",
+      },
+    ],
+    invalid: [
+      {
+        code: "async function load() { const value = condition ? await loadValue() : fallback; return value; }",
+        errors: [{ messageId: "forbidden" }],
+      },
+      {
+        code: "async function load() { const value = condition ? fallback : await loadValue(); return value; }",
+        errors: [{ messageId: "forbidden" }],
+      },
     ],
   }
 );
