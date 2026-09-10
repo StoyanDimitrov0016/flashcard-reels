@@ -1,14 +1,13 @@
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
 
 type FeedScopeContextValue = Readonly<{
   focusedFeed: FocusedFeedState;
   focusRestoring: boolean;
   focusRevision: number;
-  startFocusedFeed: (deckId: DeckId, strategy?: StudySessionStrategy) => void;
+  startFocusedFeed: (deckId: DeckId, anchorFlashcardId?: string) => void;
   consumeFocusedFeedReplacement: () => void;
 }>;
 
@@ -19,7 +18,7 @@ export type FocusedFeedState =
       replaceSession: boolean;
       revision: number;
       status: "ready";
-      strategy: StudySessionStrategy;
+      anchorFlashcardId: string | null;
     }>;
 
 const FeedScopeContext = createContext<FeedScopeContextValue | null>(null);
@@ -38,18 +37,18 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
           replaceSession: false,
           revision: focusLifecycle.revision,
           status: "ready" as const,
-          strategy: focusLifecycle.session.strategy,
+          anchorFlashcardId: null,
         }
       : null;
   const visibleFocusedFeed = restoredFocusedFeed ?? focusedFeed;
 
-  const startFocusedFeed = (deckId: DeckId, strategy: StudySessionStrategy = "shuffle") => {
+  const startFocusedFeed = (deckId: DeckId, anchorFlashcardId?: string) => {
     setFocusedFeed((currentFeed) => ({
       deckId,
       replaceSession: true,
       revision: currentFeed.status === "ready" ? currentFeed.revision + 1 : 1,
       status: "ready",
-      strategy,
+      anchorFlashcardId: anchorFlashcardId ?? null,
     }));
   };
 

@@ -190,7 +190,7 @@ export function ReelCard({
     resetHoldFeedback();
     holdCompleted.current = true;
     lastTapAt.current = 0;
-    openFocusedFeed(card.deckId);
+    openFocusedFeed(card.deckId, card.id);
   };
 
   const frontRotation = rotation.interpolate({

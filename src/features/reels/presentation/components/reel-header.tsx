@@ -38,10 +38,10 @@ export function ReelHeader({
         </View>
       ) : (
         <Pressable
-          accessibilityHint="Opens the Focus tab in Shuffle mode"
+          accessibilityHint="Opens the Focus tab with this card visible"
           accessibilityLabel={`Focus on ${label}`}
           accessibilityRole="button"
-          onPress={() => openFocusedFeed(card.deckId)}
+          onPress={() => openFocusedFeed(card.deckId, card.id)}
           style={styles.labelStack}
         >
           <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{label}</Text>

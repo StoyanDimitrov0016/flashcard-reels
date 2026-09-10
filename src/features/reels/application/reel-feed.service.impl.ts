@@ -1,11 +1,15 @@
-import { buildAdaptiveShuffleBag } from "@/features/learner-profile/domain/adaptive-shuffle-policy";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import {
+  createFeedComposer,
+  rememberCard,
+  type FeedCandidate,
+  type FeedState,
+  type FlashcardMemoryStateRepository,
+  type LearnerMemoryState,
+  type LearningScheduler,
+} from "@/features/learning-engine";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import {
-  FeedStrategyStateSchema,
-  type FeedStrategyState,
-} from "@/features/reels/contracts/feed-strategy-state.schema";
+import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
 import type {
   PreparedReelFeed,
@@ -16,17 +20,30 @@ import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service"
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 import type { StudyService } from "@/features/study/domain/study.service";
-import type { RandomSource } from "@/features/study/domain/recurrences";
+import type { Clock } from "@/shared/domain/clock";
+
+type RandomSource = () => number;
 
 export class ReelFeedServiceImpl implements ReelFeedService {
   private readonly studyService: StudyService;
-  private readonly random: RandomSource;
+  private readonly memoryStateRepository: FlashcardMemoryStateRepository;
+  private readonly scheduler: LearningScheduler;
+  private readonly clock: Clock;
+  private readonly feedComposer: ReturnType<typeof createFeedComposer>;
 
-  constructor(studyService: StudyService, random: RandomSource = Math.random) {
+  constructor(
+    studyService: StudyService,
+    memoryStateRepository: FlashcardMemoryStateRepository,
+    scheduler: LearningScheduler,
+    clock: Clock,
+    random: RandomSource = Math.random
+  ) {
     this.studyService = studyService;
-    this.random = random;
+    this.memoryStateRepository = memoryStateRepository;
+    this.scheduler = scheduler;
+    this.clock = clock;
+    this.feedComposer = createFeedComposer(random);
   }
 
   async prepareFeed(
@@ -34,23 +51,23 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExistingSession: boolean,
-    strategy: StudySessionStrategy = "shuffle"
+    anchorFlashcardId: string | null = null
   ): Promise<PreparedReelFeed> {
-    let openedSession = await this.studyService.openSession(
-      scope,
-      deckId,
-      replaceExistingSession,
-      strategy
-    );
+    let openedSession = await this.studyService.openSession(scope, deckId, replaceExistingSession);
     const hasItems =
       (await this.studyService.findMaxSessionBaseFeedPosition(openedSession.session.id)) !== null;
 
     if (!openedSession.created && !hasItems) {
       await this.studyService.completeSession(openedSession.session.id);
-      openedSession = await this.studyService.openSession(scope, deckId, true, strategy);
+      openedSession = await this.studyService.openSession(scope, deckId, true);
     }
 
-    await this.ensureMaterialized(cards, openedSession.session);
+    await this.ensureMaterialized(
+      cards,
+      openedSession.session,
+      FEED_ENGINE_CONFIG.futureWindowSize,
+      anchorFlashcardId
+    );
     return this.buildPreparedFeed(cards, openedSession.session);
   }
 
@@ -65,6 +82,16 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       FEED_ENGINE_CONFIG.futureWindowSize + FEED_ENGINE_CONFIG.materializationBatchSize
     );
     return this.buildPreparedFeed(cards, session);
+  }
+
+  async recordVisibleCard(studySessionId: string, flashcardId: string): Promise<void> {
+    const session = await this.studyService.findSession(studySessionId);
+    if (!session) {
+      throw new Error(`Missing study session ${studySessionId}`);
+    }
+    const currentState = parseFeedState(session.feedState);
+    const nextState = rememberCard(currentState, flashcardId);
+    await this.studyService.updateSessionFeedState(studySessionId, JSON.stringify(nextState));
   }
 
   async refreshOccurrences(
@@ -90,85 +117,147 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     sourceCards: readonly Flashcard[],
     session: Readonly<{
       currentReelPosition: number;
+      feedState: string;
       id: string;
-      strategy: StudySessionStrategy;
-      strategyState: string;
     }>,
-    additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize
+    additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize,
+    anchorFlashcardId: string | null = null
   ): Promise<void> {
     const targetPosition = session.currentReelPosition + additionalWindow;
-    const pendingFutureRecurrenceCardIds = new Set(
+    const candidates = await this.buildCandidates(sourceCards, session);
+    const feedState = parseFeedState(session.feedState);
+    await this.materializeUntilTarget(
+      session,
+      targetPosition,
+      candidates,
+      feedState,
+      feedState,
+      anchorFlashcardId
+    );
+  }
+
+  private async materializeUntilTarget(
+    session: Readonly<{ id: string }>,
+    targetPosition: number,
+    candidates: readonly FeedCandidate[],
+    persistedFeedState: FeedState,
+    selectionFeedState: FeedState,
+    anchorFlashcardId: string | null
+  ): Promise<void> {
+    const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
+    if (materializedThrough >= targetPosition) {
+      return;
+    }
+
+    const nextState = await this.materializeBatch(
+      session,
+      targetPosition,
+      candidates,
+      persistedFeedState,
+      selectionFeedState,
+      anchorFlashcardId
+    );
+    if (nextState) {
+      await this.materializeUntilTarget(
+        session,
+        targetPosition,
+        candidates,
+        persistedFeedState,
+        nextState,
+        anchorFlashcardId
+      );
+    }
+  }
+
+  private async buildCandidates(
+    sourceCards: readonly Flashcard[],
+    session: Readonly<{ currentReelPosition: number; id: string }>
+  ): Promise<FeedCandidate[]> {
+    const activeCards = sourceCards.filter((card) => card.active);
+    const memoryStates = await this.memoryStateRepository.findByFlashcardIds(
+      activeCards.map((card) => card.id)
+    );
+    const pendingRecurrenceCardIds = new Set(
       await this.studyService.listPendingRecurrenceFlashcardIdsFromTargetPosition(
         session.id,
         session.currentReelPosition
       )
     );
-    const learnerProfiles =
-      session.strategy === "shuffle"
-        ? await this.studyService.findLearnerProfilesByFlashcardIds(
-            sourceCards.map((card) => card.id)
-          )
-        : new Map<string, LearnerProfile>();
-    const materializeBatch = async (strategyState: FeedStrategyState): Promise<void> => {
-      const materializedThrough = await this.findMaterializedThrough(session.id, targetPosition);
-      if (materializedThrough >= targetPosition) {
-        return;
-      }
-      const batchCards: Flashcard[] = [];
-      const batchReelPositions: number[] = [];
-      let nextReelPosition =
-        ((await this.studyService.findMaxSessionReelPosition(session.id)) ?? -1) + 1;
-      const reservedRecurrences = await this.studyService.listSessionRecurrencesInTargetRange(
-        session.id,
-        nextReelPosition,
-        targetPosition
-      );
-      const occupiedRecurrencePositions = new Set(
-        reservedRecurrences.map((recurrence) => recurrence.targetReelPosition)
-      );
-      const baseFeedPositionStart =
-        ((await this.studyService.findMaxSessionBaseFeedPosition(session.id)) ?? -1) + 1;
+    const now = this.clock.now();
 
-      while (
-        nextReelPosition <= targetPosition &&
-        batchCards.length < FEED_ENGINE_CONFIG.materializationBatchSize
-      ) {
-        if (occupiedRecurrencePositions.has(nextReelPosition)) {
-          nextReelPosition += 1;
-          continue;
-        }
+    return activeCards.map((card) =>
+      toCandidate(
+        card,
+        memoryStates.get(card.id) ?? null,
+        pendingRecurrenceCardIds,
+        this.scheduler,
+        now
+      )
+    );
+  }
 
-        const nextCard = this.nextCard(
-          sourceCards,
-          session.strategy,
-          strategyState,
-          learnerProfiles,
-          pendingFutureRecurrenceCardIds
-        );
-        if (!nextCard.card) {
-          break;
-        }
-        batchCards.push(nextCard.card);
-        batchReelPositions.push(nextReelPosition);
+  private async materializeBatch(
+    session: Readonly<{ id: string }>,
+    targetPosition: number,
+    candidates: readonly FeedCandidate[],
+    persistedFeedState: FeedState,
+    initialSelectionState: FeedState,
+    anchorFlashcardId: string | null
+  ): Promise<FeedState | null> {
+    const batchCards: Flashcard[] = [];
+    const batchReelPositions: number[] = [];
+    let selectionFeedState = initialSelectionState;
+    let nextReelPosition =
+      ((await this.studyService.findMaxSessionReelPosition(session.id)) ?? -1) + 1;
+    const reservedRecurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+      session.id,
+      nextReelPosition,
+      targetPosition
+    );
+    const occupiedRecurrencePositions = new Set(
+      reservedRecurrences.map((recurrence) => recurrence.targetReelPosition)
+    );
+    const baseFeedPositionStart =
+      ((await this.studyService.findMaxSessionBaseFeedPosition(session.id)) ?? -1) + 1;
+    const anchorCandidate = candidates.filter(
+      (candidate) => candidate.card.id === anchorFlashcardId
+    );
+    const shouldAnchor = anchorFlashcardId !== null && baseFeedPositionStart === 0;
+
+    while (
+      nextReelPosition <= targetPosition &&
+      batchCards.length < FEED_ENGINE_CONFIG.materializationBatchSize
+    ) {
+      if (occupiedRecurrencePositions.has(nextReelPosition)) {
         nextReelPosition += 1;
-        strategyState = nextCard.state;
+        continue;
       }
 
-      if (batchCards.length === 0) {
-        return;
+      const choice = this.feedComposer.chooseNext({
+        candidates: shouldAnchor && batchCards.length === 0 ? anchorCandidate : candidates,
+        state: selectionFeedState,
+      });
+      if (!choice) {
+        break;
       }
+      batchCards.push(choice.candidate.card);
+      batchReelPositions.push(nextReelPosition);
+      nextReelPosition += 1;
+      selectionFeedState = choice.state;
+    }
 
-      await this.studyService.appendSessionItems(
-        session.id,
-        batchCards,
-        JSON.stringify(strategyState),
-        baseFeedPositionStart,
-        batchReelPositions
-      );
-      await materializeBatch(strategyState);
-    };
+    if (batchCards.length === 0) {
+      return null;
+    }
 
-    return materializeBatch(parseStrategyState(session.strategyState));
+    await this.studyService.appendSessionItems(
+      session.id,
+      batchCards,
+      JSON.stringify(persistedFeedState),
+      baseFeedPositionStart,
+      batchReelPositions
+    );
+    return selectionFeedState;
   }
 
   private async buildPreparedFeed(
@@ -187,22 +276,20 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       session.currentReelPosition + FEED_ENGINE_CONFIG.futureWindowSize,
       materializedThrough
     );
-    const items =
-      loadedFromReelPosition <= loadedThroughReelPosition
-        ? await this.studyService.listSessionItemsInReelPositionRange(
-            session.id,
-            loadedFromReelPosition,
-            loadedThroughReelPosition
-          )
-        : [];
-    const recurrences =
-      loadedFromReelPosition <= loadedThroughReelPosition
-        ? await this.studyService.listSessionRecurrencesInTargetRange(
-            session.id,
-            loadedFromReelPosition,
-            loadedThroughReelPosition
-          )
-        : [];
+    let items: StudySessionItem[] = [];
+    let recurrences: StudySessionRecurrence[] = [];
+    if (loadedFromReelPosition <= loadedThroughReelPosition) {
+      items = await this.studyService.listSessionItemsInReelPositionRange(
+        session.id,
+        loadedFromReelPosition,
+        loadedThroughReelPosition
+      );
+      recurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+        session.id,
+        loadedFromReelPosition,
+        loadedThroughReelPosition
+      );
+    }
     const occurrences = this.mergeMaterializedReels(
       items,
       recurrences,
@@ -219,52 +306,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       occurrences,
       studySessionId: session.id,
     };
-  }
-
-  private nextCard(
-    cards: readonly Flashcard[],
-    strategy: StudySessionStrategy,
-    state: FeedStrategyState,
-    learnerProfiles: ReadonlyMap<string, LearnerProfile>,
-    excludedCardIds: ReadonlySet<string> = new Set()
-  ): Readonly<{ card: Flashcard | null; state: FeedStrategyState }> {
-    if (cards.length === 0) {
-      return { card: null, state };
-    }
-
-    if (strategy === "ordered") {
-      const orderedCards = this.orderCards(cards);
-      const card = orderedCards[state.cursor % orderedCards.length] ?? null;
-      return { card, state: { cursor: state.cursor + 1, cycle: [] } };
-    }
-
-    let cycle = [...state.cycle];
-    let cursor = state.cursor;
-    if (cursor >= cycle.length || cycle.length === 0) {
-      cycle = buildAdaptiveShuffleBag(cards, learnerProfiles, this.random);
-      cursor = 0;
-    }
-
-    let fallback: Readonly<{ card: Flashcard; cursor: number }> | null = null;
-    for (let offset = 0; offset < cycle.length; offset += 1) {
-      const nextCursor = cursor + offset;
-      const cardId = cycle[nextCursor % cycle.length];
-      const card = cards.find((candidate) => candidate.id === cardId) ?? null;
-      if (!card) {
-        continue;
-      }
-      fallback ??= { card, cursor: nextCursor };
-      if (!excludedCardIds.has(card.id)) {
-        return { card, state: { cursor: nextCursor + 1, cycle } };
-      }
-    }
-
-    // A reserved Shuffle candidate is preferred, but cannot dead-end an infinite feed.
-    // If every candidate is reserved, use the first deterministic cycle candidate so
-    // materialization can pass through the recurrence target without rewriting history.
-    return fallback
-      ? { card: fallback.card, state: { cursor: fallback.cursor + 1, cycle } }
-      : { card: null, state: { cursor: cursor + cycle.length, cycle } };
   }
 
   private mergeMaterializedReels(
@@ -324,30 +365,33 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     }
     return materializedThrough;
   }
+}
 
-  private orderCards(cards: readonly Flashcard[]): Flashcard[] {
-    const orderedCards: Flashcard[] = [];
-    for (const card of cards) {
-      const insertionIndex = orderedCards.findIndex(
-        (current) =>
-          card.order < current.order ||
-          (card.order === current.order && card.id.localeCompare(current.id) < 0)
-      );
-      if (insertionIndex < 0) {
-        orderedCards.push(card);
-      } else {
-        orderedCards.splice(insertionIndex, 0, card);
-      }
-    }
-    return orderedCards;
+function parseFeedState(rawState: string): FeedState {
+  try {
+    const parsed = FeedStateSchema.safeParse(JSON.parse(rawState));
+    return parsed.success ? parsed.data : { recentCardIds: [] };
+  } catch {
+    return { recentCardIds: [] };
   }
 }
 
-function parseStrategyState(rawState: string): FeedStrategyState {
-  try {
-    const parsed = FeedStrategyStateSchema.safeParse(JSON.parse(rawState));
-    return parsed.success ? parsed.data : { cursor: 0, cycle: [] };
-  } catch {
-    return { cursor: 0, cycle: [] };
-  }
+function toCandidate(
+  card: Flashcard,
+  memoryState: LearnerMemoryState | null,
+  pendingRecurrenceCardIds: ReadonlySet<string>,
+  scheduler: LearningScheduler,
+  now: string
+): FeedCandidate {
+  const retrievability = memoryState ? scheduler.retrievability(memoryState, now) : null;
+  const dueAt = memoryState?.dueAt ?? null;
+  return {
+    card,
+    dueAt,
+    isDue: dueAt !== null && Date.parse(dueAt) <= Date.parse(now),
+    isNew: memoryState === null,
+    isReservedForImmediateRecurrence: pendingRecurrenceCardIds.has(card.id),
+    memoryState,
+    retrievability,
+  };
 }

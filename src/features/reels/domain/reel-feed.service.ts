@@ -2,7 +2,6 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed, PreparedReelOccurrences } from "@/features/reels/domain/reel-feed";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
 export interface ReelFeedService {
   prepareFeed(
@@ -10,9 +9,10 @@ export interface ReelFeedService {
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExistingSession: boolean,
-    strategy?: StudySessionStrategy
+    anchorFlashcardId?: string | null
   ): Promise<PreparedReelFeed>;
   extendFeed(cards: readonly Flashcard[], studySessionId: string): Promise<PreparedReelFeed>;
+  recordVisibleCard(studySessionId: string, flashcardId: string): Promise<void>;
   refreshOccurrences(
     sourceCards: readonly Flashcard[],
     studySessionId: string

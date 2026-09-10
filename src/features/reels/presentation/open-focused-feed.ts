@@ -1,15 +1,19 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySessionStrategy } from "@/features/study/domain/study-session-strategy";
 
-type StartFocusedFeed = (deckId: DeckId, strategy?: StudySessionStrategy) => void;
+type StartFocusedFeed = (deckId: DeckId, anchorFlashcardId?: string) => void;
 
 export function openFocusedFeed(
   deckId: DeckId,
   startFocusedFeed: StartFocusedFeed,
   navigate: (href: "/(tabs)/focus") => void,
-  confirm: () => void
+  confirm: () => void,
+  anchorFlashcardId?: string
 ): void {
-  startFocusedFeed(deckId, "shuffle");
+  if (anchorFlashcardId === undefined) {
+    startFocusedFeed(deckId);
+  } else {
+    startFocusedFeed(deckId, anchorFlashcardId);
+  }
   confirm();
   navigate("/(tabs)/focus");
 }

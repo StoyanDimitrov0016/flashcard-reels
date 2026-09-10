@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -7,7 +7,6 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
-import { StudyStrategySwitch } from "@/features/reels/presentation/components/study-strategy-switch";
 import {
   useFeedScope,
   type FocusedFeedState,
@@ -15,14 +14,13 @@ import {
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
-import { sizes } from "@/shared/presentation/sizes";
 
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
   deckId: DeckId;
   onSessionStarted: () => void;
   replaceSession: boolean;
-  strategy: "shuffle" | "ordered";
+  anchorFlashcardId: string | null;
 }>;
 
 function ReadyFocusedFeedContent({
@@ -30,7 +28,7 @@ function ReadyFocusedFeedContent({
   deckId,
   onSessionStarted,
   replaceSession,
-  strategy,
+  anchorFlashcardId,
 }: ReadyFocusedFeedContentProps) {
   const preparedFeed = usePreparedReelFeed(
     cards,
@@ -38,7 +36,7 @@ function ReadyFocusedFeedContent({
     deckId,
     replaceSession,
     onSessionStarted,
-    strategy
+    anchorFlashcardId
   );
   if (!preparedFeed) {
     return <LoadingState />;
@@ -71,20 +69,15 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
       deckId={focusedFeed.deckId}
       onSessionStarted={onSessionStarted}
       replaceSession={focusedFeed.replaceSession}
-      strategy={focusedFeed.strategy}
+      anchorFlashcardId={focusedFeed.anchorFlashcardId}
     />
   );
 }
 
 export default function FocusedFeedScreen() {
   const router = useRouter();
-  const {
-    consumeFocusedFeedReplacement,
-    focusedFeed,
-    focusRestoring,
-    focusRevision,
-    startFocusedFeed,
-  } = useFeedScope();
+  const { consumeFocusedFeedReplacement, focusedFeed, focusRestoring, focusRevision } =
+    useFeedScope();
 
   let content: React.ReactNode;
   if (focusedFeed.status === "empty") {
@@ -95,23 +88,11 @@ export default function FocusedFeedScreen() {
     );
   } else {
     content = (
-      <>
-        <View style={styles.strategySwitcher}>
-          <StudyStrategySwitch
-            onChange={(strategy) => {
-              if (focusedFeed.strategy !== strategy) {
-                startFocusedFeed(focusedFeed.deckId, strategy);
-              }
-            }}
-            value={focusedFeed.strategy}
-          />
-        </View>
-        <ReadyFocusedFeed
-          focusedFeed={focusedFeed}
-          key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
-          onSessionStarted={consumeFocusedFeedReplacement}
-        />
-      </>
+      <ReadyFocusedFeed
+        focusedFeed={focusedFeed}
+        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
+        onSessionStarted={consumeFocusedFeedReplacement}
+      />
     );
   }
 
@@ -124,9 +105,4 @@ export default function FocusedFeedScreen() {
 
 const styles = StyleSheet.create({
   screen: { backgroundColor: palette.background, flex: 1 },
-  strategySwitcher: {
-    backgroundColor: palette.background,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.medium,
-  },
 });

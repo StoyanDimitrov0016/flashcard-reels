@@ -65,11 +65,6 @@ async function evaluateFocusedSession(
   if (!activeSession || activeSession.deckId === null) {
     return null;
   }
-  const resumed = await studyService.openSession(
-    "focused",
-    activeSession.deckId,
-    false,
-    activeSession.strategy
-  );
+  const resumed = await studyService.openSession("focused", activeSession.deckId, false);
   return resumed.session;
 }

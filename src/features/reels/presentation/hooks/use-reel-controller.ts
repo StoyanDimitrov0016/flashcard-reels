@@ -6,7 +6,7 @@ import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/
 import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useAppServices } from "@/infrastructure/app-services";
-import { persistPositionThenExtend } from "@/features/reels/application/reel-position-extension";
+import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;
@@ -18,6 +18,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
   const extensionInFlight = useRef(false);
+  const activationQueue = useRef(Promise.resolve());
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const recallSession = useRecallSession(
     studyService,
@@ -86,27 +87,32 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
       );
       const shouldExtend = shouldExtendReelFeed(localIndex, currentFeed.occurrences.length);
 
-      void startAttempt(occurrence).then(() =>
-        Promise.all([
-          persistPositionThenExtend(
-            () =>
-              studyService.updateSessionReelPosition(
-                initialFeed.studySessionId,
-                occurrence.reelPosition
-              ),
-            () => (shouldExtend ? onExtensionNeeded() : Promise.resolve())
-          ),
-          studyService.finalizeAttemptsOutsideEditableWindow(
-            initialFeed.studySessionId,
-            occurrence.reelPosition
-          ),
-          occurrence.recurrenceId
-            ? studyService.consumeRecurrence(occurrence.recurrenceId)
-            : Promise.resolve(false),
-        ])
-      );
+      const activation = activationQueue.current.then(async () => {
+        await startAttempt(occurrence);
+        await completeReelActivation(
+          () =>
+            studyService.updateSessionReelPosition(
+              initialFeed.studySessionId,
+              occurrence.reelPosition
+            ),
+          async () => {
+            if (occurrence.recurrenceId) {
+              await studyService.consumeRecurrence(occurrence.recurrenceId);
+            }
+          },
+          () => reelFeedService.recordVisibleCard(initialFeed.studySessionId, occurrence.card.id),
+          () =>
+            studyService.finalizeAttemptsOutsideEditableWindow(
+              initialFeed.studySessionId,
+              occurrence.reelPosition
+            ),
+          () => (shouldExtend ? onExtensionNeeded() : Promise.resolve())
+        );
+      });
+      activationQueue.current = activation.catch(() => undefined);
+      void activation;
     },
-    [initialFeed.studySessionId, onExtensionNeeded, startAttempt, studyService]
+    [initialFeed.studySessionId, onExtensionNeeded, reelFeedService, startAttempt, studyService]
   );
 
   const onRatingSelected = useCallback(
