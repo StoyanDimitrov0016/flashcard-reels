@@ -265,6 +265,11 @@ export class StudyServiceImpl implements StudyService {
     reelPosition: number,
     studySessionId: string
   ): Promise<string> {
+    const session = await this.studySessionRepository.findById(studySessionId);
+    if (!session || session.completedAt !== null) {
+      throw new Error(`Cannot start a review attempt for inactive session ${studySessionId}`);
+    }
+
     const existingAttempt = await this.reviewAttemptRepository.findBySessionAndReelPosition(
       studySessionId,
       reelPosition

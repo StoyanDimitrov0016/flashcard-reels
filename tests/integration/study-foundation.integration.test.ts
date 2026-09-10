@@ -325,6 +325,18 @@ describe("study foundation learner journeys", () => {
     expect(await graph.profiles.findByFlashcardId(cardId)).toBeNull();
   });
 
+  it("rejects review attempts after a session completes", async () => {
+    const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const cardId = at(feed.occurrences, 0).card.id;
+
+    await graph.study.completeSession(feed.studySessionId);
+
+    await expect(graph.study.startAttempt(cardId, 0, feed.studySessionId)).rejects.toThrow(
+      "inactive session"
+    );
+    expect(await graph.attempts.findBySessionAndReelPosition(feed.studySessionId, 0)).toBeNull();
+  });
+
   it("keeps pre-reset attempts behind the reset boundary", async () => {
     const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const cardId = at(feed.occurrences, 0).card.id;
