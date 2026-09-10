@@ -8,9 +8,9 @@ The main feature areas under `src/features` are:
 
 - `audio` resolves and plays recordings installed in application-owned storage;
 - `decks` manages deck metadata and appearance preferences;
-- deck package contracts and installation coordinate portable content imports;
+- `decks/deck-installer` hides portable package reading, validation, version checks, serialization, audio lifecycle, SQLite updates, and session invalidation behind a narrow API;
 - `flashcards` provides card content;
-- `learner-profile` aggregates recall history and calculates adaptive priority;
+- `learner-profile` aggregates recall history for reporting and progress views;
 - `reels` prepares and presents the swipeable feed;
 - `study` owns sessions, review attempts, and card recurrence.
 
@@ -25,9 +25,9 @@ Within a feature, the layers have distinct responsibilities:
 
 ## Deck packages
 
-Deck content is transported as `.fcrdeck` ZIP-compatible archives. The canonical contract lives in `src/features/decks/contracts/deck-package.schema.ts`; archive reading and filesystem access live in infrastructure; installation orchestration lives in the application layer. The Library screen only selects a file and invokes the import use case.
+Deck content is transported as `.fcrdeck` ZIP-compatible archives. Contract validation, ZIP reading, limits, serialization, package-audio lifecycle, and SQLite installation live under `src/features/decks/deck-installer/internal`. The module's public `index.ts` exposes application-owned file/result types, typed validation/version errors, and `installFromFile`. The Library screen selects a file and invokes that boundary; bundled byte installation remains an internal composition concern. Presentation maps installer results and errors to short feedback while retaining the technical error object in hook state. The `decks:inspect` and `decks:test:generate` commands intentionally reuse the internal canonical reader, schema, and writer through explicit script-level architecture exceptions; they do not provide installation or package-management operations.
 
-Bundled packages are generated from `data/technical_flashcard_library` and checked into `assets/decks`. Database startup installs them through the same importer used for document-picker imports. Deck appearance remains application/user state and is not part of a package.
+One small demo package is generated from the dedicated `data/demo-deck` source and checked into `assets/decks`. Database startup installs the demo through the same installer used for document-picker imports. Larger decks are external imports. `bundled-deck-registry.json` is the shared runtime, test, and Node-verification source of truth for package identity and local appearance.
 
 ## Local persistence
 
@@ -37,14 +37,14 @@ The database uses constraints and transactions to preserve invariants such as on
 
 Package updates keep flashcard rows instead of deleting them. This preserves foreign-key references from learner profiles, review attempts, and materialized study sessions. Affected active focused/mixed sessions are completed so the next study entry rebuilds from current active content.
 
-Installed package audio is staged in temporary application-owned storage, activated before SQLite, and stored at `deck-audio/<deck-id>/<deck-version>/`. Playback resolves `audio/<card-id>.answer.mp3` directly from the deck/version location and does not scan unrelated decks.
+Installed package audio is staged in temporary application-owned storage, activated before SQLite, and stored at `deck-audio/<deck-id>/<deck-version>/`. Playback resolves `audio/<card-id>.answer.mp3` directly from the deck/version location and does not scan unrelated decks. A retry may replace a same-version directory when SQLite does not identify that version as installed, making cleanup-failure residue recoverable.
 
 ## Study behavior
 
-Mixed and focused sessions are independent and persist their prepared feed order. The feed is materialized in small batches around the current reel position.
+Mixed and focused sessions are independent and persist their prepared feed order. The feed is materialized in small batches around the current reel position. The last five visible reels form an editable provisional tail; activation persists position, consumes recurrence, finalizes newly committed attempts, records the visible card, and only then extends the feed.
 
-An **Again** rating schedules the card roughly eight positions later, while **Hard** schedules it roughly sixteen positions later; jitter prevents a rigid pattern. Historical ratings also create a weighted shuffle bag: struggling cards receive more copies and well-known cards receive fewer.
+An **Again** rating schedules the card roughly eight positions later, while **Hard** schedules it roughly sixteen positions later; jitter prevents a rigid pattern. The learning engine composes the materialized feed from pressure, new-card, and low-pressure groups, respecting recent-card variety across groups before relaxing recency. Finalized repeated reviews are applied to FSRS in global `ratedAt` order per card, while learner-profile counters remain reporting data. Recent history records cards when they become visible, including recurrence and anchors.
 
 ## Verification
 
-Behavior tests cover feed ordering, recurrence, session lifecycle, learner-profile aggregation, SQLite invariants, deck appearance, package lifecycle updates, inactive cards, audio/package validation, and deck appearance. `npm run verify` runs the complete formatting, static analysis, test, database, architecture, Expo, and Android export checks.
+Behavior tests cover feed ordering, recurrence, session lifecycle, learner-profile aggregation, SQLite invariants, package lifecycle and concurrency, inactive cards, audio failure recovery, fail-closed ZIP metadata, and demo bootstrap. Invalid-package scenarios assert both database and permanent-audio immutability. `npm run verify` validates runtime packages before the complete static, test, database, architecture, Expo, and Android checks.
