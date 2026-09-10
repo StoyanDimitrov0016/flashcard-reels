@@ -1,17 +1,17 @@
 import { useState } from "react";
 
-import type { DeckPackageInstallResult } from "@/features/decks/domain/deck-package.model";
+import type { DeckInstallResult } from "@/features/decks/deck-installer";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type ImportState = Readonly<{ error: Error | null; importing: boolean }>;
 
 export function useImportDeckPackage(): ImportState & {
-  importPackage: () => Promise<DeckPackageInstallResult | null>;
+  importPackage: () => Promise<DeckInstallResult | null>;
 } {
-  const { deckPackageImportService, deckPackagePicker } = useAppServices();
+  const { deckInstaller, deckPackagePicker } = useAppServices();
   const [state, setState] = useState<ImportState>({ error: null, importing: false });
 
-  const importPackage = async (): Promise<DeckPackageInstallResult | null> => {
+  const importPackage = async (): Promise<DeckInstallResult | null> => {
     setState({ error: null, importing: true });
     try {
       const selection = await deckPackagePicker.pick();
@@ -19,7 +19,7 @@ export function useImportDeckPackage(): ImportState & {
         setState({ error: null, importing: false });
         return null;
       }
-      const result = await deckPackageImportService.importFile(selection.uri);
+      const result = await deckInstaller.installFromFile(selection);
       setState({ error: null, importing: false });
       return result;
     } catch (error) {

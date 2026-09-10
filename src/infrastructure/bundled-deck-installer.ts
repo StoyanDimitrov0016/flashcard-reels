@@ -19,14 +19,14 @@ import type { Clock } from "@/shared/domain/clock";
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);
-  const { deckPackageImportService } = createDeckPackageServices(database, clock, deckRepository);
+  const { installBundledPackage } = createDeckPackageServices(database, clock, deckRepository);
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
     const installedVersion = await deckRepository.findVersion(definition.id);
     if (!shouldInstallBundledDeck(installedVersion, definition.version)) {
       continue;
     }
-    const result = await deckPackageImportService.import(await readBundledDeckPackage(definition));
+    const result = await installBundledPackage(await readBundledDeckPackage(definition));
     if (!shouldApplyBundledAppearance(result.status)) {
       continue;
     }

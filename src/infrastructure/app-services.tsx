@@ -3,7 +3,7 @@ import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
-import type { DeckPackageImportService } from "@/features/decks/application/deck-package-import.service";
+import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
@@ -18,12 +18,15 @@ import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcar
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
+import { createLearningScheduler } from "@/features/learning-engine";
+import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import type { StudyService } from "@/features/study/domain/study.service";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
@@ -36,7 +39,7 @@ import type { DeckPackagePicker } from "@/features/decks/application/deck-packag
 
 type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
-  deckPackageImportService: DeckPackageImportService;
+  deckInstaller: DeckInstaller;
   deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
   flashcardService: FlashcardService;
@@ -58,6 +61,14 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
+    const learningScheduler = createLearningScheduler();
+    const flashcardMemoryStateRepository = new SQLiteFlashcardMemoryStateRepository(
+      drizzleDatabase
+    );
+    const reviewAttemptFinalizationTransaction = new SQLiteReviewAttemptFinalizationTransaction(
+      drizzleDatabase,
+      learningScheduler
+    );
     const learnerProfileRepository = new SQLiteLearnerProfileRepository(drizzleDatabase);
     const learnerProfileAggregationTransaction = new SQLiteLearnerProfileAggregationTransaction(
       drizzleDatabase
@@ -73,7 +84,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
-    const { answerAudioRepository, deckPackageImportService } = createDeckPackageServices(
+    const { answerAudioRepository, deckInstaller } = createDeckPackageServices(
       drizzleDatabase,
       clock,
       deckRepository
@@ -88,19 +99,24 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       reviewAttemptTransaction,
       studySessionFeedTransaction,
       studySessionLifecycleTransaction,
+      reviewAttemptFinalizationTransaction,
       Math.random,
-      learnerProfileAggregationTransaction,
-      learnerProfileRepository
+      learnerProfileAggregationTransaction
     );
 
     return {
       answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
-      deckPackageImportService,
+      deckInstaller,
       deckPackagePicker: new ExpoDeckPackagePicker(),
       deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardServiceImpl(flashcardRepository),
       learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),
-      reelFeedService: new ReelFeedServiceImpl(studyService),
+      reelFeedService: new ReelFeedServiceImpl(
+        studyService,
+        flashcardMemoryStateRepository,
+        learningScheduler,
+        clock
+      ),
       studyService,
     };
   });
