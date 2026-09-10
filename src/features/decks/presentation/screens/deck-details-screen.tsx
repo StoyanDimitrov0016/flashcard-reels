@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { explainLearnerProfile } from "@/features/learner-profile/domain/adaptive-shuffle-policy";
+import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
@@ -48,9 +48,7 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
                 {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
               </Text>
               <Text style={styles.progressCaption}>
-                {reviewed
-                  ? `${progress}% recall · ${explanation.priority} priority`
-                  : "Not reviewed yet"}
+                {reviewed ? `${progress}% recall · ${explanation.historyBand}` : "Not reviewed yet"}
               </Text>
             </View>
             <View style={styles.cardProgressTrack}>

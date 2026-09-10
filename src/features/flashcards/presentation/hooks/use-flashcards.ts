@@ -22,9 +22,12 @@ export function useFlashcards(deckId: DeckId | null): FlashcardsState {
 
       const loadCards = async () => {
         try {
-          const cards = deckId
-            ? await flashcardService.listByDeckId(deckId)
-            : await flashcardService.list();
+          let cards: Flashcard[];
+          if (deckId) {
+            cards = await flashcardService.listByDeckId(deckId);
+          } else {
+            cards = await flashcardService.list();
+          }
           if (active) {
             setState({ cards, error: null, loading: false });
           }

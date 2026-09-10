@@ -20,6 +20,11 @@ import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
 import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
 import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
+import {
+  getDeckImportErrorFeedback,
+  getDeckImportResultFeedback,
+  type DeckImportFeedback,
+} from "@/features/decks/presentation/deck-import-feedback";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { palette } from "@/shared/presentation/palette";
 import { sizes } from "@/shared/presentation/sizes";
@@ -117,6 +122,15 @@ function EmptyLibrarySearch() {
   );
 }
 
+function EmptyLibrary() {
+  return (
+    <View style={styles.empty}>
+      <Text style={styles.emptyTitle}>Your library is empty</Text>
+      <Text style={styles.emptyCopy}>Import a local .fcrdeck file to add a deck.</Text>
+    </View>
+  );
+}
+
 export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
@@ -124,6 +138,7 @@ export default function LibraryScreen() {
   const { error: importError, importPackage, importing } = useImportDeckPackage();
   const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
   const [query, setQuery] = useState("");
+  const [importFeedback, setImportFeedback] = useState<DeckImportFeedback | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
   const [appearanceOverrides, setAppearanceOverrides] = useState(
     () => new Map<string, DeckAppearance>()
@@ -137,10 +152,13 @@ export default function LibraryScreen() {
   const sheetAppearance = selectedEntry
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
     : null;
+  const importStatus = importError ? getDeckImportErrorFeedback(importError) : importFeedback;
 
   const handleImport = async () => {
+    setImportFeedback(null);
     const result = await importPackage();
     if (result) {
+      setImportFeedback(getDeckImportResultFeedback(result));
       refresh();
     }
   };
@@ -189,7 +207,12 @@ export default function LibraryScreen() {
             <Text style={styles.importButtonLabel}>{importing ? "Importing…" : "Import"}</Text>
           </Pressable>
         </View>
-        {importError ? <Text style={styles.importError}>{importError.message}</Text> : null}
+        <Text style={styles.importHint}>Import local .fcrdeck files from your device.</Text>
+        {importStatus ? (
+          <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
+            {importStatus.message}
+          </Text>
+        ) : null}
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -230,7 +253,7 @@ export default function LibraryScreen() {
           data={visibleEntries}
           keyboardShouldPersistTaps="handled"
           keyExtractor={({ deck }) => deck.id}
-          ListEmptyComponent={EmptyLibrarySearch}
+          ListEmptyComponent={query.trim() ? EmptyLibrarySearch : EmptyLibrary}
           renderItem={renderItem}
         />
       )}
@@ -327,6 +350,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   importError: { color: palette.danger, fontSize: fontSize.caption },
+  importHint: { color: palette.textMuted, fontSize: fontSize.caption },
+  importSuccess: { color: palette.success, fontSize: fontSize.caption },
   iconButton: {
     alignItems: "center",
     borderColor: palette.controlBorder,
