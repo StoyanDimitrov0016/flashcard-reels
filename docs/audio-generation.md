@@ -85,7 +85,7 @@ $env:AUDIO_GENERATOR_URL = "http://127.0.0.1:8765"
 node scripts/generate-technical-audio.mjs
 ```
 
-The script creates one combined file per card in `assets/audio/technical`.
+The script creates one combined authoring-source file per card in `data/technical_flashcard_library/audio`.
 The synthesized text is the question, followed by the service's chunk pause,
 followed by the answer. The single file is played by the existing answer-side
 control after the card is revealed.
@@ -109,7 +109,7 @@ npm.cmd run decks:packages
 npm.cmd run format
 ```
 
-The package generator validates the canonical `deck.json` contract, embeds each card's optional answer audio as `audio/<card-id>.answer.mp3`, and writes one `.fcrdeck` archive per technical deck. The app copies audio into versioned persistent application-owned storage during installation.
+The package generator validates the canonical `deck.json` contract, embeds each card's optional answer audio as `audio/<card-id>.answer.mp3`, and writes one `.fcrdeck` distribution archive per technical deck. Raw audio is an authoring input and is excluded from EAS uploads; only generated archives under `assets/decks` are runtime assets. The app copies archive audio into versioned persistent application-owned storage during installation.
 
 ## Verify and build
 

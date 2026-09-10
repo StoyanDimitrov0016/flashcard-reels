@@ -49,7 +49,7 @@ Share the resulting Expo build page with testers. Internal build URLs are access
 
 ## Bundled study content and audio
 
-The source library is stored under `data/technical_flashcard_library`. Audio files remain source inputs, while generated `.fcrdeck` archives under `assets/decks` are the application content transport. The app checks the keyed bundled registry's deck ID/version before reading each archive, then installs only packages that need work. Bundled decks and user-selected packages share one validation, audio, and update path.
+The authoring library and raw audio are stored under `data/technical_flashcard_library` and excluded from EAS uploads. Generated `.fcrdeck` archives under `assets/decks` are the application content transport and remain available to Metro. Installed runtime state is SQLite plus versioned application-owned audio. The app checks the keyed bundled registry's deck ID/version before reading each archive, then installs only missing or newer bundled packages. Equal bundled versions and newer local versions skip archive reads. Bundled decks and user-selected packages share one validation, audio, and update path.
 
 After changing the source library or recordings, run:
 
