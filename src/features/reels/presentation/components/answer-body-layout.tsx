@@ -13,6 +13,8 @@ type AnswerBodyLayoutProps = Readonly<{
 
 type AnswerCopyProps = Readonly<{
   answer: string;
+  answerColor: string;
+  promptColor: string;
   question: string;
   onLongPress: () => void;
   onPress: () => void;
@@ -67,14 +69,16 @@ function AnswerControlRegion({ children }: Readonly<{ children: ReactNode }>) {
 
 export function AnswerCopy({
   answer,
+  answerColor,
   longPressDuration,
   onLongPress,
   onPress,
   onPressIn,
   onPressOut,
   question,
+  promptColor,
 }: AnswerCopyProps) {
-  const styles = createStyles(useAppTheme().colors);
+  const styles = createStyles(useAppTheme().colors, promptColor, answerColor);
 
   return (
     <Pressable
@@ -96,18 +100,22 @@ export function AnswerCopy({
   );
 }
 
-function createStyles(colors: AppColors) {
+function createStyles(
+  colors: AppColors,
+  promptColor = colors.textSecondary,
+  answerColor = colors.textPrimary
+) {
   return StyleSheet.create({
     answer: {
-      color: colors.textPrimary,
-      fontSize: fontSize.heading1,
+      color: answerColor,
+      fontSize: fontSize.flashcardAnswer,
       fontWeight: fontWeight.semibold,
       letterSpacing: letterSpacing.tight,
-      lineHeight: lineHeight.heading1,
+      lineHeight: lineHeight.flashcardAnswer,
       maxWidth: 480,
     },
     answerPrompt: {
-      color: colors.textSecondary,
+      color: promptColor,
       fontSize: fontSize.title3,
       fontWeight: fontWeight.semibold,
       lineHeight: lineHeight.title3,

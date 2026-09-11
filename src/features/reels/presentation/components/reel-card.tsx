@@ -221,7 +221,15 @@ export function ReelCard({
     onPressIn: startFocusHold,
     onPressOut: cancelFocusHold,
   };
-  const answerCopy = <AnswerCopy answer={card.answer} question={card.question} {...gestureProps} />;
+  const answerCopy = (
+    <AnswerCopy
+      answer={card.answer}
+      answerColor={reelAppearance.textPrimary}
+      promptColor={reelAppearance.textSecondary}
+      question={card.question}
+      {...gestureProps}
+    />
+  );
   const controls = (
     <StudyControlCluster
       audioSource={audioSource}
@@ -249,7 +257,12 @@ export function ReelCard({
             deckCardCount={deckCardCount}
             showMainFeedLink={showMainFeedLink}
           />
-          <QuestionFaceContent cardQuestion={card.question} {...gestureProps} />
+          <QuestionFaceContent
+            cardQuestion={card.question}
+            instructionColor={reelAppearance.textSecondary}
+            questionColor={reelAppearance.textPrimary}
+            {...gestureProps}
+          />
           <GestureFooter showHoldHint={!showMainFeedLink} />
         </CardPage>
       </Animated.View>

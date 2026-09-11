@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { darkColors, getAppColors, lightColors } from "@/shared/presentation/theme-colors";
+import { fontSize, lineHeight } from "@/shared/presentation/typography";
 
 describe("semantic application themes", () => {
   it("keeps the specified light and dark semantic palettes", () => {
@@ -53,5 +54,10 @@ describe("semantic application themes", () => {
   it("resolves app colors from the same scheme", () => {
     expect(getAppColors("light")).toBe(lightColors);
     expect(getAppColors("dark")).toBe(darkColors);
+  });
+
+  it("keeps answer typography dedicated to the flashcard answer surface", () => {
+    expect(fontSize.flashcardAnswer).toBe(25);
+    expect(lineHeight.flashcardAnswer).toBe(33);
   });
 });

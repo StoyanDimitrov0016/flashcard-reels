@@ -1,27 +1,30 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type QuestionFaceContentProps = Readonly<{
   cardQuestion: string;
+  instructionColor: string;
   onLongPress: () => void;
   onPress: () => void;
   onPressIn: () => void;
   onPressOut: () => void;
   longPressDuration: number;
+  questionColor: string;
 }>;
 
 export function QuestionFaceContent({
   cardQuestion,
+  instructionColor,
   onLongPress,
   onPress,
   onPressIn,
   onPressOut,
   longPressDuration,
+  questionColor,
 }: QuestionFaceContentProps) {
-  const styles = createStyles(useAppTheme().colors);
+  const styles = createStyles(questionColor, instructionColor);
 
   return (
     <Pressable
@@ -43,7 +46,7 @@ export function QuestionFaceContent({
   );
 }
 
-function createStyles(colors: AppColors) {
+function createStyles(questionColor: string, instructionColor: string) {
   return StyleSheet.create({
     content: {
       flex: 1,
@@ -52,14 +55,14 @@ function createStyles(colors: AppColors) {
     },
     copy: { gap: 22 },
     prompt: {
-      color: colors.textPrimary,
+      color: questionColor,
       fontSize: fontSize.hero,
       fontWeight: fontWeight.bold,
       letterSpacing: letterSpacing.tightest,
       lineHeight: lineHeight.hero,
     },
     revealInstruction: {
-      color: colors.textTertiary,
+      color: instructionColor,
       fontSize: fontSize.callout,
       lineHeight: lineHeight.subhead,
     },
