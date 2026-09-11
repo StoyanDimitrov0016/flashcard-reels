@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
 import {
   completeReelActivation,
+  createSingleFlightRequest,
   persistPositionThenExtend,
 } from "@/features/reels/application/reel-position-extension";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
@@ -122,6 +123,27 @@ describe("study session behavior", () => {
     releaseRating?.();
     await activation;
     expect(events).toEqual(["barrier-start", "barrier-end", "finalization"]);
+  });
+
+  it("shares one in-flight extension between proactive and end reached triggers", async () => {
+    let releaseExtension: (() => void) | undefined;
+    let extensionCalls = 0;
+    const extensionBlocked = new Promise<void>((resolve) => {
+      releaseExtension = resolve;
+    });
+    const requestFeedExtension = createSingleFlightRequest(async () => {
+      extensionCalls += 1;
+      await extensionBlocked;
+    });
+
+    const proactive = requestFeedExtension();
+    const defensive = requestFeedExtension();
+    expect(extensionCalls).toBe(0);
+    await Promise.resolve();
+    expect(extensionCalls).toBe(1);
+    releaseExtension?.();
+    await Promise.all([proactive, defensive]);
+    expect(extensionCalls).toBe(1);
   });
 
   it("does not run activation effects after position persistence fails", async () => {

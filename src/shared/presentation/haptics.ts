@@ -11,11 +11,13 @@ export function triggerHaptic(event: HapticEvent): void {
 
 async function playHaptic(event: HapticEvent): Promise<void> {
   if (Platform.OS === "android") {
-    await Haptics.performAndroidHapticsAsync(
-      event === "focus-completion"
-        ? Haptics.AndroidHaptics.Long_Press
-        : Haptics.AndroidHaptics.Confirm
-    );
+    let androidHaptic = Haptics.AndroidHaptics.Confirm;
+    if (event === "focus-completion") {
+      androidHaptic = Haptics.AndroidHaptics.Long_Press;
+    } else if (event === "rating-selection") {
+      androidHaptic = Haptics.AndroidHaptics.Segment_Tick;
+    }
+    await Haptics.performAndroidHapticsAsync(androidHaptic);
     return;
   }
   if (event === "rating-selection") {

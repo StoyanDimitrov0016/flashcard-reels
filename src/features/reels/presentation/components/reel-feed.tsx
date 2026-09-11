@@ -23,7 +23,13 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const controller = useReelController({ initialFeed: preparedFeed, sourceCards });
-  const { answerAudioService, feed, onOccurrenceBecameActive, onRatingSelected } = controller;
+  const {
+    answerAudioService,
+    feed,
+    onOccurrenceBecameActive,
+    onRatingSelected,
+    requestFeedExtension,
+  } = controller;
   const { handleLayout, viewport } = useReelViewport();
   const feedListReference = useRef<FlashListRef<PreparedReelOccurrence>>(null);
   const { height, width } = viewport;
@@ -110,6 +116,8 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
           initialScrollIndex={feed.occurrences.length > 0 ? activeIndex : undefined}
           key={`reel-feed-${height}-${width}`}
           keyExtractor={(occurrence) => occurrence.key}
+          onEndReached={requestFeedExtension}
+          onEndReachedThreshold={1}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
           pagingEnabled
           ref={feedListReference}

@@ -10,9 +10,9 @@ import {
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
-export class SQLiteLearningProgressResetTransaction<TRunResult = unknown>
-  implements LearningProgressResetTransaction
-{
+export class SQLiteLearningProgressResetTransaction<
+  TRunResult = unknown,
+> implements LearningProgressResetTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {
@@ -51,7 +51,12 @@ export class SQLiteLearningProgressResetTransaction<TRunResult = unknown>
       if (cards.length > 0) {
         transaction
           .delete(flashcardMemoryStates)
-          .where(inArray(flashcardMemoryStates.flashcardId, cards.map((card) => card.id)))
+          .where(
+            inArray(
+              flashcardMemoryStates.flashcardId,
+              cards.map((card) => card.id)
+            )
+          )
           .run();
       }
       this.deleteActiveSessionsForDeck(transaction, deckId);

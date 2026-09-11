@@ -61,13 +61,32 @@ describe("SQLite learning progress reset transaction", () => {
       { flashcardId: makeFlashcard(3, OTHER_DECK_ID).id, resetAt: RESET_AT, reviewCount: 0 },
     ]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL")).toEqual({ count: 0 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_items")).toEqual({ count: 0 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM flashcard_review_attempts")).toEqual({ count: 0 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_recurrences")).toEqual({ count: 0 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_sessions WHERE id = ?", "completed-mixed")).toEqual({ count: 1 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM decks")).toEqual({ count: 2 });
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM flashcards")).toEqual({ count: 3 });
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL"
+      )
+    ).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_items")
+    ).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync("SELECT COUNT(*) AS count FROM flashcard_review_attempts")
+    ).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_recurrences")
+    ).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE id = ?",
+        "completed-mixed"
+      )
+    ).toEqual({ count: 1 });
+    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM decks")).toEqual({
+      count: 2,
+    });
+    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM flashcards")).toEqual({
+      count: 3,
+    });
   });
 
   it("resets one deck, preserves other deck state, and invalidates mixed and focused sessions", async () => {
@@ -88,7 +107,11 @@ describe("SQLite learning progress reset transaction", () => {
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(2)).toBeNull();
     expect(await memoryRow(3)).not.toBeNull();
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL")).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL"
+      )
+    ).toEqual({ count: 0 });
   });
 
   it("resets one card while preserving another card's profile and memory", async () => {
@@ -104,7 +127,11 @@ describe("SQLite learning progress reset transaction", () => {
     expect(await profileRow(2)).toMatchObject({ resetAt: null, reviewCount: 1 });
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(2)).not.toBeNull();
-    expect(await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL")).toEqual({ count: 0 });
+    expect(
+      await database.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL"
+      )
+    ).toEqual({ count: 0 });
   });
 
   async function insertDeck(id: string, title: string): Promise<void> {

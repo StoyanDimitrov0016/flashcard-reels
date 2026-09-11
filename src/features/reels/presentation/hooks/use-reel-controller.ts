@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
@@ -19,11 +19,16 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
   const sourceCardsReference = useRef(sourceCards);
-  sourceCardsReference.current = sourceCards;
-  const extensionInFlight = useRef(false);
+  useEffect(
+    function synchronizeSourceCards() {
+      sourceCardsReference.current = sourceCards;
+    },
+    [sourceCards]
+  );
   const activationQueue = useRef(Promise.resolve());
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const pendingRatingPromises = useRef(new Set<Promise<void>>());
+  const extensionInFlight = useRef<Promise<void> | null>(null);
   const recallSession = useRecallSession(
     studyService,
     initialFeed.studySessionId,
@@ -73,22 +78,26 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     [getAttemptId, initialFeed.studySessionId, setAttemptId, studyService]
   );
 
-  const onExtensionNeeded = useCallback(() => {
+  const requestFeedExtension = useCallback(() => {
     if (extensionInFlight.current) {
-      return Promise.resolve();
+      return extensionInFlight.current;
     }
-    extensionInFlight.current = true;
-    return reelFeedService
-      .extendFeed(sourceCardsReference.current, initialFeed.studySessionId)
-      .then(replaceFeed)
-      .then(() => undefined)
-      .finally(() => {
-        extensionInFlight.current = false;
-      });
+    const extension = Promise.resolve()
+      .then(() =>
+        reelFeedService.extendFeed(sourceCardsReference.current, initialFeed.studySessionId)
+      )
+      .then(replaceFeed);
+    const trackedExtension = extension.finally(() => {
+      if (extensionInFlight.current === trackedExtension) {
+        extensionInFlight.current = null;
+      }
+    });
+    extensionInFlight.current = trackedExtension;
+    return trackedExtension;
   }, [initialFeed.studySessionId, reelFeedService, replaceFeed]);
 
   const awaitPendingRatings = useCallback(async () => {
-    await Promise.allSettled([...pendingRatingPromises.current]);
+    await Promise.allSettled(pendingRatingPromises.current);
   }, []);
 
   const onOccurrenceBecameActive = useCallback(
@@ -125,7 +134,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
               initialFeed.studySessionId,
               occurrence.reelPosition
             ),
-          () => (shouldExtend ? onExtensionNeeded() : Promise.resolve()),
+          () => (shouldExtend ? requestFeedExtension() : Promise.resolve()),
           awaitPendingRatings
         );
       });
@@ -135,7 +144,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     [
       awaitPendingRatings,
       initialFeed.studySessionId,
-      onExtensionNeeded,
+      requestFeedExtension,
       reelFeedService,
       startAttempt,
       studyService,
@@ -180,6 +189,7 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
     feed,
     onOccurrenceBecameActive,
     onRatingSelected,
+    requestFeedExtension,
     ...recallSession,
   };
 }

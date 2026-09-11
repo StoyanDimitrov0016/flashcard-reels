@@ -31,3 +31,14 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 
 - [ ] Try to import a deliberately invalid `.fcrdeck` file.
 - [ ] Confirm concise invalid-package feedback, app stability, and no partial deck in Library.
+
+## Phase 0 runtime stabilization smoke sequence
+
+- [ ] Launch in both dark and light/device theme.
+- [ ] Import a new deck after opening Discovery, return to Discovery, and keep swiping until cards from the imported deck appear without an app restart.
+- [ ] Swipe through at least 30 reels in Discover and confirm there is no finite ending.
+- [ ] Swipe through at least 30 reels in Focus and watch for same-card flicker at materialization boundaries.
+- [ ] Rapidly rate and swipe several cards; verify explicit ratings remain visible and correct.
+- [ ] Reset a deck and confirm its cards behave as new learning state.
+- [ ] Reset all learning progress and confirm installed decks remain.
+- [ ] Inspect Android app permissions and confirm microphone permission is absent.

@@ -9,6 +9,20 @@ export async function persistPositionThenExtend(
   return true;
 }
 
+export function createSingleFlightRequest(operation: () => Promise<void>): () => Promise<void> {
+  let inFlight: Promise<void> | null = null;
+  return () => {
+    if (!inFlight) {
+      inFlight = Promise.resolve()
+        .then(operation)
+        .finally(() => {
+          inFlight = null;
+        });
+    }
+    return inFlight;
+  };
+}
+
 export async function completeReelActivation(
   persistPosition: () => Promise<boolean>,
   consumeRecurrence: () => Promise<void>,

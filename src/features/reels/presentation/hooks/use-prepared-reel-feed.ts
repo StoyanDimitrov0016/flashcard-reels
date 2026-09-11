@@ -16,6 +16,7 @@ type PreparationRequest = Readonly<{
   cards: readonly Flashcard[];
   deckId: DeckId | null;
   anchorFlashcardId: string | null;
+  resetRevision: number;
   scope: StudySessionScope;
   promise: Promise<PreparedReelFeed>;
 }>;
@@ -44,6 +45,7 @@ export function usePreparedReelFeed(
         previousRequest &&
         previousRequest.cards === cards &&
         previousRequest.deckId === deckId &&
+        previousRequest.resetRevision === resetRevision &&
         previousRequest.scope === scope &&
         previousRequest.anchorFlashcardId === anchorFlashcardId
           ? previousRequest.promise
@@ -60,6 +62,7 @@ export function usePreparedReelFeed(
                 cards,
                 deckId,
                 promise: nextPromise,
+                resetRevision,
                 scope,
               };
               void nextPromise.then(() => {
