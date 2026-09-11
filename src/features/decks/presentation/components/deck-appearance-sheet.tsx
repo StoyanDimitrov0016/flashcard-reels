@@ -15,6 +15,7 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import {
   deckAppearancePresets,
   isCurrentPreset,
+  resolveDeckAppearanceColors,
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -38,8 +39,9 @@ type PresetItemProps = Readonly<{
 }>;
 
 function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemProps) {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
+  const previewColors = resolveDeckAppearanceColors(preset, resolvedScheme, colors);
   const selected = appearance ? isCurrentPreset(preset, appearance) : false;
   const pending = pendingPreset === preset;
 
@@ -53,21 +55,21 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
       onPress={() => onSelect(preset)}
       style={({ pressed }) => [
         styles.preset,
-        { backgroundColor: preset.backgroundColor },
-        selected && { borderColor: preset.accentColor },
+        { backgroundColor: previewColors.backgroundColor },
+        selected && { borderColor: previewColors.accentColor },
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.swatch, { backgroundColor: preset.backgroundColor }]}>
-        <View style={[styles.swatchAccent, { backgroundColor: preset.accentColor }]} />
+      <View style={[styles.swatch, { backgroundColor: previewColors.backgroundColor }]}>
+        <View style={[styles.swatchAccent, { backgroundColor: previewColors.accentColor }]} />
       </View>
       <Text style={styles.presetName}>{preset.name}</Text>
-      {pending && <ActivityIndicator color={preset.accentColor} size="small" />}
+      {pending && <ActivityIndicator color={previewColors.accentColor} size="small" />}
       {!pending && selected ? (
         <SymbolView
           name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
           size={sizes.icon.medium}
-          tintColor={preset.accentColor}
+          tintColor={previewColors.accentColor}
         />
       ) : null}
     </Pressable>

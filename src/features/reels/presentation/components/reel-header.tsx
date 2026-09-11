@@ -10,7 +10,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 type ReelHeaderProps = Readonly<{
-  appearance: DeckAppearance;
+  appearance: Readonly<Pick<DeckAppearance, "accentColor">>;
   card: Flashcard;
   deck: Deck;
   deckCardCount: number;

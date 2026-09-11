@@ -4,6 +4,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-nativ
 import { useRecyclingState } from "@shopify/flash-list";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import { resolveDeckAppearanceColors } from "@/features/decks/presentation/deck-appearance-presets";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
@@ -122,8 +123,9 @@ export function ReelCard({
 }: ReelCardProps) {
   const { preferences } = usePreferences();
   const haptics = useHaptics();
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
+  const reelAppearance = resolveDeckAppearanceColors(appearance, resolvedScheme, colors);
   const copyInsetStyles = {
     bottom: undefined,
     left: styles.copyLeftIsland,
@@ -284,9 +286,9 @@ export function ReelCard({
           { transform: [{ rotateY: frontRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={appearance.backgroundColor} height={height} width={width}>
+        <CardPage backgroundColor={reelAppearance.backgroundColor} height={height} width={width}>
           <ReelHeader
-            appearance={appearance}
+            appearance={reelAppearance}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
@@ -304,9 +306,9 @@ export function ReelCard({
           { transform: [{ rotateY: backRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={appearance.backgroundColor} height={height} width={width}>
+        <CardPage backgroundColor={reelAppearance.backgroundColor} height={height} width={width}>
           <ReelHeader
-            appearance={appearance}
+            appearance={reelAppearance}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
