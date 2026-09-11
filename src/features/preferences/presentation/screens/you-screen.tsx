@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import appIcon from "../../../../../assets/images/app-icon.png";
 
 import {
   AppearanceSelector,
@@ -43,64 +45,64 @@ export default function YouScreen() {
         <Text accessibilityRole="header" style={styles.title}>
           You
         </Text>
-        <PreferenceSection title="Study Controls">
-          <PreferenceRow
-            detail={
-              preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
-              preferences.recollectionIslandPosition.slice(1) +
-              " · " +
-              (preferences.ratingDirection === "forward" ? "Forward" : "Reverse")
-            }
-            icon={{ android: "tune", ios: "slider.horizontal.3", web: "tune" }}
-            onPress={() => setStudyControlsPresented(true)}
-            title="Study controls"
-          />
-        </PreferenceSection>
-        <PreferenceSection title="Appearance">
-          <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
-        </PreferenceSection>
-        <PreferenceSection title="Interaction">
-          <PreferenceSwitch
-            icon={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
-            label="Audio"
-            onValueChange={setAudioEnabled}
-            value={preferences.audioEnabled}
-          />
-          <PreferenceSwitch
-            icon={{ android: "vibration", ios: "waveform.path.ecg", web: "vibration" }}
-            label="Haptics"
-            onValueChange={setHapticsEnabled}
-            value={preferences.hapticsEnabled}
-          />
-        </PreferenceSection>
-        <PreferenceSection title="Learning Data">
-          <PreferenceRow
-            detail="Installed decks stay available"
-            icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-            onPress={() => {
-              setResetError(null);
-              setResetPresented(true);
-            }}
-            title="Reset all learning progress"
-          />
-        </PreferenceSection>
-        <PreferenceSection title="About">
-          <View style={styles.aboutRow}>
-            <View style={styles.aboutIcon}>
-              <Text style={styles.aboutIconLabel}>JS</Text>
+        <View style={styles.sections}>
+          <PreferenceSection title="Appearance">
+            <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
+          </PreferenceSection>
+          <PreferenceSection title="Study Controls">
+            <PreferenceRow
+              detail={
+                preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
+                preferences.recollectionIslandPosition.slice(1) +
+                " · " +
+                (preferences.ratingDirection === "forward" ? "Forward" : "Reverse")
+              }
+              icon={{ android: "tune", ios: "slider.horizontal.3", web: "tune" }}
+              onPress={() => setStudyControlsPresented(true)}
+              title="Study controls"
+            />
+          </PreferenceSection>
+          <PreferenceSection title="Interaction">
+            <PreferenceSwitch
+              icon={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
+              label="Audio"
+              onValueChange={setAudioEnabled}
+              value={preferences.audioEnabled}
+            />
+            <PreferenceSwitch
+              icon={{ android: "vibration", ios: "waveform.path.ecg", web: "vibration" }}
+              label="Haptics"
+              onValueChange={setHapticsEnabled}
+              value={preferences.hapticsEnabled}
+            />
+          </PreferenceSection>
+          <PreferenceSection title="Learning Data">
+            <PreferenceRow
+              detail="Installed decks stay available"
+              icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
+              onPress={() => {
+                setResetError(null);
+                setResetPresented(true);
+              }}
+              title="Reset all learning progress"
+            />
+          </PreferenceSection>
+          <PreferenceSection title="About">
+            <View style={styles.aboutRow}>
+              <Image accessibilityIgnoresInvertColors source={appIcon} style={styles.aboutIcon} />
+              <View style={styles.aboutCopy}>
+                <Text style={styles.rowTitle}>Flashcard Reels</Text>
+                <Text style={styles.rowDetail}>Version {appMetadata.version}</Text>
+              </View>
             </View>
-            <View style={styles.aboutCopy}>
-              <Text style={styles.rowTitle}>Flashcard Reels</Text>
-              <Text style={styles.rowDetail}>Version {appMetadata.version}</Text>
-            </View>
-          </View>
-          <PreferenceRow
-            detail="View source on GitHub"
-            icon={{ android: "code", ios: "curlybraces", web: "code" }}
-            onPress={openRepository}
-            title="Open repository"
-          />
-        </PreferenceSection>
+            <PreferenceRow
+              detail="View source on GitHub"
+              icon={{ android: "code", ios: "curlybraces", web: "code" }}
+              onPress={openRepository}
+              title="Open repository"
+            />
+          </PreferenceSection>
+        </View>
       </ScrollView>
       <ResetProgressSheet
         busy={resetting}
@@ -151,14 +153,10 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     aboutCopy: { flex: 1, gap: sizes.spacing.xSmall },
     aboutIcon: {
-      alignItems: "center",
-      backgroundColor: colors.actionPrimary,
       borderRadius: sizes.radius.medium,
       height: 44,
-      justifyContent: "center",
       width: 44,
     },
-    aboutIconLabel: { color: colors.actionPrimaryText, fontWeight: fontWeight.heavy },
     aboutRow: {
       alignItems: "center",
       flexDirection: "row",
@@ -177,6 +175,7 @@ function createStyles(colors: AppColors) {
     },
     rowTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     screen: { backgroundColor: colors.background, flex: 1 },
+    sections: { gap: sizes.spacing.spacious },
     title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
   });
 }

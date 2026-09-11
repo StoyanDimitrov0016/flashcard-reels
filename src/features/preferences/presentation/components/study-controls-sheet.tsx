@@ -44,6 +44,16 @@ export function StudyControlsSheet({
     preferences.recollectionIslandPosition,
     preferences.audioSide
   );
+  const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
+  const audioMarker = (
+    <View style={styles.audioMarker}>
+      <SymbolView
+        name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
+        size={sizes.icon.small}
+        tintColor={colors.textPrimary}
+      />
+    </View>
+  );
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
@@ -61,9 +71,6 @@ export function StudyControlsSheet({
               <Text accessibilityRole="header" style={styles.title}>
                 Study controls
               </Text>
-              <Text style={styles.subtitle}>
-                Choose where recall and audio controls feel natural.
-              </Text>
             </View>
             <Pressable
               accessibilityLabel="Close study controls"
@@ -80,40 +87,52 @@ export function StudyControlsSheet({
           </View>
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.preview}>
-              <View style={styles.previewStage}>
+              <View
+                style={[
+                  styles.previewStage,
+                  preferences.recollectionIslandPosition === "bottom" && styles.previewStageBottom,
+                  preferences.recollectionIslandPosition === "left" && styles.previewStageLeft,
+                  preferences.recollectionIslandPosition === "right" && styles.previewStageRight,
+                ]}
+              >
                 <View
                   style={[
-                    styles.previewIsland,
-                    orientation === "horizontal" && styles.previewIslandHorizontal,
+                    styles.previewCluster,
+                    orientation === "horizontal" && styles.previewClusterHorizontal,
                   ]}
                 >
-                  {deriveRatingOrder(preferences.ratingDirection).map((level) => {
-                    const option = recallOptions.find((current) => current.level === level);
-                    if (!option) {
-                      return null;
-                    }
-                    return (
-                      <View key={level} style={styles.previewAction}>
-                        <View
-                          style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}
-                        >
-                          <SymbolView
-                            name={option.symbol}
-                            size={sizes.icon.small}
-                            tintColor={colors.actionPrimaryText}
-                          />
+                  {audioBeforeIsland ? audioMarker : null}
+                  <View
+                    style={[
+                      styles.previewIsland,
+                      orientation === "horizontal" && styles.previewIslandHorizontal,
+                    ]}
+                  >
+                    {deriveRatingOrder(preferences.ratingDirection).map((level) => {
+                      const option = recallOptions.find((current) => current.level === level);
+                      if (!option) {
+                        return null;
+                      }
+                      return (
+                        <View key={level} style={styles.previewAction}>
+                          <View
+                            style={[
+                              styles.previewMarker,
+                              { backgroundColor: colors[option.color] },
+                            ]}
+                          >
+                            <SymbolView
+                              name={option.symbol}
+                              size={sizes.icon.small}
+                              tintColor={colors.actionPrimaryText}
+                            />
+                          </View>
+                          <Text style={styles.previewLabel}>{option.label}</Text>
                         </View>
-                        <Text style={styles.previewLabel}>{option.label}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-                <View style={[styles.audioMarker, styles[audioPosition]]}>
-                  <SymbolView
-                    name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
-                    size={sizes.icon.small}
-                    tintColor={colors.textPrimary}
-                  />
+                      );
+                    })}
+                  </View>
+                  {audioBeforeIsland ? null : audioMarker}
                 </View>
               </View>
             </View>
@@ -209,8 +228,6 @@ function OptionGroup<T extends string>({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    above: { bottom: "100%", marginBottom: sizes.spacing.small },
-    below: { marginTop: sizes.spacing.small, top: "100%" },
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     content: {
       gap: sizes.spacing.section,
@@ -244,7 +261,6 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.content,
     },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
-    left: { marginRight: sizes.spacing.small, right: "100%" },
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     option: {
       alignItems: "center",
@@ -277,12 +293,28 @@ function createStyles(colors: AppColors) {
       borderColor: colors.border,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      height: 220,
+      height: 260,
       justifyContent: "center",
+      overflow: "hidden",
       position: "relative",
     },
+
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
-    previewStage: { alignItems: "center", justifyContent: "center", position: "relative" },
+    previewCluster: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: sizes.spacing.small,
+    },
+    previewClusterHorizontal: { flexDirection: "row" },
+    previewStage: {
+      alignItems: "center",
+      alignSelf: "stretch",
+      flex: 1,
+      justifyContent: "center",
+    },
+    previewStageBottom: { justifyContent: "flex-end", paddingBottom: sizes.spacing.medium },
+    previewStageLeft: { alignItems: "flex-start", paddingLeft: sizes.spacing.medium },
+    previewStageRight: { alignItems: "flex-end", paddingRight: sizes.spacing.medium },
     previewIsland: {
       alignItems: "center",
       backgroundColor: colors.controlOverlay,
@@ -302,7 +334,6 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: 28,
     },
-    right: { left: "100%", marginLeft: sizes.spacing.small },
     scrim: {
       backgroundColor: colors.scrim,
       bottom: 0,
@@ -318,10 +349,10 @@ function createStyles(colors: AppColors) {
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
       borderWidth: sizes.border,
-      maxHeight: "90%",
+      maxHeight: "96%",
+      minHeight: "88%",
       width: "100%",
     },
-    subtitle: { color: colors.textSecondary, fontSize: fontSize.body },
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
     audioMarker: {
       alignItems: "center",
@@ -329,7 +360,6 @@ function createStyles(colors: AppColors) {
       borderRadius: sizes.radius.pill,
       height: 34,
       justifyContent: "center",
-      position: "absolute",
       width: 34,
     },
   });

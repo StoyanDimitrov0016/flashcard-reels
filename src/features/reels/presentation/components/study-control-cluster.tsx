@@ -67,15 +67,24 @@ function createStyles(
   orientation: "horizontal" | "vertical",
   audioPosition: "left" | "right" | "above" | "below"
 ) {
+  const left = position === "bottom" ? sizes.spacing.medium : undefined;
+  let right: number | undefined;
+  if (position === "right") {
+    right = sizes.spacing.spacious;
+  } else if (position === "bottom") {
+    right = sizes.spacing.medium;
+  }
+
   return StyleSheet.create({
     cluster: {
       alignItems: "center",
       bottom: position === "bottom" ? sizes.spacing.spacious + 44 : undefined,
       flexDirection: orientation === "horizontal" ? "row" : "column",
-      gap: sizes.spacing.xLarge,
-      left: position === "bottom" ? sizes.spacing.spacious : undefined,
+      gap: orientation === "horizontal" ? sizes.spacing.small : sizes.spacing.xLarge,
+      left,
       position: "absolute",
-      right: position === "right" || position === "bottom" ? sizes.spacing.spacious : undefined,
+      right,
+
       top: position === "bottom" ? undefined : "32%",
       ...(position === "left" ? { left: sizes.spacing.spacious } : {}),
       ...(audioPosition === "left" || audioPosition === "right"

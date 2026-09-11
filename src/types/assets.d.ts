@@ -4,6 +4,12 @@ declare module "*.mp3" {
   export default asset;
 }
 
+declare module "*.png" {
+  const asset: number;
+
+  export default asset;
+}
+
 declare module "*.sql" {
   const migration: string;
 

@@ -111,6 +111,12 @@ export function ReelCard({
   const haptics = useHaptics();
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const copyInsetStyles = {
+    bottom: undefined,
+    left: styles.copyLeftIsland,
+    right: styles.copyRightIsland,
+  };
+  const copyInsetStyle = copyInsetStyles[preferences.recollectionIslandPosition];
   const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
   const holdState = useRef<HoldToFocusState>("idle");
@@ -230,7 +236,7 @@ export function ReelCard({
       onPressOut={cancelFocusHold}
       style={styles.tapArea}
     >
-      <View style={styles.copy}>
+      <View style={[styles.copy, copyInsetStyle]}>
         <Text style={styles.prompt}>{card.question}</Text>
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
@@ -287,7 +293,7 @@ export function ReelCard({
               onPressOut={cancelFocusHold}
               style={styles.tapArea}
             >
-              <View style={styles.copy}>
+              <View style={[styles.copy, copyInsetStyle]}>
                 <Text style={styles.answerPrompt}>{card.question}</Text>
                 <Text style={styles.answer}>{card.answer}</Text>
               </View>
@@ -321,7 +327,9 @@ function createStyles(colors: AppColors) {
       paddingTop: sizes.spacing.screen,
     },
     answerContent: { flex: 1 },
-    copy: { gap: 22, paddingRight: 56 },
+    copy: { gap: 22 },
+    copyLeftIsland: { paddingLeft: 76 },
+    copyRightIsland: { paddingRight: 56 },
     prompt: {
       color: colors.textPrimary,
       fontSize: fontSize.hero,
