@@ -4,6 +4,7 @@ import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
@@ -19,6 +20,7 @@ type DeckDetailsState = Readonly<{
 export function useDeckDetails(deckId: DeckId): DeckDetailsState {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
   const { revision } = useDeckContentRevision();
+  const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<DeckDetailsState>({
     appearance: null,
     cards: [],
@@ -65,7 +67,7 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
         active = false;
       };
     },
-    [deckId, deckService, flashcardService, learnerProfileService, revision]
+    [deckId, deckService, flashcardService, learnerProfileService, resetRevision, revision]
   );
 
   if (state.error) {

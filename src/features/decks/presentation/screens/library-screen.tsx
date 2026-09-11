@@ -36,6 +36,8 @@ import {
   showFocusedToast,
   showHoldToast,
 } from "@/shared/presentation/flashcard-toast";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
@@ -248,26 +250,26 @@ export default function LibraryScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <Text accessibilityRole="header" style={styles.screenTitle}>
-            Library
-          </Text>
-          <Pressable
-            accessibilityLabel="Import deck package"
-            accessibilityRole="button"
-            disabled={importing}
-            hitSlop={4}
-            onPress={() => void handleImport()}
-            style={styles.importButton}
-          >
-            <SymbolView
-              name={{ android: "file_download", ios: "square.and.arrow.down", web: "download" }}
-              size={sizes.icon.small}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-        </View>
+      <ScreenHeader>
+        <Text accessibilityRole="header" style={styles.screenTitle}>
+          Library
+        </Text>
+        <Pressable
+          accessibilityLabel="Import deck package"
+          accessibilityRole="button"
+          disabled={importing}
+          hitSlop={4}
+          onPress={() => void handleImport()}
+          style={styles.importButton}
+        >
+          <SymbolView
+            name={{ android: "file_download", ios: "square.and.arrow.down", web: "download" }}
+            size={sizes.icon.small}
+            tintColor={colors.textPrimary}
+          />
+        </Pressable>
+      </ScreenHeader>
+      <View style={styles.body}>
         {importStatus ? (
           <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
             {importStatus.message}
@@ -304,19 +306,20 @@ export default function LibraryScreen() {
             </Pressable>
           ) : null}
         </View>
+        {loading ? (
+          <LibrarySkeleton />
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.list}
+            data={visibleEntries}
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={({ deck }) => deck.id}
+            ListEmptyComponent={query.trim() ? EmptyLibrarySearch : EmptyLibrary}
+            renderItem={renderItem}
+            style={styles.listView}
+          />
+        )}
       </View>
-      {loading ? (
-        <LibrarySkeleton />
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.list}
-          data={visibleEntries}
-          keyboardShouldPersistTaps="handled"
-          keyExtractor={({ deck }) => deck.id}
-          ListEmptyComponent={query.trim() ? EmptyLibrarySearch : EmptyLibrary}
-          renderItem={renderItem}
-        />
-      )}
       <DeckAppearanceSheet
         appearance={sheetAppearance}
         error={saveError}
@@ -386,17 +389,11 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.title2,
       fontWeight: fontWeight.bold,
     },
-    header: {
-      borderBottomColor: colors.border,
-      borderBottomWidth: sizes.border,
-      gap: sizes.spacing.xLarge,
+    body: {
+      flex: 1,
+      gap: sizes.spacing.section,
       paddingHorizontal: sizes.spacing.content,
-      paddingVertical: sizes.spacing.section,
-    },
-    headerTitleRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
+      paddingTop: screenLayout.contentTopGap,
     },
     importButton: {
       alignItems: "center",
@@ -417,8 +414,8 @@ function createStyles(colors: AppColors) {
     list: {
       gap: sizes.spacing.medium,
       paddingBottom: sizes.spacing.content,
-      paddingHorizontal: sizes.spacing.content,
     },
+    listView: { flex: 1 },
     screenTitle: {
       color: colors.textPrimary,
       fontSize: fontSize.title1,
@@ -439,7 +436,7 @@ function createStyles(colors: AppColors) {
     skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
     skeletonDeck: { paddingHorizontal: sizes.spacing.content },
     skeletonLine: { backgroundColor: colors.border, borderRadius: 3, height: 12, width: "85%" },
-    skeletonList: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
+    skeletonList: { gap: sizes.spacing.xxLarge },
     skeletonShortLine: {
       backgroundColor: colors.border,
       borderRadius: 3,

@@ -18,7 +18,12 @@ import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-inf
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
+import { useResetDeckProgress } from "@/features/learner-profile/presentation/hooks/use-reset-deck-progress";
+import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/use-card-answer-audio-source";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -65,19 +70,40 @@ export default function DeckDetailsScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
+  const resetDeckProgress = useResetDeckProgress();
+  const haptics = useHaptics();
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showDeckInfo, setShowDeckInfo] = useState(false);
+  const [resetPresented, setResetPresented] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
   const accentColor = appearance?.accentColor ?? colors.actionPrimary;
   const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
     <CardRow card={item} onPress={() => setSelectedCard(item)} />
   );
   const audioSource = useCardAnswerAudioSource(deck, selectedCard);
+  const confirmReset = () => {
+    if (resetting) {
+      return;
+    }
+    setResetting(true);
+    setResetError(null);
+    void resetDeckProgress(deckId)
+      .then(() => {
+        haptics.resetCompleted();
+        setResetPresented(false);
+      })
+      .catch(() =>
+        setResetError("The reset could not be completed. Your progress was not changed.")
+      )
+      .finally(() => setResetting(false));
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.navigationRow}>
+      <ScreenHeader>
         <Pressable
           accessibilityLabel="Back to Library"
           accessibilityRole="button"
@@ -91,67 +117,89 @@ export default function DeckDetailsScreen() {
           />
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
-      </View>
-      <View style={styles.header}>
-        {deck ? <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" /> : null}
-        <View style={styles.headingCopy}>
-          <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
-            {deck?.title ?? "Deck cards"}
-          </Text>
-          <Text style={styles.count}>{loading ? "Loading cards…" : `${cards.length} cards`}</Text>
-        </View>
         <Pressable
-          accessibilityLabel="Open deck information"
+          accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
           accessibilityRole="button"
-          accessibilityState={{ expanded: showDeckInfo }}
-          onPress={() => setShowDeckInfo(true)}
-          style={styles.infoButton}
+          disabled={deck === null || resetting}
+          hitSlop={4}
+          onPress={() => {
+            setResetError(null);
+            setResetPresented(true);
+          }}
+          style={styles.resetButton}
         >
           <SymbolView
-            name={{ android: "info", ios: "info.circle", web: "info" }}
+            name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
             size={sizes.icon.medium}
-            tintColor={colors.textSecondary}
+            tintColor={colors.danger}
           />
         </Pressable>
-      </View>
-      <View style={styles.searchShell}>
-        <SymbolView
-          name={{ android: "search", ios: "magnifyingglass", web: "search" }}
-          size={sizes.icon.small}
-          tintColor={colors.textMuted}
-        />
-        <TextInput
-          accessibilityLabel="Search cards in deck"
-          autoCapitalize="none"
-          autoCorrect={false}
-          onChangeText={setQuery}
-          placeholder="Search cards…"
-          placeholderTextColor={colors.textMuted}
-          style={styles.searchInput}
-          value={query}
-        />
-      </View>
-      <View style={styles.tabs}>
-        <View style={[styles.activeTab, { borderBottomColor: accentColor }]}>
-          <Text style={[styles.activeTabLabel, { color: accentColor }]}>Cards</Text>
+      </ScreenHeader>
+      <View style={styles.body}>
+        <View style={styles.header}>
+          {deck ? (
+            <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />
+          ) : null}
+          <View style={styles.headingCopy}>
+            <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
+              {deck?.title ?? "Deck cards"}
+            </Text>
+            <Text style={styles.count}>{loading ? "Loading cards…" : `${cards.length} cards`}</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Open deck information"
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showDeckInfo }}
+            onPress={() => setShowDeckInfo(true)}
+            style={styles.infoButton}
+          >
+            <SymbolView
+              name={{ android: "info", ios: "info.circle", web: "info" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textSecondary}
+            />
+          </Pressable>
         </View>
+        <View style={styles.searchShell}>
+          <SymbolView
+            name={{ android: "search", ios: "magnifyingglass", web: "search" }}
+            size={sizes.icon.small}
+            tintColor={colors.textMuted}
+          />
+          <TextInput
+            accessibilityLabel="Search cards in deck"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setQuery}
+            placeholder="Search cards…"
+            placeholderTextColor={colors.textMuted}
+            style={styles.searchInput}
+            value={query}
+          />
+        </View>
+        <View style={styles.tabs}>
+          <View style={[styles.activeTab, { borderBottomColor: accentColor }]}>
+            <Text style={[styles.activeTabLabel, { color: accentColor }]}>Cards</Text>
+          </View>
+        </View>
+        {loading ? (
+          <LoadingState accessibilityLabel="Loading deck cards" />
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.list}
+            data={visibleCards}
+            keyExtractor={(card) => card.id}
+            ListEmptyComponent={EmptyCardList}
+            initialNumToRender={12}
+            maxToRenderPerBatch={8}
+            removeClippedSubviews
+            renderItem={renderCard}
+            style={styles.listView}
+            updateCellsBatchingPeriod={32}
+            windowSize={7}
+          />
+        )}
       </View>
-      {loading ? (
-        <LoadingState accessibilityLabel="Loading deck cards" />
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.list}
-          data={visibleCards}
-          keyExtractor={(card) => card.id}
-          ListEmptyComponent={EmptyCardList}
-          initialNumToRender={12}
-          maxToRenderPerBatch={8}
-          removeClippedSubviews
-          renderItem={renderCard}
-          updateCellsBatchingPeriod={32}
-          windowSize={7}
-        />
-      )}
       <DeckInfoSheet
         cards={cards}
         deck={deck}
@@ -164,17 +212,24 @@ export default function DeckDetailsScreen() {
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
       />
+      <ResetProgressSheet
+        busy={resetting}
+        error={resetError}
+        isPresented={resetPresented}
+        onCancel={() => {
+          if (!resetting) {
+            setResetPresented(false);
+          }
+        }}
+        onConfirm={confirmReset}
+        scope={`${deck?.title ?? "deck"} progress`}
+      />
     </SafeAreaView>
   );
 }
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    answer: {
-      color: colors.textSecondary,
-      fontSize: fontSize.bodyLarge,
-      lineHeight: lineHeight.bodyLarge,
-    },
     backButton: {
       alignItems: "center",
       flexDirection: "row",
@@ -183,13 +238,10 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.xSmall,
     },
     backLabel: { color: colors.textPrimary, fontSize: fontSize.body },
-    cardCopy: { flex: 1, gap: sizes.spacing.medium },
-    cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
-    cardProgressTrack: {
-      backgroundColor: colors.borderStrong,
-      borderRadius: sizes.radius.pill,
-      height: 5,
-      overflow: "hidden",
+    body: {
+      flex: 1,
+      gap: sizes.spacing.section,
+      paddingTop: screenLayout.contentTopGap,
     },
     cardRow: {
       alignItems: "flex-start",
@@ -203,20 +255,7 @@ function createStyles(colors: AppColors) {
       paddingVertical: sizes.spacing.xLarge,
     },
     count: { color: colors.textMuted, fontSize: fontSize.footnote },
-    description: {
-      color: colors.textSecondary,
-      fontSize: fontSize.caption,
-      lineHeight: lineHeight.footnote,
-      marginTop: sizes.spacing.xSmall,
-    },
     empty: { color: colors.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
-    expandedContent: {
-      borderTopColor: colors.border,
-      borderTopWidth: sizes.border,
-      gap: sizes.spacing.medium,
-      marginTop: sizes.spacing.xSmall,
-      paddingTop: sizes.spacing.xLarge,
-    },
     header: {
       alignItems: "center",
       flexDirection: "row",
@@ -227,16 +266,12 @@ function createStyles(colors: AppColors) {
     },
     headingCopy: { flex: 1 },
     infoButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-    list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
-
-    navigationRow: {
-      alignItems: "center",
-      borderBottomColor: colors.border,
-      borderBottomWidth: sizes.border,
-      flexDirection: "row",
-      height: 56,
-      paddingHorizontal: sizes.spacing.xLarge,
+    list: {
+      gap: sizes.spacing.medium,
+      paddingBottom: sizes.spacing.content,
+      paddingHorizontal: sizes.spacing.content,
     },
+    listView: { flex: 1 },
     position: {
       color: colors.textMuted,
       fontSize: fontSize.footnote,
@@ -245,18 +280,7 @@ function createStyles(colors: AppColors) {
       textAlign: "center",
       width: 22,
     },
-    progressHeading: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      justifyContent: "space-between",
-    },
-    progressCaption: {
-      color: colors.textMuted,
-      flex: 1,
-      fontSize: fontSize.caption,
-      textAlign: "right",
-    },
+    resetButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     question: {
       color: colors.textPrimary,
       flex: 1,
@@ -264,10 +288,6 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
       lineHeight: lineHeight.subhead,
     },
-    ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
-    ratingLabel: { color: colors.textMuted, fontSize: fontSize.caption },
-    ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
-    ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
     screen: { backgroundColor: colors.background, flex: 1 },
     searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 44 },
     searchShell: {
@@ -291,8 +311,6 @@ function createStyles(colors: AppColors) {
       paddingVertical: sizes.spacing.medium,
     },
     activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
-    lastReviewed: { color: colors.textMuted, fontSize: fontSize.caption },
-    status: { flexShrink: 0, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
     title: { color: colors.textPrimary, ...textStyles.screenTitle },
   });
 }

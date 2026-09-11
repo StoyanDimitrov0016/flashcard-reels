@@ -9,6 +9,8 @@ import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
@@ -63,11 +65,11 @@ export default function ProgressScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <View style={styles.headingRow}>
+      <ScreenHeader>
         <Text accessibilityRole="header" style={styles.title}>
           Progress
         </Text>
-      </View>
+      </ScreenHeader>
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={renderRefreshControl(loading && rows.length > 0, refresh, colors)}
@@ -209,7 +211,11 @@ function SummaryFact({ icon, label, value }: SummaryFactProps) {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
+    content: {
+      gap: sizes.spacing.section,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: screenLayout.contentTopGap,
+    },
     deckAccent: { alignSelf: "stretch", width: 4 },
     deckCard: {
       alignItems: "center",
@@ -238,15 +244,6 @@ function createStyles(colors: AppColors) {
       flex: 1,
       fontSize: fontSize.body,
       fontWeight: fontWeight.bold,
-    },
-    headingRow: {
-      alignItems: "center",
-      borderBottomColor: colors.border,
-      borderBottomWidth: sizes.border,
-      flexDirection: "row",
-      height: 56,
-      justifyContent: "space-between",
-      paddingHorizontal: sizes.spacing.content,
     },
     percentage: {
       color: colors.textSecondary,

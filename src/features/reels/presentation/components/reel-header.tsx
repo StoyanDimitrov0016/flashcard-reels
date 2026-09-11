@@ -5,6 +5,7 @@ import type { Deck } from "@/features/decks/domain/deck.model";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
@@ -65,6 +66,10 @@ const styles = StyleSheet.create({
     letterSpacing: letterSpacing.wide,
   },
   focusedIdentity: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xLarge },
-  header: { alignItems: "center", flexDirection: "row" },
+  header: {
+    alignItems: "center",
+    flexDirection: "row",
+    height: screenLayout.headerHeight,
+  },
   labelStack: { alignItems: "center", paddingVertical: 4 },
 });

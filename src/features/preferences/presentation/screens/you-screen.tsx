@@ -16,6 +16,8 @@ import { useLearnerProgress } from "@/features/learner-profile/presentation/hook
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
@@ -41,10 +43,12 @@ export default function YouScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScreenHeader>
         <Text accessibilityRole="header" style={styles.title}>
           Controls
         </Text>
+      </ScreenHeader>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.sections}>
           <PreferenceSection title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
@@ -165,8 +169,9 @@ function createStyles(colors: AppColors) {
     },
     content: {
       gap: sizes.spacing.section,
-      padding: sizes.spacing.content,
+      paddingHorizontal: sizes.spacing.content,
       paddingBottom: sizes.spacing.spacious,
+      paddingTop: screenLayout.contentTopGap,
     },
     rowDetail: {
       color: colors.textSecondary,

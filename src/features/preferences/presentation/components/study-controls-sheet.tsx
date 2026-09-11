@@ -86,7 +86,12 @@ export function StudyControlsSheet({
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.content}>
-            <View style={styles.preview}>
+            <View
+              style={[
+                styles.preview,
+                preferences.recollectionIslandPosition === "bottom" && styles.previewBottom,
+              ]}
+            >
               <View
                 style={[
                   styles.previewStage,
@@ -353,6 +358,7 @@ function createStyles(colors: AppColors) {
       overflow: "hidden",
       position: "relative",
     },
+    previewBottom: { height: 320 },
 
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
     previewCluster: {
@@ -360,14 +366,18 @@ function createStyles(colors: AppColors) {
       flexDirection: "column",
       gap: sizes.spacing.small,
     },
-    previewClusterHorizontal: { flexDirection: "row" },
+    previewClusterHorizontal: { flexDirection: "row", width: "100%" },
     previewStage: {
       alignItems: "center",
       alignSelf: "stretch",
       flex: 1,
       justifyContent: "center",
     },
-    previewStageBottom: { justifyContent: "flex-end", paddingBottom: sizes.spacing.medium },
+    previewStageBottom: {
+      alignItems: "stretch",
+      justifyContent: "flex-end",
+      paddingBottom: sizes.spacing.medium,
+    },
     previewStageLeft: { alignItems: "flex-start", paddingLeft: sizes.spacing.medium },
     previewStageRight: { alignItems: "flex-end", paddingRight: sizes.spacing.medium },
     previewIsland: {
@@ -380,7 +390,11 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.medium,
       padding: sizes.spacing.medium,
     },
-    previewIslandHorizontal: { flexDirection: "row" },
+    previewIslandHorizontal: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
     previewLabel: { color: colors.textMuted, fontSize: fontSize.micro },
     previewMarker: {
       alignItems: "center",
