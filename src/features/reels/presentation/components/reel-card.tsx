@@ -69,7 +69,9 @@ function GestureHint({ label, symbol }: GestureHintProps) {
   );
 }
 
-function GestureFooter() {
+type GestureFooterProps = Readonly<{ showHoldHint: boolean }>;
+
+function GestureFooter({ showHoldHint }: GestureFooterProps) {
   const styles = createStyles(useAppTheme().colors);
 
   return (
@@ -82,6 +84,12 @@ function GestureFooter() {
         label="Double tap"
         symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
       />
+      {showHoldHint ? (
+        <GestureHint
+          label="Hold"
+          symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -262,7 +270,7 @@ export function ReelCard({
             showMainFeedLink={showMainFeedLink}
           />
           {questionTapArea}
-          <GestureFooter />
+          <GestureFooter showHoldHint={!showMainFeedLink} />
         </CardPage>
       </Animated.View>
       <Animated.View
@@ -299,7 +307,7 @@ export function ReelCard({
               </View>
             </Pressable>
           </View>
-          <GestureFooter />
+          <GestureFooter showHoldHint={!showMainFeedLink} />
           <StudyControlCluster
             audioEnabled={preferences.audioEnabled}
             audioSide={preferences.audioSide}

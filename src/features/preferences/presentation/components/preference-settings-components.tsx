@@ -39,6 +39,7 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
             accessibilityLabel={appearanceLabels[appearance] + " appearance"}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected, selected: isSelected }}
+            hitSlop={4}
             key={appearance}
             onPress={() => onChange(appearance)}
             style={[styles.segment, isSelected && styles.segmentSelected]}
@@ -46,7 +47,7 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
             <View style={styles.segmentContent}>
               <SymbolView
                 name={appearanceIcons[appearance]}
-                size={sizes.icon.small}
+                size={16}
                 tintColor={isSelected ? colors.textPrimary : colors.textSecondary}
               />
               <Text style={[styles.segmentLabel, isSelected && styles.segmentLabelSelected]}>
@@ -74,13 +75,14 @@ export function PreferenceSection({ children, title }: PreferenceSectionProps) {
 }
 
 type PreferenceRowProps = Readonly<{
-  detail: string;
+  detail?: string;
   icon: SymbolViewProps["name"];
+  iconColor?: string;
   onPress: () => void;
   title: string;
 }>;
 
-export function PreferenceRow({ detail, icon, onPress, title }: PreferenceRowProps) {
+export function PreferenceRow({ detail, icon, iconColor, onPress, title }: PreferenceRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -91,10 +93,14 @@ export function PreferenceRow({ detail, icon, onPress, title }: PreferenceRowPro
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.textSecondary} />
+      <SymbolView
+        name={icon}
+        size={sizes.icon.medium}
+        tintColor={iconColor ?? colors.textSecondary}
+      />
       <View style={styles.rowCopy}>
         <Text style={styles.rowTitle}>{title}</Text>
-        <Text style={styles.rowDetail}>{detail}</Text>
+        {detail ? <Text style={styles.rowDetail}>{detail}</Text> : null}
       </View>
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
@@ -163,7 +169,7 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      minHeight: 46,
+      height: 36,
       paddingHorizontal: sizes.spacing.small,
     },
     segmentContent: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
@@ -180,7 +186,7 @@ function createStyles(colors: AppColors) {
       borderRadius: sizes.radius.medium,
       borderWidth: sizes.border,
       flexDirection: "row",
-      gap: sizes.spacing.xSmall,
+      gap: sizes.spacing.large,
       margin: 0,
       padding: sizes.spacing.xSmall,
     },

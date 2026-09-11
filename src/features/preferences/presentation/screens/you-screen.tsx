@@ -78,8 +78,8 @@ export default function YouScreen() {
           </PreferenceSection>
           <PreferenceSection title="Learning Data">
             <PreferenceRow
-              detail="Installed decks stay available"
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
+              iconColor={colors.danger}
               onPress={() => {
                 setResetError(null);
                 setResetPresented(true);
