@@ -7,15 +7,25 @@ export function useRecallSession(
   studyService: StudyService,
   studySessionId: string,
   fromReelPosition: number,
-  throughReelPosition: number
+  throughReelPosition: number,
+  initialCardState?: Readonly<{
+    position: number;
+    recallLevel: RecallLevel | null;
+    revealed: boolean;
+  }>
 ) {
+  const initialRecallLevels =
+    initialCardState?.recallLevel === null || initialCardState?.recallLevel === undefined
+      ? new Map<number, RecallLevel>()
+      : new Map([[initialCardState.position, initialCardState.recallLevel]]);
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
   const attemptIdsReference = useRef<ReadonlyMap<number, string>>(new Map());
-  const [revealedPositions, setRevealedPositions] = useState<ReadonlySet<number>>(() => new Set());
-  const [recallLevels, setRecallLevels] = useState<ReadonlyMap<number, RecallLevel>>(
-    () => new Map()
+  const [revealedPositions, setRevealedPositions] = useState<ReadonlySet<number>>(() =>
+    initialCardState?.revealed ? new Set([initialCardState.position]) : new Set()
   );
-  const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(new Map());
+  const [recallLevels, setRecallLevels] =
+    useState<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
+  const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
 
   useEffect(
     function loadRecallSessionAttempts() {
@@ -40,6 +50,12 @@ export function useRecallSession(
           }
           attemptIdsReference.current = nextAttemptIds;
           setAttemptIds(nextAttemptIds);
+          if (
+            initialCardState?.recallLevel !== null &&
+            initialCardState?.recallLevel !== undefined
+          ) {
+            nextRecallLevels.set(initialCardState.position, initialCardState.recallLevel);
+          }
           recallLevelsReference.current = nextRecallLevels;
           setRecallLevels(nextRecallLevels);
         })
@@ -49,7 +65,7 @@ export function useRecallSession(
         active = false;
       };
     },
-    [fromReelPosition, studyService, studySessionId, throughReelPosition]
+    [fromReelPosition, initialCardState, studyService, studySessionId, throughReelPosition]
   );
 
   const getAttemptId = useCallback(

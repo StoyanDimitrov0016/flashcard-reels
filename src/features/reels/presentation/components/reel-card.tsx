@@ -126,12 +126,8 @@ export function ReelCard({
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const reelAppearance = resolveDeckAppearanceColors(appearance, resolvedScheme, colors);
-  const copyInsetStyles = {
-    bottom: undefined,
-    left: styles.copyLeftIsland,
-    right: styles.copyRightIsland,
-  };
-  const copyInsetStyle = copyInsetStyles[preferences.recollectionIslandPosition];
+  const answerInsetStyle =
+    preferences.recollectionIslandPosition === "left" ? styles.copyLeftIsland : undefined;
   const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
   const holdState = useRef<HoldToFocusState>("idle");
@@ -245,7 +241,9 @@ export function ReelCard({
     holdCompleted.current = true;
     lastTapAt.current = 0;
     haptics.focusCompleted();
-    openFocusedFeed(card.deckId, card.id);
+    openFocusedFeed(card.deckId, card.id, {
+      cardState: { cardId: card.id, recallLevel, revealed },
+    });
   };
 
   const frontRotation = rotation.interpolate({
@@ -269,7 +267,7 @@ export function ReelCard({
       onPressOut={cancelFocusHold}
       style={styles.tapArea}
     >
-      <View style={[styles.copy, copyInsetStyle]}>
+      <View style={styles.copy}>
         <Text style={styles.prompt}>{card.question}</Text>
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
@@ -326,7 +324,7 @@ export function ReelCard({
               onPressOut={cancelFocusHold}
               style={styles.tapArea}
             >
-              <View style={[styles.copy, copyInsetStyle]}>
+              <View style={[styles.copy, answerInsetStyle]}>
                 <Text style={styles.answerPrompt}>{card.question}</Text>
                 <Text style={styles.answer}>{card.answer}</Text>
               </View>
@@ -362,7 +360,6 @@ function createStyles(colors: AppColors) {
     answerContent: { flex: 1 },
     copy: { gap: 22 },
     copyLeftIsland: { paddingLeft: 76 },
-    copyRightIsland: { paddingRight: 56 },
     prompt: {
       color: colors.textPrimary,
       fontSize: fontSize.hero,

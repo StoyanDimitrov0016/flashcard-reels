@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
@@ -8,13 +8,19 @@ import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mount
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useAppServices } from "@/infrastructure/app-services";
 import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
+import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;
   sourceCards: readonly Flashcard[];
+  initialCardState?: FocusedCardState;
 }>;
 
-export function useReelController({ initialFeed, sourceCards }: UseReelControllerParameters) {
+export function useReelController({
+  initialCardState,
+  initialFeed,
+  sourceCards,
+}: UseReelControllerParameters) {
   const { answerAudioService, reelFeedService, studyService } = useAppServices();
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
@@ -29,11 +35,25 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const pendingRatingPromises = useRef(new Set<Promise<void>>());
   const extensionInFlight = useRef<Promise<void> | null>(null);
+  const initialRecallState = useMemo(
+    () =>
+      initialCardState
+        ? {
+            position:
+              initialFeed.occurrences.find(({ card }) => card.id === initialCardState.cardId)
+                ?.reelPosition ?? initialFeed.currentReelPosition,
+            recallLevel: initialCardState.recallLevel,
+            revealed: initialCardState.revealed,
+          }
+        : undefined,
+    [initialCardState, initialFeed]
+  );
   const recallSession = useRecallSession(
     studyService,
     initialFeed.studySessionId,
     feed.loadedFromReelPosition,
-    feed.loadedThroughReelPosition
+    feed.loadedThroughReelPosition,
+    initialRecallState
   );
   const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
 

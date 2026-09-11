@@ -12,6 +12,7 @@ import {
   type FocusedFeedState,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
+import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
@@ -21,6 +22,7 @@ type ReadyFocusedFeedContentProps = Readonly<{
   onSessionStarted: () => void;
   replaceSession: boolean;
   anchorFlashcardId: string | null;
+  options?: FocusedFeedOptions;
 }>;
 
 function ReadyFocusedFeedContent({
@@ -29,6 +31,7 @@ function ReadyFocusedFeedContent({
   onSessionStarted,
   replaceSession,
   anchorFlashcardId,
+  options,
 }: ReadyFocusedFeedContentProps) {
   const preparedFeed = usePreparedReelFeed(
     cards,
@@ -48,6 +51,7 @@ function ReadyFocusedFeedContent({
       preparedFeed={preparedFeed}
       showMainFeedLink
       sourceCards={cards}
+      initialCardState={options?.cardState}
     />
   );
 }
@@ -71,6 +75,7 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
       onSessionStarted={onSessionStarted}
       replaceSession={focusedFeed.replaceSession}
       anchorFlashcardId={focusedFeed.anchorFlashcardId}
+      options={focusedFeed.options}
     />
   );
 }

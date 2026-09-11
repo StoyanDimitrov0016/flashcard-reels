@@ -10,6 +10,7 @@ import { useReelController } from "@/features/reels/presentation/hooks/use-reel-
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
+import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
@@ -17,12 +18,22 @@ type ReelFeedProps = Readonly<{
   preparedFeed: PreparedReelFeed;
   showMainFeedLink?: boolean;
   sourceCards: Flashcard[];
+  initialCardState?: FocusedCardState;
 }>;
 
-export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }: ReelFeedProps) {
+export function ReelFeed({
+  initialCardState,
+  preparedFeed,
+  showMainFeedLink = false,
+  sourceCards,
+}: ReelFeedProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const controller = useReelController({ initialFeed: preparedFeed, sourceCards });
+  const controller = useReelController({
+    initialCardState,
+    initialFeed: preparedFeed,
+    sourceCards,
+  });
   const {
     answerAudioService,
     feed,
