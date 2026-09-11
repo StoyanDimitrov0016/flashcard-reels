@@ -1,9 +1,11 @@
 import Constants from "expo-constants";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
+import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -19,7 +21,8 @@ const appearanceLabels: Record<AppearancePreference, string> = {
 export default function YouScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { preferences, setAppearance, setAudioEnabled, setHapticsEnabled } = usePreferences();
+  const { preferences, setAppearance, setAudioEnabled, setAudioSide, setHapticsEnabled, setRatingDirection, setRecollectionIslandPosition } = usePreferences();
+  const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const version = Constants.expoConfig?.version ?? "1.0.0";
 
   return (
@@ -84,6 +87,14 @@ export default function YouScreen() {
           <PreferenceRow detail="Built for open learning" icon={{ android: "code", ios: "curlybraces", web: "code" }} onPress={() => undefined} title="Open source" />
         </PreferenceSection>
       </ScrollView>
+      <StudyControlsSheet
+        onAudioSideChange={setAudioSide}
+        onClose={() => setStudyControlsPresented(false)}
+        onPositionChange={setRecollectionIslandPosition}
+        onRatingDirectionChange={setRatingDirection}
+        preferences={preferences}
+        visible={studyControlsPresented}
+      />
     </SafeAreaView>
   );
 }

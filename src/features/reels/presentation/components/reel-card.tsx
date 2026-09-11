@@ -3,14 +3,15 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
-import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
+import { StudyControlCluster } from "@/features/reels/presentation/components/study-control-cluster";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
@@ -106,6 +107,7 @@ export function ReelCard({
   showMainFeedLink,
   width,
 }: ReelCardProps) {
+  const { preferences } = usePreferences();
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const openFocusedFeed = useOpenFocusedFeed();
@@ -272,10 +274,16 @@ export function ReelCard({
             </Pressable>
           </View>
           <GestureFooter showMainFeedLink={showMainFeedLink} />
-          <View style={styles.controlRail}>
-            <RecallControls onSelect={onRate} selectedLevel={recallLevel} />
-            <AnswerAudioPlayer isActive={isActive} source={audioSource} />
-          </View>
+          <StudyControlCluster
+            audioEnabled={preferences.audioEnabled}
+            audioSide={preferences.audioSide}
+            audioSource={audioSource}
+            isActive={isActive}
+            onRate={onRate}
+            position={preferences.recollectionIslandPosition}
+            ratingDirection={preferences.ratingDirection}
+            selectedLevel={recallLevel}
+          />
         </CardPage>
       </Animated.View>
       {!showMainFeedLink ? (

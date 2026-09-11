@@ -1,9 +1,10 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { deriveRatingOrder } from "@/features/reels/presentation/study-control-layout";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { selectAction } from "@/shared/presentation/haptics";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
@@ -15,47 +16,30 @@ type RecallOption = Readonly<{
 }>;
 
 const recallOptions: readonly RecallOption[] = [
-  {
-    color: "danger",
-    label: "Again",
-    level: "again",
-    symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
-  },
-  {
-    color: "warning",
-    label: "Hard",
-    level: "hard",
-    symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
-  },
-  {
-    color: "success",
-    label: "Good",
-    level: "good",
-    symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_box" },
-  },
-  {
-    color: "recallEasy",
-    label: "Easy",
-    level: "easy",
-    symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
-  },
+  { color: "danger", label: "Again", level: "again", symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" } },
+  { color: "warning", label: "Hard", level: "hard", symbol: { android: "speed", ios: "tortoise.fill", web: "speed" } },
+  { color: "success", label: "Good", level: "good", symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" } },
+  { color: "recallEasy", label: "Easy", level: "easy", symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" } },
 ];
 
 type RecallControlsProps = Readonly<{
   onSelect: (level: RecallLevel) => void;
-  orderedOptions?: readonly RecallOption[];
   orientation?: "horizontal" | "vertical";
+  ratingOrder?: readonly RecallLevel[];
   selectedLevel: RecallLevel | null;
 }>;
 
 export function RecallControls({
   onSelect,
-  orderedOptions = recallOptions,
   orientation = "vertical",
+  ratingOrder = deriveRatingOrder("forward"),
   selectedLevel,
 }: RecallControlsProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors, orientation);
+  const orderedOptions = ratingOrder.map(
+    (level) => recallOptions.find((option) => option.level === level)!
+  );
 
   return (
     <View style={styles.island}>
