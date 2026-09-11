@@ -15,6 +15,7 @@ import { GestureFooter } from "@/features/reels/presentation/components/gesture-
 import { QuestionFaceContent } from "@/features/reels/presentation/components/question-face-content";
 import { StudyControlCluster } from "@/features/reels/presentation/components/study-control-cluster";
 import { StudyControlLayoutProvider } from "@/features/reels/presentation/context/study-control-layout-context";
+import { getReelRotationValue } from "@/features/reels/presentation/reel-rotation";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -88,17 +89,17 @@ export function ReelCard({
   const styles = createStyles();
   const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
   const openFocusedFeed = useOpenFocusedFeed();
-  const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
+  const [rotation] = useState(() => new Animated.Value(getReelRotationValue(revealed)));
   const holdState = useRef<HoldToFocusState>("idle");
   const holdCompleted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
   const [flipCount, setFlipCount] = useRecyclingState(
-    revealed ? 1 : 0,
+    getReelRotationValue(revealed),
     [occurrenceKey, reelPosition],
     () => {
       rotation.stopAnimation();
-      rotation.setValue(revealed ? 1 : 0);
+      rotation.setValue(getReelRotationValue(revealed));
       if (holdState.current === "feedback") {
         hideFlashcardToast();
       }
@@ -110,6 +111,16 @@ export function ReelCard({
         holdFeedbackTimer.current = null;
       }
     }
+  );
+
+  useEffect(
+    function synchronizeRotationWithRevealedState() {
+      const rotationValue = getReelRotationValue(revealed);
+      rotation.stopAnimation();
+      rotation.setValue(rotationValue);
+      setFlipCount(rotationValue);
+    },
+    [occurrenceKey, reelPosition, revealed, rotation, setFlipCount]
   );
 
   const clearHoldFeedbackTimer = () => {
@@ -143,7 +154,7 @@ export function ReelCard({
     const now = Date.now();
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
-      const nextFlipCount = flipCount + 1;
+      const nextFlipCount = flipCount === 0 ? 1 : 0;
       setFlipCount(nextFlipCount);
       onFlip();
       Animated.timing(rotation, {

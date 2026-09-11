@@ -176,11 +176,11 @@ export function useReelController({
   const onRatingSelected = useCallback(
     (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
       const previousLevel = getRecallLevel(occurrence.reelPosition);
+      rateCard(occurrence.reelPosition, level);
       const ratingPersistence = startAttempt(occurrence)
         .then((attemptId) => studyService.rateAttempt(attemptId, level))
         .then((updated) => {
           if (updated) {
-            rateCard(occurrence.reelPosition, level);
             if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
               void reelFeedService
                 .refreshFeed(sourceCardsReference.current, initialFeed.studySessionId)
