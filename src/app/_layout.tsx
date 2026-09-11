@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
@@ -55,20 +56,23 @@ function AppNavigation() {
 
   return (
     <ThemeProvider value={getRouterTheme(resolvedScheme, colors)}>
-      <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          animation: "none",
-          contentStyle: { backgroundColor: colors.background },
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="decks/[deckId]"
-          options={{ animation: "none", contentStyle: { backgroundColor: colors.background } }}
-        />
-      </Stack>
+      <>
+        <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
+        <Stack
+          screenOptions={{
+            animation: "none",
+            contentStyle: { backgroundColor: colors.background },
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="decks/[deckId]"
+            options={{ animation: "none", contentStyle: { backgroundColor: colors.background } }}
+          />
+        </Stack>
+        <FlashcardToastHost />
+      </>
     </ThemeProvider>
   );
 }

@@ -6,7 +6,6 @@ import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-ap
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
-
 export function useSaveDeckAppearance() {
   const { deckService } = useAppServices();
   const { invalidateAppearances } = useDeckAppearanceRevision();

@@ -104,7 +104,11 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       minHeight: 46,
     },
-    cancelLabel: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
+    cancelLabel: {
+      color: colors.textPrimary,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
+    },
     disabled: { opacity: 0.58 },
     error: { color: colors.danger, fontSize: fontSize.caption, textAlign: "center" },
     handle: {

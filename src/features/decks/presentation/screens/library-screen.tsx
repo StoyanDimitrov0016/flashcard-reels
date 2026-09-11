@@ -100,6 +100,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
 
 function LibrarySkeleton() {
   const styles = createStyles(useAppTheme().colors);
+
   return (
     <View accessibilityLabel="Loading deck library" style={styles.skeletonList}>
       {["first", "second", "third"].map((key) => (
@@ -118,6 +119,7 @@ function LibrarySkeleton() {
 
 function EmptyLibrarySearch() {
   const styles = createStyles(useAppTheme().colors);
+
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>No decks found</Text>
@@ -128,6 +130,7 @@ function EmptyLibrarySearch() {
 
 function EmptyLibrary() {
   const styles = createStyles(useAppTheme().colors);
+
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>Your library is empty</Text>
@@ -286,117 +289,122 @@ export default function LibraryScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-  accent: { alignSelf: "stretch", width: 4 },
-  actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
-  cardCount: {
-    color: colors.textMuted,
-    fontSize: fontSize.caption,
-  },
-  clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-  deck: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: sizes.radius.row,
-    borderWidth: sizes.border,
-    flexDirection: "row",
-    minHeight: 84,
-    overflow: "hidden",
-  },
-  deckBody: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: sizes.spacing.xLarge,
-    minHeight: 84,
-    paddingHorizontal: sizes.spacing.xLarge,
-    paddingVertical: sizes.spacing.large,
-  },
-  deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
-  deckHeading: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: sizes.spacing.small,
-    justifyContent: "space-between",
-  },
-  deckTitle: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: fontSize.callout,
-    fontWeight: fontWeight.bold,
-  },
-  description: {
-    color: colors.textSecondary,
-    fontSize: fontSize.caption,
-    lineHeight: lineHeight.footnote,
-  },
-  empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
-  emptyCopy: { color: colors.textSecondary, fontSize: fontSize.body },
-  emptyTitle: {
-    color: colors.textPrimary,
-    fontSize: fontSize.title2,
-    fontWeight: fontWeight.bold,
-  },
-  header: {
-    borderBottomColor: colors.border,
-    borderBottomWidth: sizes.border,
-    gap: sizes.spacing.xLarge,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.section,
-  },
-  headerTitleRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  importButton: {
-    alignItems: "center",
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  importError: { color: colors.danger, fontSize: fontSize.caption },
-  importSuccess: { color: colors.success, fontSize: fontSize.caption },
-  iconButton: {
-    alignItems: "center",
-    borderColor: colors.controlBorder,
-    borderRadius: sizes.radius.pill,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  list: {
-    gap: sizes.spacing.medium,
-    paddingBottom: sizes.spacing.content,
-    paddingHorizontal: sizes.spacing.content,
-  },
-  screenTitle: {
-    color: colors.textPrimary,
-    fontSize: fontSize.title1,
-    fontWeight: fontWeight.heavy,
-  },
-  screen: { backgroundColor: colors.background, flex: 1 },
-  searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
-  searchShell: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: sizes.radius.row,
-    borderWidth: sizes.border,
-    flexDirection: "row",
-    paddingLeft: sizes.spacing.section,
-  },
-  skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
-  skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
-  skeletonDeck: { paddingHorizontal: sizes.spacing.content },
-  skeletonLine: { backgroundColor: colors.border, borderRadius: 3, height: 12, width: "85%" },
-  skeletonList: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
-  skeletonShortLine: { backgroundColor: colors.border, borderRadius: 3, height: 10, width: "35%" },
-  skeletonTitle: {
-    backgroundColor: colors.borderStrong,
-    borderRadius: 3,
-    height: 21,
-    width: "55%",
-  }
+    accent: { alignSelf: "stretch", width: 4 },
+    actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
+    cardCount: {
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+    },
+    clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    deck: {
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      minHeight: 84,
+      overflow: "hidden",
+    },
+    deckBody: {
+      alignItems: "center",
+      flex: 1,
+      flexDirection: "row",
+      gap: sizes.spacing.xLarge,
+      minHeight: 84,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.large,
+    },
+    deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
+    deckHeading: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.small,
+      justifyContent: "space-between",
+    },
+    deckTitle: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.callout,
+      fontWeight: fontWeight.bold,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      lineHeight: lineHeight.footnote,
+    },
+    empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
+    emptyCopy: { color: colors.textSecondary, fontSize: fontSize.body },
+    emptyTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title2,
+      fontWeight: fontWeight.bold,
+    },
+    header: {
+      borderBottomColor: colors.border,
+      borderBottomWidth: sizes.border,
+      gap: sizes.spacing.xLarge,
+      paddingHorizontal: sizes.spacing.content,
+      paddingVertical: sizes.spacing.section,
+    },
+    headerTitleRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    importButton: {
+      alignItems: "center",
+      height: 36,
+      justifyContent: "center",
+      width: 36,
+    },
+    importError: { color: colors.danger, fontSize: fontSize.caption },
+    importSuccess: { color: colors.success, fontSize: fontSize.caption },
+    iconButton: {
+      alignItems: "center",
+      borderColor: colors.controlBorder,
+      borderRadius: sizes.radius.pill,
+      height: 36,
+      justifyContent: "center",
+      width: 36,
+    },
+    list: {
+      gap: sizes.spacing.medium,
+      paddingBottom: sizes.spacing.content,
+      paddingHorizontal: sizes.spacing.content,
+    },
+    screenTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title1,
+      fontWeight: fontWeight.heavy,
+    },
+    screen: { backgroundColor: colors.background, flex: 1 },
+    searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
+    searchShell: {
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      paddingLeft: sizes.spacing.section,
+    },
+    skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
+    skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
+    skeletonDeck: { paddingHorizontal: sizes.spacing.content },
+    skeletonLine: { backgroundColor: colors.border, borderRadius: 3, height: 12, width: "85%" },
+    skeletonList: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
+    skeletonShortLine: {
+      backgroundColor: colors.border,
+      borderRadius: 3,
+      height: 10,
+      width: "35%",
+    },
+    skeletonTitle: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: 3,
+      height: 21,
+      width: "55%",
+    },
   });
 }

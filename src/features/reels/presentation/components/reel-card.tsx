@@ -11,6 +11,18 @@ import { ReelHeader } from "@/features/reels/presentation/components/reel-header
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+import {
+  canStartFocusHold,
+  FOCUS_HOLD_DURATION_MS,
+  HOLD_FEEDBACK_DELAY_MS,
+  transitionHoldToFocus,
+  type HoldToFocusState,
+} from "@/features/reels/presentation/hold-to-focus";
+import {
+  hideFlashcardToast,
+  showFocusedToast,
+  showHoldToast,
+} from "@/shared/presentation/flashcard-toast";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -40,9 +52,6 @@ type CardPageProps = Readonly<{
 }>;
 
 const DOUBLE_TAP_WINDOW_MS = 450;
-const FOCUS_HOLD_DURATION_MS = 900;
-const HOLD_FEEDBACK_DELAY_MS = 150;
-
 type GestureHintProps = Readonly<{
   label: string;
   symbol: SymbolViewProps["name"];
@@ -60,9 +69,7 @@ function GestureHint({ label, symbol }: GestureHintProps) {
   );
 }
 
-type GestureFooterProps = Readonly<{ showMainFeedLink: boolean }>;
-
-function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
+function GestureFooter() {
   const styles = createStyles(useAppTheme().colors);
 
   return (
@@ -75,12 +82,6 @@ function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
         label="Double tap"
         symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
       />
-      {!showMainFeedLink ? (
-        <GestureHint
-          label="Hold"
-          symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
-        />
-      ) : null}
     </View>
   );
 }
@@ -88,9 +89,7 @@ function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
 function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
   const styles = createStyles(useAppTheme().colors);
 
-  return (
-    <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>
-  );
+  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
 }
 
 export function ReelCard({
@@ -114,7 +113,7 @@ export function ReelCard({
   const styles = createStyles(colors);
   const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
-  const [holdProgress] = useState(() => new Animated.Value(0));
+  const holdState = useRef<HoldToFocusState>("idle");
   const flipCount = useRef(revealed ? 1 : 0);
   const holdCompleted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,21 +124,19 @@ export function ReelCard({
       clearTimeout(holdFeedbackTimer.current);
       holdFeedbackTimer.current = null;
     }
-    holdProgress.stopAnimation();
-    holdProgress.setValue(0);
+    holdState.current = "idle";
+    hideFlashcardToast();
   };
 
-  useEffect(
-    function cleanUpHoldFeedback() {
-      return function cancelHoldFeedbackOnUnmount() {
-        if (holdFeedbackTimer.current !== null) {
-          clearTimeout(holdFeedbackTimer.current);
-        }
-        holdProgress.stopAnimation();
-      };
-    },
-    [holdProgress]
-  );
+  useEffect(function cleanUpHoldFeedback() {
+    return function cancelHoldFeedbackOnUnmount() {
+      if (holdFeedbackTimer.current !== null) {
+        clearTimeout(holdFeedbackTimer.current);
+      }
+      holdState.current = "idle";
+      hideFlashcardToast();
+    };
+  }, []);
 
   const handleCardPress = () => {
     if (holdCompleted.current) {
@@ -163,32 +160,41 @@ export function ReelCard({
   };
 
   const startFocusHold = () => {
-    if (!isActive || showMainFeedLink) {
+    if (!canStartFocusHold(isActive, showMainFeedLink)) {
       return;
     }
     resetHoldFeedback();
     holdCompleted.current = false;
     holdFeedbackTimer.current = setTimeout(() => {
       holdFeedbackTimer.current = null;
-      Animated.timing(holdProgress, {
-        duration: FOCUS_HOLD_DURATION_MS - HOLD_FEEDBACK_DELAY_MS,
-        easing: Easing.linear,
-        toValue: 1,
-        useNativeDriver: false,
-      }).start();
+      const transition = transitionHoldToFocus(holdState.current, "feedback-delay");
+      holdState.current = transition.state;
+      if (transition.actions.includes("show-hold-toast")) {
+        showHoldToast();
+      }
     }, HOLD_FEEDBACK_DELAY_MS);
   };
 
   const cancelFocusHold = () => resetHoldFeedback();
 
   const completeFocusHold = () => {
-    if (!isActive || showMainFeedLink) {
+    if (!canStartFocusHold(isActive, showMainFeedLink)) {
       return;
     }
-    resetHoldFeedback();
+    const transition = transitionHoldToFocus(holdState.current, "complete");
+    holdState.current = transition.state;
+    if (!transition.actions.includes("open-focus")) {
+      return;
+    }
+    if (transition.actions.includes("hide-toast")) {
+      hideFlashcardToast();
+    }
+    if (transition.actions.includes("show-focused-toast")) {
+      showFocusedToast();
+    }
     holdCompleted.current = true;
     lastTapAt.current = 0;
-        haptics.focusCompleted();
+    haptics.focusCompleted();
     openFocusedFeed(card.deckId, card.id);
   };
 
@@ -239,7 +245,7 @@ export function ReelCard({
             showMainFeedLink={showMainFeedLink}
           />
           {questionTapArea}
-          <GestureFooter showMainFeedLink={showMainFeedLink} />
+          <GestureFooter />
         </CardPage>
       </Animated.View>
       <Animated.View
@@ -276,7 +282,7 @@ export function ReelCard({
               </View>
             </Pressable>
           </View>
-          <GestureFooter showMainFeedLink={showMainFeedLink} />
+          <GestureFooter />
           <StudyControlCluster
             audioEnabled={preferences.audioEnabled}
             audioSide={preferences.audioSide}
@@ -289,24 +295,6 @@ export function ReelCard({
           />
         </CardPage>
       </Animated.View>
-      {!showMainFeedLink ? (
-        <Animated.View pointerEvents="none" style={[styles.holdCue, { opacity: holdProgress }]}>
-          <Text style={styles.holdLabel}>Hold to Focus</Text>
-          <View style={styles.holdTrack}>
-            <Animated.View
-              style={[
-                styles.holdProgress,
-                {
-                  width: holdProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ["0%", "100%"],
-                  }),
-                },
-              ]}
-            />
-          </View>
-        </Animated.View>
-      ) : null}
     </View>
   );
 }
@@ -380,34 +368,5 @@ function createStyles(colors: AppColors) {
       rowGap: sizes.spacing.small,
     },
     gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
-    holdCue: {
-      alignItems: "center",
-      backgroundColor: colors.controlOverlay,
-      borderBottomColor: colors.controlBorder,
-      borderBottomWidth: sizes.border,
-      borderTopColor: colors.controlBorder,
-      borderTopWidth: sizes.border,
-      gap: sizes.spacing.medium,
-      left: 0,
-      paddingHorizontal: sizes.spacing.section,
-      paddingVertical: sizes.spacing.xLarge,
-      position: "absolute",
-      right: 0,
-      top: 72,
-      zIndex: 2,
-    },
-    holdLabel: {
-      color: colors.textPrimary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.heavy,
-    },
-    holdProgress: { backgroundColor: colors.actionPrimary, height: "100%" },
-    holdTrack: {
-      backgroundColor: colors.controlBorder,
-      borderRadius: sizes.radius.pill,
-      height: 4,
-      overflow: "hidden",
-      width: "100%",
-    },
   });
 }

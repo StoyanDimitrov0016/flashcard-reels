@@ -92,6 +92,7 @@ type RatingFactProps = Readonly<{ color: string; label: string; value: number }>
 
 function RatingFact({ color, label, value }: RatingFactProps) {
   const styles = createStyles(useAppTheme().colors);
+
   return (
     <View style={styles.ratingFact}>
       <Text style={[styles.ratingValue, { color }]}>{value}</Text>
@@ -102,6 +103,7 @@ function RatingFact({ color, label, value }: RatingFactProps) {
 
 function EmptyCardList() {
   const styles = createStyles(useAppTheme().colors);
+
   return <Text style={styles.empty}>This deck has no cards.</Text>;
 }
 
@@ -174,118 +176,118 @@ export default function DeckDetailsScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-  answer: {
-    color: colors.textSecondary,
-    fontSize: fontSize.bodyLarge,
-    lineHeight: lineHeight.bodyLarge,
-  },
-  backButton: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: sizes.spacing.xSmall,
-    height: "100%",
-    paddingHorizontal: sizes.spacing.xSmall,
-  },
-  backLabel: { color: colors.textPrimary, fontSize: fontSize.body },
-  cardCopy: { flex: 1, gap: sizes.spacing.medium },
-  cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
-  cardProgressTrack: {
-    backgroundColor: colors.borderStrong,
-    borderRadius: sizes.radius.pill,
-    height: 5,
-    overflow: "hidden",
-  },
-  cardRow: {
-    alignItems: "flex-start",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: sizes.radius.row,
-    borderWidth: sizes.border,
-    flexDirection: "row",
-    gap: sizes.spacing.medium,
-    paddingHorizontal: sizes.spacing.xLarge,
-    paddingVertical: sizes.spacing.xLarge,
-  },
-  count: { color: colors.textMuted, fontSize: fontSize.footnote },
-  description: {
-    color: colors.textSecondary,
-    fontSize: fontSize.caption,
-    lineHeight: lineHeight.footnote,
-    marginTop: sizes.spacing.xSmall,
-  },
-  empty: { color: colors.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
-  expandedContent: {
-    borderTopColor: colors.border,
-    borderTopWidth: sizes.border,
-    gap: sizes.spacing.medium,
-    marginTop: sizes.spacing.xSmall,
-    paddingTop: sizes.spacing.xLarge,
-  },
-  header: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: sizes.spacing.medium,
-    paddingBottom: sizes.spacing.section,
-    paddingHorizontal: sizes.spacing.content,
-    paddingTop: sizes.spacing.small,
-  },
-  headingCopy: { flex: 1 },
-  list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
-  navigationRow: {
-    alignItems: "center",
-    borderBottomColor: colors.border,
-    borderBottomWidth: sizes.border,
-    flexDirection: "row",
-    height: 56,
-    paddingHorizontal: sizes.spacing.xLarge,
-  },
-  position: {
-    color: colors.textMuted,
-    fontSize: fontSize.footnote,
-    fontVariant: ["tabular-nums"],
-    fontWeight: fontWeight.heavy,
-    textAlign: "center",
-    width: 22,
-  },
-  progressHeading: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: sizes.spacing.medium,
-    justifyContent: "space-between",
-  },
-  progressCaption: {
-    color: colors.textMuted,
-    flex: 1,
-    fontSize: fontSize.caption,
-    textAlign: "right",
-  },
-  question: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-    lineHeight: lineHeight.subhead,
-  },
-  ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
-  ratingLabel: { color: colors.textMuted, fontSize: fontSize.caption },
-  ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
-  ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
-  screen: { backgroundColor: colors.background, flex: 1 },
-  tabs: {
-    borderBottomColor: colors.border,
-    borderBottomWidth: sizes.border,
-    paddingHorizontal: sizes.spacing.content,
-  },
-  activeTab: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderBottomWidth: 2,
-    paddingHorizontal: sizes.spacing.xLarge,
-    paddingVertical: sizes.spacing.medium,
-  },
-  activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
-  lastReviewed: { color: colors.textMuted, fontSize: fontSize.caption },
-  status: { flexShrink: 0, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
-  title: { color: colors.textPrimary, ...textStyles.screenTitle }
+    answer: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodyLarge,
+      lineHeight: lineHeight.bodyLarge,
+    },
+    backButton: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.xSmall,
+      height: "100%",
+      paddingHorizontal: sizes.spacing.xSmall,
+    },
+    backLabel: { color: colors.textPrimary, fontSize: fontSize.body },
+    cardCopy: { flex: 1, gap: sizes.spacing.medium },
+    cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
+    cardProgressTrack: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 5,
+      overflow: "hidden",
+    },
+    cardRow: {
+      alignItems: "flex-start",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.xLarge,
+    },
+    count: { color: colors.textMuted, fontSize: fontSize.footnote },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      lineHeight: lineHeight.footnote,
+      marginTop: sizes.spacing.xSmall,
+    },
+    empty: { color: colors.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
+    expandedContent: {
+      borderTopColor: colors.border,
+      borderTopWidth: sizes.border,
+      gap: sizes.spacing.medium,
+      marginTop: sizes.spacing.xSmall,
+      paddingTop: sizes.spacing.xLarge,
+    },
+    header: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      paddingBottom: sizes.spacing.section,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: sizes.spacing.small,
+    },
+    headingCopy: { flex: 1 },
+    list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
+    navigationRow: {
+      alignItems: "center",
+      borderBottomColor: colors.border,
+      borderBottomWidth: sizes.border,
+      flexDirection: "row",
+      height: 56,
+      paddingHorizontal: sizes.spacing.xLarge,
+    },
+    position: {
+      color: colors.textMuted,
+      fontSize: fontSize.footnote,
+      fontVariant: ["tabular-nums"],
+      fontWeight: fontWeight.heavy,
+      textAlign: "center",
+      width: 22,
+    },
+    progressHeading: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      justifyContent: "space-between",
+    },
+    progressCaption: {
+      color: colors.textMuted,
+      flex: 1,
+      fontSize: fontSize.caption,
+      textAlign: "right",
+    },
+    question: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
+      lineHeight: lineHeight.subhead,
+    },
+    ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
+    ratingLabel: { color: colors.textMuted, fontSize: fontSize.caption },
+    ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
+    ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
+    screen: { backgroundColor: colors.background, flex: 1 },
+    tabs: {
+      borderBottomColor: colors.border,
+      borderBottomWidth: sizes.border,
+      paddingHorizontal: sizes.spacing.content,
+    },
+    activeTab: {
+      alignItems: "center",
+      alignSelf: "flex-start",
+      borderBottomWidth: 2,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.medium,
+    },
+    activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
+    lastReviewed: { color: colors.textMuted, fontSize: fontSize.caption },
+    status: { flexShrink: 0, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
+    title: { color: colors.textPrimary, ...textStyles.screenTitle },
   });
 }

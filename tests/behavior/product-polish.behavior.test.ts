@@ -13,12 +13,10 @@ describe("product polish policies", () => {
     const startFocusedFeed = vi.fn();
     const navigate = vi.fn();
 
-
     openFocusedFeed("deck-2", startFocusedFeed, navigate);
 
     expect(startFocusedFeed).toHaveBeenCalledWith("deck-2");
     expect(navigate).toHaveBeenCalledWith("/(tabs)/focus");
-
   });
 
   it("matches deck titles and descriptions case-insensitively and clears cleanly", () => {

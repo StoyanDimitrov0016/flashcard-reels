@@ -1,7 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useColorScheme } from "react-native";
 
-
 import {
   defaultAppPreferences,
   resolveColorScheme,
@@ -40,20 +39,23 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
   const preferencesReference = useRef(defaultAppPreferences);
   const writeQueue = useRef(Promise.resolve());
 
-  useEffect(() => {
-    let active = true;
-    void service.load().then((loadedPreferences) => {
-      if (!active) {
-        return;
-      }
-      preferencesReference.current = loadedPreferences;
-      setPreferences(loadedPreferences);
-      setReady(true);
-    });
-    return () => {
-      active = false;
-    };
-  }, [service]);
+  useEffect(
+    function loadPreferences() {
+      let active = true;
+      void service.load().then((loadedPreferences) => {
+        if (!active) {
+          return;
+        }
+        preferencesReference.current = loadedPreferences;
+        setPreferences(loadedPreferences);
+        setReady(true);
+      });
+      return function deactivatePreferences() {
+        active = false;
+      };
+    },
+    [service]
+  );
 
   const updatePreferences = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) => {
     const nextPreferences = { ...preferencesReference.current, [key]: value };

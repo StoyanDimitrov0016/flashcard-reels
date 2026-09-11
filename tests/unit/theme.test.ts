@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  darkColors,
-  getAppColors,
-  lightColors,
-} from "@/shared/presentation/theme-colors";
+import { darkColors, getAppColors, lightColors } from "@/shared/presentation/theme-colors";
 
 describe("semantic application themes", () => {
   it("keeps the specified light and dark semantic palettes", () => {

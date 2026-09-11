@@ -14,6 +14,7 @@ type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
+
   return (
     <ErrorState
       message="Try again, or return to Discover."
@@ -57,7 +58,11 @@ export default function TabLayout() {
             name="(discover)"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView name={{ android: "explore", ios: "safari.fill", web: "explore" }} size={sizes.icon.medium} tintColor={color} />
+                <SymbolView
+                  name={{ android: "explore", ios: "safari.fill", web: "explore" }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
               ),
               title: "Discover",
             }}
@@ -66,7 +71,15 @@ export default function TabLayout() {
             name="focus"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView name={{ android: "center_focus_strong", ios: "scope", web: "center_focus_strong" }} size={sizes.icon.medium} tintColor={color} />
+                <SymbolView
+                  name={{
+                    android: "center_focus_strong",
+                    ios: "scope",
+                    web: "center_focus_strong",
+                  }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
               ),
               title: "Focus",
             }}
@@ -75,7 +88,15 @@ export default function TabLayout() {
             name="library"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView name={{ android: "library_books", ios: "books.vertical.fill", web: "library_books" }} size={sizes.icon.medium} tintColor={color} />
+                <SymbolView
+                  name={{
+                    android: "library_books",
+                    ios: "books.vertical.fill",
+                    web: "library_books",
+                  }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
               ),
               title: "Library",
             }}
@@ -84,7 +105,11 @@ export default function TabLayout() {
             name="progress"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }} size={sizes.icon.medium} tintColor={color} />
+                <SymbolView
+                  name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
               ),
               title: "Progress",
             }}
@@ -93,7 +118,11 @@ export default function TabLayout() {
             name="you"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView name={{ android: "person", ios: "person.fill", web: "person" }} size={sizes.icon.medium} tintColor={color} />
+                <SymbolView
+                  name={{ android: "person", ios: "person.fill", web: "person" }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
               ),
               title: "You",
             }}

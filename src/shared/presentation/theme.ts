@@ -4,7 +4,6 @@ import { usePreferences } from "@/features/preferences/presentation/hooks/use-pr
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
 
-export { darkColors, lightColors } from "@/shared/presentation/theme-colors";
 export type { AppColors } from "@/shared/presentation/theme-colors";
 
 export function useAppTheme(): Readonly<{

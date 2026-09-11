@@ -7,6 +7,7 @@ import type {
   RatingDirection,
   RecollectionIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 import {
   deriveAudioPosition,
   deriveIslandOrientation,
@@ -28,7 +29,21 @@ type StudyControlsSheetProps = Readonly<{
 }>;
 
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
-const labels: Record<string, string> = { again: "Again", hard: "Hard", good: "Good", easy: "Easy" };
+const labels: Record<RecallLevel, string> = {
+  again: "Again",
+  hard: "Hard",
+  good: "Good",
+  easy: "Easy",
+};
+const previewColors: Record<
+  RecallLevel,
+  keyof Pick<AppColors, "danger" | "warning" | "success" | "recallEasy">
+> = {
+  again: "danger",
+  hard: "warning",
+  good: "success",
+  easy: "recallEasy",
+};
 
 export function StudyControlsSheet({
   onAudioSideChange,
@@ -41,41 +56,116 @@ export function StudyControlsSheet({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const orientation = deriveIslandOrientation(preferences.recollectionIslandPosition);
-  const audioPosition = deriveAudioPosition(preferences.recollectionIslandPosition, preferences.audioSide);
+  const audioPosition = deriveAudioPosition(
+    preferences.recollectionIslandPosition,
+    preferences.audioSide
+  );
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <View style={styles.modalRoot}>
-        <Pressable accessibilityLabel="Close study controls" accessibilityRole="button" onPress={onClose} style={styles.scrim} />
+        <Pressable
+          accessibilityLabel="Close study controls"
+          accessibilityRole="button"
+          onPress={onClose}
+          style={styles.scrim}
+        />
         <View accessibilityViewIsModal style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <View style={styles.headingCopy}>
-              <Text accessibilityRole="header" style={styles.title}>Study controls</Text>
-              <Text style={styles.subtitle}>Choose where recall and audio controls feel natural.</Text>
+              <Text accessibilityRole="header" style={styles.title}>
+                Study controls
+              </Text>
+              <Text style={styles.subtitle}>
+                Choose where recall and audio controls feel natural.
+              </Text>
             </View>
-            <Pressable accessibilityLabel="Close study controls" accessibilityRole="button" onPress={onClose} style={styles.closeButton}>
-              <SymbolView name={{ android: "close", ios: "xmark", web: "close" }} size={sizes.icon.medium} tintColor={colors.textPrimary} />
+            <Pressable
+              accessibilityLabel="Close study controls"
+              accessibilityRole="button"
+              onPress={onClose}
+              style={styles.closeButton}
+            >
+              <SymbolView
+                name={{ android: "close", ios: "xmark", web: "close" }}
+                size={sizes.icon.medium}
+                tintColor={colors.textPrimary}
+              />
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.preview}>
-              <View style={[styles.previewIsland, orientation === "horizontal" && styles.previewIslandHorizontal]}>
+              <View
+                style={[
+                  styles.previewIsland,
+                  orientation === "horizontal" && styles.previewIslandHorizontal,
+                ]}
+              >
                 {deriveRatingOrder(preferences.ratingDirection).map((level) => (
                   <View key={level} style={styles.previewAction}>
-                    <View style={[styles.previewMarker, { backgroundColor: colors[level === "again" ? "danger" : level === "hard" ? "warning" : level === "good" ? "success" : "recallEasy"] }]} />
+                    <View
+                      style={[
+                        styles.previewMarker,
+                        {
+                          backgroundColor: colors[previewColors[level]],
+                        },
+                      ]}
+                    />
                     <Text style={styles.previewLabel}>{labels[level]}</Text>
                   </View>
                 ))}
               </View>
               <View style={[styles.audioMarker, styles[audioPosition]]}>
-                <SymbolView name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }} size={sizes.icon.small} tintColor={colors.textPrimary} />
+                <SymbolView
+                  name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
+                  size={sizes.icon.small}
+                  tintColor={colors.textPrimary}
+                />
               </View>
             </View>
-            <OptionGroup label="Recollection island" options={positions.map((value) => ({ label: value.charAt(0).toUpperCase() + value.slice(1), value }))} selected={preferences.recollectionIslandPosition} onChange={onPositionChange} />
-            <OptionGroup label="Rating direction" options={[{ label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"), value: "forward" as const }, { label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "reverse"), value: "reverse" as const }]} selected={preferences.ratingDirection} onChange={onRatingDirectionChange} />
-            <OptionGroup label="Audio position" options={[{ label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"), value: "primary" as const }, { label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"), value: "opposite" as const }]} selected={preferences.audioSide} onChange={onAudioSideChange} />
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}><Text style={styles.doneLabel}>Done</Text></Pressable>
+            <OptionGroup
+              label="Recollection island"
+              options={positions.map((value) => ({
+                label: value.charAt(0).toUpperCase() + value.slice(1),
+                value,
+              }))}
+              selected={preferences.recollectionIslandPosition}
+              onChange={onPositionChange}
+            />
+            <OptionGroup
+              label="Rating direction"
+              options={[
+                {
+                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"),
+                  value: "forward" as const,
+                },
+                {
+                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "reverse"),
+                  value: "reverse" as const,
+                },
+              ]}
+              selected={preferences.ratingDirection}
+              onChange={onRatingDirectionChange}
+            />
+            <OptionGroup
+              label="Audio position"
+              options={[
+                {
+                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
+                  value: "primary" as const,
+                },
+                {
+                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
+                  value: "opposite" as const,
+                },
+              ]}
+              selected={preferences.audioSide}
+              onChange={onAudioSideChange}
+            />
+            <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
+              <Text style={styles.doneLabel}>Done</Text>
+            </Pressable>
           </ScrollView>
         </View>
       </View>
@@ -83,17 +173,41 @@ export function StudyControlsSheet({
   );
 }
 
-type OptionGroupProps<T extends string> = Readonly<{ label: string; onChange: (value: T) => void; options: readonly { label: string; value: T }[]; selected: T }>;
-function OptionGroup<T extends string>({ label, onChange, options, selected }: OptionGroupProps<T>) {
+type OptionGroupProps<T extends string> = Readonly<{
+  label: string;
+  onChange: (value: T) => void;
+  options: readonly { label: string; value: T }[];
+  selected: T;
+}>;
+function OptionGroup<T extends string>({
+  label,
+  onChange,
+  options,
+  selected,
+}: OptionGroupProps<T>) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+
   return (
     <View style={styles.optionGroup}>
       <Text style={styles.optionLabel}>{label}</Text>
       <View style={styles.options}>
         {options.map((option) => {
           const isSelected = selected === option.value;
-          return <Pressable accessibilityLabel={option.label} accessibilityRole="radio" accessibilityState={{ checked: isSelected, selected: isSelected }} key={option.value} onPress={() => onChange(option.value)} style={[styles.option, isSelected && styles.optionSelected]}><Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>{option.label}</Text></Pressable>;
+          return (
+            <Pressable
+              accessibilityLabel={option.label}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected, selected: isSelected }}
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              style={[styles.option, isSelected && styles.optionSelected]}
+            >
+              <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
         })}
       </View>
     </View>
@@ -105,32 +219,118 @@ function createStyles(colors: AppColors) {
     above: { top: 14 },
     below: { bottom: 14 },
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-    content: { gap: sizes.spacing.section, padding: sizes.spacing.content, paddingBottom: sizes.spacing.spacious },
-    doneButton: { alignItems: "center", backgroundColor: colors.actionPrimary, borderRadius: sizes.radius.pill, justifyContent: "center", minHeight: 48 },
-    doneLabel: { color: colors.actionPrimaryText, fontSize: fontSize.body, fontWeight: fontWeight.heavy },
-    handle: { alignSelf: "center", backgroundColor: colors.borderStrong, borderRadius: sizes.radius.pill, height: 4, marginTop: sizes.spacing.medium, width: 40 },
-    header: { alignItems: "flex-start", flexDirection: "row", gap: sizes.spacing.medium, padding: sizes.spacing.content },
+    content: {
+      gap: sizes.spacing.section,
+      padding: sizes.spacing.content,
+      paddingBottom: sizes.spacing.spacious,
+    },
+    doneButton: {
+      alignItems: "center",
+      backgroundColor: colors.actionPrimary,
+      borderRadius: sizes.radius.pill,
+      justifyContent: "center",
+      minHeight: 48,
+    },
+    doneLabel: {
+      color: colors.actionPrimaryText,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.heavy,
+    },
+    handle: {
+      alignSelf: "center",
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 4,
+      marginTop: sizes.spacing.medium,
+      width: 40,
+    },
+    header: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      padding: sizes.spacing.content,
+    },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
     left: { left: 18 },
     modalRoot: { flex: 1, justifyContent: "flex-end" },
-    option: { alignItems: "center", borderColor: colors.controlBorder, borderRadius: sizes.radius.medium, borderWidth: sizes.border, flex: 1, justifyContent: "center", minHeight: 44, paddingHorizontal: sizes.spacing.small },
+    option: {
+      alignItems: "center",
+      borderColor: colors.controlBorder,
+      borderRadius: sizes.radius.medium,
+      borderWidth: sizes.border,
+      flex: 1,
+      justifyContent: "center",
+      minHeight: 44,
+      paddingHorizontal: sizes.spacing.small,
+    },
     optionGroup: { gap: sizes.spacing.small },
-    optionLabel: { color: colors.textSecondary, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
+    optionLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+    },
     optionSelected: { backgroundColor: colors.controlSelected, borderColor: colors.actionPrimary },
-    optionText: { color: colors.textSecondary, fontSize: fontSize.caption, fontWeight: fontWeight.bold, textAlign: "center" },
+    optionText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+      textAlign: "center",
+    },
     optionTextSelected: { color: colors.textPrimary },
     options: { flexDirection: "row", gap: sizes.spacing.small },
-    preview: { alignItems: "center", backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderRadius: sizes.radius.card, borderWidth: sizes.border, height: 190, justifyContent: "center", position: "relative" },
+    preview: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.card,
+      borderWidth: sizes.border,
+      height: 190,
+      justifyContent: "center",
+      position: "relative",
+    },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
-    previewIsland: { alignItems: "center", backgroundColor: colors.controlOverlay, borderColor: colors.controlBorder, borderRadius: sizes.radius.island, borderWidth: sizes.border, flexDirection: "column", gap: sizes.spacing.medium, padding: sizes.spacing.medium },
+    previewIsland: {
+      alignItems: "center",
+      backgroundColor: colors.controlOverlay,
+      borderColor: colors.controlBorder,
+      borderRadius: sizes.radius.island,
+      borderWidth: sizes.border,
+      flexDirection: "column",
+      gap: sizes.spacing.medium,
+      padding: sizes.spacing.medium,
+    },
     previewIslandHorizontal: { flexDirection: "row" },
     previewLabel: { color: colors.textMuted, fontSize: fontSize.micro },
     previewMarker: { borderRadius: sizes.radius.pill, height: 24, width: 24 },
     right: { right: 18 },
-    scrim: { backgroundColor: colors.scrim, bottom: 0, left: 0, position: "absolute", right: 0, top: 0 },
-    sheet: { alignSelf: "center", backgroundColor: colors.surface, borderColor: colors.borderStrong, borderTopLeftRadius: sizes.radius.panel, borderTopRightRadius: sizes.radius.panel, borderWidth: sizes.border, maxHeight: "90%", width: "100%" },
+    scrim: {
+      backgroundColor: colors.scrim,
+      bottom: 0,
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
+    sheet: {
+      alignSelf: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.borderStrong,
+      borderTopLeftRadius: sizes.radius.panel,
+      borderTopRightRadius: sizes.radius.panel,
+      borderWidth: sizes.border,
+      maxHeight: "90%",
+      width: "100%",
+    },
     subtitle: { color: colors.textSecondary, fontSize: fontSize.body },
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
-    audioMarker: { alignItems: "center", backgroundColor: colors.controlSelected, borderRadius: sizes.radius.pill, height: 34, justifyContent: "center", position: "absolute", width: 34 },
+    audioMarker: {
+      alignItems: "center",
+      backgroundColor: colors.controlSelected,
+      borderRadius: sizes.radius.pill,
+      height: 34,
+      justifyContent: "center",
+      position: "absolute",
+      width: 34,
+    },
   });
 }

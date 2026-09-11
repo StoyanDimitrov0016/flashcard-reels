@@ -1,10 +1,15 @@
-import type { AudioSide, RatingDirection, RecollectionIslandPosition } from "@/features/preferences/domain/app-preferences";
+import type {
+  AudioSide,
+  RatingDirection,
+  RecollectionIslandPosition,
+} from "@/features/preferences/domain/app-preferences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export type StudyControlOrientation = "horizontal" | "vertical";
 export type StudyControlAudioPosition = "left" | "right" | "above" | "below";
 
 const canonicalRatingOrder: readonly RecallLevel[] = ["again", "hard", "good", "easy"];
+const reverseRatingOrder: readonly RecallLevel[] = ["easy", "good", "hard", "again"];
 
 export function deriveIslandOrientation(
   position: RecollectionIslandPosition
@@ -13,7 +18,7 @@ export function deriveIslandOrientation(
 }
 
 export function deriveRatingOrder(direction: RatingDirection): readonly RecallLevel[] {
-  return direction === "forward" ? canonicalRatingOrder : [...canonicalRatingOrder].reverse();
+  return direction === "forward" ? canonicalRatingOrder : reverseRatingOrder;
 }
 
 export function deriveAudioPosition(
@@ -37,7 +42,10 @@ export function getRatingDirectionLabel(
   return direction === "forward" ? "Top → Bottom" : "Bottom → Top";
 }
 
-export function getAudioSideLabel(islandPosition: RecollectionIslandPosition, audioSide: AudioSide) {
+export function getAudioSideLabel(
+  islandPosition: RecollectionIslandPosition,
+  audioSide: AudioSide
+) {
   const horizontal = islandPosition === "bottom";
   if (horizontal) {
     return audioSide === "primary" ? "Left" : "Right";

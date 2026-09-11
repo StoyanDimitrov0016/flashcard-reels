@@ -10,9 +10,9 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesRepository } from "@/features/preferences/domain/preferences.repository";
 
-export const PREFERENCES_STORAGE_KEY = "flashcard-reels.preferences.v1";
+const PREFERENCES_STORAGE_KEY = "flashcard-reels.preferences.v1";
 
-export class ExpoSqlitePreferencesRepository implements PreferencesRepository {
+class ExpoSqlitePreferencesRepository implements PreferencesRepository {
   async load(): Promise<AppPreferences> {
     try {
       const stored = await Storage.getItem(PREFERENCES_STORAGE_KEY);

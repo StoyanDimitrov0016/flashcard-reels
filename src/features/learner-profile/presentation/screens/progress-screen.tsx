@@ -17,7 +17,7 @@ export default function ProgressScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { loading, refresh, resetAllProgress, resetDeckProgress, rows } = useLearnerProgress();
+  const { loading, refresh, resetDeckProgress, rows } = useLearnerProgress();
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [pendingReset, setPendingReset] = useState<Readonly<{
@@ -67,19 +67,6 @@ export default function ProgressScreen() {
         <Text accessibilityRole="header" style={styles.title}>
           Progress
         </Text>
-        <Pressable
-          accessibilityLabel="Reset all progress"
-          accessibilityRole="button"
-          disabled={resetting}
-          hitSlop={8}
-          onPress={() => requestReset("all learning progress", resetAllProgress)}
-        >
-          <SymbolView
-            name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-            size={sizes.icon.medium}
-            tintColor={colors.danger}
-          />
-        </Pressable>
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
@@ -200,7 +187,11 @@ type SummaryFactProps = Readonly<{
 function SummaryFact({ icon, label, value }: SummaryFactProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const summaryColors = { cards: colors.actionPrimary, new: colors.warning, reviewed: colors.success };
+  const summaryColors = {
+    cards: colors.actionPrimary,
+    new: colors.warning,
+    reviewed: colors.success,
+  };
   const symbols = {
     cards: { android: "library_books", ios: "books.vertical.fill", web: "library_books" },
     new: { android: "auto_awesome", ios: "sparkles", web: "auto_awesome" },
@@ -218,77 +209,77 @@ function SummaryFact({ icon, label, value }: SummaryFactProps) {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-  content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
-  deckAccent: { alignSelf: "stretch", width: 4 },
-  deckCard: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: sizes.radius.row,
-    borderWidth: sizes.border,
-    flexDirection: "row",
-    gap: sizes.spacing.xLarge,
-    minHeight: 82,
-    overflow: "hidden",
-    paddingRight: sizes.spacing.medium,
-  },
-  deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
-  deckHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.small },
-  deckList: { gap: sizes.spacing.medium },
-  deckLink: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: sizes.spacing.xLarge,
-    minHeight: 80,
-  },
-  deckTitle: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-  },
-  headingRow: {
-    alignItems: "center",
-    borderBottomColor: colors.border,
-    borderBottomWidth: sizes.border,
-    flexDirection: "row",
-    height: 56,
-    justifyContent: "space-between",
-    paddingHorizontal: sizes.spacing.content,
-  },
-  percentage: {
-    color: colors.textSecondary,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-  },
-  pressed: { opacity: 0.72 },
-  progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
-  progressTrack: {
-    backgroundColor: colors.borderStrong,
-    borderRadius: sizes.radius.pill,
-    height: 5,
-    overflow: "hidden",
-  },
-  reviewed: { color: colors.textMuted, fontSize: fontSize.caption },
-  screen: { backgroundColor: colors.background, flex: 1 },
-  summaryFact: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: sizes.radius.row,
-    borderWidth: sizes.border,
-    flex: 1,
-    gap: sizes.spacing.xSmall,
-    padding: sizes.spacing.xLarge,
-  },
-  summaryLabel: { color: colors.textMuted, fontSize: fontSize.caption },
-  summaryRow: { flexDirection: "row", gap: sizes.spacing.medium },
-  summaryValue: {
-    color: colors.textPrimary,
-    fontSize: fontSize.title2,
-    fontWeight: fontWeight.heavy,
-  },
-  title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy }
+    content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
+    deckAccent: { alignSelf: "stretch", width: 4 },
+    deckCard: {
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      gap: sizes.spacing.xLarge,
+      minHeight: 82,
+      overflow: "hidden",
+      paddingRight: sizes.spacing.medium,
+    },
+    deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
+    deckHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.small },
+    deckList: { gap: sizes.spacing.medium },
+    deckLink: {
+      alignItems: "center",
+      flex: 1,
+      flexDirection: "row",
+      gap: sizes.spacing.xLarge,
+      minHeight: 80,
+    },
+    deckTitle: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
+    },
+    headingRow: {
+      alignItems: "center",
+      borderBottomColor: colors.border,
+      borderBottomWidth: sizes.border,
+      flexDirection: "row",
+      height: 56,
+      justifyContent: "space-between",
+      paddingHorizontal: sizes.spacing.content,
+    },
+    percentage: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+    },
+    pressed: { opacity: 0.72 },
+    progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
+    progressTrack: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 5,
+      overflow: "hidden",
+    },
+    reviewed: { color: colors.textMuted, fontSize: fontSize.caption },
+    screen: { backgroundColor: colors.background, flex: 1 },
+    summaryFact: {
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flex: 1,
+      gap: sizes.spacing.xSmall,
+      padding: sizes.spacing.xLarge,
+    },
+    summaryLabel: { color: colors.textMuted, fontSize: fontSize.caption },
+    summaryRow: { flexDirection: "row", gap: sizes.spacing.medium },
+    summaryValue: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title2,
+      fontWeight: fontWeight.heavy,
+    },
+    title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
   });
 }

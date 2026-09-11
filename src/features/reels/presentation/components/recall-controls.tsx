@@ -16,10 +16,30 @@ type RecallOption = Readonly<{
 }>;
 
 const recallOptions: readonly RecallOption[] = [
-  { color: "danger", label: "Again", level: "again", symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" } },
-  { color: "warning", label: "Hard", level: "hard", symbol: { android: "speed", ios: "tortoise.fill", web: "speed" } },
-  { color: "success", label: "Good", level: "good", symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" } },
-  { color: "recallEasy", label: "Easy", level: "easy", symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" } },
+  {
+    color: "danger",
+    label: "Again",
+    level: "again",
+    symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
+  },
+  {
+    color: "warning",
+    label: "Hard",
+    level: "hard",
+    symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
+  },
+  {
+    color: "success",
+    label: "Good",
+    level: "good",
+    symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },
+  },
+  {
+    color: "recallEasy",
+    label: "Easy",
+    level: "easy",
+    symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
+  },
 ];
 
 type RecallControlsProps = Readonly<{
@@ -38,8 +58,8 @@ export function RecallControls({
   const { colors } = useAppTheme();
   const styles = createStyles(colors, orientation);
   const haptics = useHaptics();
-  const orderedOptions = ratingOrder.map(
-    (level) => recallOptions.find((option) => option.level === level)!
+  const orderedOptions = ratingOrder.flatMap((level) =>
+    recallOptions.filter((option) => option.level === level)
   );
 
   return (
