@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
@@ -18,9 +19,10 @@ type FlashcardDetailsSheetProps = Readonly<{
 export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardDetailsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const { height } = useWindowDimensions();
 
   return (
-    <AppBottomSheet onClose={onClose} visible={card !== null}>
+    <AppBottomSheet contentHeight={height * 0.82} onClose={onClose} visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -40,13 +42,13 @@ export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardD
           </Pressable>
         </View>
         {card ? (
-          <ScrollView contentContainerStyle={styles.content}>
+          <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <Text style={styles.question}>{card.question}</Text>
             <View style={styles.answerRow}>
               <Text style={styles.answer}>{card.answer}</Text>
               {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
             </View>
-          </ScrollView>
+          </BottomSheetScrollView>
         ) : null}
       </View>
     </AppBottomSheet>
@@ -82,12 +84,11 @@ function createStyles(colors: AppColors) {
     },
     sheet: {
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      borderWidth: sizes.border,
-      maxHeight: "82%",
+      flex: 1,
     },
+    scrollView: { flex: 1 },
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
   });
 }

@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -21,6 +22,7 @@ type DeckInfoSheetProps = Readonly<{
 export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckInfoSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const { height } = useWindowDimensions();
   const reviewedProfiles = cards.flatMap((card) => {
     const profile = profiles.get(card.id);
     return profile && profile.reviewCount > 0 ? [profile] : [];
@@ -38,7 +40,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
         );
 
   return (
-    <AppBottomSheet onClose={onClose} visible={visible}>
+    <AppBottomSheet contentHeight={height * 0.7} onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -57,7 +59,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
             />
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={styles.content}>
+        <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
           <View style={styles.metrics}>
             <Metric label="Cards" value={cards.length} />
             <Metric label="Reviewed" value={reviewedProfiles.length} />
@@ -68,7 +70,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
             {averageRecall === null ? "No recall data yet" : `${averageRecall}% average recall`}
           </Text>
           {deck ? <Text style={styles.description}>{deck.description}</Text> : null}
-        </ScrollView>
+        </BottomSheetScrollView>
       </View>
     </AppBottomSheet>
   );
@@ -118,12 +120,11 @@ function createStyles(colors: AppColors) {
     recall: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     sheet: {
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      borderWidth: sizes.border,
-      maxHeight: "70%",
+      flex: 1,
     },
+    scrollView: { flex: 1 },
     title: {
       color: colors.textPrimary,
       flex: 1,

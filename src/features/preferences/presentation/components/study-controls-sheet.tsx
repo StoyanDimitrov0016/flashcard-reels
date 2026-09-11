@@ -1,5 +1,12 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  LayoutAnimation,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import type {
   AppPreferences,
@@ -40,6 +47,7 @@ export function StudyControlsSheet({
 }: StudyControlsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const { height } = useWindowDimensions();
   const layout = resolveStudyControlLayout(preferences);
   const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
@@ -63,7 +71,7 @@ export function StudyControlsSheet({
   };
 
   return (
-    <AppBottomSheet onClose={onClose} snapPoints={["70%"]} visible={visible}>
+    <AppBottomSheet contentHeight={height * 0.7} onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -466,10 +474,8 @@ function createStyles(colors: AppColors) {
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      borderWidth: sizes.border,
       flex: 1,
       minHeight: 0,
       width: "100%",

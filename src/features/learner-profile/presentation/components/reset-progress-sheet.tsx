@@ -129,10 +129,8 @@ function createStyles(colors: AppColors) {
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      borderWidth: sizes.border,
       gap: sizes.spacing.xLarge,
       maxWidth: 560,
       padding: sizes.spacing.content,

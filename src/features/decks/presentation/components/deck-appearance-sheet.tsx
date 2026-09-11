@@ -86,7 +86,7 @@ export function DeckAppearanceSheet({
 }: DeckAppearanceSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { width } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const columnCount = width >= 680 ? 4 : 3;
   const renderPreset: ListRenderItem<DeckAppearancePreset> = ({ item }) => (
     <PresetItem
@@ -98,7 +98,7 @@ export function DeckAppearanceSheet({
   );
 
   return (
-    <AppBottomSheet onClose={onDismiss} snapPoints={["82%"]} visible={isPresented}>
+    <AppBottomSheet contentHeight={height * 0.82} onClose={onDismiss} visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -129,6 +129,7 @@ export function DeckAppearanceSheet({
           keyExtractor={({ id }) => id}
           numColumns={columnCount}
           renderItem={renderPreset}
+          style={styles.listView}
         />
         {error ? (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
@@ -177,13 +178,14 @@ function createStyles(colors: AppColors) {
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
+      flex: 1,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      maxHeight: "82%",
       maxWidth: 680,
       paddingBottom: sizes.spacing.content,
       width: "100%",
     },
+    listView: { flex: 1 },
     subtitle: { color: colors.textSecondary, fontSize: fontSize.body },
     swatch: {
       borderColor: colors.borderStrong,

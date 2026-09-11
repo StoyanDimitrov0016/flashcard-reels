@@ -6,17 +6,17 @@ import { useAppTheme } from "@/shared/presentation/theme";
 
 type AppBottomSheetProps = Readonly<{
   children: ReactNode;
+  contentHeight?: number;
   dismissible?: boolean;
   onClose: () => void;
-  snapPoints?: (string | number)[];
   visible: boolean;
 }>;
 
 export function AppBottomSheet({
   children,
+  contentHeight,
   dismissible = true,
   onClose,
-  snapPoints,
   visible,
 }: AppBottomSheetProps) {
   const { colors } = useAppTheme();
@@ -28,9 +28,10 @@ export function AppBottomSheet({
       enablePanDownToClose={dismissible}
       index={visible ? 0 : -1}
       onClose={onClose}
-      snapPoints={snapPoints}
     >
-      <BottomSheetView style={snapPoints ? styles.fixedContent : styles.content}>
+      <BottomSheetView
+        style={[styles.content, contentHeight !== undefined && { height: contentHeight }]}
+      >
         {children}
       </BottomSheetView>
     </BottomSheet>
@@ -41,6 +42,5 @@ function createStyles(backgroundColor: string) {
   return StyleSheet.create({
     background: { backgroundColor },
     content: { backgroundColor },
-    fixedContent: { backgroundColor, flex: 1 },
   });
 }

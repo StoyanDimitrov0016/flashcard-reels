@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
@@ -28,6 +29,7 @@ export function FlashcardProgressSheet({
 }: FlashcardProgressSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const { height } = useWindowDimensions();
   const explanation = explainLearnerProfile(profile);
   const reviewed = (profile?.reviewCount ?? 0) > 0;
   const recallPercentage =
@@ -36,7 +38,7 @@ export function FlashcardProgressSheet({
       : Math.round((explanation.averageRecallScore / 3) * 100);
 
   return (
-    <AppBottomSheet onClose={onClose} visible={card !== null}>
+    <AppBottomSheet contentHeight={height * 0.82} onClose={onClose} visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -56,7 +58,7 @@ export function FlashcardProgressSheet({
           </Pressable>
         </View>
         {card ? (
-          <ScrollView contentContainerStyle={styles.content}>
+          <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <Text style={styles.question}>{card.question}</Text>
             <View style={styles.answerRow}>
               <Text style={styles.answer}>{card.answer}</Text>
@@ -97,7 +99,7 @@ export function FlashcardProgressSheet({
                 ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
                 : "No review history"}
             </Text>
-          </ScrollView>
+          </BottomSheetScrollView>
         ) : null}
       </View>
     </AppBottomSheet>
@@ -155,12 +157,11 @@ function createStyles(colors: AppColors) {
     ratings: { flexDirection: "row" },
     sheet: {
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      borderWidth: sizes.border,
-      maxHeight: "82%",
+      flex: 1,
     },
+    scrollView: { flex: 1 },
     status: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
     track: {
