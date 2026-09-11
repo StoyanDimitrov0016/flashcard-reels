@@ -4,8 +4,8 @@ import { SymbolView } from "expo-symbols";
 import type { ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
+import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -14,7 +14,6 @@ type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
-
   return (
     <ErrorState
       message="Try again, or return to Discover."
@@ -29,7 +28,6 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 
 export default function TabLayout() {
   "use no memo";
-
   const { colors } = useAppTheme();
   const { bottom } = useSafeAreaInsets();
 
@@ -59,11 +57,7 @@ export default function TabLayout() {
             name="(discover)"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView
-                  name={{ android: "explore", ios: "safari.fill", web: "explore" }}
-                  size={sizes.icon.medium}
-                  tintColor={color}
-                />
+                <SymbolView name={{ android: "explore", ios: "safari.fill", web: "explore" }} size={sizes.icon.medium} tintColor={color} />
               ),
               title: "Discover",
             }}
@@ -72,15 +66,7 @@ export default function TabLayout() {
             name="focus"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView
-                  name={{
-                    android: "center_focus_strong",
-                    ios: "scope",
-                    web: "center_focus_strong",
-                  }}
-                  size={sizes.icon.medium}
-                  tintColor={color}
-                />
+                <SymbolView name={{ android: "center_focus_strong", ios: "scope", web: "center_focus_strong" }} size={sizes.icon.medium} tintColor={color} />
               ),
               title: "Focus",
             }}
@@ -89,15 +75,7 @@ export default function TabLayout() {
             name="library"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView
-                  name={{
-                    android: "library_books",
-                    ios: "books.vertical.fill",
-                    web: "library_books",
-                  }}
-                  size={sizes.icon.medium}
-                  tintColor={color}
-                />
+                <SymbolView name={{ android: "library_books", ios: "books.vertical.fill", web: "library_books" }} size={sizes.icon.medium} tintColor={color} />
               ),
               title: "Library",
             }}
@@ -106,19 +84,16 @@ export default function TabLayout() {
             name="progress"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView
-                  name={{
-                    android: "insights",
-                    ios: "chart.bar.xaxis",
-                    web: "insights",
-                  }}
-                  size={sizes.icon.medium}
-                  tintColor={color}
-                />
+                <SymbolView name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }} size={sizes.icon.medium} tintColor={color} />
               ),
               title: "Progress",
             }}
           />
+          <TopTabs.Screen
+            name="you"
+            options={{
+              tabBarIcon: ({ color }: TabIconProps) => (
+                <SymbolView name={{ android: "person", ios: "person.fill", web: "person" }} size={sizes.icon.medium} tintColor={color} />
               ),
               title: "You",
             }}
