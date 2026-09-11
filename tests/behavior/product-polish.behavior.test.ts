@@ -6,6 +6,7 @@ import {
   isCurrentPreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
+import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { openFocusedFeed } from "@/features/reels/presentation/open-focused-feed";
 
 describe("product polish policies", () => {
@@ -28,6 +29,13 @@ describe("product polish policies", () => {
     expect(matchesDeckSearch(deck, "")).toBe(true);
   });
 
+  it("matches deck flashcard questions and answers", () => {
+    const card = { answer: "A retained lexical scope", question: "What is a closure?" };
+
+    expect(matchesFlashcardSearch(card, "closure")).toBe(true);
+    expect(matchesFlashcardSearch(card, "LEXICAL")).toBe(true);
+    expect(matchesFlashcardSearch(card, "database")).toBe(false);
+  });
   it("provides distinct named presets with accessible white primary text contrast", () => {
     expect(deckAppearancePresets).toHaveLength(9);
     expect(new Set(deckAppearancePresets.map(({ name }) => name)).size).toBe(9);

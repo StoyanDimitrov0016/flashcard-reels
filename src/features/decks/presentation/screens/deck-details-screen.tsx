@@ -1,106 +1,58 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type ListRenderItem,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
+import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
+import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
+import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/use-card-answer-audio-source";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
 type CardRowProps = Readonly<{
-  accentColor: string;
   card: Flashcard;
-  profile: LearnerProfile | null;
+  onPress: () => void;
 }>;
 
-function CardRow({ accentColor, card, profile }: CardRowProps) {
+function CardRow({ card, onPress }: CardRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const [expanded, setExpanded] = useState(false);
-  const explanation = explainLearnerProfile(profile);
-  const reviewed = (profile?.reviewCount ?? 0) > 0;
-  const progress =
-    explanation.averageRecallScore === null
-      ? 0
-      : Math.round((explanation.averageRecallScore / 3) * 100);
 
   return (
     <Pressable
-      accessibilityHint="Shows or hides the answer"
+      accessibilityHint="Opens question, answer, audio, and progress"
+      accessibilityLabel={`Card ${card.order + 1}: ${card.question}`}
       accessibilityRole="button"
-      accessibilityState={{ expanded }}
-      onPress={() => setExpanded((current) => !current)}
+      onPress={onPress}
       style={styles.cardRow}
     >
       <Text style={styles.position}>{card.order + 1}</Text>
-      <View style={styles.cardCopy}>
-        <Text style={styles.question}>{card.question}</Text>
-        {expanded ? (
-          <View style={styles.expandedContent}>
-            <Text style={styles.answer}>{card.answer}</Text>
-            <View style={styles.progressHeading}>
-              <Text style={[styles.status, { color: reviewed ? accentColor : colors.textMuted }]}>
-                {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
-              </Text>
-              <Text style={styles.progressCaption}>
-                {reviewed ? `${progress}% recall · ${explanation.historyBand}` : "Not reviewed yet"}
-              </Text>
-            </View>
-            <View style={styles.cardProgressTrack}>
-              <View
-                style={[
-                  styles.cardProgressFill,
-                  { backgroundColor: accentColor, width: `${progress}%` },
-                ]}
-              />
-            </View>
-            <View style={styles.ratingRow}>
-              <RatingFact color={colors.danger} label="Again" value={profile?.againCount ?? 0} />
-              <RatingFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
-              <RatingFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
-              <RatingFact color={colors.recallEasy} label="Easy" value={profile?.easyCount ?? 0} />
-            </View>
-            <Text style={styles.lastReviewed}>
-              {profile?.lastReviewedAt
-                ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
-                : "No review history"}
-            </Text>
-          </View>
-        ) : null}
-      </View>
+      <Text numberOfLines={2} style={styles.question}>
+        {card.question}
+      </Text>
       <SymbolView
-        name={{
-          android: expanded ? "expand_less" : "chevron_right",
-          ios: expanded ? "chevron.up" : "chevron.right",
-          web: expanded ? "expand_less" : "chevron_right",
-        }}
+        name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
         size={sizes.icon.small}
         tintColor={colors.textMuted}
       />
     </Pressable>
   );
 }
-
-type RatingFactProps = Readonly<{ color: string; label: string; value: number }>;
-
-function RatingFact({ color, label, value }: RatingFactProps) {
-  const styles = createStyles(useAppTheme().colors);
-
-  return (
-    <View style={styles.ratingFact}>
-      <Text style={[styles.ratingValue, { color }]}>{value}</Text>
-      <Text style={styles.ratingLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function EmptyCardList() {
   const styles = createStyles(useAppTheme().colors);
 
@@ -113,10 +65,15 @@ export default function DeckDetailsScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
+  const [query, setQuery] = useState("");
+  const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
+  const [showDeckInfo, setShowDeckInfo] = useState(false);
+  const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
   const accentColor = appearance?.accentColor ?? colors.actionPrimary;
   const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
-    <CardRow accentColor={accentColor} card={item} profile={profiles.get(item.id) ?? null} />
+    <CardRow card={item} onPress={() => setSelectedCard(item)} />
   );
+  const audioSource = useCardAnswerAudioSource(deck, selectedCard);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -142,12 +99,37 @@ export default function DeckDetailsScreen() {
             {deck?.title ?? "Deck cards"}
           </Text>
           <Text style={styles.count}>{loading ? "Loading cards…" : `${cards.length} cards`}</Text>
-          {deck ? (
-            <Text numberOfLines={2} style={styles.description}>
-              {deck.description}
-            </Text>
-          ) : null}
         </View>
+        <Pressable
+          accessibilityLabel="Open deck information"
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showDeckInfo }}
+          onPress={() => setShowDeckInfo(true)}
+          style={styles.infoButton}
+        >
+          <SymbolView
+            name={{ android: "info", ios: "info.circle", web: "info" }}
+            size={sizes.icon.medium}
+            tintColor={colors.textSecondary}
+          />
+        </Pressable>
+      </View>
+      <View style={styles.searchShell}>
+        <SymbolView
+          name={{ android: "search", ios: "magnifyingglass", web: "search" }}
+          size={sizes.icon.small}
+          tintColor={colors.textMuted}
+        />
+        <TextInput
+          accessibilityLabel="Search cards in deck"
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={setQuery}
+          placeholder="Search cards…"
+          placeholderTextColor={colors.textMuted}
+          style={styles.searchInput}
+          value={query}
+        />
       </View>
       <View style={styles.tabs}>
         <View style={[styles.activeTab, { borderBottomColor: accentColor }]}>
@@ -159,7 +141,7 @@ export default function DeckDetailsScreen() {
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
-          data={cards}
+          data={visibleCards}
           keyExtractor={(card) => card.id}
           ListEmptyComponent={EmptyCardList}
           initialNumToRender={12}
@@ -170,6 +152,20 @@ export default function DeckDetailsScreen() {
           windowSize={7}
         />
       )}
+      <DeckInfoSheet
+        cards={cards}
+        deck={deck}
+        onClose={() => setShowDeckInfo(false)}
+        profiles={profiles}
+        visible={showDeckInfo}
+      />
+      <FlashcardDetailsSheet
+        accentColor={accentColor}
+        audioSource={audioSource}
+        card={selectedCard}
+        onClose={() => setSelectedCard(null)}
+        profile={selectedCard ? (profiles.get(selectedCard.id) ?? null) : null}
+      />
     </SafeAreaView>
   );
 }
@@ -232,7 +228,9 @@ function createStyles(colors: AppColors) {
       paddingTop: sizes.spacing.small,
     },
     headingCopy: { flex: 1 },
+    infoButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
+
     navigationRow: {
       alignItems: "center",
       borderBottomColor: colors.border,
@@ -273,6 +271,15 @@ function createStyles(colors: AppColors) {
     ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
     ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
     screen: { backgroundColor: colors.background, flex: 1 },
+    searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 44 },
+    searchShell: {
+      alignItems: "center",
+      borderBottomColor: colors.border,
+      borderBottomWidth: sizes.border,
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      paddingHorizontal: sizes.spacing.content,
+    },
     tabs: {
       borderBottomColor: colors.border,
       borderBottomWidth: sizes.border,

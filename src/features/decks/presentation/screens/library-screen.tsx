@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import {
@@ -26,6 +26,16 @@ import {
   type DeckImportFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import {
+  FOCUS_HOLD_DURATION_MS,
+  HOLD_FEEDBACK_DELAY_MS,
+} from "@/features/reels/presentation/hold-to-focus";
+import {
+  hideFlashcardToast,
+  showFocusedToast,
+  showHoldToast,
+} from "@/shared/presentation/flashcard-toast";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
@@ -42,6 +52,29 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const { appearance, cardCount, deck } = entry;
+  const longPressHandled = useRef(false);
+  const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const haptics = useHaptics();
+
+  const clearHoldFeedback = () => {
+    if (holdFeedbackTimer.current !== null) {
+      clearTimeout(holdFeedbackTimer.current);
+      holdFeedbackTimer.current = null;
+    }
+    hideFlashcardToast();
+  };
+
+  useEffect(function cleanUpHoldFeedback() {
+    return function cancelIncompleteHoldFeedback() {
+      if (holdFeedbackTimer.current !== null) {
+        clearTimeout(holdFeedbackTimer.current);
+        holdFeedbackTimer.current = null;
+      }
+      if (!longPressHandled.current) {
+        hideFlashcardToast();
+      }
+    };
+  }, []);
 
   return (
     <View style={styles.deck}>
@@ -50,9 +83,33 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
         accessibilityHint="Tap to view deck cards. Hold to study this deck in Focus."
         accessibilityLabel={deck.title}
         accessibilityRole="button"
-        delayLongPress={500}
-        onLongPress={onFocus}
-        onPress={onViewCards}
+        delayLongPress={FOCUS_HOLD_DURATION_MS}
+        onLongPress={() => {
+          clearHoldFeedback();
+          longPressHandled.current = true;
+          haptics.focusCompleted();
+          showFocusedToast();
+          onFocus();
+        }}
+        onPressIn={() => {
+          clearHoldFeedback();
+          holdFeedbackTimer.current = setTimeout(() => {
+            holdFeedbackTimer.current = null;
+            showHoldToast();
+          }, HOLD_FEEDBACK_DELAY_MS);
+        }}
+        onPressOut={() => {
+          if (!longPressHandled.current) {
+            clearHoldFeedback();
+          }
+        }}
+        onPress={() => {
+          if (longPressHandled.current) {
+            longPressHandled.current = false;
+            return;
+          }
+          onViewCards();
+        }}
         style={styles.deckBody}
       >
         <DeckCover accentColor={appearance.accentColor} asset={deck.coverAsset} />
