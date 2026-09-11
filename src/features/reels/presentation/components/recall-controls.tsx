@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { recallOptions } from "@/features/reels/presentation/recall-options";
-import { deriveRatingOrder } from "@/features/reels/presentation/study-control-layout";
+import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -11,17 +11,11 @@ import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type RecallControlsProps = Readonly<{
   onSelect: (level: RecallLevel) => void;
-  orientation?: "horizontal" | "vertical";
-  ratingOrder?: readonly RecallLevel[];
   selectedLevel: RecallLevel | null;
 }>;
 
-export function RecallControls({
-  onSelect,
-  orientation = "vertical",
-  ratingOrder = deriveRatingOrder("forward"),
-  selectedLevel,
-}: RecallControlsProps) {
+export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps) {
+  const { orientation, ratingOrder } = useStudyControlLayout();
   const { colors } = useAppTheme();
   const styles = createStyles(colors, orientation);
   const haptics = useHaptics();
@@ -68,16 +62,15 @@ function createStyles(colors: AppColors, orientation: "horizontal" | "vertical")
       borderColor: colors.studyIslandBorder,
       borderRadius: sizes.radius.island,
       borderWidth: sizes.border,
-      flex: orientation === "horizontal" ? 1 : undefined,
       flexDirection: orientation === "horizontal" ? "row" : "column",
-      gap: orientation === "horizontal" ? 0 : sizes.spacing.xxLarge,
+      gap: orientation === "horizontal" ? 0 : sizes.spacing.medium,
       paddingHorizontal: sizes.spacing.medium,
-      paddingVertical: sizes.spacing.xxLarge,
+      paddingVertical: sizes.spacing.medium,
     },
     action: {
       alignItems: "center",
-      flex: orientation === "horizontal" ? 1 : undefined,
       gap: sizes.spacing.xSmall,
+      minWidth: orientation === "horizontal" ? 48 : undefined,
     },
     iconCircle: {
       alignItems: "center",

@@ -6,6 +6,7 @@ import {
   deriveRatingOrder,
   getAudioSideLabel,
   getRatingDirectionLabel,
+  resolveStudyControlLayout,
 } from "@/features/reels/presentation/study-control-layout";
 
 describe("study control derivation", () => {
@@ -32,5 +33,36 @@ describe("study control derivation", () => {
     expect(getRatingDirectionLabel("right", "forward")).toBe("Top → Bottom");
     expect(getAudioSideLabel("bottom", "primary")).toBe("Left");
     expect(getAudioSideLabel("left", "opposite")).toBe("Bottom");
+  });
+
+  it("resolves the complete presentation layout from semantic preferences", () => {
+    expect(
+      resolveStudyControlLayout({
+        audioEnabled: true,
+        audioSide: "opposite",
+        ratingDirection: "reverse",
+        recollectionIslandPosition: "right",
+      })
+    ).toEqual({
+      audioEnabled: true,
+      audioPosition: "below",
+      orientation: "vertical",
+      position: "right",
+      ratingOrder: ["easy", "good", "hard", "again"],
+    });
+    expect(
+      resolveStudyControlLayout({
+        audioEnabled: false,
+        audioSide: "primary",
+        ratingDirection: "forward",
+        recollectionIslandPosition: "bottom",
+      })
+    ).toEqual({
+      audioEnabled: false,
+      audioPosition: "left",
+      orientation: "horizontal",
+      position: "bottom",
+      ratingOrder: ["again", "hard", "good", "easy"],
+    });
   });
 });

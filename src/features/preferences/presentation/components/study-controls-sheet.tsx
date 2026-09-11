@@ -10,10 +10,9 @@ import type {
 import { recallOptions } from "@/features/reels/presentation/recall-options";
 import {
   deriveAudioPosition,
-  deriveIslandOrientation,
-  deriveRatingOrder,
   getAudioSideLabel,
   getRatingDirectionLabel,
+  resolveStudyControlLayout,
 } from "@/features/reels/presentation/study-control-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -39,11 +38,8 @@ export function StudyControlsSheet({
 }: StudyControlsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const orientation = deriveIslandOrientation(preferences.recollectionIslandPosition);
-  const audioPosition = deriveAudioPosition(
-    preferences.recollectionIslandPosition,
-    preferences.audioSide
-  );
+  const layout = resolveStudyControlLayout(preferences);
+  const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
   const audioMarker = (
     <View style={styles.audioMarker}>
@@ -90,11 +86,14 @@ export function StudyControlsSheet({
               <View
                 style={[
                   styles.previewStage,
-                  preferences.recollectionIslandPosition === "bottom" && styles.previewStageBottom,
-                  preferences.recollectionIslandPosition === "left" && styles.previewStageLeft,
-                  preferences.recollectionIslandPosition === "right" && styles.previewStageRight,
+                  layout.position === "bottom"
+                    ? styles.previewStageBottom
+                    : styles.previewStageSide,
+                  layout.position === "left" && styles.previewStageLeft,
+                  layout.position === "right" && styles.previewStageRight,
                 ]}
               >
+                {layout.position === "left" ? null : <View style={styles.previewContentRegion} />}
                 <View
                   style={[
                     styles.previewCluster,
@@ -120,7 +119,7 @@ export function StudyControlsSheet({
                           orientation === "horizontal" && styles.previewRatingControlsHorizontal,
                         ]}
                       >
-                        {deriveRatingOrder(preferences.ratingDirection).map((level) => {
+                        {layout.ratingOrder.map((level) => {
                           const option = recallOptions.find((current) => current.level === level);
                           if (!option) {
                             return null;
@@ -154,6 +153,7 @@ export function StudyControlsSheet({
                     {audioBeforeIsland ? null : audioMarker}
                   </View>
                 </View>
+                {layout.position === "left" ? <View style={styles.previewContentRegion} /> : null}
               </View>
             </View>
             <View style={styles.controls}>
@@ -378,14 +378,14 @@ function createStyles(colors: AppColors) {
       borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      flex: 1,
+      height: 180,
       justifyContent: "center",
       minHeight: 0,
       overflow: "hidden",
       position: "relative",
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
-    previewActionHorizontal: { flex: 1, minWidth: 0 },
+    previewActionHorizontal: { minWidth: 42 },
     previewCluster: {
       alignItems: "center",
       flexDirection: "column",
@@ -393,10 +393,8 @@ function createStyles(colors: AppColors) {
     },
     previewClusterHorizontal: {
       alignItems: "center",
-      alignSelf: "stretch",
       flexDirection: "row",
       justifyContent: "center",
-      width: "100%",
     },
     previewControlsGroup: {
       alignItems: "center",
@@ -406,22 +404,33 @@ function createStyles(colors: AppColors) {
     previewControlsGroupHorizontal: {
       alignSelf: "center",
       flexDirection: "row",
-      minWidth: 0,
-      width: "90%",
+      flexShrink: 0,
     },
     previewStage: {
       alignItems: "center",
       alignSelf: "stretch",
       flex: 1,
+      gap: sizes.spacing.medium,
       justifyContent: "center",
     },
+    previewStageSide: { flexDirection: "row" },
     previewStageBottom: {
       alignItems: "stretch",
+      flexDirection: "column",
       justifyContent: "flex-end",
       paddingBottom: sizes.spacing.medium,
     },
-    previewStageLeft: { alignItems: "flex-start", paddingLeft: sizes.spacing.medium },
-    previewStageRight: { alignItems: "flex-end", paddingRight: sizes.spacing.medium },
+    previewStageLeft: { paddingLeft: sizes.spacing.medium },
+    previewStageRight: { paddingRight: sizes.spacing.medium },
+    previewContentRegion: {
+      backgroundColor: colors.surfaceSubtle,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.medium,
+      borderWidth: sizes.border,
+      flex: 1,
+      minHeight: 0,
+      minWidth: 0,
+    },
     previewIsland: {
       alignItems: "center",
       backgroundColor: colors.studyIslandSurface,
@@ -434,9 +443,7 @@ function createStyles(colors: AppColors) {
       paddingVertical: sizes.spacing.content,
     },
     previewIslandHorizontal: {
-      flex: 1,
       flexDirection: "row",
-      minWidth: 0,
       paddingVertical: sizes.spacing.medium,
     },
     previewRatingControls: {
@@ -445,7 +452,6 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.medium,
     },
     previewRatingControlsHorizontal: {
-      flex: 1,
       flexDirection: "row",
       gap: 0,
       justifyContent: "space-around",

@@ -9,12 +9,12 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import {
   AnswerBodyLayout,
-  AnswerControlRegion,
   AnswerCopy,
 } from "@/features/reels/presentation/components/answer-body-layout";
 import { GestureFooter } from "@/features/reels/presentation/components/gesture-footer";
 import { QuestionFaceContent } from "@/features/reels/presentation/components/question-face-content";
 import { StudyControlCluster } from "@/features/reels/presentation/components/study-control-cluster";
+import { StudyControlLayoutProvider } from "@/features/reels/presentation/context/study-control-layout-context";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -32,7 +32,6 @@ import {
   showHoldToast,
 } from "@/shared/presentation/flashcard-toast";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 
@@ -84,7 +83,6 @@ export function ReelCard({
   showMainFeedLink,
   width,
 }: ReelCardProps) {
-  const { preferences } = usePreferences();
   const haptics = useHaptics();
   const { resolvedScheme } = useAppTheme();
   const styles = createStyles();
@@ -224,19 +222,13 @@ export function ReelCard({
     onPressOut: cancelFocusHold,
   };
   const answerCopy = <AnswerCopy answer={card.answer} question={card.question} {...gestureProps} />;
-  const controlRegion = (
-    <AnswerControlRegion position={preferences.recollectionIslandPosition}>
-      <StudyControlCluster
-        audioEnabled={preferences.audioEnabled}
-        audioSide={preferences.audioSide}
-        audioSource={audioSource}
-        isActive={isActive}
-        onRate={onRate}
-        position={preferences.recollectionIslandPosition}
-        ratingDirection={preferences.ratingDirection}
-        selectedLevel={recallLevel}
-      />
-    </AnswerControlRegion>
+  const controls = (
+    <StudyControlCluster
+      audioSource={audioSource}
+      isActive={isActive}
+      onRate={onRate}
+      selectedLevel={recallLevel}
+    />
   );
 
   return (
@@ -277,19 +269,9 @@ export function ReelCard({
             deckCardCount={deckCardCount}
             showMainFeedLink={showMainFeedLink}
           />
-          <AnswerBodyLayout position={preferences.recollectionIslandPosition}>
-            {preferences.recollectionIslandPosition === "left" ? (
-              <>
-                {controlRegion}
-                {answerCopy}
-              </>
-            ) : (
-              <>
-                {answerCopy}
-                {controlRegion}
-              </>
-            )}
-          </AnswerBodyLayout>
+          <StudyControlLayoutProvider>
+            <AnswerBodyLayout answer={answerCopy} controls={controls} />
+          </StudyControlLayoutProvider>
           <GestureFooter showHoldHint={!showMainFeedLink} />
         </CardPage>
       </Animated.View>

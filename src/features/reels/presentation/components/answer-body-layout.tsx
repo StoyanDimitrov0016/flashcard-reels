@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { RecollectionIslandPosition } from "@/features/preferences/domain/app-preferences";
+import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type AnswerBodyLayoutProps = Readonly<{
-  children: ReactNode;
-  position: RecollectionIslandPosition;
+  answer: ReactNode;
+  controls: ReactNode;
 }>;
 
 type AnswerCopyProps = Readonly<{
@@ -21,13 +21,10 @@ type AnswerCopyProps = Readonly<{
   longPressDuration: number;
 }>;
 
-type AnswerControlRegionProps = Readonly<{
-  children: ReactNode;
-  position: RecollectionIslandPosition;
-}>;
-
-export function AnswerBodyLayout({ children, position }: AnswerBodyLayoutProps) {
+export function AnswerBodyLayout({ answer, controls }: AnswerBodyLayoutProps) {
+  const { position } = useStudyControlLayout();
   const styles = createStyles(useAppTheme().colors);
+  const controlRegion = <AnswerControlRegion>{controls}</AnswerControlRegion>;
 
   return (
     <View
@@ -37,12 +34,23 @@ export function AnswerBodyLayout({ children, position }: AnswerBodyLayoutProps) 
         position === "right" ? styles.bodyRight : styles.bodyLeft,
       ]}
     >
-      {children}
+      {position === "left" ? (
+        <>
+          {controlRegion}
+          {answer}
+        </>
+      ) : (
+        <>
+          {answer}
+          {controlRegion}
+        </>
+      )}
     </View>
   );
 }
 
-export function AnswerControlRegion({ children, position }: AnswerControlRegionProps) {
+function AnswerControlRegion({ children }: Readonly<{ children: ReactNode }>) {
+  const { position } = useStudyControlLayout();
   const styles = createStyles(useAppTheme().colors);
 
   return (
