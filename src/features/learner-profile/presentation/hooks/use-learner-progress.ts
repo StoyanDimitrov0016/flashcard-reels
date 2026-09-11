@@ -28,8 +28,6 @@ const initialState: LearnerProgressState = { error: null, loading: true, rows: [
 export function useLearnerProgress(): LearnerProgressState & {
   refresh: () => void;
   resetAllProgress: () => Promise<void>;
-  resetCardProgress: (flashcardId: string) => Promise<void>;
-  resetDeckProgress: (deckId: string) => Promise<void>;
 } {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
   const { invalidateLearningProgress, revision: resetRevision } = useLearningProgressReset();
@@ -39,22 +37,6 @@ export function useLearnerProgress(): LearnerProgressState & {
     setState((current) => ({ ...current, loading: true }));
     setRevision((current) => current + 1);
   }, []);
-  const resetCardProgress = useCallback(
-    async (flashcardId: string) => {
-      await learnerProfileService.resetCardProgress(flashcardId);
-      invalidateLearningProgress();
-      refresh();
-    },
-    [invalidateLearningProgress, learnerProfileService, refresh]
-  );
-  const resetDeckProgress = useCallback(
-    async (deckId: string) => {
-      await learnerProfileService.resetDeckProgress(deckId);
-      invalidateLearningProgress();
-      refresh();
-    },
-    [invalidateLearningProgress, learnerProfileService, refresh]
-  );
   const resetAllProgress = useCallback(async () => {
     await learnerProfileService.resetAllProgress();
     invalidateLearningProgress();
@@ -106,5 +88,5 @@ export function useLearnerProgress(): LearnerProgressState & {
   if (state.error) {
     throw state.error;
   }
-  return { ...state, refresh, resetAllProgress, resetCardProgress, resetDeckProgress };
+  return { ...state, refresh, resetAllProgress };
 }

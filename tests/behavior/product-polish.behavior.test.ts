@@ -6,6 +6,11 @@ import {
   isCurrentPreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
+import {
+  getDeckDetailsHref,
+  resolveDeckDetailsMode,
+  showsLearningProgress,
+} from "@/features/decks/presentation/deck-details-mode";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { openFocusedFeed } from "@/features/reels/presentation/open-focused-feed";
 
@@ -36,6 +41,21 @@ describe("product polish policies", () => {
     expect(matchesFlashcardSearch(card, "LEXICAL")).toBe(true);
     expect(matchesFlashcardSearch(card, "database")).toBe(false);
   });
+
+  it("keeps Library and Progress deck details behavior distinct", () => {
+    expect(getDeckDetailsHref("deck-1", "library")).toEqual({
+      params: { deckId: "deck-1", mode: "library" },
+      pathname: "/decks/[deckId]",
+    });
+    expect(getDeckDetailsHref("deck-1", "progress")).toEqual({
+      params: { deckId: "deck-1", mode: "progress" },
+      pathname: "/decks/[deckId]",
+    });
+    expect(showsLearningProgress(resolveDeckDetailsMode("progress"))).toBe(true);
+    expect(showsLearningProgress(resolveDeckDetailsMode("library"))).toBe(false);
+    expect(showsLearningProgress(resolveDeckDetailsMode(undefined))).toBe(false);
+  });
+
   it("provides distinct named presets with accessible white primary text contrast", () => {
     expect(deckAppearancePresets).toHaveLength(9);
     expect(new Set(deckAppearancePresets.map(({ name }) => name)).size).toBe(9);

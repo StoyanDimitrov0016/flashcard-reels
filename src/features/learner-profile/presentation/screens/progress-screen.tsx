@@ -1,13 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
-import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -19,13 +19,7 @@ export default function ProgressScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { loading, refresh, resetDeckProgress, rows } = useLearnerProgress();
-  const [resetting, setResetting] = useState(false);
-  const [resetError, setResetError] = useState<string | null>(null);
-  const [pendingReset, setPendingReset] = useState<Readonly<{
-    reset: () => Promise<void>;
-    scope: string;
-  }> | null>(null);
+  const { loading, refresh, rows } = useLearnerProgress();
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
@@ -35,33 +29,6 @@ export default function ProgressScreen() {
       refresh();
     }, [refresh])
   );
-
-  const requestReset = (scope: string, reset: () => Promise<void>): void => {
-    if (resetting) {
-      return;
-    }
-    setResetError(null);
-    setPendingReset({ reset, scope });
-  };
-
-  const confirmReset = () => {
-    const request = pendingReset;
-    if (!request || resetting) {
-      return;
-    }
-    setResetting(true);
-    setResetError(null);
-    void request
-      .reset()
-      .then(() => {
-        refresh();
-        setPendingReset(null);
-      })
-      .catch(() =>
-        setResetError("The reset could not be completed. Your progress was not changed.")
-      )
-      .finally(() => setResetting(false));
-  };
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -98,12 +65,7 @@ export default function ProgressScreen() {
                       accessibilityHint="Opens the cards in this deck"
                       accessibilityLabel={`View ${deck.title} cards and progress`}
                       accessibilityRole="button"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/decks/[deckId]",
-                          params: { deckId: deck.id },
-                        })
-                      }
+                      onPress={() => router.push(getDeckDetailsHref(deck.id, "progress"))}
                       style={({ pressed }) => [styles.deckLink, pressed && styles.pressed]}
                     >
                       <DeckCover accentColor={accent} asset={deck.coverAsset} />
@@ -127,24 +89,6 @@ export default function ProgressScreen() {
                         </View>
                       </View>
                     </Pressable>
-                    <Pressable
-                      accessibilityLabel={`Reset ${deck.title} progress`}
-                      disabled={resetting}
-                      hitSlop={8}
-                      onPress={() =>
-                        requestReset(`${deck.title} progress`, () => resetDeckProgress(deck.id))
-                      }
-                    >
-                      <SymbolView
-                        name={{
-                          android: "restart_alt",
-                          ios: "arrow.counterclockwise",
-                          web: "restart_alt",
-                        }}
-                        size={sizes.icon.small}
-                        tintColor={colors.danger}
-                      />
-                    </Pressable>
                   </View>
                 );
               })}
@@ -152,18 +96,6 @@ export default function ProgressScreen() {
           </>
         )}
       </ScrollView>
-      <ResetProgressSheet
-        busy={resetting}
-        error={resetError}
-        isPresented={pendingReset !== null}
-        onCancel={() => {
-          if (!resetting) {
-            setPendingReset(null);
-          }
-        }}
-        onConfirm={confirmReset}
-        scope={pendingReset?.scope ?? "progress"}
-      />
     </SafeAreaView>
   );
 }

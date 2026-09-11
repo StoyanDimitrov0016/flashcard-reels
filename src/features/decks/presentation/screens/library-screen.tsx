@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
+import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
@@ -242,9 +243,7 @@ export default function LibraryScreen() {
         setSelectedEntry(item);
       }}
       onFocus={() => openFocusedFeed(item.deck.id)}
-      onViewCards={() =>
-        router.push({ pathname: "/decks/[deckId]", params: { deckId: item.deck.id } })
-      }
+      onViewCards={() => router.push(getDeckDetailsHref(item.deck.id, "library"))}
     />
   );
 

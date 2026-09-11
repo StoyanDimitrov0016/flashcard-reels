@@ -16,8 +16,13 @@ import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-det
 import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
+import {
+  resolveDeckDetailsMode,
+  showsLearningProgress,
+} from "@/features/decks/presentation/deck-details-mode";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { useResetDeckProgress } from "@/features/learner-profile/presentation/hooks/use-reset-deck-progress";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
@@ -32,15 +37,20 @@ import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentat
 type CardRowProps = Readonly<{
   card: Flashcard;
   onPress: () => void;
+  showProgress: boolean;
 }>;
 
-function CardRow({ card, onPress }: CardRowProps) {
+function CardRow({ card, onPress, showProgress }: CardRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
   return (
     <Pressable
-      accessibilityHint="Opens question, answer, and audio"
+      accessibilityHint={
+        showProgress
+          ? "Opens question, answer, audio, and progress"
+          : "Opens question, answer, and audio"
+      }
       accessibilityLabel={`Card ${card.order + 1}: ${card.question}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -68,7 +78,12 @@ export default function DeckDetailsScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { deckId } = useLocalSearchParams<{ deckId: string }>();
+  const { deckId, mode: modeParameter } = useLocalSearchParams<{
+    deckId: string;
+    mode?: string | string[];
+  }>();
+  const mode = resolveDeckDetailsMode(modeParameter);
+  const showProgress = showsLearningProgress(mode);
   const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
@@ -81,7 +96,7 @@ export default function DeckDetailsScreen() {
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
   const accentColor = appearance?.accentColor ?? colors.actionPrimary;
   const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
-    <CardRow card={item} onPress={() => setSelectedCard(item)} />
+    <CardRow card={item} onPress={() => setSelectedCard(item)} showProgress={showProgress} />
   );
   const audioSource = useCardAnswerAudioSource(deck, selectedCard);
   const confirmReset = () => {
@@ -105,7 +120,7 @@ export default function DeckDetailsScreen() {
     <SafeAreaView style={styles.screen}>
       <ScreenHeader>
         <Pressable
-          accessibilityLabel="Back to Library"
+          accessibilityLabel={`Back to ${showProgress ? "Progress" : "Library"}`}
           accessibilityRole="button"
           onPress={() => router.back()}
           style={styles.backButton}
@@ -117,23 +132,25 @@ export default function DeckDetailsScreen() {
           />
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
-        <Pressable
-          accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
-          accessibilityRole="button"
-          disabled={deck === null || resetting}
-          hitSlop={4}
-          onPress={() => {
-            setResetError(null);
-            setResetPresented(true);
-          }}
-          style={styles.resetButton}
-        >
-          <SymbolView
-            name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-            size={sizes.icon.medium}
-            tintColor={colors.danger}
-          />
-        </Pressable>
+        {showProgress ? (
+          <Pressable
+            accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
+            accessibilityRole="button"
+            disabled={deck === null || resetting}
+            hitSlop={4}
+            onPress={() => {
+              setResetError(null);
+              setResetPresented(true);
+            }}
+            style={styles.resetButton}
+          >
+            <SymbolView
+              name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
+              size={sizes.icon.medium}
+              tintColor={colors.danger}
+            />
+          </Pressable>
+        ) : null}
       </ScreenHeader>
       <View style={styles.body}>
         <View style={styles.header}>
@@ -207,23 +224,35 @@ export default function DeckDetailsScreen() {
         profiles={profiles}
         visible={showDeckInfo}
       />
-      <FlashcardDetailsSheet
-        audioSource={audioSource}
-        card={selectedCard}
-        onClose={() => setSelectedCard(null)}
-      />
-      <ResetProgressSheet
-        busy={resetting}
-        error={resetError}
-        isPresented={resetPresented}
-        onCancel={() => {
-          if (!resetting) {
-            setResetPresented(false);
-          }
-        }}
-        onConfirm={confirmReset}
-        scope={`${deck?.title ?? "deck"} progress`}
-      />
+      {showProgress ? (
+        <FlashcardProgressSheet
+          accentColor={accentColor}
+          audioSource={audioSource}
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)}
+          profile={selectedCard ? (profiles.get(selectedCard.id) ?? null) : null}
+        />
+      ) : (
+        <FlashcardDetailsSheet
+          audioSource={audioSource}
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)}
+        />
+      )}
+      {showProgress ? (
+        <ResetProgressSheet
+          busy={resetting}
+          error={resetError}
+          isPresented={resetPresented}
+          onCancel={() => {
+            if (!resetting) {
+              setResetPresented(false);
+            }
+          }}
+          onConfirm={confirmReset}
+          scope={`${deck?.title ?? "deck"} progress`}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
