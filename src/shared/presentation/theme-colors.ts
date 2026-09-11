@@ -1,77 +1,83 @@
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
 
 export type AppColors = Readonly<{
-  background: string;
-  surface: string;
-  surfaceSubtle: string;
+  canvas: string;
+  navigation: string;
   surfaceRaised: string;
-  border: string;
-  borderStrong: string;
+  surfaceSubtle: string;
+  surfaceHover: string;
   textPrimary: string;
   textSecondary: string;
-  textMuted: string;
-  textDisabled: string;
-  controlOverlay: string;
-  controlBorder: string;
-  controlSelected: string;
-  controlPressed: string;
-  scrim: string;
+  textTertiary: string;
+  borderSubtle: string;
+  borderStrong: string;
+  interactive: string;
+  interactiveHover: string;
+  success: string;
+  warning: string;
+  error: string;
+  overlay: string;
   actionPrimary: string;
   actionPrimaryText: string;
-  accent: string;
-  danger: string;
-  warning: string;
-  success: string;
+  studyIslandSurface: string;
+  studyIslandBorder: string;
+  recallAgain: string;
+  recallHard: string;
+  recallGood: string;
   recallEasy: string;
 }>;
 
 export const lightColors: AppColors = {
-  background: "#FFFFFF",
-  surface: "#FAFAFA",
-  surfaceSubtle: "#FCFCFC",
-  surfaceRaised: "#F6F6F6",
-  border: "#E4E4E4",
-  borderStrong: "#DADADA",
-  textPrimary: "#222222",
-  textSecondary: "#5C5C5C",
-  textMuted: "#707070",
-  textDisabled: "#ABABAB",
-  controlOverlay: "rgba(255, 255, 255, 0.94)",
-  controlBorder: "#DADADA",
-  controlSelected: "#E4E4E4",
-  controlPressed: "#DADADA",
-  scrim: "rgba(0, 0, 0, 0.36)",
-  actionPrimary: "#222222",
+  canvas: "#FFFFFF",
+  navigation: "#F7F7F5",
+  surfaceRaised: "#FFFFFF",
+  surfaceSubtle: "#F1F1EF",
+  surfaceHover: "#EFEFED",
+  textPrimary: "#373530",
+  textSecondary: "#787774",
+  textTertiary: "#9B9A97",
+  borderSubtle: "rgba(55,53,47,0.12)",
+  borderStrong: "rgba(55,53,47,0.22)",
+  interactive: "#2383E2",
+  interactiveHover: "#0B6BCB",
+  success: "#2E7D32",
+  warning: "#C58A16",
+  error: "#D44C47",
+  overlay: "rgba(15,15,15,0.35)",
+  actionPrimary: "#373530",
   actionPrimaryText: "#FFFFFF",
-  accent: "#8A6500",
-  danger: "#C83446",
-  warning: "#8A6500",
-  success: "#247A4E",
+  studyIslandSurface: "#FFFFFF",
+  studyIslandBorder: "rgba(55,53,47,0.22)",
+  recallAgain: "#D44C47",
+  recallHard: "#C58A16",
+  recallGood: "#2E7D32",
   recallEasy: "#7852EE",
 };
 
 export const darkColors: AppColors = {
-  background: "#1C1C1C",
-  surface: "#212121",
-  surfaceSubtle: "#232323",
-  surfaceRaised: "#282828",
-  border: "#333333",
-  borderStrong: "#3F3F3F",
-  textPrimary: "#F2F2F2",
-  textSecondary: "#B3B3B3",
-  textMuted: "#999999",
-  textDisabled: "#666666",
-  controlOverlay: "rgba(28, 28, 28, 0.94)",
-  controlBorder: "#3F3F3F",
-  controlSelected: "#555555",
-  controlPressed: "#666666",
-  scrim: "rgba(0, 0, 0, 0.62)",
-  actionPrimary: "#F2F2F2",
-  actionPrimaryText: "#222222",
-  accent: "#F2C14E",
-  danger: "#FB5964",
-  warning: "#E0AC00",
-  success: "#44CF6E",
+  canvas: "#191919",
+  navigation: "#202020",
+  surfaceRaised: "#252525",
+  surfaceSubtle: "#2A2A2A",
+  surfaceHover: "#2F2F2F",
+  textPrimary: "#D4D4D4",
+  textSecondary: "#9B9B9B",
+  textTertiary: "#737373",
+  borderSubtle: "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(255,255,255,0.16)",
+  interactive: "#2383E2",
+  interactiveHover: "#4A9EF0",
+  success: "#4F9768",
+  warning: "#C19138",
+  error: "#BE524B",
+  overlay: "rgba(0,0,0,0.55)",
+  actionPrimary: "#D4D4D4",
+  actionPrimaryText: "#191919",
+  studyIslandSurface: "#252525",
+  studyIslandBorder: "rgba(255,255,255,0.16)",
+  recallAgain: "#BE524B",
+  recallHard: "#C19138",
+  recallGood: "#4F9768",
   recallEasy: "#A882FF",
 };
 

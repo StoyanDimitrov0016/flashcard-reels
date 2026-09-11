@@ -84,7 +84,7 @@ function createStyles(colors: AppColors) {
     },
     root: { flex: 1, justifyContent: "flex-end" },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",
@@ -92,7 +92,7 @@ function createStyles(colors: AppColors) {
       top: 0,
     },
     sheet: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,

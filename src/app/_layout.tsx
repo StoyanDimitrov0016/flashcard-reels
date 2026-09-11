@@ -36,7 +36,7 @@ export function SuspenseFallback() {
   const { colors } = useAppTheme();
 
   return (
-    <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
       <LoadingState />
     </SafeAreaView>
   );
@@ -48,7 +48,7 @@ function AppNavigation() {
 
   if (!ready) {
     return (
-      <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
         <LoadingState label="Loading your preferences…" />
       </SafeAreaView>
     );
@@ -61,14 +61,14 @@ function AppNavigation() {
         <Stack
           screenOptions={{
             animation: "none",
-            contentStyle: { backgroundColor: colors.background },
+            contentStyle: { backgroundColor: colors.canvas },
             headerShown: false,
           }}
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="decks/[deckId]"
-            options={{ animation: "none", contentStyle: { backgroundColor: colors.background } }}
+            options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
           />
         </Stack>
         <FlashcardToastHost />

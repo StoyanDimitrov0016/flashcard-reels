@@ -103,7 +103,7 @@ export function resolveDeckAppearanceColors(
     };
   }
   const backgroundColor =
-    mixHexColors(colors.background, appearance.accentColor, 0.08) ?? colors.surfaceSubtle;
+    mixHexColors(colors.canvas, appearance.accentColor, 0.08) ?? colors.surfaceSubtle;
   return {
     accentColor: resolveReadableAccent(appearance.accentColor, backgroundColor, colors.textPrimary),
     backgroundColor,

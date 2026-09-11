@@ -64,8 +64,8 @@ export function RecallControls({
 function createStyles(colors: AppColors, orientation: "horizontal" | "vertical") {
   return StyleSheet.create({
     island: {
-      backgroundColor: colors.controlOverlay,
-      borderColor: colors.controlBorder,
+      backgroundColor: colors.studyIslandSurface,
+      borderColor: colors.studyIslandBorder,
       borderRadius: sizes.radius.island,
       borderWidth: sizes.border,
       flex: orientation === "horizontal" ? 1 : undefined,

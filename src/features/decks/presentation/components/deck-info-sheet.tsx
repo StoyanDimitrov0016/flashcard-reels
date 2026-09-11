@@ -114,7 +114,7 @@ function createStyles(colors: AppColors) {
     },
     iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     metric: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
-    metricLabel: { color: colors.textMuted, fontSize: fontSize.caption },
+    metricLabel: { color: colors.textTertiary, fontSize: fontSize.caption },
     metrics: { flexDirection: "row" },
     metricValue: {
       color: colors.textPrimary,
@@ -124,7 +124,7 @@ function createStyles(colors: AppColors) {
     recall: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     root: { flex: 1, justifyContent: "flex-end" },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",
@@ -132,7 +132,7 @@ function createStyles(colors: AppColors) {
       top: 0,
     },
     sheet: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,

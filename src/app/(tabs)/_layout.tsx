@@ -37,17 +37,17 @@ export default function TabLayout() {
         <TopTabs
           tabBarPosition="bottom"
           screenOptions={{
-            sceneStyle: { backgroundColor: colors.background },
+            sceneStyle: { backgroundColor: colors.canvas },
             tabBarActiveTintColor: colors.actionPrimary,
             tabBarIndicatorStyle: { height: 0 },
-            tabBarInactiveTintColor: colors.textMuted,
+            tabBarInactiveTintColor: colors.textTertiary,
             tabBarPressColor: "transparent",
             tabBarPressOpacity: 1,
             tabBarShowIcon: true,
             tabBarShowLabel: false,
             tabBarStyle: {
-              backgroundColor: colors.background,
-              borderTopColor: colors.border,
+              backgroundColor: colors.navigation,
+              borderTopColor: colors.borderSubtle,
               elevation: 0,
               paddingBottom: bottom,
             },

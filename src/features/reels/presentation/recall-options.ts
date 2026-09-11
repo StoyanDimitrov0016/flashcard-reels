@@ -4,7 +4,7 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { AppColors } from "@/shared/presentation/theme";
 
 export type RecallOption = Readonly<{
-  color: keyof Pick<AppColors, "danger" | "warning" | "success" | "recallEasy">;
+  color: keyof Pick<AppColors, "recallAgain" | "recallHard" | "recallGood" | "recallEasy">;
   label: string;
   level: RecallLevel;
   symbol: SymbolViewProps["name"];
@@ -12,19 +12,19 @@ export type RecallOption = Readonly<{
 
 export const recallOptions: readonly RecallOption[] = [
   {
-    color: "danger",
+    color: "recallAgain",
     label: "Again",
     level: "again",
     symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
   },
   {
-    color: "warning",
+    color: "recallHard",
     label: "Hard",
     level: "hard",
     symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
   },
   {
-    color: "success",
+    color: "recallGood",
     label: "Good",
     level: "good",
     symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },

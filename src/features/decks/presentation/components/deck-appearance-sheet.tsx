@@ -160,13 +160,13 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     error: {
-      color: colors.danger,
+      color: colors.error,
       fontSize: fontSize.footnote,
       paddingHorizontal: sizes.spacing.content,
     },
     handle: {
       alignSelf: "center",
-      backgroundColor: colors.textMuted,
+      backgroundColor: colors.textTertiary,
       borderRadius: sizes.radius.pill,
       height: 4,
       marginTop: sizes.spacing.medium,
@@ -183,7 +183,7 @@ function createStyles(colors: AppColors) {
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     preset: {
       alignItems: "center",
-      borderColor: colors.controlBorder,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.card,
       borderWidth: 2,
       flex: 1,
@@ -200,7 +200,7 @@ function createStyles(colors: AppColors) {
     pressed: { opacity: 0.72 },
     row: { gap: sizes.spacing.medium },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",

@@ -278,7 +278,7 @@ export default function LibraryScreen() {
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
             size={sizes.icon.small}
-            tintColor={colors.textMuted}
+            tintColor={colors.textTertiary}
           />
           <TextInput
             accessibilityLabel="Search deck library"
@@ -286,7 +286,7 @@ export default function LibraryScreen() {
             autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Search decks…"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.textTertiary}
             style={styles.searchInput}
             value={query}
           />
@@ -300,7 +300,7 @@ export default function LibraryScreen() {
               <SymbolView
                 name={{ android: "cancel", ios: "xmark.circle.fill", web: "cancel" }}
                 size={sizes.icon.small}
-                tintColor={colors.textMuted}
+                tintColor={colors.textTertiary}
               />
             </Pressable>
           ) : null}
@@ -340,14 +340,14 @@ function createStyles(colors: AppColors) {
     accent: { alignSelf: "stretch", width: 4 },
     actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
     cardCount: {
-      color: colors.textMuted,
+      color: colors.textTertiary,
       fontSize: fontSize.caption,
     },
     clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     deck: {
       alignItems: "center",
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.row,
       borderWidth: sizes.border,
       flexDirection: "row",
@@ -400,11 +400,11 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: 36,
     },
-    importError: { color: colors.danger, fontSize: fontSize.caption },
+    importError: { color: colors.error, fontSize: fontSize.caption },
     importSuccess: { color: colors.success, fontSize: fontSize.caption },
     iconButton: {
       alignItems: "center",
-      borderColor: colors.controlBorder,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.pill,
       height: 36,
       justifyContent: "center",
@@ -420,12 +420,12 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.title1,
       fontWeight: fontWeight.heavy,
     },
-    screen: { backgroundColor: colors.background, flex: 1 },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
     searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
     searchShell: {
       alignItems: "center",
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.row,
       borderWidth: sizes.border,
       flexDirection: "row",
@@ -434,10 +434,10 @@ function createStyles(colors: AppColors) {
     skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
     skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
     skeletonDeck: { paddingHorizontal: sizes.spacing.content },
-    skeletonLine: { backgroundColor: colors.border, borderRadius: 3, height: 12, width: "85%" },
+    skeletonLine: { backgroundColor: colors.borderSubtle, borderRadius: 3, height: 12, width: "85%" },
     skeletonList: { gap: sizes.spacing.xxLarge },
     skeletonShortLine: {
-      backgroundColor: colors.border,
+      backgroundColor: colors.borderSubtle,
       borderRadius: 3,
       height: 10,
       width: "35%",

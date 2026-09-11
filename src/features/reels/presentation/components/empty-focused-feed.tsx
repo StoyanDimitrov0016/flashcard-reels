@@ -33,7 +33,7 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     screen: {
       alignItems: "center",
-      backgroundColor: colors.background,
+      backgroundColor: colors.canvas,
       flex: 1,
       justifyContent: "center",
       paddingBottom: 52,

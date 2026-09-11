@@ -48,7 +48,7 @@ export function ResetProgressSheet({
             <SymbolView
               name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               size={sizes.icon.large}
-              tintColor={colors.danger}
+              tintColor={colors.error}
             />
           </View>
           <Text accessibilityRole="header" style={styles.title}>
@@ -110,7 +110,7 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     disabled: { opacity: 0.58 },
-    error: { color: colors.danger, fontSize: fontSize.caption, textAlign: "center" },
+    error: { color: colors.error, fontSize: fontSize.caption, textAlign: "center" },
     handle: {
       alignSelf: "center",
       backgroundColor: colors.borderStrong,
@@ -121,8 +121,8 @@ function createStyles(colors: AppColors) {
     iconShell: {
       alignItems: "center",
       alignSelf: "center",
-      backgroundColor: colors.danger + "18",
-      borderColor: colors.danger + "38",
+      backgroundColor: colors.error + "18",
+      borderColor: colors.error + "38",
       borderRadius: sizes.radius.pill,
       borderWidth: sizes.border,
       height: 64,
@@ -139,7 +139,7 @@ function createStyles(colors: AppColors) {
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     resetButton: {
       alignItems: "center",
-      backgroundColor: colors.danger,
+      backgroundColor: colors.error,
       borderRadius: sizes.radius.pill,
       flex: 1,
       justifyContent: "center",
@@ -151,7 +151,7 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
     },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",
@@ -160,7 +160,7 @@ function createStyles(colors: AppColors) {
     },
     sheet: {
       alignSelf: "center",
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,

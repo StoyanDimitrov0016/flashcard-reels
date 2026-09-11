@@ -105,7 +105,7 @@ export function PreferenceRow({ detail, icon, iconColor, onPress, title }: Prefe
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
         size={sizes.icon.small}
-        tintColor={colors.textMuted}
+        tintColor={colors.textTertiary}
       />
     </Pressable>
   );
@@ -131,8 +131,8 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
         accessibilityRole="switch"
         accessibilityState={{ checked: value }}
         onValueChange={onValueChange}
-        thumbColor={value ? colors.actionPrimaryText : colors.textMuted}
-        trackColor={{ false: colors.borderStrong, true: colors.accent }}
+        thumbColor={value ? colors.actionPrimaryText : colors.textTertiary}
+        trackColor={{ false: colors.borderStrong, true: colors.interactive }}
         value={value}
       />
     </View>
@@ -160,7 +160,7 @@ function createStyles(colors: AppColors) {
     section: { gap: sizes.spacing.small },
     sectionContent: { gap: sizes.spacing.xSmall },
     sectionTitle: {
-      color: colors.textMuted,
+      color: colors.textTertiary,
       fontSize: fontSize.caption,
       fontWeight: fontWeight.bold,
       textTransform: "uppercase",
@@ -179,10 +179,10 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     segmentLabelSelected: { color: colors.textPrimary },
-    segmentSelected: { backgroundColor: colors.controlSelected, borderRadius: sizes.radius.medium },
+    segmentSelected: { backgroundColor: colors.surfaceHover, borderRadius: sizes.radius.medium },
     segmentedControl: {
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.border,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.medium,
       borderWidth: sizes.border,
       flexDirection: "row",

@@ -67,7 +67,7 @@ function GestureHint({ label, symbol }: GestureHintProps) {
 
   return (
     <View accessible accessibilityLabel={label} style={styles.gestureHint}>
-      <SymbolView name={symbol} size={sizes.icon.small} tintColor={colors.textMuted} />
+      <SymbolView name={symbol} size={sizes.icon.small} tintColor={colors.textTertiary} />
       <Text style={styles.hint}>{label}</Text>
     </View>
   );
@@ -382,7 +382,7 @@ function createStyles(colors: AppColors) {
       maxWidth: 480,
     },
     revealInstruction: {
-      color: colors.textMuted,
+      color: colors.textTertiary,
       fontSize: fontSize.callout,
       lineHeight: lineHeight.subhead,
     },
@@ -393,7 +393,7 @@ function createStyles(colors: AppColors) {
       paddingTop: sizes.spacing.screen,
     },
     hint: {
-      color: colors.textMuted,
+      color: colors.textTertiary,
       fontSize: fontSize.caption,
       letterSpacing: letterSpacing.wider,
     },

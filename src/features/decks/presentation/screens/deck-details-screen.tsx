@@ -63,7 +63,7 @@ function CardRow({ card, onPress, showProgress }: CardRowProps) {
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
         size={sizes.icon.small}
-        tintColor={colors.textMuted}
+        tintColor={colors.textTertiary}
       />
     </Pressable>
   );
@@ -147,7 +147,7 @@ export default function DeckDetailsScreen() {
             <SymbolView
               name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               size={sizes.icon.medium}
-              tintColor={colors.danger}
+              tintColor={colors.error}
             />
           </Pressable>
         ) : null}
@@ -181,7 +181,7 @@ export default function DeckDetailsScreen() {
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
             size={sizes.icon.small}
-            tintColor={colors.textMuted}
+            tintColor={colors.textTertiary}
           />
           <TextInput
             accessibilityLabel="Search cards in deck"
@@ -189,7 +189,7 @@ export default function DeckDetailsScreen() {
             autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Search cards…"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.textTertiary}
             style={styles.searchInput}
             value={query}
           />
@@ -274,8 +274,8 @@ function createStyles(colors: AppColors) {
     },
     cardRow: {
       alignItems: "flex-start",
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.row,
       borderWidth: sizes.border,
       flexDirection: "row",
@@ -283,7 +283,7 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.xLarge,
       paddingVertical: sizes.spacing.xLarge,
     },
-    count: { color: colors.textMuted, fontSize: fontSize.footnote },
+    count: { color: colors.textTertiary, fontSize: fontSize.footnote },
     empty: { color: colors.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
     header: {
       alignItems: "center",
@@ -302,7 +302,7 @@ function createStyles(colors: AppColors) {
     },
     listView: { flex: 1 },
     position: {
-      color: colors.textMuted,
+      color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
@@ -317,18 +317,18 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
       lineHeight: lineHeight.subhead,
     },
-    screen: { backgroundColor: colors.background, flex: 1 },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
     searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 44 },
     searchShell: {
       alignItems: "center",
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.borderSubtle,
       borderBottomWidth: sizes.border,
       flexDirection: "row",
       gap: sizes.spacing.medium,
       paddingHorizontal: sizes.spacing.content,
     },
     tabs: {
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.borderSubtle,
       borderBottomWidth: sizes.border,
       paddingHorizontal: sizes.spacing.content,
     },

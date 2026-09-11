@@ -25,7 +25,7 @@ function FlashcardToast({ text1, props }: FlashcardToastProps) {
             : { android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }
         }
         size={sizes.icon.small}
-        tintColor={colors.accent}
+        tintColor={colors.interactive}
       />
       <Text style={styles.label}>{text1}</Text>
     </View>
@@ -76,8 +76,8 @@ function createStyles(colors: AppColors) {
     label: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     toast: {
       alignItems: "center",
-      backgroundColor: colors.controlOverlay,
-      borderColor: colors.controlBorder,
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderStrong,
       borderRadius: sizes.radius.pill,
       borderWidth: sizes.border,
       flexDirection: "row",

@@ -172,6 +172,6 @@ export function ReelFeed({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    feed: { backgroundColor: colors.background, flex: 1 },
+    feed: { backgroundColor: colors.canvas, flex: 1 },
   });
 }

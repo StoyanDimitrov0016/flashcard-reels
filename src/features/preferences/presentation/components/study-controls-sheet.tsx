@@ -351,7 +351,7 @@ function createStyles(colors: AppColors) {
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     option: {
       alignItems: "center",
-      borderColor: colors.controlBorder,
+      borderColor: colors.studyIslandBorder,
       borderRadius: sizes.radius.medium,
       borderWidth: sizes.border,
       flex: 1,
@@ -370,12 +370,12 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
       width: 56,
     },
-    optionSelected: { backgroundColor: colors.controlSelected, borderColor: colors.actionPrimary },
+    optionSelected: { backgroundColor: colors.surfaceHover, borderColor: colors.actionPrimary },
     options: { flex: 1, flexDirection: "row", gap: sizes.spacing.large },
     preview: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
-      borderColor: colors.border,
+      borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
       flex: 1,
@@ -424,8 +424,8 @@ function createStyles(colors: AppColors) {
     previewStageRight: { alignItems: "flex-end", paddingRight: sizes.spacing.medium },
     previewIsland: {
       alignItems: "center",
-      backgroundColor: colors.controlOverlay,
-      borderColor: colors.controlBorder,
+      backgroundColor: colors.studyIslandSurface,
+      borderColor: colors.studyIslandBorder,
       borderRadius: sizes.radius.island,
       borderWidth: sizes.border,
       flexDirection: "column",
@@ -451,7 +451,7 @@ function createStyles(colors: AppColors) {
       justifyContent: "space-around",
       minWidth: 0,
     },
-    previewLabel: { color: colors.textMuted, fontSize: fontSize.micro },
+    previewLabel: { color: colors.textTertiary, fontSize: fontSize.micro },
     previewMarker: {
       alignItems: "center",
       borderRadius: sizes.radius.pill,
@@ -460,7 +460,7 @@ function createStyles(colors: AppColors) {
       width: 28,
     },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",
@@ -470,7 +470,7 @@ function createStyles(colors: AppColors) {
     scroll: { flex: 1 },
     sheet: {
       alignSelf: "center",
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
@@ -482,7 +482,7 @@ function createStyles(colors: AppColors) {
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
     audioMarker: {
       alignItems: "center",
-      backgroundColor: colors.controlSelected,
+      backgroundColor: colors.surfaceHover,
       borderRadius: sizes.radius.pill,
       height: 34,
       justifyContent: "center",

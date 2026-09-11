@@ -83,7 +83,7 @@ export default function YouScreen() {
           <PreferenceSection title="Learning Data">
             <PreferenceRow
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-              iconColor={colors.danger}
+              iconColor={colors.error}
               onPress={() => {
                 setResetError(null);
                 setResetPresented(true);
@@ -179,7 +179,7 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.footnote,
     },
     rowTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    screen: { backgroundColor: colors.background, flex: 1 },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
     sections: { gap: sizes.spacing.spacious },
     title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
   });

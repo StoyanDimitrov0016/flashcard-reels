@@ -68,7 +68,7 @@ export function FlashcardProgressSheet({
                 {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
               </View>
               <View style={styles.progressHeading}>
-                <Text style={[styles.status, { color: reviewed ? accentColor : colors.textMuted }]}>
+                <Text style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}>
                   {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
                 </Text>
                 <Text style={styles.caption}>
@@ -87,7 +87,7 @@ export function FlashcardProgressSheet({
               </View>
               <View style={styles.ratings}>
                 <ProgressFact
-                  color={colors.danger}
+                  color={colors.error}
                   label="Again"
                   value={profile?.againCount ?? 0}
                 />
@@ -134,7 +134,7 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.bodyLarge,
     },
     answerRow: { alignItems: "flex-start", flexDirection: "row", gap: sizes.spacing.section },
-    caption: { color: colors.textMuted, fontSize: fontSize.caption },
+    caption: { color: colors.textTertiary, fontSize: fontSize.caption },
     content: {
       gap: sizes.spacing.section,
       padding: sizes.spacing.content,
@@ -163,7 +163,7 @@ function createStyles(colors: AppColors) {
     ratings: { flexDirection: "row" },
     root: { flex: 1, justifyContent: "flex-end" },
     scrim: {
-      backgroundColor: colors.scrim,
+      backgroundColor: colors.overlay,
       bottom: 0,
       left: 0,
       position: "absolute",
@@ -171,7 +171,7 @@ function createStyles(colors: AppColors) {
       top: 0,
     },
     sheet: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,

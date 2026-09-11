@@ -10,7 +10,7 @@ type ScreenHeaderProps = Readonly<{ children: ReactNode }>;
 export function ScreenHeader({ children }: ScreenHeaderProps) {
   const { colors } = useAppTheme();
 
-  return <View style={[styles.header, { borderBottomColor: colors.border }]}>{children}</View>;
+  return <View style={[styles.header, { borderBottomColor: colors.borderSubtle }]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({

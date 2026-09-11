@@ -35,6 +35,6 @@ export default function DiscoverScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    screen: { backgroundColor: colors.background, flex: 1 },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
   });
 }
