@@ -15,6 +15,38 @@ npm start
 
 From the Expo terminal, scan the QR code or press `a`, `i`, or `w` for Android, iOS, or web.
 
+## Local Windows emulator workaround
+
+These commands are intentionally specific to Stoyan's current Windows laptop.
+Android Emulator 37.1.11 freezes before guest boot on this machine; Google's
+archived Emulator 36.6.11 at `D:\AndroidEmulatorArchive\36.6.11` works with the
+`Expo_API_35_Stable` AVD. This is a temporary host-tool workaround, not a
+portable project or CI requirement. Re-test a newer stable Android Emulator
+when Google publishes one, then remove this section and the two machine scripts
+once the managed version boots normally.
+
+Start the emulator, wait for Android to finish booting, and open the app in
+Expo Go:
+
+```powershell
+npm run android:machine:start
+```
+
+Press `Ctrl+C` to stop the foreground Metro process. To clean up Metro on port
+8081, the local emulator, and adb together, run:
+
+```powershell
+npm run android:machine:stop
+```
+
+The helper accepts `FLASHCARD_ANDROID_EMULATOR` and `FLASHCARD_ANDROID_AVD`
+environment-variable overrides if the archived emulator or AVD changes.
+
+While Metro is running and the app is connected, press `j` to open React Native
+DevTools. Its Console, Sources, Network, Memory, Components, and Profiler panels
+provide JavaScript debugging and React render profiling. Press `m` for the
+in-app developer menu.
+
 ## Quality checks
 
 ```bash

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
+    "android:machine:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/android-machine.ps1 -Action Start",
+    "android:machine:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/android-machine.ps1 -Action Stop",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "format": "oxfmt --write . && node scripts/format-react-component-conventions.mjs --write && oxfmt --write .",
