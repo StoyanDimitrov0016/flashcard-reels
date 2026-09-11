@@ -14,6 +14,8 @@ type RecallControlsProps = Readonly<{
   selectedLevel: RecallLevel | null;
 }>;
 
+const HORIZONTAL_RECALL_ACTION_MIN_WIDTH = 44;
+
 export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps) {
   const { orientation, ratingOrder } = useStudyControlLayout();
   const { colors } = useAppTheme();
@@ -70,7 +72,7 @@ function createStyles(colors: AppColors, orientation: "horizontal" | "vertical")
     action: {
       alignItems: "center",
       gap: sizes.spacing.xSmall,
-      minWidth: orientation === "horizontal" ? 48 : undefined,
+      minWidth: orientation === "horizontal" ? HORIZONTAL_RECALL_ACTION_MIN_WIDTH : undefined,
     },
     iconCircle: {
       alignItems: "center",

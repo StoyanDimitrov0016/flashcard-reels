@@ -63,7 +63,7 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
       <View style={[styles.swatch, { backgroundColor: previewColors.background }]}>
         <View style={[styles.swatchAccent, { backgroundColor: previewColors.accent }]} />
       </View>
-      <Text style={styles.presetName}>{preset.name}</Text>
+      <Text style={[styles.presetName, { color: previewColors.textPrimary }]}>{preset.name}</Text>
       {pending && <ActivityIndicator color={previewColors.accent} size="small" />}
       {!pending && selected ? (
         <SymbolView

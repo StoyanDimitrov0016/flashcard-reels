@@ -16,7 +16,10 @@ import { GestureFooter } from "@/features/reels/presentation/components/gesture-
 import { QuestionFaceContent } from "@/features/reels/presentation/components/question-face-content";
 import { StudyControlCluster } from "@/features/reels/presentation/components/study-control-cluster";
 import { StudyControlLayoutProvider } from "@/features/reels/presentation/context/study-control-layout-context";
-import { getReelRotationValue } from "@/features/reels/presentation/reel-rotation";
+import {
+  getReelRotationValue,
+  shouldSynchronizeReelRotation,
+} from "@/features/reels/presentation/reel-rotation";
 import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -94,6 +97,10 @@ export function ReelCard({
   const openFocusWithCurrentCardState = () => {
     openFocusedFeed(card.deckId, card.id, { cardState: focusedCardState });
   };
+  const occurrenceIdentity = `${occurrenceKey}:${reelPosition}`;
+  const previousOccurrenceIdentity = useRef(occurrenceIdentity);
+  const previousRevealed = useRef(revealed);
+  const animationTarget = useRef(revealed);
   const [rotation] = useState(() => new Animated.Value(getReelRotationValue(revealed)));
   const holdState = useRef<HoldToFocusState>("idle");
   const holdCompleted = useRef(false);
@@ -103,6 +110,9 @@ export function ReelCard({
     getReelRotationValue(revealed),
     [occurrenceKey, reelPosition],
     () => {
+      previousOccurrenceIdentity.current = occurrenceIdentity;
+      previousRevealed.current = revealed;
+      animationTarget.current = revealed;
       rotation.stopAnimation();
       rotation.setValue(getReelRotationValue(revealed));
       if (holdState.current === "feedback") {
@@ -120,12 +130,26 @@ export function ReelCard({
 
   useLayoutEffect(
     function synchronizeRotationWithRevealedState() {
-      const rotationValue = getReelRotationValue(revealed);
+      const occurrenceChanged = previousOccurrenceIdentity.current !== occurrenceIdentity;
+      const revealedChanged = previousRevealed.current !== revealed;
+      previousOccurrenceIdentity.current = occurrenceIdentity;
+      previousRevealed.current = revealed;
+      if (
+        !shouldSynchronizeReelRotation(
+          occurrenceChanged,
+          revealedChanged,
+          animationTarget.current,
+          revealed
+        )
+      ) {
+        return;
+      }
+      animationTarget.current = revealed;
       rotation.stopAnimation();
-      rotation.setValue(rotationValue);
-      setFlipCount(rotationValue);
+      rotation.setValue(getReelRotationValue(revealed));
+      setFlipCount(getReelRotationValue(revealed));
     },
-    [occurrenceKey, reelPosition, revealed, rotation, setFlipCount]
+    [occurrenceIdentity, revealed, rotation, setFlipCount]
   );
 
   const clearHoldFeedbackTimer = () => {
@@ -160,6 +184,7 @@ export function ReelCard({
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
       const nextFlipCount = flipCount === 0 ? 1 : 0;
+      animationTarget.current = nextFlipCount === 1;
       setFlipCount(nextFlipCount);
       onFlip();
       Animated.timing(rotation, {
