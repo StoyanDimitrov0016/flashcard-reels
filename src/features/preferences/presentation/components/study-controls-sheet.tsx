@@ -1,15 +1,5 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Animated,
-  Modal,
-  PanResponder,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type {
   AppPreferences,
@@ -27,7 +17,7 @@ import {
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
-import { shouldDismissStudyControlsSheet } from "@/features/preferences/presentation/study-controls-sheet-gesture";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type StudyControlsSheetProps = Readonly<{
   onAudioSideChange: (value: AudioSide) => void;
@@ -49,56 +39,6 @@ export function StudyControlsSheet({
 }: StudyControlsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { height } = useWindowDimensions();
-  const [sheetOffset] = useState(() => new Animated.Value(0));
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          gestureState.dy > 4 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
-        onPanResponderMove: (_, gestureState) => {
-          sheetOffset.setValue(Math.max(0, gestureState.dy));
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (shouldDismissStudyControlsSheet(gestureState.dy, gestureState.vy)) {
-            Animated.timing(sheetOffset, {
-              duration: 180,
-              toValue: height,
-              useNativeDriver: true,
-            }).start(({ finished }) => {
-              if (finished) {
-                onClose();
-              }
-            });
-            return;
-          }
-          Animated.spring(sheetOffset, {
-            friction: 8,
-            tension: 70,
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-        onPanResponderTerminate: () => {
-          Animated.spring(sheetOffset, {
-            friction: 8,
-            tension: 70,
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-      }),
-    [height, onClose, sheetOffset]
-  );
-
-  useEffect(
-    function resetSheetOffsetWhenPresented() {
-      if (visible) {
-        sheetOffset.setValue(0);
-      }
-    },
-    [sheetOffset, visible]
-  );
   const layout = resolveStudyControlLayout(preferences);
   const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
@@ -113,184 +53,156 @@ export function StudyControlsSheet({
   );
 
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <View style={styles.modalRoot}>
-        <Pressable
-          accessibilityLabel="Close study island"
-          accessibilityRole="button"
-          onPress={onClose}
-          style={styles.scrim}
-        />
-        <Animated.View
-          accessibilityViewIsModal
-          style={[styles.sheet, { transform: [{ translateY: sheetOffset }] }]}
-        >
-          <View
-            {...panResponder.panHandlers}
-            accessibilityHint="Swipe down to close"
-            accessibilityLabel="Drag handle"
-            accessible
-            style={styles.handleArea}
+    <AppBottomSheet onClose={onClose} snapPoints={["92%"]} visible={visible}>
+      <View accessibilityViewIsModal style={styles.sheet}>
+        <View style={styles.header}>
+          <View style={styles.headingCopy}>
+            <Text accessibilityRole="header" style={styles.title}>
+              Study island
+            </Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Close study island"
+            accessibilityRole="button"
+            onPress={onClose}
+            style={styles.closeButton}
           >
-            <View style={styles.handle} />
-          </View>
-          <View style={styles.header}>
-            <View style={styles.headingCopy}>
-              <Text accessibilityRole="header" style={styles.title}>
-                Study island
-              </Text>
-            </View>
-            <Pressable
-              accessibilityLabel="Close study island"
-              accessibilityRole="button"
-              onPress={onClose}
-              style={styles.closeButton}
+            <SymbolView
+              name={{ android: "close", ios: "xmark", web: "close" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
+        </View>
+        <View style={styles.content}>
+          <View style={styles.preview}>
+            <View
+              style={[
+                styles.previewStage,
+                layout.position === "bottom" ? styles.previewStageBottom : styles.previewStageSide,
+                layout.position === "left" && styles.previewStageLeft,
+                layout.position === "right" && styles.previewStageRight,
+              ]}
             >
-              <SymbolView
-                name={{ android: "close", ios: "xmark", web: "close" }}
-                size={sizes.icon.medium}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          </View>
-          <View style={styles.content}>
-            <View style={styles.preview}>
+              {layout.position === "left" ? null : <View style={styles.previewContentRegion} />}
               <View
                 style={[
-                  styles.previewStage,
-                  layout.position === "bottom"
-                    ? styles.previewStageBottom
-                    : styles.previewStageSide,
-                  layout.position === "left" && styles.previewStageLeft,
-                  layout.position === "right" && styles.previewStageRight,
+                  styles.previewCluster,
+                  orientation === "horizontal" && styles.previewClusterHorizontal,
                 ]}
               >
-                {layout.position === "left" ? null : <View style={styles.previewContentRegion} />}
                 <View
                   style={[
-                    styles.previewCluster,
-                    orientation === "horizontal" && styles.previewClusterHorizontal,
+                    styles.previewControlsGroup,
+                    orientation === "horizontal" && styles.previewControlsGroupHorizontal,
                   ]}
                 >
+                  {audioBeforeIsland ? audioMarker : null}
                   <View
                     style={[
-                      styles.previewControlsGroup,
-                      orientation === "horizontal" && styles.previewControlsGroupHorizontal,
+                      styles.previewIsland,
+                      orientation === "vertical" && styles.previewIslandSide,
+                      orientation === "horizontal" && styles.previewIslandHorizontal,
                     ]}
                   >
-                    {audioBeforeIsland ? audioMarker : null}
                     <View
                       style={[
-                        styles.previewIsland,
-                        orientation === "vertical" && styles.previewIslandSide,
-                        orientation === "horizontal" && styles.previewIslandHorizontal,
+                        styles.previewRatingControls,
+                        orientation === "vertical" && styles.previewRatingControlsSide,
+                        orientation === "horizontal" && styles.previewRatingControlsHorizontal,
                       ]}
                     >
-                      <View
-                        style={[
-                          styles.previewRatingControls,
-                          orientation === "vertical" && styles.previewRatingControlsSide,
-                          orientation === "horizontal" && styles.previewRatingControlsHorizontal,
-                        ]}
-                      >
-                        {layout.ratingOrder.map((level) => {
-                          const option = recallOptions.find((current) => current.level === level);
-                          if (!option) {
-                            return null;
-                          }
-                          return (
+                      {layout.ratingOrder.map((level) => {
+                        const option = recallOptions.find((current) => current.level === level);
+                        if (!option) {
+                          return null;
+                        }
+                        return (
+                          <View
+                            key={level}
+                            style={[
+                              styles.previewAction,
+                              orientation === "vertical" && styles.previewActionSide,
+                              orientation === "horizontal" && styles.previewActionHorizontal,
+                            ]}
+                          >
                             <View
-                              key={level}
                               style={[
-                                styles.previewAction,
-                                orientation === "vertical" && styles.previewActionSide,
-                                orientation === "horizontal" && styles.previewActionHorizontal,
+                                styles.previewMarker,
+                                orientation === "vertical" && styles.previewMarkerSide,
+                                { backgroundColor: colors[option.color] },
                               ]}
                             >
-                              <View
-                                style={[
-                                  styles.previewMarker,
-                                  orientation === "vertical" && styles.previewMarkerSide,
-                                  { backgroundColor: colors[option.color] },
-                                ]}
-                              >
-                                <SymbolView
-                                  name={option.symbol}
-                                  size={sizes.icon.small}
-                                  tintColor={colors.actionPrimaryText}
-                                />
-                              </View>
-                              <Text style={styles.previewLabel}>{option.label}</Text>
+                              <SymbolView
+                                name={option.symbol}
+                                size={sizes.icon.small}
+                                tintColor={colors.actionPrimaryText}
+                              />
                             </View>
-                          );
-                        })}
-                      </View>
+                            <Text style={styles.previewLabel}>{option.label}</Text>
+                          </View>
+                        );
+                      })}
                     </View>
-                    {audioBeforeIsland ? null : audioMarker}
                   </View>
+                  {audioBeforeIsland ? null : audioMarker}
                 </View>
-                {layout.position === "left" ? <View style={styles.previewContentRegion} /> : null}
               </View>
+              {layout.position === "left" ? <View style={styles.previewContentRegion} /> : null}
             </View>
-            <View style={styles.controls}>
-              <OptionGroup
-                label="Position"
-                options={positions.map((value) => ({
-                  label: value.charAt(0).toUpperCase() + value.slice(1),
-                  symbol: getPositionSymbol(value),
-                  value,
-                }))}
-                selected={preferences.recollectionIslandPosition}
-                onChange={onPositionChange}
-              />
-              <OptionGroup
-                label="Order"
-                options={[
-                  {
-                    label: getRatingDirectionLabel(
-                      preferences.recollectionIslandPosition,
-                      "forward"
-                    ),
-                    symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "forward"),
-                    value: "forward" as const,
-                  },
-                  {
-                    label: getRatingDirectionLabel(
-                      preferences.recollectionIslandPosition,
-                      "reverse"
-                    ),
-                    symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "reverse"),
-                    value: "reverse" as const,
-                  },
-                ]}
-                selected={preferences.ratingDirection}
-                onChange={onRatingDirectionChange}
-              />
-              <OptionGroup
-                label="Audio"
-                options={[
-                  {
-                    label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
-                    symbol: getAudioSymbol(preferences.recollectionIslandPosition, "primary"),
-                    value: "primary" as const,
-                  },
-                  {
-                    label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
-                    symbol: getAudioSymbol(preferences.recollectionIslandPosition, "opposite"),
-                    value: "opposite" as const,
-                  },
-                ]}
-                selected={preferences.audioSide}
-                onChange={onAudioSideChange}
-              />
-            </View>
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
-              <Text style={styles.doneLabel}>Done</Text>
-            </Pressable>
           </View>
-        </Animated.View>
+          <View style={styles.controls}>
+            <OptionGroup
+              label="Position"
+              options={positions.map((value) => ({
+                label: value.charAt(0).toUpperCase() + value.slice(1),
+                symbol: getPositionSymbol(value),
+                value,
+              }))}
+              selected={preferences.recollectionIslandPosition}
+              onChange={onPositionChange}
+            />
+            <OptionGroup
+              label="Order"
+              options={[
+                {
+                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"),
+                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "forward"),
+                  value: "forward" as const,
+                },
+                {
+                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "reverse"),
+                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "reverse"),
+                  value: "reverse" as const,
+                },
+              ]}
+              selected={preferences.ratingDirection}
+              onChange={onRatingDirectionChange}
+            />
+            <OptionGroup
+              label="Audio"
+              options={[
+                {
+                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
+                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "primary"),
+                  value: "primary" as const,
+                },
+                {
+                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
+                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "opposite"),
+                  value: "opposite" as const,
+                },
+              ]}
+              selected={preferences.audioSide}
+              onChange={onAudioSideChange}
+            />
+          </View>
+          <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
+            <Text style={styles.doneLabel}>Done</Text>
+          </Pressable>
+        </View>
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
@@ -409,17 +321,6 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.body,
       fontWeight: fontWeight.heavy,
     },
-    handleArea: {
-      alignItems: "center",
-      height: 40,
-      justifyContent: "center",
-    },
-    handle: {
-      backgroundColor: colors.borderStrong,
-      borderRadius: sizes.radius.pill,
-      height: 4,
-      width: 40,
-    },
     header: {
       alignItems: "flex-start",
       flexDirection: "row",
@@ -427,7 +328,6 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.content,
     },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
-    modalRoot: { flex: 1, justifyContent: "flex-end" },
     option: {
       alignItems: "center",
       borderColor: colors.studyIslandBorder,
@@ -553,14 +453,6 @@ function createStyles(colors: AppColors) {
       width: 28,
     },
     previewMarkerSide: { height: 24, width: 24 },
-    scrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
@@ -569,8 +461,7 @@ function createStyles(colors: AppColors) {
       borderTopRightRadius: sizes.radius.panel,
       borderWidth: sizes.border,
       flex: 1,
-      maxHeight: "96%",
-      minHeight: "88%",
+      minHeight: 0,
       width: "100%",
     },
     title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },

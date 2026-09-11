@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -8,6 +8,7 @@ import type { LearnerProfile } from "@/features/learner-profile/domain/learner-p
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type DeckInfoSheetProps = Readonly<{
   cards: readonly Flashcard[];
@@ -37,46 +38,39 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
         );
 
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <View style={styles.root}>
-        <Pressable
-          accessibilityLabel="Close deck information"
-          onPress={onClose}
-          style={styles.scrim}
-        />
-        <View accessibilityViewIsModal style={styles.sheet}>
-          <View style={styles.header}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {deck?.title ?? "Deck information"}
-            </Text>
-            <Pressable
-              accessibilityLabel="Close deck information"
-              accessibilityRole="button"
-              onPress={onClose}
-              style={styles.iconButton}
-            >
-              <SymbolView
-                name={{ android: "close", ios: "xmark", web: "close" }}
-                size={sizes.icon.medium}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={styles.content}>
-            <View style={styles.metrics}>
-              <Metric label="Cards" value={cards.length} />
-              <Metric label="Reviewed" value={reviewedProfiles.length} />
-              <Metric label="New" value={cards.length - reviewedProfiles.length} />
-              <Metric label="Reviews" value={totalReviews} />
-            </View>
-            <Text style={styles.recall}>
-              {averageRecall === null ? "No recall data yet" : `${averageRecall}% average recall`}
-            </Text>
-            {deck ? <Text style={styles.description}>{deck.description}</Text> : null}
-          </ScrollView>
+    <AppBottomSheet onClose={onClose} visible={visible}>
+      <View accessibilityViewIsModal style={styles.sheet}>
+        <View style={styles.header}>
+          <Text accessibilityRole="header" style={styles.title}>
+            {deck?.title ?? "Deck information"}
+          </Text>
+          <Pressable
+            accessibilityLabel="Close deck information"
+            accessibilityRole="button"
+            onPress={onClose}
+            style={styles.iconButton}
+          >
+            <SymbolView
+              name={{ android: "close", ios: "xmark", web: "close" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
         </View>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.metrics}>
+            <Metric label="Cards" value={cards.length} />
+            <Metric label="Reviewed" value={reviewedProfiles.length} />
+            <Metric label="New" value={cards.length - reviewedProfiles.length} />
+            <Metric label="Reviews" value={totalReviews} />
+          </View>
+          <Text style={styles.recall}>
+            {averageRecall === null ? "No recall data yet" : `${averageRecall}% average recall`}
+          </Text>
+          {deck ? <Text style={styles.description}>{deck.description}</Text> : null}
+        </ScrollView>
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
@@ -122,15 +116,6 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
     },
     recall: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    root: { flex: 1, justifyContent: "flex-end" },
-    scrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     sheet: {
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,

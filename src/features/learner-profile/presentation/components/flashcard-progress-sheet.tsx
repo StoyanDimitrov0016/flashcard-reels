@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
@@ -9,6 +9,7 @@ import type { LearnerProfile } from "@/features/learner-profile/domain/learner-p
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type FlashcardProgressSheetProps = Readonly<{
   accentColor: string;
@@ -35,78 +36,71 @@ export function FlashcardProgressSheet({
       : Math.round((explanation.averageRecallScore / 3) * 100);
 
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={card !== null}>
-      <View style={styles.root}>
-        <Pressable
-          accessibilityLabel="Close card progress"
-          onPress={onClose}
-          style={styles.scrim}
-        />
-        <View accessibilityViewIsModal style={styles.sheet}>
-          <View style={styles.header}>
-            <Text accessibilityRole="header" style={styles.title}>
-              Card {card ? card.order + 1 : ""}
-            </Text>
-            <Pressable
-              accessibilityLabel="Close card progress"
-              accessibilityRole="button"
-              onPress={onClose}
-              style={styles.iconButton}
-            >
-              <SymbolView
-                name={{ android: "close", ios: "xmark", web: "close" }}
-                size={sizes.icon.medium}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          </View>
-          {card ? (
-            <ScrollView contentContainerStyle={styles.content}>
-              <Text style={styles.question}>{card.question}</Text>
-              <View style={styles.answerRow}>
-                <Text style={styles.answer}>{card.answer}</Text>
-                {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
-              </View>
-              <View style={styles.progressHeading}>
-                <Text
-                  style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}
-                >
-                  {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
-                </Text>
-                <Text style={styles.caption}>
-                  {reviewed
-                    ? `${recallPercentage}% recall · ${explanation.historyBand}`
-                    : "Not reviewed yet"}
-                </Text>
-              </View>
-              <View style={styles.track}>
-                <View
-                  style={[
-                    styles.fill,
-                    { backgroundColor: accentColor, width: `${recallPercentage}%` },
-                  ]}
-                />
-              </View>
-              <View style={styles.ratings}>
-                <ProgressFact color={colors.error} label="Again" value={profile?.againCount ?? 0} />
-                <ProgressFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
-                <ProgressFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
-                <ProgressFact
-                  color={colors.recallEasy}
-                  label="Easy"
-                  value={profile?.easyCount ?? 0}
-                />
-              </View>
-              <Text style={styles.caption}>
-                {profile?.lastReviewedAt
-                  ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
-                  : "No review history"}
-              </Text>
-            </ScrollView>
-          ) : null}
+    <AppBottomSheet onClose={onClose} visible={card !== null}>
+      <View accessibilityViewIsModal style={styles.sheet}>
+        <View style={styles.header}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Card {card ? card.order + 1 : ""}
+          </Text>
+          <Pressable
+            accessibilityLabel="Close card progress"
+            accessibilityRole="button"
+            onPress={onClose}
+            style={styles.iconButton}
+          >
+            <SymbolView
+              name={{ android: "close", ios: "xmark", web: "close" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
         </View>
+        {card ? (
+          <ScrollView contentContainerStyle={styles.content}>
+            <Text style={styles.question}>{card.question}</Text>
+            <View style={styles.answerRow}>
+              <Text style={styles.answer}>{card.answer}</Text>
+              {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
+            </View>
+            <View style={styles.progressHeading}>
+              <Text
+                style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}
+              >
+                {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
+              </Text>
+              <Text style={styles.caption}>
+                {reviewed
+                  ? `${recallPercentage}% recall · ${explanation.historyBand}`
+                  : "Not reviewed yet"}
+              </Text>
+            </View>
+            <View style={styles.track}>
+              <View
+                style={[
+                  styles.fill,
+                  { backgroundColor: accentColor, width: `${recallPercentage}%` },
+                ]}
+              />
+            </View>
+            <View style={styles.ratings}>
+              <ProgressFact color={colors.error} label="Again" value={profile?.againCount ?? 0} />
+              <ProgressFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
+              <ProgressFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
+              <ProgressFact
+                color={colors.recallEasy}
+                label="Easy"
+                value={profile?.easyCount ?? 0}
+              />
+            </View>
+            <Text style={styles.caption}>
+              {profile?.lastReviewedAt
+                ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
+                : "No review history"}
+            </Text>
+          </ScrollView>
+        ) : null}
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
@@ -159,15 +153,6 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.title3,
     },
     ratings: { flexDirection: "row" },
-    root: { flex: 1, justifyContent: "flex-end" },
-    scrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     sheet: {
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderStrong,

@@ -1,9 +1,10 @@
 import { SymbolView } from "expo-symbols";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type ResetProgressSheetProps = Readonly<{
   busy: boolean;
@@ -26,68 +27,51 @@ export function ResetProgressSheet({
   const styles = createStyles(colors);
 
   return (
-    <Modal
-      animationType="fade"
-      navigationBarTranslucent
-      onRequestClose={busy ? undefined : onCancel}
-      statusBarTranslucent
-      transparent
-      visible={isPresented}
-    >
-      <View style={styles.modalRoot}>
-        <Pressable
-          accessibilityLabel="Cancel progress reset"
-          accessibilityRole="button"
-          disabled={busy}
-          onPress={onCancel}
-          style={styles.scrim}
-        />
-        <View accessibilityViewIsModal style={styles.sheet}>
-          <View style={styles.handle} />
-          <View style={styles.iconShell}>
-            <SymbolView
-              name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-              size={sizes.icon.large}
-              tintColor={colors.error}
-            />
-          </View>
-          <Text accessibilityRole="header" style={styles.title}>
-            Reset {scope}?
+    <AppBottomSheet dismissible={!busy} onClose={onCancel} visible={isPresented}>
+      <View accessibilityViewIsModal style={styles.sheet}>
+        <View style={styles.iconShell}>
+          <SymbolView
+            name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
+            size={sizes.icon.large}
+            tintColor={colors.error}
+          />
+        </View>
+        <Text accessibilityRole="header" style={styles.title}>
+          Reset {scope}?
+        </Text>
+        <Text style={styles.message}>
+          Learning history and profiling will be cleared. Your installed cards and decks will remain
+          available.
+        </Text>
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
           </Text>
-          <Text style={styles.message}>
-            Learning history and profiling will be cleared. Your installed cards and decks will
-            remain available.
-          </Text>
-          {error ? (
-            <Text accessibilityLiveRegion="polite" style={styles.error}>
-              {error}
-            </Text>
-          ) : null}
-          <View style={styles.actions}>
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy}
-              onPress={onCancel}
-              style={styles.cancelButton}
-            >
-              <Text style={styles.cancelLabel}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy}
-              onPress={onConfirm}
-              style={[styles.resetButton, busy && styles.disabled]}
-            >
-              {busy ? (
-                <ActivityIndicator color={colors.actionPrimaryText} size="small" />
-              ) : (
-                <Text style={styles.resetLabel}>Reset progress</Text>
-              )}
-            </Pressable>
-          </View>
+        ) : null}
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={onCancel}
+            style={styles.cancelButton}
+          >
+            <Text style={styles.cancelLabel}>Cancel</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={onConfirm}
+            style={[styles.resetButton, busy && styles.disabled]}
+          >
+            {busy ? (
+              <ActivityIndicator color={colors.actionPrimaryText} size="small" />
+            ) : (
+              <Text style={styles.resetLabel}>Reset progress</Text>
+            )}
+          </Pressable>
         </View>
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
@@ -111,13 +95,6 @@ function createStyles(colors: AppColors) {
     },
     disabled: { opacity: 0.58 },
     error: { color: colors.error, fontSize: fontSize.caption, textAlign: "center" },
-    handle: {
-      alignSelf: "center",
-      backgroundColor: colors.borderStrong,
-      borderRadius: sizes.radius.pill,
-      height: 4,
-      width: 40,
-    },
     iconShell: {
       alignItems: "center",
       alignSelf: "center",
@@ -136,7 +113,6 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.body,
       textAlign: "center",
     },
-    modalRoot: { flex: 1, justifyContent: "flex-end" },
     resetButton: {
       alignItems: "center",
       backgroundColor: colors.error,
@@ -149,14 +125,6 @@ function createStyles(colors: AppColors) {
       color: colors.actionPrimaryText,
       fontSize: fontSize.body,
       fontWeight: fontWeight.heavy,
-    },
-    scrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
     },
     sheet: {
       alignSelf: "center",

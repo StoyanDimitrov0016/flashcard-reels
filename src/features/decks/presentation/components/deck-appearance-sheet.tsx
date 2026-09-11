@@ -2,7 +2,6 @@ import { SymbolView } from "expo-symbols";
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import {
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type DeckAppearanceSheetProps = Readonly<{
   appearance: DeckAppearance | null;
@@ -98,61 +98,45 @@ export function DeckAppearanceSheet({
   );
 
   return (
-    <Modal
-      animationType="slide"
-      navigationBarTranslucent
-      onRequestClose={onDismiss}
-      statusBarTranslucent
-      transparent
-      visible={isPresented}
-    >
-      <View style={styles.modalRoot}>
-        <Pressable
-          accessibilityLabel="Close deck appearance"
-          accessibilityRole="button"
-          onPress={onDismiss}
-          style={styles.scrim}
-        />
-        <View accessibilityViewIsModal style={styles.sheet}>
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <View style={styles.headingCopy}>
-              <Text accessibilityRole="header" style={styles.title}>
-                Deck appearance
-              </Text>
-              <Text style={styles.subtitle}>Choose a curated, high-contrast theme.</Text>
-            </View>
-            <Pressable
-              accessibilityLabel="Close deck appearance"
-              accessibilityRole="button"
-              onPress={onDismiss}
-              style={styles.closeButton}
-            >
-              <SymbolView
-                name={{ android: "close", ios: "xmark", web: "close" }}
-                size={sizes.icon.medium}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          </View>
-          <FlatList
-            columnWrapperStyle={styles.row}
-            contentContainerStyle={styles.list}
-            data={deckAppearancePresets}
-            extraData={{ appearance, pendingPreset }}
-            key={columnCount}
-            keyExtractor={({ id }) => id}
-            numColumns={columnCount}
-            renderItem={renderPreset}
-          />
-          {error ? (
-            <Text accessibilityLiveRegion="polite" style={styles.error}>
-              {error}
+    <AppBottomSheet onClose={onDismiss} snapPoints={["82%"]} visible={isPresented}>
+      <View accessibilityViewIsModal style={styles.sheet}>
+        <View style={styles.header}>
+          <View style={styles.headingCopy}>
+            <Text accessibilityRole="header" style={styles.title}>
+              Deck appearance
             </Text>
-          ) : null}
+            <Text style={styles.subtitle}>Choose a curated, high-contrast theme.</Text>
+          </View>
+          <Pressable
+            accessibilityLabel="Close deck appearance"
+            accessibilityRole="button"
+            onPress={onDismiss}
+            style={styles.closeButton}
+          >
+            <SymbolView
+              name={{ android: "close", ios: "xmark", web: "close" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
         </View>
+        <FlatList
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.list}
+          data={deckAppearancePresets}
+          extraData={{ appearance, pendingPreset }}
+          key={columnCount}
+          keyExtractor={({ id }) => id}
+          numColumns={columnCount}
+          renderItem={renderPreset}
+        />
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
@@ -164,14 +148,6 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.footnote,
       paddingHorizontal: sizes.spacing.content,
     },
-    handle: {
-      alignSelf: "center",
-      backgroundColor: colors.textTertiary,
-      borderRadius: sizes.radius.pill,
-      height: 4,
-      marginTop: sizes.spacing.medium,
-      width: 40,
-    },
     header: {
       alignItems: "flex-start",
       flexDirection: "row",
@@ -180,7 +156,6 @@ function createStyles(colors: AppColors) {
     },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
     list: { gap: sizes.spacing.medium, padding: sizes.spacing.content, paddingTop: 0 },
-    modalRoot: { flex: 1, justifyContent: "flex-end" },
     preset: {
       alignItems: "center",
       borderColor: colors.borderSubtle,
@@ -199,14 +174,6 @@ function createStyles(colors: AppColors) {
     },
     pressed: { opacity: 0.72 },
     row: { gap: sizes.spacing.medium },
-    scrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
