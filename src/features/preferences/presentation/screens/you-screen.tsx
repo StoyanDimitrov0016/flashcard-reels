@@ -43,13 +43,13 @@ export default function YouScreen() {
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text accessibilityRole="header" style={styles.title}>
-          You
+          Controls
         </Text>
         <View style={styles.sections}>
           <PreferenceSection title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
           </PreferenceSection>
-          <PreferenceSection title="Study Controls">
+          <PreferenceSection title="Study island">
             <PreferenceRow
               detail={
                 preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
@@ -59,7 +59,7 @@ export default function YouScreen() {
               }
               icon={{ android: "tune", ios: "slider.horizontal.3", web: "tune" }}
               onPress={() => setStudyControlsPresented(true)}
-              title="Study controls"
+              title="Study island"
             />
           </PreferenceSection>
           <PreferenceSection title="Interaction">

@@ -47,16 +47,18 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
     <View style={styles.deck}>
       <View style={[styles.accent, { backgroundColor: appearance.accentColor }]} />
       <Pressable
-        accessibilityHint="Opens the Focus tab in Shuffle mode"
-        accessibilityLabel={`Focus on ${deck.title}`}
+        accessibilityHint="Tap to view deck cards. Hold to study this deck in Focus."
+        accessibilityLabel={deck.title}
         accessibilityRole="button"
-        onPress={onFocus}
+        delayLongPress={500}
+        onLongPress={onFocus}
+        onPress={onViewCards}
         style={styles.deckBody}
       >
         <DeckCover accentColor={appearance.accentColor} asset={deck.coverAsset} />
         <View style={styles.deckCopy}>
           <View style={styles.deckHeading}>
-            <Text numberOfLines={1} style={styles.deckTitle}>
+            <Text numberOfLines={2} style={styles.deckTitle}>
               {deck.title}
             </Text>
             <Text style={styles.cardCount}>{cardCount} cards</Text>
@@ -78,19 +80,6 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
             name={{ android: "palette", ios: "paintpalette.fill", web: "palette" }}
             size={sizes.icon.small}
             tintColor={colors.textSecondary}
-          />
-        </Pressable>
-        <Pressable
-          accessibilityLabel={`View cards in ${deck.title}`}
-          accessibilityRole="button"
-          hitSlop={4}
-          onPress={onViewCards}
-          style={styles.iconButton}
-        >
-          <SymbolView
-            name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
-            size={sizes.icon.small}
-            tintColor={colors.textMuted}
           />
         </Pressable>
       </View>

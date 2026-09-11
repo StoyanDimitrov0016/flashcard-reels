@@ -1,4 +1,4 @@
-import { SymbolView } from "expo-symbols";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import type {
@@ -59,7 +59,7 @@ export function StudyControlsSheet({
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <View style={styles.modalRoot}>
         <Pressable
-          accessibilityLabel="Close study controls"
+          accessibilityLabel="Close study island"
           accessibilityRole="button"
           onPress={onClose}
           style={styles.scrim}
@@ -69,11 +69,11 @@ export function StudyControlsSheet({
           <View style={styles.header}>
             <View style={styles.headingCopy}>
               <Text accessibilityRole="header" style={styles.title}>
-                Study controls
+                Study island
               </Text>
             </View>
             <Pressable
-              accessibilityLabel="Close study controls"
+              accessibilityLabel="Close study island"
               accessibilityRole="button"
               onPress={onClose}
               style={styles.closeButton}
@@ -140,6 +140,7 @@ export function StudyControlsSheet({
               label="Recollection island"
               options={positions.map((value) => ({
                 label: value.charAt(0).toUpperCase() + value.slice(1),
+                symbol: getPositionSymbol(value),
                 value,
               }))}
               selected={preferences.recollectionIslandPosition}
@@ -150,10 +151,12 @@ export function StudyControlsSheet({
               options={[
                 {
                   label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"),
+                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "forward"),
                   value: "forward" as const,
                 },
                 {
                   label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "reverse"),
+                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "reverse"),
                   value: "reverse" as const,
                 },
               ]}
@@ -165,10 +168,12 @@ export function StudyControlsSheet({
               options={[
                 {
                   label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
+                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "primary"),
                   value: "primary" as const,
                 },
                 {
                   label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
+                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "opposite"),
                   value: "opposite" as const,
                 },
               ]}
@@ -185,10 +190,59 @@ export function StudyControlsSheet({
   );
 }
 
+function getPositionSymbol(position: RecollectionIslandPosition): SymbolViewProps["name"] {
+  if (position === "left") {
+    return {
+      android: "align_horizontal_left",
+      ios: "align.horizontal.left.fill",
+      web: "align_horizontal_left",
+    };
+  }
+  if (position === "right") {
+    return {
+      android: "align_horizontal_right",
+      ios: "align.horizontal.right.fill",
+      web: "align_horizontal_right",
+    };
+  }
+  return {
+    android: "vertical_align_bottom",
+    ios: "align.vertical.bottom.fill",
+    web: "vertical_align_bottom",
+  };
+}
+
+function getDirectionSymbol(
+  position: RecollectionIslandPosition,
+  direction: RatingDirection
+): SymbolViewProps["name"] {
+  if (position === "bottom") {
+    return direction === "forward"
+      ? { android: "arrow_forward", ios: "arrow.right", web: "arrow_forward" }
+      : { android: "arrow_back", ios: "arrow.left", web: "arrow_back" };
+  }
+  return direction === "forward"
+    ? { android: "arrow_downward", ios: "arrow.down", web: "arrow_downward" }
+    : { android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" };
+}
+
+function getAudioSymbol(
+  position: RecollectionIslandPosition,
+  side: AudioSide
+): SymbolViewProps["name"] {
+  const concrete = deriveAudioPosition(position, side);
+  const names = {
+    above: { android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" },
+    below: { android: "arrow_downward", ios: "arrow.down", web: "arrow_downward" },
+    left: { android: "arrow_back", ios: "arrow.left", web: "arrow_back" },
+    right: { android: "arrow_forward", ios: "arrow.right", web: "arrow_forward" },
+  } as const;
+  return names[concrete];
+}
 type OptionGroupProps<T extends string> = Readonly<{
   label: string;
   onChange: (value: T) => void;
-  options: readonly { label: string; value: T }[];
+  options: readonly { label: string; symbol: SymbolViewProps["name"]; value: T }[];
   selected: T;
 }>;
 function OptionGroup<T extends string>({
@@ -215,6 +269,11 @@ function OptionGroup<T extends string>({
               onPress={() => onChange(option.value)}
               style={[styles.option, isSelected && styles.optionSelected]}
             >
+              <SymbolView
+                name={option.symbol}
+                size={sizes.icon.small}
+                tintColor={isSelected ? colors.textPrimary : colors.textSecondary}
+              />
               <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                 {option.label}
               </Text>
