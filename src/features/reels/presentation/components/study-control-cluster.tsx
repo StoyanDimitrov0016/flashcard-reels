@@ -39,7 +39,7 @@ export function StudyControlCluster({
 }: StudyControlClusterProps) {
   const orientation = deriveIslandOrientation(position);
   const audioPosition = deriveAudioPosition(position, audioSide);
-  const styles = createStyles(position, orientation, audioPosition);
+  const styles = createStyles(orientation);
   const audio =
     audioEnabled && audioSource ? (
       <AnswerAudioPlayer isActive={isActive} source={audioSource} />
@@ -62,34 +62,13 @@ export function StudyControlCluster({
   );
 }
 
-function createStyles(
-  position: RecollectionIslandPosition,
-  orientation: "horizontal" | "vertical",
-  audioPosition: "left" | "right" | "above" | "below"
-) {
-  const left = position === "bottom" ? sizes.spacing.medium : undefined;
-  let right: number | undefined;
-  if (position === "right") {
-    right = sizes.spacing.spacious;
-  } else if (position === "bottom") {
-    right = sizes.spacing.medium;
-  }
-
+function createStyles(orientation: "horizontal" | "vertical") {
   return StyleSheet.create({
     cluster: {
       alignItems: "center",
-      bottom: position === "bottom" ? sizes.spacing.spacious + 44 : undefined,
       flexDirection: orientation === "horizontal" ? "row" : "column",
       gap: orientation === "horizontal" ? sizes.spacing.small : sizes.spacing.xLarge,
-      left,
-      position: "absolute",
-      right,
-
-      top: position === "bottom" ? undefined : "32%",
-      ...(position === "left" ? { left: sizes.spacing.spacious } : {}),
-      ...(audioPosition === "left" || audioPosition === "right"
-        ? { justifyContent: "center" as const }
-        : {}),
+      flexShrink: 0,
     },
   });
 }
