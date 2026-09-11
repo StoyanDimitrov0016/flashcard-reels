@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type FlashcardsState = Readonly<{
@@ -14,6 +15,7 @@ const initialState: FlashcardsState = { cards: [], error: null, loading: true };
 
 export function useFlashcards(deckId: DeckId | null): FlashcardsState {
   const { flashcardService } = useAppServices();
+  const { revision } = useDeckContentRevision();
   const [state, setState] = useState<FlashcardsState>(initialState);
 
   useEffect(
@@ -47,7 +49,7 @@ export function useFlashcards(deckId: DeckId | null): FlashcardsState {
         active = false;
       };
     },
-    [deckId, flashcardService]
+    [deckId, flashcardService, revision]
   );
 
   if (state.error) {

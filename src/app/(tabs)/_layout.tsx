@@ -5,6 +5,7 @@ import type { ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
+import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { ErrorState } from "@/shared/presentation/components/error-state";
@@ -35,8 +36,9 @@ export default function TabLayout() {
 
   return (
     <DeckAppearanceProvider>
-      <LearningProgressResetProvider>
-        <FeedScopeProvider>
+      <DeckContentProvider>
+        <LearningProgressResetProvider>
+          <FeedScopeProvider>
         <TopTabs
           tabBarPosition="bottom"
           screenOptions={{
@@ -131,8 +133,9 @@ export default function TabLayout() {
             }}
           />
         </TopTabs>
-        </FeedScopeProvider>
-      </LearningProgressResetProvider>
+          </FeedScopeProvider>
+        </LearningProgressResetProvider>
+      </DeckContentProvider>
     </DeckAppearanceProvider>
   );
 }

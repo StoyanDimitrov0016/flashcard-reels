@@ -9,6 +9,7 @@ import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
+import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 
 const resultMessages: Record<DeckInstallResult["status"], string> = {
   installed: "Deck installed.",
@@ -26,6 +27,14 @@ describe("deck import presentation feedback", () => {
 
     expect(feedback.tone).toBe("success");
     expect(feedback.message).toBe(resultMessages[result.status]);
+  });
+
+  it.each<DeckInstallResult>([
+    { deckId: "deck", status: "installed", version: 1 },
+    { deckId: "deck", status: "updated", version: 2 },
+    { deckId: "deck", status: "no-op", version: 2 },
+  ])("invalidates shared content only for a material content change", (result) => {
+    expect(shouldInvalidateDeckContent(result)).toBe(result.status !== "no-op");
   });
 
   it.each([

@@ -14,13 +14,15 @@ export async function completeReelActivation(
   consumeRecurrence: () => Promise<void>,
   recordVisibleCard: () => Promise<void>,
   finalizeAttempts: () => Promise<void>,
-  extendFeed: () => Promise<void>
+  extendFeed: () => Promise<void>,
+  awaitPendingRatings: () => Promise<void> = async () => undefined
 ): Promise<boolean> {
   if (!(await persistPosition())) {
     return false;
   }
   await consumeRecurrence();
   await recordVisibleCard();
+  await awaitPendingRatings();
   await finalizeAttempts();
   await extendFeed();
   return true;

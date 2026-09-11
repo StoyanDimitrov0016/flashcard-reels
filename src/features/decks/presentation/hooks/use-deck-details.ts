@@ -4,6 +4,7 @@ import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type DeckDetailsState = Readonly<{
@@ -17,6 +18,7 @@ type DeckDetailsState = Readonly<{
 
 export function useDeckDetails(deckId: DeckId): DeckDetailsState {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
+  const { revision } = useDeckContentRevision();
   const [state, setState] = useState<DeckDetailsState>({
     appearance: null,
     cards: [],
@@ -63,7 +65,7 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
         active = false;
       };
     },
-    [deckId, deckService, flashcardService, learnerProfileService]
+    [deckId, deckService, flashcardService, learnerProfileService, revision]
   );
 
   if (state.error) {

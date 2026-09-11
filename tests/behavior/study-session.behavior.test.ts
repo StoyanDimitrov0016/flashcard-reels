@@ -91,6 +91,39 @@ describe("study session behavior", () => {
     expect(events).toEqual(["position", "recurrence", "visible", "finalization", "extension"]);
   });
 
+  it("waits for pending rating persistence before finalization", async () => {
+    const events: string[] = [];
+    let releaseRating: (() => void) | undefined;
+    let barrierStarted: (() => void) | undefined;
+    const ratingPersisted = new Promise<void>((resolve) => {
+      releaseRating = resolve;
+    });
+    const barrierWasReached = new Promise<void>((resolve) => {
+      barrierStarted = resolve;
+    });
+    const activation = completeReelActivation(
+      async () => true,
+      async () => undefined,
+      async () => undefined,
+      async () => {
+        events.push("finalization");
+      },
+      async () => undefined,
+      async () => {
+        events.push("barrier-start");
+        barrierStarted?.();
+        await ratingPersisted;
+        events.push("barrier-end");
+      }
+    );
+
+    await barrierWasReached;
+    expect(events).toEqual(["barrier-start"]);
+    releaseRating?.();
+    await activation;
+    expect(events).toEqual(["barrier-start", "barrier-end", "finalization"]);
+  });
+
   it("does not run activation effects after position persistence fails", async () => {
     const events: string[] = [];
 
