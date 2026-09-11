@@ -1,5 +1,15 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Animated,
+  Modal,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import type {
   AppPreferences,
@@ -17,6 +27,7 @@ import {
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
+import { shouldDismissStudyControlsSheet } from "@/features/preferences/presentation/study-controls-sheet-gesture";
 
 type StudyControlsSheetProps = Readonly<{
   onAudioSideChange: (value: AudioSide) => void;
@@ -38,6 +49,56 @@ export function StudyControlsSheet({
 }: StudyControlsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const { height } = useWindowDimensions();
+  const [sheetOffset] = useState(() => new Animated.Value(0));
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          gestureState.dy > 4 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+        onPanResponderMove: (_, gestureState) => {
+          sheetOffset.setValue(Math.max(0, gestureState.dy));
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (shouldDismissStudyControlsSheet(gestureState.dy, gestureState.vy)) {
+            Animated.timing(sheetOffset, {
+              duration: 180,
+              toValue: height,
+              useNativeDriver: true,
+            }).start(({ finished }) => {
+              if (finished) {
+                onClose();
+              }
+            });
+            return;
+          }
+          Animated.spring(sheetOffset, {
+            friction: 8,
+            tension: 70,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+        onPanResponderTerminate: () => {
+          Animated.spring(sheetOffset, {
+            friction: 8,
+            tension: 70,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [height, onClose, sheetOffset]
+  );
+
+  useEffect(
+    function resetSheetOffsetWhenPresented() {
+      if (visible) {
+        sheetOffset.setValue(0);
+      }
+    },
+    [sheetOffset, visible]
+  );
   const layout = resolveStudyControlLayout(preferences);
   const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
@@ -60,8 +121,19 @@ export function StudyControlsSheet({
           onPress={onClose}
           style={styles.scrim}
         />
-        <View accessibilityViewIsModal style={styles.sheet}>
-          <View style={styles.handle} />
+        <Animated.View
+          accessibilityViewIsModal
+          style={[styles.sheet, { transform: [{ translateY: sheetOffset }] }]}
+        >
+          <View
+            {...panResponder.panHandlers}
+            accessibilityHint="Swipe down to close"
+            accessibilityLabel="Drag handle"
+            accessible
+            style={styles.handleArea}
+          >
+            <View style={styles.handle} />
+          </View>
           <View style={styles.header}>
             <View style={styles.headingCopy}>
               <Text accessibilityRole="header" style={styles.title}>
@@ -81,7 +153,7 @@ export function StudyControlsSheet({
               />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.content} style={styles.scroll}>
+          <View style={styles.content}>
             <View style={styles.preview}>
               <View
                 style={[
@@ -110,12 +182,14 @@ export function StudyControlsSheet({
                     <View
                       style={[
                         styles.previewIsland,
+                        orientation === "vertical" && styles.previewIslandSide,
                         orientation === "horizontal" && styles.previewIslandHorizontal,
                       ]}
                     >
                       <View
                         style={[
                           styles.previewRatingControls,
+                          orientation === "vertical" && styles.previewRatingControlsSide,
                           orientation === "horizontal" && styles.previewRatingControlsHorizontal,
                         ]}
                       >
@@ -129,12 +203,14 @@ export function StudyControlsSheet({
                               key={level}
                               style={[
                                 styles.previewAction,
+                                orientation === "vertical" && styles.previewActionSide,
                                 orientation === "horizontal" && styles.previewActionHorizontal,
                               ]}
                             >
                               <View
                                 style={[
                                   styles.previewMarker,
+                                  orientation === "vertical" && styles.previewMarkerSide,
                                   { backgroundColor: colors[option.color] },
                                 ]}
                               >
@@ -211,8 +287,8 @@ export function StudyControlsSheet({
             <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
               <Text style={styles.doneLabel}>Done</Text>
             </Pressable>
-          </ScrollView>
-        </View>
+          </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -315,10 +391,10 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     content: {
-      flexGrow: 1,
-      gap: sizes.spacing.section,
+      flex: 1,
+      gap: sizes.spacing.screen,
       padding: sizes.spacing.content,
-      paddingBottom: sizes.spacing.spacious,
+      paddingBottom: sizes.spacing.content,
     },
     controls: { gap: sizes.spacing.section },
     doneButton: {
@@ -333,12 +409,15 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.body,
       fontWeight: fontWeight.heavy,
     },
+    handleArea: {
+      alignItems: "center",
+      height: 40,
+      justifyContent: "center",
+    },
     handle: {
-      alignSelf: "center",
       backgroundColor: colors.borderStrong,
       borderRadius: sizes.radius.pill,
       height: 4,
-      marginTop: sizes.spacing.medium,
       width: 40,
     },
     header: {
@@ -378,13 +457,14 @@ function createStyles(colors: AppColors) {
       borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      height: 180,
+      flex: 1,
       justifyContent: "center",
-      minHeight: 0,
+      minHeight: 160,
       overflow: "hidden",
       position: "relative",
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
+    previewActionSide: { gap: sizes.spacing.xSmall / 2 },
     previewActionHorizontal: { minWidth: 42 },
     previewCluster: {
       alignItems: "center",
@@ -423,6 +503,7 @@ function createStyles(colors: AppColors) {
     previewStageLeft: { paddingLeft: sizes.spacing.medium },
     previewStageRight: { paddingRight: sizes.spacing.medium },
     previewContentRegion: {
+      alignSelf: "stretch",
       backgroundColor: colors.surfaceSubtle,
       borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.medium,
@@ -442,6 +523,11 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.medium,
       paddingVertical: sizes.spacing.content,
     },
+    previewIslandSide: {
+      gap: sizes.spacing.small,
+      paddingHorizontal: sizes.spacing.small,
+      paddingVertical: sizes.spacing.medium,
+    },
     previewIslandHorizontal: {
       flexDirection: "row",
       paddingVertical: sizes.spacing.medium,
@@ -451,6 +537,7 @@ function createStyles(colors: AppColors) {
       flexDirection: "column",
       gap: sizes.spacing.medium,
     },
+    previewRatingControlsSide: { gap: sizes.spacing.small },
     previewRatingControlsHorizontal: {
       flexDirection: "row",
       gap: 0,
@@ -465,6 +552,7 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: 28,
     },
+    previewMarkerSide: { height: 24, width: 24 },
     scrim: {
       backgroundColor: colors.overlay,
       bottom: 0,
@@ -473,7 +561,6 @@ function createStyles(colors: AppColors) {
       right: 0,
       top: 0,
     },
-    scroll: { flex: 1 },
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surfaceRaised,
@@ -481,6 +568,7 @@ function createStyles(colors: AppColors) {
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
       borderWidth: sizes.border,
+      flex: 1,
       maxHeight: "96%",
       minHeight: "88%",
       width: "100%",
