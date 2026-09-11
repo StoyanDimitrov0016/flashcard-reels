@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 
 type UseReelFeedParameters = Readonly<{
@@ -39,19 +39,22 @@ export function useReelFeed({
     [itemCount, loadedFromReelPosition]
   );
 
-  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const nextIndex = Math.min(
-      itemCount - 1,
-      Math.max(0, Math.round(event.nativeEvent.contentOffset.y / itemHeight))
-    );
+  const handleMomentumScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const nextIndex = Math.min(
+        itemCount - 1,
+        Math.max(0, Math.round(event.nativeEvent.contentOffset.y / itemHeight))
+      );
 
-    if (nextIndex !== activeIndexReference.current) {
-      activeIndexReference.current = nextIndex;
-      activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
-      setActiveIndex(nextIndex);
-      setActiveReelPosition(activeReelPositionReference.current);
-    }
-  };
+      if (nextIndex !== activeIndexReference.current) {
+        activeIndexReference.current = nextIndex;
+        activeReelPositionReference.current = loadedFromReelPosition + nextIndex;
+        setActiveIndex(nextIndex);
+        setActiveReelPosition(activeReelPositionReference.current);
+      }
+    },
+    [itemCount, itemHeight, loadedFromReelPosition]
+  );
 
   return {
     activeIndex,

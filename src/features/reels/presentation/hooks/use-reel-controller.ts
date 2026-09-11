@@ -72,7 +72,9 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
           return attemptId;
         });
       startingAttemptPromises.current.set(occurrence.reelPosition, start);
-      void start.finally(() => startingAttemptPromises.current.delete(occurrence.reelPosition));
+      void start
+        .finally(() => startingAttemptPromises.current.delete(occurrence.reelPosition))
+        .catch(() => undefined);
       return start;
     },
     [getAttemptId, initialFeed.studySessionId, setAttemptId, studyService]
@@ -162,7 +164,8 @@ export function useReelController({ initialFeed, sourceCards }: UseReelControlle
             if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
               void reelFeedService
                 .refreshFeed(sourceCardsReference.current, initialFeed.studySessionId)
-                .then(replaceFeed);
+                .then(replaceFeed)
+                .catch(() => undefined);
             }
           }
         });

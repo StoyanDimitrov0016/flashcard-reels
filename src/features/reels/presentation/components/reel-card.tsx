@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRecyclingState } from "@shopify/flash-list";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 
@@ -41,6 +42,8 @@ type ReelCardProps = Readonly<{
   onRate: (level: RecallLevel) => void;
   recallLevel: RecallLevel | null;
   revealed: boolean;
+  occurrenceKey: string;
+  reelPosition: number;
   showMainFeedLink: boolean;
   width: number;
 }>;
@@ -112,6 +115,8 @@ export function ReelCard({
   onRate,
   recallLevel,
   revealed,
+  occurrenceKey,
+  reelPosition,
   showMainFeedLink,
   width,
 }: ReelCardProps) {
@@ -128,10 +133,27 @@ export function ReelCard({
   const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
   const holdState = useRef<HoldToFocusState>("idle");
-  const flipCount = useRef(revealed ? 1 : 0);
   const holdCompleted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
+  const [flipCount, setFlipCount] = useRecyclingState(
+    revealed ? 1 : 0,
+    [occurrenceKey, reelPosition],
+    () => {
+      rotation.stopAnimation();
+      rotation.setValue(revealed ? 1 : 0);
+      if (holdState.current === "feedback") {
+        hideFlashcardToast();
+      }
+      holdState.current = "idle";
+      holdCompleted.current = false;
+      lastTapAt.current = 0;
+      if (holdFeedbackTimer.current !== null) {
+        clearTimeout(holdFeedbackTimer.current);
+        holdFeedbackTimer.current = null;
+      }
+    }
+  );
 
   const clearHoldFeedbackTimer = () => {
     if (holdFeedbackTimer.current !== null) {
@@ -164,12 +186,13 @@ export function ReelCard({
     const now = Date.now();
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
-      flipCount.current += 1;
+      const nextFlipCount = flipCount + 1;
+      setFlipCount(nextFlipCount);
       onFlip();
       Animated.timing(rotation, {
         duration: 520,
         easing: Easing.inOut(Easing.cubic),
-        toValue: flipCount.current,
+        toValue: nextFlipCount,
         useNativeDriver: true,
       }).start();
       return;

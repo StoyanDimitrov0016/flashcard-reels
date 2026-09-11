@@ -65,9 +65,11 @@ export function usePreparedReelFeed(
                 resetRevision,
                 scope,
               };
-              void nextPromise.then(() => {
-                onSessionStarted?.();
-              });
+              void nextPromise
+                .then(() => {
+                  onSessionStarted?.();
+                })
+                .catch(() => undefined);
               return nextPromise;
             })();
 
