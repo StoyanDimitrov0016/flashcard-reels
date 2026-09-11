@@ -35,7 +35,7 @@ function CardRow({ card, onPress }: CardRowProps) {
 
   return (
     <Pressable
-      accessibilityHint="Opens question, answer, audio, and progress"
+      accessibilityHint="Opens question, answer, and audio"
       accessibilityLabel={`Card ${card.order + 1}: ${card.question}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -160,11 +160,9 @@ export default function DeckDetailsScreen() {
         visible={showDeckInfo}
       />
       <FlashcardDetailsSheet
-        accentColor={accentColor}
         audioSource={audioSource}
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
-        profile={selectedCard ? (profiles.get(selectedCard.id) ?? null) : null}
       />
     </SafeAreaView>
   );
