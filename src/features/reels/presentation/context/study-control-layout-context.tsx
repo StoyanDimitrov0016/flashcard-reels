@@ -13,7 +13,13 @@ type StudyControlLayoutProviderProps = Readonly<{ children: ReactNode }>;
 export function StudyControlLayoutProvider({ children }: StudyControlLayoutProviderProps) {
   const { preferences } = usePreferences();
   const layout = useMemo(
-    () => resolveStudyControlLayout(preferences),
+    () =>
+      resolveStudyControlLayout({
+        audioEnabled: preferences.audioEnabled,
+        audioSide: preferences.audioSide,
+        ratingDirection: preferences.ratingDirection,
+        recollectionIslandPosition: preferences.recollectionIslandPosition,
+      }),
     [
       preferences.audioEnabled,
       preferences.audioSide,

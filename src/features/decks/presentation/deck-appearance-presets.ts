@@ -201,23 +201,24 @@ export function isCurrentPreset(
 }
 
 export function contrastRatio(first: string, second: string): number {
-  const luminance = (color: string) => {
-    const channels = color
-      .slice(1)
-      .match(/.{2}/g)
-      ?.map((channel) => Number.parseInt(channel, 16) / 255);
-    if (!channels || channels.length !== 3) {
-      return 0;
-    }
-    const [red = 0, green = 0, blue = 0] = channels.map((channel) =>
-      channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-    );
-    return red * 0.2126 + green * 0.7152 + blue * 0.0722;
-  };
   const firstLuminance = luminance(first);
   const secondLuminance = luminance(second);
   return (
     (Math.max(firstLuminance, secondLuminance) + 0.05) /
     (Math.min(firstLuminance, secondLuminance) + 0.05)
   );
+}
+
+function luminance(color: string): number {
+  const channels = color
+    .slice(1)
+    .match(/.{2}/g)
+    ?.map((channel) => Number.parseInt(channel, 16) / 255);
+  if (!channels || channels.length !== 3) {
+    return 0;
+  }
+  const [red = 0, green = 0, blue = 0] = channels.map((channel) =>
+    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  );
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
 }

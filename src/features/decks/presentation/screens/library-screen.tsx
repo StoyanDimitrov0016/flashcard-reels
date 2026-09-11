@@ -13,8 +13,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import {
+  resolveDeckAppearance,
+  type DeckAppearancePreset,
+} from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";

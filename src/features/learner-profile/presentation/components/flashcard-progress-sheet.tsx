@@ -68,7 +68,9 @@ export function FlashcardProgressSheet({
                 {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
               </View>
               <View style={styles.progressHeading}>
-                <Text style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}>
+                <Text
+                  style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}
+                >
                   {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
                 </Text>
                 <Text style={styles.caption}>
@@ -86,11 +88,7 @@ export function FlashcardProgressSheet({
                 />
               </View>
               <View style={styles.ratings}>
-                <ProgressFact
-                  color={colors.error}
-                  label="Again"
-                  value={profile?.againCount ?? 0}
-                />
+                <ProgressFact color={colors.error} label="Again" value={profile?.againCount ?? 0} />
                 <ProgressFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
                 <ProgressFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
                 <ProgressFact

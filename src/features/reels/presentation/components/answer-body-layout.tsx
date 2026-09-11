@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -7,8 +7,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type AnswerBodyLayoutProps = Readonly<{
-  answer: ReactNode;
-  controls: ReactNode;
+  children: ReactNode;
 }>;
 
 type AnswerCopyProps = Readonly<{
@@ -23,35 +22,22 @@ type AnswerCopyProps = Readonly<{
   longPressDuration: number;
 }>;
 
-export function AnswerBodyLayout({ answer, controls }: AnswerBodyLayoutProps) {
+type AnswerControlRegionProps = Readonly<{ children: ReactNode }>;
+
+export function AnswerBodyLayout({ children }: AnswerBodyLayoutProps) {
   const { position } = useStudyControlLayout();
   const styles = createStyles(useAppTheme().colors);
-  const controlRegion = <AnswerControlRegion>{controls}</AnswerControlRegion>;
+  let bodyStyle: ViewStyle = styles.bodyRight;
+  if (position === "bottom") {
+    bodyStyle = styles.bodyBottom;
+  } else if (position === "left") {
+    bodyStyle = styles.bodyLeft;
+  }
 
-  return (
-    <View
-      style={[
-        styles.body,
-        position === "bottom" ? styles.bodyBottom : styles.bodyLeft,
-        position === "right" ? styles.bodyRight : styles.bodyLeft,
-      ]}
-    >
-      {position === "left" ? (
-        <>
-          {controlRegion}
-          {answer}
-        </>
-      ) : (
-        <>
-          {answer}
-          {controlRegion}
-        </>
-      )}
-    </View>
-  );
+  return <View style={[styles.body, bodyStyle]}>{children}</View>;
 }
 
-function AnswerControlRegion({ children }: Readonly<{ children: ReactNode }>) {
+export function AnswerControlRegion({ children }: AnswerControlRegionProps) {
   const { position } = useStudyControlLayout();
   const styles = createStyles(useAppTheme().colors);
 
@@ -122,7 +108,7 @@ function createStyles(
     },
     body: { flex: 1 },
     bodyBottom: { flexDirection: "column" },
-    bodyLeft: { flexDirection: "row" },
+    bodyLeft: { flexDirection: "row-reverse" },
     bodyRight: { flexDirection: "row" },
     copy: { gap: sizes.spacing.spacious },
     copyRegion: {

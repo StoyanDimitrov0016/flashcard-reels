@@ -1,6 +1,6 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 
-export const deckAppearancePresetIds = [
+const deckAppearancePresetIds = [
   "graphite",
   "gold",
   "orange",

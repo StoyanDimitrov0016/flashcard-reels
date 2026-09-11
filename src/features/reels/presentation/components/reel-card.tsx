@@ -9,6 +9,7 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import {
   AnswerBodyLayout,
+  AnswerControlRegion,
   AnswerCopy,
 } from "@/features/reels/presentation/components/answer-body-layout";
 import { GestureFooter } from "@/features/reels/presentation/components/gesture-footer";
@@ -232,23 +233,6 @@ export function ReelCard({
     onPressIn: startFocusHold,
     onPressOut: cancelFocusHold,
   };
-  const answerCopy = (
-    <AnswerCopy
-      answer={card.answer}
-      answerColor={reelAppearance.textPrimary}
-      promptColor={reelAppearance.textSecondary}
-      question={card.question}
-      {...gestureProps}
-    />
-  );
-  const controls = (
-    <StudyControlCluster
-      audioSource={audioSource}
-      isActive={isActive}
-      onRate={onRate}
-      selectedLevel={recallLevel}
-    />
-  );
 
   return (
     <View style={[styles.card, { height, width }]}>
@@ -294,7 +278,23 @@ export function ReelCard({
             showMainFeedLink={showMainFeedLink}
           />
           <StudyControlLayoutProvider>
-            <AnswerBodyLayout answer={answerCopy} controls={controls} />
+            <AnswerBodyLayout>
+              <AnswerCopy
+                answer={card.answer}
+                answerColor={reelAppearance.textPrimary}
+                promptColor={reelAppearance.textSecondary}
+                question={card.question}
+                {...gestureProps}
+              />
+              <AnswerControlRegion>
+                <StudyControlCluster
+                  audioSource={audioSource}
+                  isActive={isActive}
+                  onRate={onRate}
+                  selectedLevel={recallLevel}
+                />
+              </AnswerControlRegion>
+            </AnswerBodyLayout>
           </StudyControlLayoutProvider>
           <GestureFooter showHoldHint={!showMainFeedLink} />
         </CardPage>

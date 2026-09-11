@@ -73,7 +73,7 @@ Updating a deck completes its active focused session and the active mixed sessio
 
 The self-contained authoring document and two source audio files live under `data/demo-deck`; they are excluded from EAS build uploads. `assets/decks` contains only one small six-card/two-audio demo package. External import is the normal distribution path for larger decks. Installed runtime state lives in SQLite plus application-owned `deck-audio/<deck-id>/<version>` storage.
 
-The keyed registry in `src/infrastructure/bundled-deck-packages.ts` holds the demo ID, version, package asset, appearance, and cover asset. Database startup reads it only when no version is installed or the bundled version is newer. Equal versions and newer local versions skip the archive entirely. Fresh bootstrap applies its local appearance and cover; updates do not overwrite user-customized appearance.
+The keyed registry in `src/infrastructure/bundled-deck-packages.ts` holds the demo ID, version, package asset, curated appearance preset ID, and cover asset. Database startup reads it only when no version is installed or the bundled version is newer. Equal versions and newer local versions skip the archive entirely. Fresh bootstrap applies its local preset and cover; updates do not overwrite user-customized appearance.
 
 Regenerate and validate the demo package with:
 

@@ -21,7 +21,7 @@ The **Library** starts with one small offline demo deck. Import `.fcrdeck` files
 - search by title or description;
 - start a focused study session;
 - inspect every question and answer in a deck;
-- choose a color palette for each deck.
+- choose one curated appearance preset for each deck; the preset keeps paired light and dark variants.
 - import a local deck package.
 
 ## Progress
@@ -41,3 +41,5 @@ The fifth bottom tab, **You**, groups global preferences into Study Controls, Ap
 Appearance offers **Light**, **Dark**, and **Device**. Interaction controls Audio and Haptics. Study Controls configures the recollection-island position, rating direction, and contextual audio side. Learning Data owns the global learning-progress reset while installed decks remain available. About shows the app name, Expo-configured version, and an Open repository link.
 
 The Hold-to-Focus action in Discover uses a themed top toast and opens Focus only after the long-press threshold; Focus cards do not offer that Discover-only action.
+
+Deck appearance is stored by preset ID, so changing the application appearance changes the rendered deck variant without changing the deck's selected identity. Reel cards use structural header, body, and footer regions; the Study Island reserves layout space beside or below answer content.
