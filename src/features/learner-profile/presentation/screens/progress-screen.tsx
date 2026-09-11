@@ -9,11 +9,13 @@ import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const { loading, refresh, resetAllProgress, resetDeckProgress, rows } = useLearnerProgress();
   const [resetting, setResetting] = useState(false);
@@ -71,18 +73,17 @@ export default function ProgressScreen() {
           disabled={resetting}
           hitSlop={8}
           onPress={() => requestReset("all learning progress", resetAllProgress)}
-          style={styles.headerAction}
         >
           <SymbolView
             name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
             size={sizes.icon.medium}
-            tintColor={palette.danger}
+            tintColor={colors.danger}
           />
         </Pressable>
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
-        refreshControl={renderRefreshControl(loading && rows.length > 0, refresh)}
+        refreshControl={renderRefreshControl(loading && rows.length > 0, refresh, colors)}
       >
         {loading && rows.length === 0 ? (
           <LoadingState fill={false} />
@@ -100,7 +101,7 @@ export default function ProgressScreen() {
                 const percentage = deckRows.length
                   ? Math.round((reviewed / deckRows.length) * 100)
                   : 0;
-                const accent = appearances.get(deck.id)?.accentColor ?? palette.actionPrimary;
+                const accent = appearances.get(deck.id)?.accentColor ?? colors.actionPrimary;
                 return (
                   <View key={deck.id} style={styles.deckCard}>
                     <View style={[styles.deckAccent, { backgroundColor: accent }]} />
@@ -144,7 +145,6 @@ export default function ProgressScreen() {
                       onPress={() =>
                         requestReset(`${deck.title} progress`, () => resetDeckProgress(deck.id))
                       }
-                      style={styles.moreButton}
                     >
                       <SymbolView
                         name={{
@@ -153,7 +153,7 @@ export default function ProgressScreen() {
                           web: "restart_alt",
                         }}
                         size={sizes.icon.small}
-                        tintColor={palette.danger}
+                        tintColor={colors.danger}
                       />
                     </Pressable>
                   </View>
@@ -179,14 +179,14 @@ export default function ProgressScreen() {
   );
 }
 
-function renderRefreshControl(refreshing: boolean, onRefresh: () => void) {
+function renderRefreshControl(refreshing: boolean, onRefresh: () => void, colors: AppColors) {
   return (
     <RefreshControl
-      colors={[palette.actionPrimary]}
+      colors={[colors.actionPrimary]}
       onRefresh={onRefresh}
-      progressBackgroundColor={palette.surfaceRaised}
+      progressBackgroundColor={colors.surfaceRaised}
       refreshing={refreshing}
-      tintColor={palette.actionPrimary}
+      tintColor={colors.actionPrimary}
     />
   );
 }
@@ -198,7 +198,9 @@ type SummaryFactProps = Readonly<{
 }>;
 
 function SummaryFact({ icon, label, value }: SummaryFactProps) {
-  const colors = { cards: palette.actionPrimary, new: palette.warning, reviewed: palette.success };
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+  const summaryColors = { cards: colors.actionPrimary, new: colors.warning, reviewed: colors.success };
   const symbols = {
     cards: { android: "library_books", ios: "books.vertical.fill", web: "library_books" },
     new: { android: "auto_awesome", ios: "sparkles", web: "auto_awesome" },
@@ -207,20 +209,21 @@ function SummaryFact({ icon, label, value }: SummaryFactProps) {
 
   return (
     <View style={styles.summaryFact}>
-      <SymbolView name={symbols[icon]} size={sizes.icon.medium} tintColor={colors[icon]} />
+      <SymbolView name={symbols[icon]} size={sizes.icon.medium} tintColor={summaryColors[icon]} />
       <Text style={styles.summaryValue}>{value}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
   content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
   deckAccent: { alignSelf: "stretch", width: 4 },
   deckCard: {
     alignItems: "center",
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
@@ -240,53 +243,52 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   deckTitle: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
   },
-  headerAction: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   headingRow: {
     alignItems: "center",
-    borderBottomColor: palette.border,
+    borderBottomColor: colors.border,
     borderBottomWidth: sizes.border,
     flexDirection: "row",
     height: 56,
     justifyContent: "space-between",
     paddingHorizontal: sizes.spacing.content,
   },
-  moreButton: { alignItems: "center", height: 36, justifyContent: "center", width: 32 },
   percentage: {
-    color: palette.textSecondary,
+    color: colors.textSecondary,
     fontSize: fontSize.caption,
     fontWeight: fontWeight.bold,
   },
   pressed: { opacity: 0.72 },
   progressFill: { borderRadius: sizes.radius.pill, height: "100%" },
   progressTrack: {
-    backgroundColor: palette.borderStrong,
+    backgroundColor: colors.borderStrong,
     borderRadius: sizes.radius.pill,
     height: 5,
     overflow: "hidden",
   },
-  reviewed: { color: palette.textMuted, fontSize: fontSize.caption },
-  screen: { backgroundColor: palette.background, flex: 1 },
+  reviewed: { color: colors.textMuted, fontSize: fontSize.caption },
+  screen: { backgroundColor: colors.background, flex: 1 },
   summaryFact: {
     alignItems: "center",
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flex: 1,
     gap: sizes.spacing.xSmall,
     padding: sizes.spacing.xLarge,
   },
-  summaryLabel: { color: palette.textMuted, fontSize: fontSize.caption },
+  summaryLabel: { color: colors.textMuted, fontSize: fontSize.caption },
   summaryRow: { flexDirection: "row", gap: sizes.spacing.medium },
   summaryValue: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     fontSize: fontSize.title2,
     fontWeight: fontWeight.heavy,
   },
-  title: { color: palette.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
-});
+  title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy }
+  });
+}

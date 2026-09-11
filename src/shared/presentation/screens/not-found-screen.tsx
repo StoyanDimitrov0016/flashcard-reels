@@ -1,12 +1,14 @@
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 export default function NotFoundScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
 
   return (
     <View style={styles.screen}>
@@ -19,33 +21,39 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    alignItems: "center",
-    backgroundColor: palette.background,
-    flex: 1,
-    gap: sizes.spacing.section,
-    justifyContent: "center",
-    padding: sizes.spacing.spacious,
-  },
-  eyebrow: {
-    color: palette.warning,
-    fontSize: fontSize.footnote,
-    fontWeight: fontWeight.heavy,
-    letterSpacing: letterSpacing.eyebrow,
-  },
-  title: {
-    color: palette.textPrimary,
-    fontSize: fontSize.display,
-    fontWeight: fontWeight.bold,
-    textAlign: "center",
-  },
-  button: {
-    backgroundColor: palette.textPrimary,
-    borderRadius: sizes.radius.pill,
-    marginTop: sizes.spacing.xLarge,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.xLarge,
-  },
-  buttonLabel: { color: palette.background, fontSize: fontSize.body, fontWeight: fontWeight.heavy },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    screen: {
+      alignItems: "center",
+      backgroundColor: colors.background,
+      flex: 1,
+      gap: sizes.spacing.section,
+      justifyContent: "center",
+      padding: sizes.spacing.spacious,
+    },
+    eyebrow: {
+      color: colors.warning,
+      fontSize: fontSize.footnote,
+      fontWeight: fontWeight.heavy,
+      letterSpacing: letterSpacing.eyebrow,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: fontSize.display,
+      fontWeight: fontWeight.bold,
+      textAlign: "center",
+    },
+    button: {
+      backgroundColor: colors.actionPrimary,
+      borderRadius: sizes.radius.pill,
+      marginTop: sizes.spacing.xLarge,
+      paddingHorizontal: sizes.spacing.content,
+      paddingVertical: sizes.spacing.xLarge,
+    },
+    buttonLabel: {
+      color: colors.actionPrimaryText,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.heavy,
+    },
+  });
+}

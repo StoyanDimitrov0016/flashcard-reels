@@ -13,7 +13,7 @@ import {
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
@@ -51,6 +51,7 @@ function ReadyFocusedFeedContent({
     />
   );
 }
+
 type ReadyFocusedFeedProps = Readonly<{
   focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
   onSessionStarted: () => void;
@@ -75,6 +76,8 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
 }
 
 export default function FocusedFeedScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const { consumeFocusedFeedReplacement, focusedFeed, focusRestoring, focusRevision } =
     useFeedScope();
@@ -103,6 +106,8 @@ export default function FocusedFeedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { backgroundColor: palette.background, flex: 1 },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    screen: { backgroundColor: colors.background, flex: 1 },
+  });
+}

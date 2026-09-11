@@ -2,39 +2,39 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { selectAction } from "@/shared/presentation/haptics";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type RecallOption = Readonly<{
-  color: string;
+  color: keyof Pick<AppColors, "danger" | "warning" | "success" | "recallEasy">;
   label: string;
   level: RecallLevel;
   symbol: SymbolViewProps["name"];
 }>;
 
-const recallOptions: RecallOption[] = [
+const recallOptions: readonly RecallOption[] = [
   {
-    color: palette.danger,
+    color: "danger",
     label: "Again",
     level: "again",
     symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
   },
   {
-    color: palette.warning,
+    color: "warning",
     label: "Hard",
     level: "hard",
     symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
   },
   {
-    color: palette.success,
+    color: "success",
     label: "Good",
     level: "good",
-    symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },
+    symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_box" },
   },
   {
-    color: palette.recallEasy,
+    color: "recallEasy",
     label: "Easy",
     level: "easy",
     symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
@@ -43,17 +43,28 @@ const recallOptions: RecallOption[] = [
 
 type RecallControlsProps = Readonly<{
   onSelect: (level: RecallLevel) => void;
+  orderedOptions?: readonly RecallOption[];
+  orientation?: "horizontal" | "vertical";
   selectedLevel: RecallLevel | null;
 }>;
 
-export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps) {
+export function RecallControls({
+  onSelect,
+  orderedOptions = recallOptions,
+  orientation = "vertical",
+  selectedLevel,
+}: RecallControlsProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors, orientation);
+
   return (
     <View style={styles.island}>
-      {recallOptions.map(({ color, label, level, symbol }) => {
+      {orderedOptions.map(({ color: colorName, label, level, symbol }) => {
+        const color = colors[colorName];
         const selected = level === selectedLevel;
         return (
           <Pressable
-            accessibilityLabel={`Recall level: ${label}`}
+            accessibilityLabel={"Recall level: " + label}
             accessibilityRole="button"
             accessibilityState={{ selected }}
             key={level}
@@ -67,7 +78,7 @@ export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps)
               <SymbolView
                 name={symbol}
                 size={sizes.icon.medium}
-                tintColor={selected ? palette.actionPrimaryText : color}
+                tintColor={selected ? colors.actionPrimaryText : color}
               />
             </View>
             <Text style={[styles.label, { color }]}>{label}</Text>
@@ -78,24 +89,27 @@ export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps)
   );
 }
 
-const styles = StyleSheet.create({
-  island: {
-    backgroundColor: palette.controlOverlay,
-    borderColor: palette.controlBorder,
-    borderRadius: sizes.radius.island,
-    borderWidth: sizes.border,
-    gap: sizes.spacing.xxLarge,
-    paddingHorizontal: sizes.spacing.medium,
-    paddingVertical: sizes.spacing.xxLarge,
-  },
-  action: { alignItems: "center", gap: sizes.spacing.xSmall },
-  iconCircle: {
-    alignItems: "center",
-    borderRadius: sizes.radius.pill,
-    height: 40,
-    justifyContent: "center",
-    overflow: "hidden",
-    width: 40,
-  },
-  label: { fontSize: fontSize.micro, fontWeight: fontWeight.bold },
-});
+function createStyles(colors: AppColors, orientation: "horizontal" | "vertical") {
+  return StyleSheet.create({
+    island: {
+      backgroundColor: colors.controlOverlay,
+      borderColor: colors.controlBorder,
+      borderRadius: sizes.radius.island,
+      borderWidth: sizes.border,
+      flexDirection: orientation === "horizontal" ? "row" : "column",
+      gap: sizes.spacing.xxLarge,
+      paddingHorizontal: sizes.spacing.medium,
+      paddingVertical: sizes.spacing.xxLarge,
+    },
+    action: { alignItems: "center", gap: sizes.spacing.xSmall },
+    iconCircle: {
+      alignItems: "center",
+      borderRadius: sizes.radius.pill,
+      height: 40,
+      justifyContent: "center",
+      overflow: "hidden",
+      width: 40,
+    },
+    label: { fontSize: fontSize.micro, fontWeight: fontWeight.bold },
+  });
+}

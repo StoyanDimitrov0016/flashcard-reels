@@ -17,7 +17,7 @@ import {
   isCurrentPreset,
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 
@@ -38,13 +38,15 @@ type PresetItemProps = Readonly<{
 }>;
 
 function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const selected = appearance ? isCurrentPreset(preset, appearance) : false;
   const pending = pendingPreset === preset;
 
   return (
     <Pressable
       accessibilityHint="Applies this theme immediately"
-      accessibilityLabel={`${preset.name} palette`}
+      accessibilityLabel={preset.name + " palette"}
       accessibilityRole="radio"
       accessibilityState={{ busy: pending, checked: selected, disabled: pendingPreset !== null }}
       disabled={pendingPreset !== null}
@@ -80,6 +82,8 @@ export function DeckAppearanceSheet({
   onSelect,
   pendingPreset,
 }: DeckAppearanceSheetProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const { width } = useWindowDimensions();
   const columnCount = width >= 680 ? 4 : 3;
   const renderPreset: ListRenderItem<DeckAppearancePreset> = ({ item }) => (
@@ -125,7 +129,7 @@ export function DeckAppearanceSheet({
               <SymbolView
                 name={{ android: "close", ios: "xmark", web: "close" }}
                 size={sizes.icon.medium}
-                tintColor={palette.textPrimary}
+                tintColor={colors.textPrimary}
               />
             </Pressable>
           </View>
@@ -150,75 +154,77 @@ export function DeckAppearanceSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-  error: {
-    color: palette.danger,
-    fontSize: fontSize.footnote,
-    paddingHorizontal: sizes.spacing.content,
-  },
-  handle: {
-    alignSelf: "center",
-    backgroundColor: palette.textMuted,
-    borderRadius: sizes.radius.pill,
-    height: 4,
-    marginTop: sizes.spacing.medium,
-    width: 40,
-  },
-  header: {
-    alignItems: "flex-start",
-    flexDirection: "row",
-    gap: sizes.spacing.medium,
-    padding: sizes.spacing.content,
-  },
-  headingCopy: { flex: 1, gap: sizes.spacing.small },
-  list: { gap: sizes.spacing.medium, padding: sizes.spacing.content, paddingTop: 0 },
-  modalRoot: { flex: 1, justifyContent: "flex-end" },
-  preset: {
-    alignItems: "center",
-    borderColor: palette.controlBorder,
-    borderRadius: sizes.radius.card,
-    borderWidth: 2,
-    flex: 1,
-    gap: sizes.spacing.medium,
-    minHeight: 104,
-    padding: sizes.spacing.medium,
-  },
-  presetName: {
-    color: palette.textPrimary,
-    textAlign: "center",
-    fontSize: fontSize.footnote,
-    fontWeight: fontWeight.bold,
-  },
-  pressed: { opacity: 0.72 },
-  row: { gap: sizes.spacing.medium },
-  scrim: {
-    backgroundColor: palette.scrim,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-    right: 0,
-    top: 0,
-  },
-  sheet: {
-    alignSelf: "center",
-    backgroundColor: palette.surfaceRaised,
-    borderTopLeftRadius: sizes.radius.panel,
-    borderTopRightRadius: sizes.radius.panel,
-    maxHeight: "82%",
-    maxWidth: 680,
-    paddingBottom: sizes.spacing.content,
-    width: "100%",
-  },
-  subtitle: { color: palette.textSecondary, fontSize: fontSize.body },
-  swatch: {
-    borderColor: palette.borderStrong,
-    borderRadius: sizes.radius.medium,
-    borderWidth: sizes.border,
-    height: 52,
-    overflow: "hidden",
-    width: "100%",
-  },
-  swatchAccent: { height: "100%", opacity: 0.88, width: "55%" },
-  title: { color: palette.textPrimary, ...textStyles.screenTitle },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    error: {
+      color: colors.danger,
+      fontSize: fontSize.footnote,
+      paddingHorizontal: sizes.spacing.content,
+    },
+    handle: {
+      alignSelf: "center",
+      backgroundColor: colors.textMuted,
+      borderRadius: sizes.radius.pill,
+      height: 4,
+      marginTop: sizes.spacing.medium,
+      width: 40,
+    },
+    header: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      padding: sizes.spacing.content,
+    },
+    headingCopy: { flex: 1, gap: sizes.spacing.small },
+    list: { gap: sizes.spacing.medium, padding: sizes.spacing.content, paddingTop: 0 },
+    modalRoot: { flex: 1, justifyContent: "flex-end" },
+    preset: {
+      alignItems: "center",
+      borderColor: colors.controlBorder,
+      borderRadius: sizes.radius.card,
+      borderWidth: 2,
+      flex: 1,
+      gap: sizes.spacing.medium,
+      minHeight: 104,
+      padding: sizes.spacing.medium,
+    },
+    presetName: {
+      color: colors.textPrimary,
+      textAlign: "center",
+      fontSize: fontSize.footnote,
+      fontWeight: fontWeight.bold,
+    },
+    pressed: { opacity: 0.72 },
+    row: { gap: sizes.spacing.medium },
+    scrim: {
+      backgroundColor: colors.scrim,
+      bottom: 0,
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
+    sheet: {
+      alignSelf: "center",
+      backgroundColor: colors.surfaceRaised,
+      borderTopLeftRadius: sizes.radius.panel,
+      borderTopRightRadius: sizes.radius.panel,
+      maxHeight: "82%",
+      maxWidth: 680,
+      paddingBottom: sizes.spacing.content,
+      width: "100%",
+    },
+    subtitle: { color: colors.textSecondary, fontSize: fontSize.body },
+    swatch: {
+      borderColor: colors.borderStrong,
+      borderRadius: sizes.radius.medium,
+      borderWidth: sizes.border,
+      height: 52,
+      overflow: "hidden",
+      width: "100%",
+    },
+    swatchAccent: { height: "100%", opacity: 0.88, width: "55%" },
+    title: { color: colors.textPrimary, ...textStyles.screenTitle },
+  });
+}

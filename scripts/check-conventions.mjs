@@ -10,6 +10,19 @@ const violations = [];
 const architectureViolations = [];
 const reportSignals = [];
 
+function sourceFiles(directory) {
+  const files = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...sourceFiles(entryPath));
+    } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
 function visit(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const entryPath = path.join(directory, entry.name);
@@ -156,6 +169,45 @@ function visit(directory) {
 }
 
 visit(sourceDirectory);
+
+const allowedThemeFiles = new Set([
+  "shared/presentation/theme.ts",
+  "shared/presentation/theme-colors.ts",
+  "features/decks/presentation/deck-appearance-presets.ts",
+]);
+const rawAppColorPattern = /#[0-9A-Fa-f]{3,8}|rgba\s*\(/;
+for (const file of sourceFiles(sourceDirectory)) {
+  const source = fs.readFileSync(file, "utf8");
+  const relativePath = path.relative(sourceDirectory, file).replaceAll(path.sep, "/");
+  const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
+  const isPresentation =
+    (/(^|\/)features\/[^/]+\/presentation\//.test(relativePath) ||
+      /(^|\/)app\/.+\.(ts|tsx)$/.test(relativePath)) &&
+    relativePath !== "app/_layout.tsx";
+  if (imports.some((specifier) => specifier.includes("shared/presentation/palette"))) {
+    architectureViolations.push(
+      relativePath + ": imports the removed static palette instead of the app theme abstraction"
+    );
+  }
+  if (imports.includes("expo-haptics") && relativePath !== "shared/presentation/haptics.ts") {
+    architectureViolations.push(
+      relativePath + ": imports expo-haptics outside the haptics platform adapter"
+    );
+  }
+  if (
+    imports.includes("expo-sqlite/kv-store") &&
+    relativePath !== "features/preferences/infrastructure/expo-sqlite-preferences.repository.ts"
+  ) {
+    architectureViolations.push(
+      relativePath + ": imports expo-sqlite/kv-store outside the preferences repository"
+    );
+  }
+  if (isPresentation && !allowedThemeFiles.has(relativePath) && rawAppColorPattern.test(source)) {
+    architectureViolations.push(
+      relativePath + ": hard-coded app-shell color; use the semantic app theme"
+    );
+  }
+}
 
 if (violations.length > 0 || architectureViolations.length > 0) {
   if (violations.length > 0) {

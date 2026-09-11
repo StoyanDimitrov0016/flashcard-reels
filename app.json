@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/app-icon.png",
     "scheme": "flashcard-reels",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/app-icon.png"
     },
@@ -38,7 +38,8 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0A0D11",
+          "backgroundColor": "#FFFFFF",
+          "dark": { "backgroundColor": "#1C1C1C" },
           "image": "./assets/images/splash-logo.png",
           "imageWidth": 220
         }

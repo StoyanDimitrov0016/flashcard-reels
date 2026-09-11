@@ -10,7 +10,7 @@ import { getLocalReelIndex, useReelFeed } from "@/features/reels/presentation/ho
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type ReelFeedProps = Readonly<{
   preparedFeed: PreparedReelFeed;
@@ -19,6 +19,8 @@ type ReelFeedProps = Readonly<{
 }>;
 
 export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }: ReelFeedProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const controller = useReelController({ initialFeed: preparedFeed, sourceCards });
   const { answerAudioService, feed, onOccurrenceBecameActive, onRatingSelected } = controller;
   const { handleLayout, viewport } = useReelViewport();
@@ -149,6 +151,8 @@ export function ReelFeed({ preparedFeed, showMainFeedLink = false, sourceCards }
   );
 }
 
-const styles = StyleSheet.create({
-  feed: { backgroundColor: palette.background, flex: 1 },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    feed: { backgroundColor: colors.background, flex: 1 },
+  });
+}

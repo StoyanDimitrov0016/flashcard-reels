@@ -10,7 +10,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
@@ -21,6 +21,8 @@ type CardRowProps = Readonly<{
 }>;
 
 function CardRow({ accentColor, card, profile }: CardRowProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const [expanded, setExpanded] = useState(false);
   const explanation = explainLearnerProfile(profile);
   const reviewed = (profile?.reviewCount ?? 0) > 0;
@@ -44,7 +46,7 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
           <View style={styles.expandedContent}>
             <Text style={styles.answer}>{card.answer}</Text>
             <View style={styles.progressHeading}>
-              <Text style={[styles.status, { color: reviewed ? accentColor : palette.textMuted }]}>
+              <Text style={[styles.status, { color: reviewed ? accentColor : colors.textMuted }]}>
                 {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
               </Text>
               <Text style={styles.progressCaption}>
@@ -60,10 +62,10 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
               />
             </View>
             <View style={styles.ratingRow}>
-              <RatingFact color={palette.danger} label="Again" value={profile?.againCount ?? 0} />
-              <RatingFact color={palette.warning} label="Hard" value={profile?.hardCount ?? 0} />
-              <RatingFact color={palette.success} label="Good" value={profile?.goodCount ?? 0} />
-              <RatingFact color={palette.recallEasy} label="Easy" value={profile?.easyCount ?? 0} />
+              <RatingFact color={colors.danger} label="Again" value={profile?.againCount ?? 0} />
+              <RatingFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
+              <RatingFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
+              <RatingFact color={colors.recallEasy} label="Easy" value={profile?.easyCount ?? 0} />
             </View>
             <Text style={styles.lastReviewed}>
               {profile?.lastReviewedAt
@@ -80,7 +82,7 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
           web: expanded ? "expand_less" : "chevron_right",
         }}
         size={sizes.icon.small}
-        tintColor={palette.textMuted}
+        tintColor={colors.textMuted}
       />
     </Pressable>
   );
@@ -89,6 +91,7 @@ function CardRow({ accentColor, card, profile }: CardRowProps) {
 type RatingFactProps = Readonly<{ color: string; label: string; value: number }>;
 
 function RatingFact({ color, label, value }: RatingFactProps) {
+  const styles = createStyles(useAppTheme().colors);
   return (
     <View style={styles.ratingFact}>
       <Text style={[styles.ratingValue, { color }]}>{value}</Text>
@@ -98,14 +101,17 @@ function RatingFact({ color, label, value }: RatingFactProps) {
 }
 
 function EmptyCardList() {
+  const styles = createStyles(useAppTheme().colors);
   return <Text style={styles.empty}>This deck has no cards.</Text>;
 }
 
 export default function DeckDetailsScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
-  const accentColor = appearance?.accentColor ?? palette.actionPrimary;
+  const accentColor = appearance?.accentColor ?? colors.actionPrimary;
   const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
     <CardRow accentColor={accentColor} card={item} profile={profiles.get(item.id) ?? null} />
   );
@@ -122,7 +128,7 @@ export default function DeckDetailsScreen() {
           <SymbolView
             name={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
             size={sizes.icon.medium}
-            tintColor={palette.textPrimary}
+            tintColor={colors.textPrimary}
           />
           <Text style={styles.backLabel}>Back</Text>
         </Pressable>
@@ -166,9 +172,10 @@ export default function DeckDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
   answer: {
-    color: palette.textSecondary,
+    color: colors.textSecondary,
     fontSize: fontSize.bodyLarge,
     lineHeight: lineHeight.bodyLarge,
   },
@@ -179,19 +186,19 @@ const styles = StyleSheet.create({
     height: "100%",
     paddingHorizontal: sizes.spacing.xSmall,
   },
-  backLabel: { color: palette.textPrimary, fontSize: fontSize.body },
+  backLabel: { color: colors.textPrimary, fontSize: fontSize.body },
   cardCopy: { flex: 1, gap: sizes.spacing.medium },
   cardProgressFill: { borderRadius: sizes.radius.pill, height: "100%" },
   cardProgressTrack: {
-    backgroundColor: palette.borderStrong,
+    backgroundColor: colors.borderStrong,
     borderRadius: sizes.radius.pill,
     height: 5,
     overflow: "hidden",
   },
   cardRow: {
     alignItems: "flex-start",
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
@@ -199,16 +206,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.spacing.xLarge,
     paddingVertical: sizes.spacing.xLarge,
   },
-  count: { color: palette.textMuted, fontSize: fontSize.footnote },
+  count: { color: colors.textMuted, fontSize: fontSize.footnote },
   description: {
-    color: palette.textSecondary,
+    color: colors.textSecondary,
     fontSize: fontSize.caption,
     lineHeight: lineHeight.footnote,
     marginTop: sizes.spacing.xSmall,
   },
-  empty: { color: palette.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
+  empty: { color: colors.textSecondary, padding: sizes.spacing.wide, textAlign: "center" },
   expandedContent: {
-    borderTopColor: palette.border,
+    borderTopColor: colors.border,
     borderTopWidth: sizes.border,
     gap: sizes.spacing.medium,
     marginTop: sizes.spacing.xSmall,
@@ -226,14 +233,14 @@ const styles = StyleSheet.create({
   list: { gap: sizes.spacing.medium, padding: sizes.spacing.content },
   navigationRow: {
     alignItems: "center",
-    borderBottomColor: palette.border,
+    borderBottomColor: colors.border,
     borderBottomWidth: sizes.border,
     flexDirection: "row",
     height: 56,
     paddingHorizontal: sizes.spacing.xLarge,
   },
   position: {
-    color: palette.textMuted,
+    color: colors.textMuted,
     fontSize: fontSize.footnote,
     fontVariant: ["tabular-nums"],
     fontWeight: fontWeight.heavy,
@@ -247,25 +254,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   progressCaption: {
-    color: palette.textMuted,
+    color: colors.textMuted,
     flex: 1,
     fontSize: fontSize.caption,
     textAlign: "right",
   },
   question: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
     lineHeight: lineHeight.subhead,
   },
   ratingFact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
-  ratingLabel: { color: palette.textMuted, fontSize: fontSize.caption },
+  ratingLabel: { color: colors.textMuted, fontSize: fontSize.caption },
   ratingRow: { flexDirection: "row", gap: sizes.spacing.small },
   ratingValue: { fontSize: fontSize.body, fontWeight: fontWeight.heavy },
-  screen: { backgroundColor: palette.background, flex: 1 },
+  screen: { backgroundColor: colors.background, flex: 1 },
   tabs: {
-    borderBottomColor: palette.border,
+    borderBottomColor: colors.border,
     borderBottomWidth: sizes.border,
     paddingHorizontal: sizes.spacing.content,
   },
@@ -277,7 +284,8 @@ const styles = StyleSheet.create({
     paddingVertical: sizes.spacing.medium,
   },
   activeTabLabel: { fontSize: fontSize.footnote, fontWeight: fontWeight.bold },
-  lastReviewed: { color: palette.textMuted, fontSize: fontSize.caption },
+  lastReviewed: { color: colors.textMuted, fontSize: fontSize.caption },
   status: { flexShrink: 0, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
-  title: { color: palette.textPrimary, ...textStyles.screenTitle },
-});
+  title: { color: colors.textPrimary, ...textStyles.screenTitle }
+  });
+}

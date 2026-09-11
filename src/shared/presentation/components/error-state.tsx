@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import {
   fontSize,
@@ -30,6 +30,9 @@ export function ErrorState({
   secondaryActionLabel,
   title,
 }: ErrorStateProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
   return (
     <SafeAreaView style={styles.screen}>
       {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -53,49 +56,51 @@ export function ErrorState({
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    alignItems: "center",
-    backgroundColor: palette.background,
-    flex: 1,
-    gap: sizes.spacing.section,
-    justifyContent: "center",
-    padding: sizes.spacing.spacious,
-  },
-  eyebrow: {
-    color: palette.danger,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.heavy,
-    letterSpacing: letterSpacing.widest,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: palette.textPrimary,
-    textAlign: "center",
-    ...textStyles.screenTitle,
-  },
-  message: {
-    color: palette.textSecondary,
-    fontSize: fontSize.footnote,
-    lineHeight: lineHeight.footnote,
-    textAlign: "center",
-  },
-  primaryButton: {
-    backgroundColor: palette.textPrimary,
-    borderRadius: sizes.radius.pill,
-    paddingHorizontal: sizes.spacing.content,
-    paddingVertical: sizes.spacing.xLarge,
-  },
-  primaryLabel: {
-    color: palette.actionPrimaryText,
-    ...textStyles.primaryButtonLabel,
-  },
-  secondaryButton: {
-    paddingHorizontal: sizes.spacing.section,
-    paddingVertical: sizes.spacing.medium,
-  },
-  secondaryLabel: {
-    color: palette.textSecondary,
-    fontWeight: fontWeight.bold,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    screen: {
+      alignItems: "center",
+      backgroundColor: colors.background,
+      flex: 1,
+      gap: sizes.spacing.section,
+      justifyContent: "center",
+      padding: sizes.spacing.spacious,
+    },
+    eyebrow: {
+      color: colors.danger,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.heavy,
+      letterSpacing: letterSpacing.widest,
+      textTransform: "uppercase",
+    },
+    title: {
+      color: colors.textPrimary,
+      textAlign: "center",
+      ...textStyles.screenTitle,
+    },
+    message: {
+      color: colors.textSecondary,
+      fontSize: fontSize.footnote,
+      lineHeight: lineHeight.footnote,
+      textAlign: "center",
+    },
+    primaryButton: {
+      backgroundColor: colors.actionPrimary,
+      borderRadius: sizes.radius.pill,
+      paddingHorizontal: sizes.spacing.content,
+      paddingVertical: sizes.spacing.xLarge,
+    },
+    primaryLabel: {
+      color: colors.actionPrimaryText,
+      ...textStyles.primaryButtonLabel,
+    },
+    secondaryButton: {
+      paddingHorizontal: sizes.spacing.section,
+      paddingVertical: sizes.spacing.medium,
+    },
+    secondaryLabel: {
+      color: colors.textSecondary,
+      fontWeight: fontWeight.bold,
+    },
+  });
+}

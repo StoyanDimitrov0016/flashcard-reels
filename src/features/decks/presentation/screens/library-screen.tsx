@@ -26,7 +26,7 @@ import {
   type DeckImportFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
@@ -39,6 +39,8 @@ type DeckRowProps = Readonly<{
 }>;
 
 function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const { appearance, cardCount, deck } = entry;
 
   return (
@@ -75,7 +77,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
           <SymbolView
             name={{ android: "palette", ios: "paintpalette.fill", web: "palette" }}
             size={sizes.icon.small}
-            tintColor={palette.textSecondary}
+            tintColor={colors.textSecondary}
           />
         </Pressable>
         <Pressable
@@ -88,7 +90,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
           <SymbolView
             name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
             size={sizes.icon.small}
-            tintColor={palette.textMuted}
+            tintColor={colors.textMuted}
           />
         </Pressable>
       </View>
@@ -97,6 +99,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
 }
 
 function LibrarySkeleton() {
+  const styles = createStyles(useAppTheme().colors);
   return (
     <View accessibilityLabel="Loading deck library" style={styles.skeletonList}>
       {["first", "second", "third"].map((key) => (
@@ -114,6 +117,7 @@ function LibrarySkeleton() {
 }
 
 function EmptyLibrarySearch() {
+  const styles = createStyles(useAppTheme().colors);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>No decks found</Text>
@@ -123,6 +127,7 @@ function EmptyLibrarySearch() {
 }
 
 function EmptyLibrary() {
+  const styles = createStyles(useAppTheme().colors);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>Your library is empty</Text>
@@ -132,6 +137,8 @@ function EmptyLibrary() {
 }
 
 export default function LibraryScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
@@ -201,13 +208,17 @@ export default function LibraryScreen() {
             accessibilityLabel="Import deck package"
             accessibilityRole="button"
             disabled={importing}
+            hitSlop={4}
             onPress={() => void handleImport()}
             style={styles.importButton}
           >
-            <Text style={styles.importButtonLabel}>{importing ? "Importing…" : "Import"}</Text>
+            <SymbolView
+              name={{ android: "file_download", ios: "square.and.arrow.down", web: "download" }}
+              size={sizes.icon.small}
+              tintColor={colors.textPrimary}
+            />
           </Pressable>
         </View>
-        <Text style={styles.importHint}>Import local .fcrdeck files from your device.</Text>
         {importStatus ? (
           <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
             {importStatus.message}
@@ -217,7 +228,7 @@ export default function LibraryScreen() {
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
             size={sizes.icon.small}
-            tintColor={palette.textMuted}
+            tintColor={colors.textMuted}
           />
           <TextInput
             accessibilityLabel="Search deck library"
@@ -225,7 +236,7 @@ export default function LibraryScreen() {
             autoCorrect={false}
             onChangeText={setQuery}
             placeholder="Search decks…"
-            placeholderTextColor={palette.textMuted}
+            placeholderTextColor={colors.textMuted}
             style={styles.searchInput}
             value={query}
           />
@@ -239,7 +250,7 @@ export default function LibraryScreen() {
               <SymbolView
                 name={{ android: "cancel", ios: "xmark.circle.fill", web: "cancel" }}
                 size={sizes.icon.small}
-                tintColor={palette.textMuted}
+                tintColor={colors.textMuted}
               />
             </Pressable>
           ) : null}
@@ -273,18 +284,19 @@ export default function LibraryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
   accent: { alignSelf: "stretch", width: 4 },
   actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
   cardCount: {
-    color: palette.textMuted,
+    color: colors.textMuted,
     fontSize: fontSize.caption,
   },
   clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   deck: {
     alignItems: "center",
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
@@ -308,25 +320,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   deckTitle: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     flex: 1,
     fontSize: fontSize.callout,
     fontWeight: fontWeight.bold,
   },
   description: {
-    color: palette.textSecondary,
+    color: colors.textSecondary,
     fontSize: fontSize.caption,
     lineHeight: lineHeight.footnote,
   },
   empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
-  emptyCopy: { color: palette.textSecondary, fontSize: fontSize.body },
+  emptyCopy: { color: colors.textSecondary, fontSize: fontSize.body },
   emptyTitle: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     fontSize: fontSize.title2,
     fontWeight: fontWeight.bold,
   },
   header: {
-    borderBottomColor: palette.border,
+    borderBottomColor: colors.border,
     borderBottomWidth: sizes.border,
     gap: sizes.spacing.xLarge,
     paddingHorizontal: sizes.spacing.content,
@@ -338,23 +350,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   importButton: {
-    borderColor: palette.controlBorder,
-    borderRadius: sizes.radius.pill,
-    borderWidth: sizes.border,
-    paddingHorizontal: sizes.spacing.large,
-    paddingVertical: sizes.spacing.small,
+    alignItems: "center",
+    height: 36,
+    justifyContent: "center",
+    width: 36,
   },
-  importButtonLabel: {
-    color: palette.textPrimary,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-  },
-  importError: { color: palette.danger, fontSize: fontSize.caption },
-  importHint: { color: palette.textMuted, fontSize: fontSize.caption },
-  importSuccess: { color: palette.success, fontSize: fontSize.caption },
+  importError: { color: colors.danger, fontSize: fontSize.caption },
+  importSuccess: { color: colors.success, fontSize: fontSize.caption },
   iconButton: {
     alignItems: "center",
-    borderColor: palette.controlBorder,
+    borderColor: colors.controlBorder,
     borderRadius: sizes.radius.pill,
     height: 36,
     justifyContent: "center",
@@ -366,31 +371,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.spacing.content,
   },
   screenTitle: {
-    color: palette.textPrimary,
+    color: colors.textPrimary,
     fontSize: fontSize.title1,
     fontWeight: fontWeight.heavy,
   },
-  screen: { backgroundColor: palette.background, flex: 1 },
-  searchInput: { color: palette.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
+  screen: { backgroundColor: colors.background, flex: 1 },
+  searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
   searchShell: {
     alignItems: "center",
-    backgroundColor: palette.surface,
-    borderColor: palette.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: sizes.radius.row,
     borderWidth: sizes.border,
     flexDirection: "row",
     paddingLeft: sizes.spacing.section,
   },
-  skeletonAccent: { backgroundColor: palette.borderStrong, height: 72, width: 6 },
+  skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
   skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
   skeletonDeck: { paddingHorizontal: sizes.spacing.content },
-  skeletonLine: { backgroundColor: palette.border, borderRadius: 3, height: 12, width: "85%" },
+  skeletonLine: { backgroundColor: colors.border, borderRadius: 3, height: 12, width: "85%" },
   skeletonList: { gap: sizes.spacing.xxLarge, padding: sizes.spacing.content },
-  skeletonShortLine: { backgroundColor: palette.border, borderRadius: 3, height: 10, width: "35%" },
+  skeletonShortLine: { backgroundColor: colors.border, borderRadius: 3, height: 10, width: "35%" },
   skeletonTitle: {
-    backgroundColor: palette.borderStrong,
+    backgroundColor: colors.borderStrong,
     borderRadius: 3,
     height: 21,
     width: "55%",
-  },
-});
+  }
+  });
+}

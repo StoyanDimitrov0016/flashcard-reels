@@ -6,7 +6,7 @@ import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flas
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type ReadyMixedFeedProps = Readonly<{ cards: Flashcard[] }>;
 
@@ -22,6 +22,8 @@ function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
 }
 
 export default function DiscoverScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const { cards, loading } = useFlashcards(null);
 
   return (
@@ -31,6 +33,8 @@ export default function DiscoverScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { backgroundColor: palette.background, flex: 1 },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    screen: { backgroundColor: colors.background, flex: 1 },
+  });
+}

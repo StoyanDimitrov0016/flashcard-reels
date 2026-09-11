@@ -1,28 +1,19 @@
 import { SQLiteProvider } from "expo-sqlite";
-import { DarkTheme, Stack, ThemeProvider, type ErrorBoundaryProps, useRouter } from "expo-router";
+import { Stack, ThemeProvider, type ErrorBoundaryProps, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AppServicesProvider } from "@/infrastructure/app-services";
-import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
-import { preferencesService } from "@/infrastructure/preferences-services";
+import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { palette } from "@/shared/presentation/palette";
+import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
+import { AppServicesProvider } from "@/infrastructure/app-services";
+import { preferencesService } from "@/infrastructure/preferences-services";
+import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
 // oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
 import "../../global.css";
-
-const appTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: palette.background,
-    border: palette.border,
-    card: palette.background,
-  },
-};
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   const router = useRouter();
@@ -41,10 +32,44 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 }
 
 export function SuspenseFallback() {
+  const { colors } = useAppTheme();
+
   return (
-    <SafeAreaView style={styles.fallbackScreen}>
-      <LoadingState label="Shuffling your next cards…" />
+    <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.background }]}>
+      <LoadingState />
     </SafeAreaView>
+  );
+}
+
+function AppNavigation() {
+  const { colors, resolvedScheme } = useAppTheme();
+  const { ready } = usePreferences();
+
+  if (!ready) {
+    return (
+      <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.background }]}>
+        <LoadingState label="Loading your preferences…" />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <ThemeProvider value={getRouterTheme(resolvedScheme, colors)}>
+      <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          animation: "none",
+          contentStyle: { backgroundColor: colors.background },
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="decks/[deckId]"
+          options={{ animation: "none", contentStyle: { backgroundColor: colors.background } }}
+        />
+      </Stack>
+    </ThemeProvider>
   );
 }
 
@@ -53,22 +78,7 @@ export default function RootLayout() {
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeDatabase}>
       <PreferencesProvider service={preferencesService}>
         <AppServicesProvider>
-          <ThemeProvider value={appTheme}>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                animation: "none",
-                contentStyle: styles.appBackground,
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen
-                name="decks/[deckId]"
-                options={{ animation: "none", contentStyle: styles.appBackground }}
-              />
-            </Stack>
-          </ThemeProvider>
+          <AppNavigation />
         </AppServicesProvider>
       </PreferencesProvider>
     </SQLiteProvider>
@@ -76,6 +86,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  appBackground: { backgroundColor: palette.background },
-  fallbackScreen: { backgroundColor: palette.background, flex: 1 },
+  fallbackScreen: { flex: 1 },
 });

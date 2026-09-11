@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { ErrorState } from "@/shared/presentation/components/error-state";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 
 type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
@@ -30,6 +30,7 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 export default function TabLayout() {
   "use no memo";
 
+  const { colors } = useAppTheme();
   const { bottom } = useSafeAreaInsets();
 
   return (
@@ -38,16 +39,16 @@ export default function TabLayout() {
         <TopTabs
           tabBarPosition="bottom"
           screenOptions={{
-            sceneStyle: { backgroundColor: palette.background },
-            tabBarActiveTintColor: palette.actionPrimary,
+            sceneStyle: { backgroundColor: colors.background },
+            tabBarActiveTintColor: colors.actionPrimary,
             tabBarIndicatorStyle: { height: 0 },
-            tabBarInactiveTintColor: palette.textMuted,
+            tabBarInactiveTintColor: colors.textMuted,
             tabBarPressColor: "transparent",
             tabBarPressOpacity: 1,
             tabBarShowIcon: true,
             tabBarStyle: {
-              backgroundColor: palette.background,
-              borderTopColor: palette.border,
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
               elevation: 0,
               paddingBottom: bottom,
             },
@@ -116,6 +117,10 @@ export default function TabLayout() {
                 />
               ),
               title: "Progress",
+            }}
+          />
+              ),
+              title: "You",
             }}
           />
         </TopTabs>

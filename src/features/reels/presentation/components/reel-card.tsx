@@ -11,7 +11,7 @@ import { ReelHeader } from "@/features/reels/presentation/components/reel-header
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
@@ -47,9 +47,12 @@ type GestureHintProps = Readonly<{
 }>;
 
 function GestureHint({ label, symbol }: GestureHintProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
   return (
     <View accessible accessibilityLabel={label} style={styles.gestureHint}>
-      <SymbolView name={symbol} size={sizes.icon.small} tintColor={palette.textMuted} />
+      <SymbolView name={symbol} size={sizes.icon.small} tintColor={colors.textMuted} />
       <Text style={styles.hint}>{label}</Text>
     </View>
   );
@@ -58,6 +61,8 @@ function GestureHint({ label, symbol }: GestureHintProps) {
 type GestureFooterProps = Readonly<{ showMainFeedLink: boolean }>;
 
 function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
+  const styles = createStyles(useAppTheme().colors);
+
   return (
     <View style={styles.gestureFooter}>
       <GestureHint
@@ -79,19 +84,10 @@ function GestureFooter({ showMainFeedLink }: GestureFooterProps) {
 }
 
 function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
+  const styles = createStyles(useAppTheme().colors);
+
   return (
-    <View
-      style={[
-        styles.page,
-        {
-          backgroundColor,
-          height,
-          width,
-        },
-      ]}
-    >
-      {children}
-    </View>
+    <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>
   );
 }
 
@@ -110,6 +106,8 @@ export function ReelCard({
   showMainFeedLink,
   width,
 }: ReelCardProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const openFocusedFeed = useOpenFocusedFeed();
   const [rotation] = useState(() => new Animated.Value(revealed ? 1 : 0));
   const [holdProgress] = useState(() => new Animated.Value(0));
@@ -148,7 +146,6 @@ export function ReelCard({
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
       flipCount.current += 1;
-
       onFlip();
       Animated.timing(rotation, {
         duration: 520,
@@ -158,7 +155,6 @@ export function ReelCard({
       }).start();
       return;
     }
-
     lastTapAt.current = now;
   };
 
@@ -179,9 +175,7 @@ export function ReelCard({
     }, HOLD_FEEDBACK_DELAY_MS);
   };
 
-  const cancelFocusHold = () => {
-    resetHoldFeedback();
-  };
+  const cancelFocusHold = () => resetHoldFeedback();
 
   const completeFocusHold = () => {
     if (!isActive || showMainFeedLink) {
@@ -205,7 +199,7 @@ export function ReelCard({
   const questionTapArea = (
     <Pressable
       accessibilityHint="Double tap to reveal the answer"
-      accessibilityLabel={`Flashcard question: ${card.question}`}
+      accessibilityLabel={"Flashcard question: " + card.question}
       accessibilityRole="button"
       delayLongPress={FOCUS_HOLD_DURATION_MS}
       onLongPress={completeFocusHold}
@@ -262,7 +256,7 @@ export function ReelCard({
           <View style={styles.answerContent}>
             <Pressable
               accessibilityHint="Double tap to return to the question"
-              accessibilityLabel={`Flashcard answer: ${card.answer}`}
+              accessibilityLabel={"Flashcard answer: " + card.answer}
               accessibilityRole="button"
               delayLongPress={FOCUS_HOLD_DURATION_MS}
               onLongPress={completeFocusHold}
@@ -285,15 +279,7 @@ export function ReelCard({
         </CardPage>
       </Animated.View>
       {!showMainFeedLink ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.holdCue,
-            {
-              opacity: holdProgress,
-            },
-          ]}
-        >
+        <Animated.View pointerEvents="none" style={[styles.holdCue, { opacity: holdProgress }]}>
           <Text style={styles.holdLabel}>Hold to Focus</Text>
           <View style={styles.holdTrack}>
             <Animated.View
@@ -314,111 +300,103 @@ export function ReelCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: { overflow: "hidden" },
-  face: { backfaceVisibility: "hidden", position: "absolute" },
-  page: {
-    justifyContent: "space-between",
-    paddingBottom: sizes.spacing.screen,
-    paddingHorizontal: sizes.spacing.spacious,
-    paddingTop: sizes.spacing.screen,
-  },
-  answerContent: { flex: 1 },
-  copy: { gap: 22, paddingRight: 56 },
-  controlRail: {
-    alignItems: "center",
-    gap: sizes.spacing.xLarge,
-    position: "absolute",
-    right: sizes.spacing.section,
-    top: "32%",
-  },
-  prompt: {
-    color: palette.textPrimary,
-    fontSize: fontSize.hero,
-    fontWeight: fontWeight.bold,
-    letterSpacing: letterSpacing.tightest,
-    lineHeight: lineHeight.hero,
-  },
-  answerPrompt: {
-    color: palette.textSecondary,
-    fontSize: fontSize.title3,
-    fontWeight: fontWeight.semibold,
-    lineHeight: lineHeight.title3,
-  },
-  answer: {
-    color: palette.textPrimary,
-    fontSize: fontSize.heading1,
-    fontWeight: fontWeight.semibold,
-    letterSpacing: letterSpacing.tight,
-    lineHeight: lineHeight.heading1,
-    maxWidth: 480,
-  },
-  revealInstruction: {
-    color: palette.textMuted,
-    fontSize: fontSize.callout,
-    lineHeight: lineHeight.subhead,
-  },
-  tapArea: {
-    flex: 1,
-    justifyContent: "space-between",
-    paddingBottom: sizes.spacing.screen,
-    paddingTop: sizes.spacing.screen,
-  },
-  hint: {
-    color: palette.textMuted,
-    fontSize: fontSize.caption,
-    letterSpacing: letterSpacing.wider,
-  },
-  hintRow: {
-    alignItems: "center",
-    alignSelf: "center",
-    columnGap: sizes.spacing.section,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    rowGap: sizes.spacing.small,
-    width: "100%",
-  },
-  gestureFooter: {
-    alignItems: "center",
-    bottom: sizes.spacing.screen,
-    columnGap: sizes.spacing.section,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    left: sizes.spacing.spacious,
-    position: "absolute",
-    right: sizes.spacing.spacious,
-    rowGap: sizes.spacing.small,
-  },
-  gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
-  holdCue: {
-    alignItems: "center",
-    backgroundColor: palette.controlOverlay,
-    borderBottomColor: palette.controlBorder,
-    borderBottomWidth: sizes.border,
-    borderTopColor: palette.controlBorder,
-    borderTopWidth: sizes.border,
-    gap: sizes.spacing.medium,
-    left: 0,
-    paddingHorizontal: sizes.spacing.section,
-    paddingVertical: sizes.spacing.xLarge,
-    position: "absolute",
-    right: 0,
-    top: 72,
-    zIndex: 2,
-  },
-  holdLabel: {
-    color: palette.textPrimary,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.heavy,
-  },
-  holdProgress: { backgroundColor: palette.actionPrimary, height: "100%" },
-  holdTrack: {
-    backgroundColor: palette.controlBorder,
-    borderRadius: sizes.radius.pill,
-    height: 4,
-    overflow: "hidden",
-    width: "100%",
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    card: { overflow: "hidden" },
+    face: { backfaceVisibility: "hidden", position: "absolute" },
+    page: {
+      justifyContent: "space-between",
+      paddingBottom: sizes.spacing.screen,
+      paddingHorizontal: sizes.spacing.spacious,
+      paddingTop: sizes.spacing.screen,
+    },
+    answerContent: { flex: 1 },
+    copy: { gap: 22, paddingRight: 56 },
+    controlRail: {
+      alignItems: "center",
+      gap: sizes.spacing.xLarge,
+      position: "absolute",
+      right: sizes.spacing.section,
+      top: "32%",
+    },
+    prompt: {
+      color: colors.textPrimary,
+      fontSize: fontSize.hero,
+      fontWeight: fontWeight.bold,
+      letterSpacing: letterSpacing.tightest,
+      lineHeight: lineHeight.hero,
+    },
+    answerPrompt: {
+      color: colors.textSecondary,
+      fontSize: fontSize.title3,
+      fontWeight: fontWeight.semibold,
+      lineHeight: lineHeight.title3,
+    },
+    answer: {
+      color: colors.textPrimary,
+      fontSize: fontSize.heading1,
+      fontWeight: fontWeight.semibold,
+      letterSpacing: letterSpacing.tight,
+      lineHeight: lineHeight.heading1,
+      maxWidth: 480,
+    },
+    revealInstruction: {
+      color: colors.textMuted,
+      fontSize: fontSize.callout,
+      lineHeight: lineHeight.subhead,
+    },
+    tapArea: {
+      flex: 1,
+      justifyContent: "space-between",
+      paddingBottom: sizes.spacing.screen,
+      paddingTop: sizes.spacing.screen,
+    },
+    hint: {
+      color: colors.textMuted,
+      fontSize: fontSize.caption,
+      letterSpacing: letterSpacing.wider,
+    },
+    gestureFooter: {
+      alignItems: "center",
+      bottom: sizes.spacing.screen,
+      columnGap: sizes.spacing.section,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      left: sizes.spacing.spacious,
+      position: "absolute",
+      right: sizes.spacing.spacious,
+      rowGap: sizes.spacing.small,
+    },
+    gestureHint: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
+    holdCue: {
+      alignItems: "center",
+      backgroundColor: colors.controlOverlay,
+      borderBottomColor: colors.controlBorder,
+      borderBottomWidth: sizes.border,
+      borderTopColor: colors.controlBorder,
+      borderTopWidth: sizes.border,
+      gap: sizes.spacing.medium,
+      left: 0,
+      paddingHorizontal: sizes.spacing.section,
+      paddingVertical: sizes.spacing.xLarge,
+      position: "absolute",
+      right: 0,
+      top: 72,
+      zIndex: 2,
+    },
+    holdLabel: {
+      color: colors.textPrimary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.heavy,
+    },
+    holdProgress: { backgroundColor: colors.actionPrimary, height: "100%" },
+    holdTrack: {
+      backgroundColor: colors.controlBorder,
+      borderRadius: sizes.radius.pill,
+      height: 4,
+      overflow: "hidden",
+      width: "100%",
+    },
+  });
+}

@@ -3,12 +3,14 @@ import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 
 import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import { palette } from "@/shared/presentation/palette";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 
 type AnswerAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
 
 export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const { status, togglePlayback } = useAnswerAudio(isActive ? source : null);
 
   if (!source) {
@@ -44,7 +46,7 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
       ]}
     >
       {isLoading ? (
-        <ActivityIndicator color={palette.textPrimary} size="small" />
+        <ActivityIndicator color={colors.textPrimary} size="small" />
       ) : (
         <SymbolView
           name={
@@ -53,23 +55,25 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
               : { android: "play_arrow", ios: "play.fill", web: "play_arrow" }
           }
           size={sizes.icon.medium}
-          tintColor={palette.textPrimary}
+          tintColor={colors.textPrimary}
         />
       )}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    alignSelf: "center",
-    backgroundColor: palette.borderStrong,
-    borderRadius: sizes.radius.pill,
-    height: 48,
-    justifyContent: "center",
-    width: 48,
-  },
-  disabled: { opacity: 0.45 },
-  pressed: { opacity: 0.72 },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    button: {
+      alignItems: "center",
+      alignSelf: "center",
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 48,
+      justifyContent: "center",
+      width: 48,
+    },
+    disabled: { opacity: 0.45 },
+    pressed: { opacity: 0.72 },
+  });
+}
