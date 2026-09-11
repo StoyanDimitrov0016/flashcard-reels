@@ -15,7 +15,7 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import {
   deckAppearancePresets,
   isCurrentPreset,
-  resolveDeckAppearanceColors,
+  resolveDeckAppearance,
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -41,7 +41,7 @@ type PresetItemProps = Readonly<{
 function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
-  const previewColors = resolveDeckAppearanceColors(preset, resolvedScheme, colors);
+  const previewColors = resolveDeckAppearance(preset.id, resolvedScheme);
   const selected = appearance ? isCurrentPreset(preset, appearance) : false;
   const pending = pendingPreset === preset;
 
@@ -55,21 +55,21 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
       onPress={() => onSelect(preset)}
       style={({ pressed }) => [
         styles.preset,
-        { backgroundColor: previewColors.backgroundColor },
-        selected && { borderColor: previewColors.accentColor },
+        { backgroundColor: previewColors.background },
+        selected && { borderColor: previewColors.accent },
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.swatch, { backgroundColor: previewColors.backgroundColor }]}>
-        <View style={[styles.swatchAccent, { backgroundColor: previewColors.accentColor }]} />
+      <View style={[styles.swatch, { backgroundColor: previewColors.background }]}>
+        <View style={[styles.swatchAccent, { backgroundColor: previewColors.accent }]} />
       </View>
       <Text style={styles.presetName}>{preset.name}</Text>
-      {pending && <ActivityIndicator color={previewColors.accentColor} size="small" />}
+      {pending && <ActivityIndicator color={previewColors.accent} size="small" />}
       {!pending && selected ? (
         <SymbolView
           name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
           size={sizes.icon.medium}
-          tintColor={previewColors.accentColor}
+          tintColor={previewColors.accent}
         />
       ) : null}
     </Pressable>
@@ -141,7 +141,7 @@ export function DeckAppearanceSheet({
             data={deckAppearancePresets}
             extraData={{ appearance, pendingPreset }}
             key={columnCount}
-            keyExtractor={({ name }) => name}
+            keyExtractor={({ id }) => id}
             numColumns={columnCount}
             renderItem={renderPreset}
           />

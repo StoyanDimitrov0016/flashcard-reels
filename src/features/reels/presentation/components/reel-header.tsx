@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckAppearanceVariant } from "@/features/decks/presentation/deck-appearance-presets";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
@@ -9,7 +9,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 type ReelHeaderProps = Readonly<{
-  appearance: Readonly<Pick<DeckAppearance, "accentColor">>;
+  appearance: Readonly<Pick<DeckAppearanceVariant, "accent">>;
   card: Flashcard;
   deck: Deck;
   deckCardCount: number;
@@ -30,8 +30,8 @@ export function ReelHeader({
     <View style={styles.header}>
       {showMainFeedLink ? (
         <View style={styles.labelStack}>
-          <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{label}</Text>
-          <View style={[styles.accentLine, { backgroundColor: appearance.accentColor }]} />
+          <Text style={[styles.deckLabel, { color: appearance.accent }]}>{label}</Text>
+          <View style={[styles.accentLine, { backgroundColor: appearance.accent }]} />
         </View>
       ) : (
         <Pressable
@@ -41,8 +41,8 @@ export function ReelHeader({
           onPress={() => openFocusedFeed(card.deckId, card.id)}
           style={styles.labelStack}
         >
-          <Text style={[styles.deckLabel, { color: appearance.accentColor }]}>{label}</Text>
-          <View style={[styles.accentLine, { backgroundColor: appearance.accentColor }]} />
+          <Text style={[styles.deckLabel, { color: appearance.accent }]}>{label}</Text>
+          <View style={[styles.accentLine, { backgroundColor: appearance.accent }]} />
         </Pressable>
       )}
     </View>

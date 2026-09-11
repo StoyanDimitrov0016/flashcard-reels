@@ -1,6 +1,9 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import {
+  DeckAppearance,
+  isDeckAppearancePresetId,
+} from "@/features/decks/domain/deck-appearance.model";
 import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
@@ -41,24 +44,24 @@ export class SQLiteDeckAppearanceRepository<
     await this.database
       .insert(deckAppearances)
       .values({
-        accentColor: appearance.accentColor,
-        backgroundColor: appearance.backgroundColor,
         deckId: appearance.deckId,
+        presetId: appearance.presetId,
       })
       .onConflictDoUpdate({
         target: deckAppearances.deckId,
         set: {
-          accentColor: appearance.accentColor,
-          backgroundColor: appearance.backgroundColor,
+          presetId: appearance.presetId,
         },
       });
   }
 
   private toModel(row: typeof deckAppearances.$inferSelect): DeckAppearance {
+    if (!isDeckAppearancePresetId(row.presetId)) {
+      throw new Error(`Unknown deck appearance preset ${row.presetId}`);
+    }
     return new DeckAppearance({
-      accentColor: row.accentColor,
-      backgroundColor: row.backgroundColor,
       deckId: row.deckId,
+      presetId: row.presetId,
     });
   }
 }

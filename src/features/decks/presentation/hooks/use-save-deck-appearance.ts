@@ -13,7 +13,7 @@ export function useSaveDeckAppearance() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const savePreset = async (deckId: DeckId, preset: DeckAppearancePreset) => {
-    const appearance = new DeckAppearance({ deckId, ...preset });
+    const appearance = new DeckAppearance({ deckId, presetId: preset.id });
     setPendingPreset(preset);
     setSaveError(null);
     try {

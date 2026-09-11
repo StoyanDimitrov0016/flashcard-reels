@@ -71,9 +71,8 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .insert(deckAppearances)
           .values({
-            accentColor: "#4FD1C5",
-            backgroundColor: "#0B151A",
             deckId: deckPackage.id,
+            presetId: "graphite",
           })
           .onConflictDoNothing()
           .run();

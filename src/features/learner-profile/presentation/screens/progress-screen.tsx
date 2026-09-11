@@ -5,6 +5,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "r
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
@@ -16,7 +17,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
   const { loading, refresh, rows } = useLearnerProgress();
@@ -57,7 +58,10 @@ export default function ProgressScreen() {
                 const percentage = deckRows.length
                   ? Math.round((reviewed / deckRows.length) * 100)
                   : 0;
-                const accent = appearances.get(deck.id)?.accentColor ?? colors.actionPrimary;
+                const appearance = appearances.get(deck.id);
+                const accent = appearance
+                  ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+                  : colors.actionPrimary;
                 return (
                   <View key={deck.id} style={styles.deckCard}>
                     <View style={[styles.deckAccent, { backgroundColor: accent }]} />

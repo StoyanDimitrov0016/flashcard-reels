@@ -22,7 +22,11 @@ describe("bundled deck registry", () => {
       const metadata = registry.find(
         (entry: { packageAsset: string }) => entry.packageAsset === packageFile
       );
-      expect(metadata).toMatchObject({ id: deckPackage.id, version: deckPackage.version });
+      expect(metadata).toMatchObject({
+        appearance: { presetId: "gold" },
+        id: deckPackage.id,
+        version: deckPackage.version,
+      });
     }
   });
 });

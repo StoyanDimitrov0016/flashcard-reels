@@ -9,7 +9,7 @@ const { readBundledDeckPackage } = vi.hoisted(() => ({
 vi.mock("@/infrastructure/bundled-deck-packages", () => ({
   bundledDeckRegistry: {
     "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873": {
-      appearance: { accentColor: "#fff", backgroundColor: "#000", coverAsset: "javascript" },
+      appearance: { presetId: "gold", coverAsset: "javascript" },
       asset: 1,
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
       version: 2,

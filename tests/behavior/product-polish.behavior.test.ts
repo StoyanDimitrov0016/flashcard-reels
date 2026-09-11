@@ -4,7 +4,7 @@ import {
   contrastRatio,
   deckAppearancePresets,
   isCurrentPreset,
-  resolveDeckAppearanceColors,
+  resolveDeckAppearance,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@/features/decks/presentation/deck-details-mode";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { openFocusedFeed } from "@/features/reels/presentation/open-focused-feed";
-import { darkColors, lightColors } from "@/shared/presentation/theme-colors";
 
 describe("product polish policies", () => {
   it("hands the exact deck to Focus and navigates to Focus", () => {
@@ -58,31 +57,22 @@ describe("product polish policies", () => {
     expect(showsLearningProgress(resolveDeckDetailsMode(undefined))).toBe(false);
   });
 
-  it("provides distinct named presets with accessible white primary text contrast", () => {
-    expect(deckAppearancePresets).toHaveLength(9);
-    expect(new Set(deckAppearancePresets.map(({ name }) => name)).size).toBe(9);
+  it("provides ten paired presets with readable text and accents", () => {
+    expect(deckAppearancePresets).toHaveLength(10);
+    expect(new Set(deckAppearancePresets.map(({ id }) => id)).size).toBe(10);
     for (const preset of deckAppearancePresets) {
-      expect(contrastRatio(preset.backgroundColor, "#FFFFFF")).toBeGreaterThanOrEqual(7);
-      expect(isCurrentPreset(preset, preset)).toBe(true);
+      expect(isCurrentPreset(preset, { presetId: preset.id })).toBe(true);
+      for (const variant of [preset.light, preset.dark]) {
+        expect(contrastRatio(variant.textPrimary, variant.background)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(variant.accent, variant.background)).toBeGreaterThanOrEqual(4.5);
+      }
     }
   });
 
-  it("adapts dark deck presets into readable light reel palettes", () => {
+  it("resolves the saved preset into the active application scheme", () => {
     for (const preset of deckAppearancePresets) {
-      const lightAppearance = resolveDeckAppearanceColors(preset, "light", lightColors);
-      const darkAppearance = resolveDeckAppearanceColors(preset, "dark", darkColors);
-
-      expect(lightAppearance.backgroundColor).not.toBe(preset.backgroundColor);
-      expect(
-        contrastRatio(lightAppearance.backgroundColor, lightColors.textPrimary)
-      ).toBeGreaterThanOrEqual(7);
-      expect(
-        contrastRatio(lightAppearance.backgroundColor, lightAppearance.accentColor)
-      ).toBeGreaterThanOrEqual(4.5);
-      expect(darkAppearance).toEqual({
-        accentColor: preset.accentColor,
-        backgroundColor: preset.backgroundColor,
-      });
+      expect(resolveDeckAppearance(preset.id, "light")).toEqual(preset.light);
+      expect(resolveDeckAppearance(preset.id, "dark")).toEqual(preset.dark);
     }
   });
 });

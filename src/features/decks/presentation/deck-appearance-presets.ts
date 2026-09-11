@@ -1,121 +1,223 @@
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
-import type { AppColors } from "@/shared/presentation/theme-colors";
+import { type DeckAppearancePresetId } from "@/features/decks/domain/deck-appearance.model";
+
+export type DeckAppearanceVariant = Readonly<{
+  background: string;
+  accent: string;
+  textPrimary: string;
+  textSecondary: string;
+}>;
 
 export type DeckAppearancePreset = Readonly<{
-  accentColor: string;
-  backgroundColor: string;
+  id: DeckAppearancePresetId;
   name: string;
+  light: DeckAppearanceVariant;
+  dark: DeckAppearanceVariant;
 }>;
 
 export const deckAppearancePresets: readonly DeckAppearancePreset[] = [
-  { accentColor: "#73D9FF", backgroundColor: "#0B151A", name: "Arctic blue" },
-  { accentColor: "#F8C15C", backgroundColor: "#17130D", name: "Golden hour" },
-  { accentColor: "#B8A5FF", backgroundColor: "#131020", name: "Ultraviolet" },
-  { accentColor: "#82E0B0", backgroundColor: "#0D1815", name: "Mint forest" },
-  { accentColor: "#FF9D66", backgroundColor: "#1A100D", name: "Solar orange" },
-  { accentColor: "#FF8FA3", backgroundColor: "#1B0E13", name: "Rose night" },
-  { accentColor: "#61DAFB", backgroundColor: "#0B1720", name: "Electric cyan" },
-  { accentColor: "#D6F36A", backgroundColor: "#15190A", name: "Acid lime" },
-  { accentColor: "#F0A7FF", backgroundColor: "#190D1B", name: "Orchid glow" },
+  {
+    id: "graphite",
+    name: "Graphite",
+    light: {
+      background: "#F8FAFC",
+      accent: "#334155",
+      textPrimary: "#0F172A",
+      textSecondary: "#475569",
+    },
+    dark: {
+      background: "#020617",
+      accent: "#94A3B8",
+      textPrimary: "#F1F5F9",
+      textSecondary: "#94A3B8",
+    },
+  },
+  {
+    id: "gold",
+    name: "Gold",
+    light: {
+      background: "#FFFBEB",
+      accent: "#B45309",
+      textPrimary: "#78350F",
+      textSecondary: "#B45309",
+    },
+    dark: {
+      background: "#451A03",
+      accent: "#FBBF24",
+      textPrimary: "#FEF3C7",
+      textSecondary: "#FBBF24",
+    },
+  },
+  {
+    id: "orange",
+    name: "Orange",
+    light: {
+      background: "#FFF7ED",
+      accent: "#C2410C",
+      textPrimary: "#7C2D12",
+      textSecondary: "#C2410C",
+    },
+    dark: {
+      background: "#431407",
+      accent: "#FB923C",
+      textPrimary: "#FFEDD5",
+      textSecondary: "#FB923C",
+    },
+  },
+  {
+    id: "rose",
+    name: "Rose",
+    light: {
+      background: "#FFF1F2",
+      accent: "#BE123C",
+      textPrimary: "#881337",
+      textSecondary: "#BE123C",
+    },
+    dark: {
+      background: "#4C0519",
+      accent: "#FB7185",
+      textPrimary: "#FFE4E6",
+      textSecondary: "#FB7185",
+    },
+  },
+  {
+    id: "violet",
+    name: "Violet",
+    light: {
+      background: "#F5F3FF",
+      accent: "#6D28D9",
+      textPrimary: "#4C1D95",
+      textSecondary: "#6D28D9",
+    },
+    dark: {
+      background: "#2E1065",
+      accent: "#A78BFA",
+      textPrimary: "#EDE9FE",
+      textSecondary: "#A78BFA",
+    },
+  },
+  {
+    id: "blue",
+    name: "Blue",
+    light: {
+      background: "#EFF6FF",
+      accent: "#1D4ED8",
+      textPrimary: "#1E3A8A",
+      textSecondary: "#1D4ED8",
+    },
+    dark: {
+      background: "#172554",
+      accent: "#60A5FA",
+      textPrimary: "#DBEAFE",
+      textSecondary: "#60A5FA",
+    },
+  },
+  {
+    id: "cyan",
+    name: "Cyan",
+    light: {
+      background: "#ECFEFF",
+      accent: "#0E7490",
+      textPrimary: "#164E63",
+      textSecondary: "#0E7490",
+    },
+    dark: {
+      background: "#083344",
+      accent: "#22D3EE",
+      textPrimary: "#CFFAFE",
+      textSecondary: "#22D3EE",
+    },
+  },
+  {
+    id: "emerald",
+    name: "Emerald",
+    light: {
+      background: "#ECFDF5",
+      accent: "#047857",
+      textPrimary: "#064E3B",
+      textSecondary: "#047857",
+    },
+    dark: {
+      background: "#022C22",
+      accent: "#34D399",
+      textPrimary: "#D1FAE5",
+      textSecondary: "#34D399",
+    },
+  },
+  {
+    id: "lime",
+    name: "Lime",
+    light: {
+      background: "#F7FEE7",
+      accent: "#4D7C0F",
+      textPrimary: "#365314",
+      textSecondary: "#4D7C0F",
+    },
+    dark: {
+      background: "#1A2E05",
+      accent: "#A3E635",
+      textPrimary: "#ECFCCB",
+      textSecondary: "#A3E635",
+    },
+  },
+  {
+    id: "stone",
+    name: "Stone",
+    light: {
+      background: "#FAFAF9",
+      accent: "#44403C",
+      textPrimary: "#1C1917",
+      textSecondary: "#57534E",
+    },
+    dark: {
+      background: "#0C0A09",
+      accent: "#A8A29E",
+      textPrimary: "#F5F5F4",
+      textSecondary: "#A8A29E",
+    },
+  },
 ] as const;
 
-type RgbColor = readonly [red: number, green: number, blue: number];
+const presetsById: ReadonlyMap<DeckAppearancePresetId, DeckAppearancePreset> = new Map(
+  deckAppearancePresets.map((preset) => [preset.id, preset])
+);
 
-function toHexChannel(value: number): string {
-  return Math.round(value).toString(16).padStart(2, "0");
-}
-
-function parseHexColor(hexColor: string): RgbColor | null {
-  if (!/^#[\dA-Fa-f]{6}$/.test(hexColor)) {
-    return null;
+export function resolveDeckAppearance(
+  presetId: DeckAppearancePresetId,
+  scheme: ResolvedColorScheme
+): DeckAppearanceVariant {
+  const preset = presetsById.get(presetId);
+  if (!preset) {
+    throw new Error(`Unknown deck appearance preset ${presetId}`);
   }
-  return [
-    Number.parseInt(hexColor.slice(1, 3), 16),
-    Number.parseInt(hexColor.slice(3, 5), 16),
-    Number.parseInt(hexColor.slice(5, 7), 16),
-  ];
-}
-
-function toHexColor([red, green, blue]: RgbColor): string {
-  return `#${toHexChannel(red)}${toHexChannel(green)}${toHexChannel(blue)}`.toUpperCase();
-}
-
-function mixHexColors(first: string, second: string, secondWeight: number): string | null {
-  const firstRgb = parseHexColor(first);
-  const secondRgb = parseHexColor(second);
-  if (!firstRgb || !secondRgb) {
-    return null;
-  }
-  return toHexColor([
-    firstRgb[0] + (secondRgb[0] - firstRgb[0]) * secondWeight,
-    firstRgb[1] + (secondRgb[1] - firstRgb[1]) * secondWeight,
-    firstRgb[2] + (secondRgb[2] - firstRgb[2]) * secondWeight,
-  ]);
-}
-
-function luminance(hexColor: string): number {
-  const rgb = parseHexColor(hexColor);
-  if (!rgb) {
-    return 0;
-  }
-  const channels = rgb.map((rawChannel) => {
-    const channel = rawChannel / 255;
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-  const [red = 0, green = 0, blue = 0] = channels;
-  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
-}
-
-export function contrastRatio(first: string, second: string): number {
-  const firstLuminance = luminance(first);
-  const secondLuminance = luminance(second);
-  const light = Math.max(firstLuminance, secondLuminance);
-  const dark = Math.min(firstLuminance, secondLuminance);
-  return (light + 0.05) / (dark + 0.05);
-}
-
-function resolveReadableAccent(
-  accentColor: string,
-  backgroundColor: string,
-  target: string
-): string {
-  if (parseHexColor(accentColor) && contrastRatio(accentColor, backgroundColor) >= 4.5) {
-    return accentColor;
-  }
-  for (let step = 1; step <= 10; step += 1) {
-    const candidate = mixHexColors(accentColor, target, step / 10);
-    if (candidate && contrastRatio(candidate, backgroundColor) >= 4.5) {
-      return candidate;
-    }
-  }
-  return target;
-}
-
-export function resolveDeckAppearanceColors(
-  appearance: Readonly<{ accentColor: string; backgroundColor: string }>,
-  scheme: ResolvedColorScheme,
-  colors: AppColors
-): Readonly<{ accentColor: string; backgroundColor: string }> {
-  if (scheme === "dark") {
-    return {
-      accentColor: appearance.accentColor,
-      backgroundColor: appearance.backgroundColor,
-    };
-  }
-  const backgroundColor =
-    mixHexColors(colors.canvas, appearance.accentColor, 0.08) ?? colors.surfaceSubtle;
-  return {
-    accentColor: resolveReadableAccent(appearance.accentColor, backgroundColor, colors.textPrimary),
-    backgroundColor,
-  };
+  return scheme === "light" ? preset.light : preset.dark;
 }
 
 export function isCurrentPreset(
   preset: DeckAppearancePreset,
-  appearance: Readonly<{ accentColor: string; backgroundColor: string }>
+  appearance: Readonly<{ presetId: DeckAppearancePresetId }>
 ): boolean {
+  return preset.id === appearance.presetId;
+}
+
+export function contrastRatio(first: string, second: string): number {
+  const luminance = (color: string) => {
+    const channels = color
+      .slice(1)
+      .match(/.{2}/g)
+      ?.map((channel) => Number.parseInt(channel, 16) / 255);
+    if (!channels || channels.length !== 3) {
+      return 0;
+    }
+    const [red = 0, green = 0, blue = 0] = channels.map((channel) =>
+      channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+    );
+    return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+  };
+  const firstLuminance = luminance(first);
+  const secondLuminance = luminance(second);
   return (
-    preset.accentColor === appearance.accentColor &&
-    preset.backgroundColor === appearance.backgroundColor
+    (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05)
   );
 }

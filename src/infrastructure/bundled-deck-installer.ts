@@ -32,9 +32,8 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
     }
     await appearanceRepository.save(
       new DeckAppearance({
-        accentColor: definition.appearance.accentColor,
-        backgroundColor: definition.appearance.backgroundColor,
         deckId: definition.id,
+        presetId: definition.appearance.presetId,
       })
     );
     const deck = await deckRepository.findById(definition.id);

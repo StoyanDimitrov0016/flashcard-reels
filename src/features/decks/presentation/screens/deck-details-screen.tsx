@@ -21,6 +21,7 @@ import {
   showsLearningProgress,
 } from "@/features/decks/presentation/deck-details-mode";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
@@ -75,7 +76,7 @@ function EmptyCardList() {
 }
 
 export default function DeckDetailsScreen() {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
   const { deckId, mode: modeParameter } = useLocalSearchParams<{
@@ -94,7 +95,8 @@ export default function DeckDetailsScreen() {
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
-  const accentColor = appearance?.accentColor ?? colors.actionPrimary;
+  const deckColors = appearance ? resolveDeckAppearance(appearance.presetId, resolvedScheme) : null;
+  const accentColor = deckColors?.accent ?? colors.actionPrimary;
   const renderCard: ListRenderItem<Flashcard> = ({ item }) => (
     <CardRow card={item} onPress={() => setSelectedCard(item)} showProgress={showProgress} />
   );

@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
@@ -52,9 +53,10 @@ type DeckRowProps = Readonly<{
 }>;
 
 function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const { appearance, cardCount, deck } = entry;
+  const deckColors = resolveDeckAppearance(appearance.presetId, resolvedScheme);
   const longPressHandled = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const haptics = useHaptics();
@@ -81,7 +83,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
 
   return (
     <View style={styles.deck}>
-      <View style={[styles.accent, { backgroundColor: appearance.accentColor }]} />
+      <View style={[styles.accent, { backgroundColor: deckColors.accent }]} />
       <Pressable
         accessibilityHint="Tap to view deck cards. Hold to study this deck in Focus."
         accessibilityLabel={deck.title}
@@ -115,7 +117,7 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
         }}
         style={styles.deckBody}
       >
-        <DeckCover accentColor={appearance.accentColor} asset={deck.coverAsset} />
+        <DeckCover accentColor={deckColors.accent} asset={deck.coverAsset} />
         <View style={styles.deckCopy}>
           <View style={styles.deckHeading}>
             <Text numberOfLines={2} style={styles.deckTitle}>
@@ -434,7 +436,12 @@ function createStyles(colors: AppColors) {
     skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
     skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
     skeletonDeck: { paddingHorizontal: sizes.spacing.content },
-    skeletonLine: { backgroundColor: colors.borderSubtle, borderRadius: 3, height: 12, width: "85%" },
+    skeletonLine: {
+      backgroundColor: colors.borderSubtle,
+      borderRadius: 3,
+      height: 12,
+      width: "85%",
+    },
     skeletonList: { gap: sizes.spacing.xxLarge },
     skeletonShortLine: {
       backgroundColor: colors.borderSubtle,

@@ -25,8 +25,7 @@ export const deckAppearances = sqliteTable("deck_appearances", {
     .primaryKey()
     .notNull()
     .references(() => decks.id, { onDelete: "cascade" }),
-  accentColor: text("accent_color").notNull(),
-  backgroundColor: text("background_color").notNull(),
+  presetId: text("preset_id").notNull(),
 });
 
 export const flashcards = sqliteTable(

@@ -1,7 +1,6 @@
 CREATE TABLE `deck_appearances` (
 	`deck_id` text PRIMARY KEY NOT NULL,
-	`accent_color` text NOT NULL,
-	`background_color` text NOT NULL,
+	`preset_id` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint

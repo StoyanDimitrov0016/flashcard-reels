@@ -1,4 +1,5 @@
 import { strToU8, zipSync } from "fflate";
+import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
@@ -15,6 +16,7 @@ import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { deckAppearances } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, type ScenarioGraph } from "../support/sqlite-study-scenario";
 import {
@@ -264,6 +266,12 @@ describe("deck package installation", () => {
 
     const initialInstall = await importer.installFromBytes(validArchive(1, [cardA, cardB]));
     expect(initialInstall.status).toBe("installed");
+    expect(
+      await database.drizzle
+        .select({ presetId: deckAppearances.presetId })
+        .from(deckAppearances)
+        .where(eq(deckAppearances.deckId, TEST_DECK_ID))
+    ).toEqual([{ presetId: "graphite" }]);
     expect(audio.staged).toHaveLength(1);
     expect(audio.activated).toHaveLength(1);
     const sessionId = await reviewCard(graph, database, cardA.id, false);

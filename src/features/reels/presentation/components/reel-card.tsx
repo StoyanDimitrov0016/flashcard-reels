@@ -4,7 +4,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-nativ
 import { useRecyclingState } from "@shopify/flash-list";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import { resolveDeckAppearanceColors } from "@/features/decks/presentation/deck-appearance-presets";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Deck } from "@/features/decks/domain/deck.model";
@@ -125,7 +125,7 @@ export function ReelCard({
   const haptics = useHaptics();
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
-  const reelAppearance = resolveDeckAppearanceColors(appearance, resolvedScheme, colors);
+  const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
   const answerInsetStyle =
     preferences.recollectionIslandPosition === "left" ? styles.copyLeftIsland : undefined;
   const openFocusedFeed = useOpenFocusedFeed();
@@ -284,7 +284,7 @@ export function ReelCard({
           { transform: [{ rotateY: frontRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={reelAppearance.backgroundColor} height={height} width={width}>
+        <CardPage backgroundColor={reelAppearance.background} height={height} width={width}>
           <ReelHeader
             appearance={reelAppearance}
             card={card}
@@ -304,7 +304,7 @@ export function ReelCard({
           { transform: [{ rotateY: backRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={reelAppearance.backgroundColor} height={height} width={width}>
+        <CardPage backgroundColor={reelAppearance.background} height={height} width={width}>
           <ReelHeader
             appearance={reelAppearance}
             card={card}

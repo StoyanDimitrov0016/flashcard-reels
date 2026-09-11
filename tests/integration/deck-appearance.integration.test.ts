@@ -30,9 +30,8 @@ describe("deck appearance persistence", () => {
       new SQLiteDeckAppearanceRepository(database.drizzle)
     );
     const appearance = new DeckAppearance({
-      accentColor: "#73D9FF",
-      backgroundColor: "#0B151A",
       deckId: TEST_DECK_ID,
+      presetId: "cyan",
     });
 
     await service.saveAppearance(appearance);
