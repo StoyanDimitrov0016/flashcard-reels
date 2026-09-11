@@ -14,9 +14,11 @@ import {
 type ErrorStateProps = Readonly<{
   eyebrow?: string;
   message?: string;
+  onHomeAction: () => void;
   onPrimaryAction: () => void;
   onSecondaryAction?: () => void;
   primaryActionLabel: string;
+  homeActionLabel: string;
   secondaryActionLabel?: string;
   title: string;
 }>;
@@ -24,9 +26,11 @@ type ErrorStateProps = Readonly<{
 export function ErrorState({
   eyebrow,
   message,
+  onHomeAction,
   onPrimaryAction,
   onSecondaryAction,
   primaryActionLabel,
+  homeActionLabel,
   secondaryActionLabel,
   title,
 }: ErrorStateProps) {
@@ -52,6 +56,9 @@ export function ErrorState({
           <Text style={styles.secondaryLabel}>{secondaryActionLabel}</Text>
         </Pressable>
       ) : null}
+      <Pressable accessibilityRole="button" onPress={onHomeAction} style={styles.secondaryButton}>
+        <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
