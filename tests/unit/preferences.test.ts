@@ -26,6 +26,19 @@ describe("application preferences", () => {
     });
   });
 
+  it("preserves valid fields when another stored field is invalid", () => {
+    expect(
+      normalizePersistedPreferences({
+        appearance: "light",
+        audioEnabled: "yes",
+        hapticsEnabled: false,
+      })
+    ).toEqual({
+      ...defaultAppPreferences,
+      appearance: "light",
+      hapticsEnabled: false,
+    });
+  });
   it("falls back to a complete model for invalid stored data", () => {
     expect(normalizePersistedPreferences({ appearance: "sepia" })).toEqual(defaultAppPreferences);
     expect(normalizePersistedPreferences("not-json-object")).toEqual(defaultAppPreferences);

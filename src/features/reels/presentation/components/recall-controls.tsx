@@ -1,46 +1,13 @@
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { recallOptions } from "@/features/reels/presentation/recall-options";
 import { deriveRatingOrder } from "@/features/reels/presentation/study-control-layout";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
-
-type RecallOption = Readonly<{
-  color: keyof Pick<AppColors, "danger" | "warning" | "success" | "recallEasy">;
-  label: string;
-  level: RecallLevel;
-  symbol: SymbolViewProps["name"];
-}>;
-
-const recallOptions: readonly RecallOption[] = [
-  {
-    color: "danger",
-    label: "Again",
-    level: "again",
-    symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
-  },
-  {
-    color: "warning",
-    label: "Hard",
-    level: "hard",
-    symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
-  },
-  {
-    color: "success",
-    label: "Good",
-    level: "good",
-    symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },
-  },
-  {
-    color: "recallEasy",
-    label: "Easy",
-    level: "easy",
-    symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
-  },
-];
 
 type RecallControlsProps = Readonly<{
   onSelect: (level: RecallLevel) => void;

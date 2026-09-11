@@ -14,9 +14,31 @@ export const AppPreferencesSchema = z.object({
   hapticsEnabled: z.boolean(),
 });
 
-const PartialAppPreferencesSchema = AppPreferencesSchema.partial();
+const preferenceKeys: ReadonlyArray<keyof AppPreferences> = [
+  "appearance",
+  "recollectionIslandPosition",
+  "ratingDirection",
+  "audioSide",
+  "audioEnabled",
+  "hapticsEnabled",
+];
 
 export function normalizePersistedPreferences(value: unknown): AppPreferences {
-  const parsed = PartialAppPreferencesSchema.safeParse(value);
-  return parsed.success ? { ...defaultAppPreferences, ...parsed.data } : defaultAppPreferences;
+  if (!isRecord(value)) {
+    return defaultAppPreferences;
+  }
+
+  const validValues: Partial<AppPreferences> = {};
+  for (const key of preferenceKeys) {
+    const parsed = AppPreferencesSchema.shape[key].safeParse(value[key]);
+    if (parsed.success) {
+      Object.assign(validValues, { [key]: parsed.data });
+    }
+  }
+
+  return { ...defaultAppPreferences, ...validValues };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

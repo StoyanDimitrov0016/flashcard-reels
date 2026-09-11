@@ -7,7 +7,7 @@ import type {
   RatingDirection,
   RecollectionIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import { recallOptions } from "@/features/reels/presentation/recall-options";
 import {
   deriveAudioPosition,
   deriveIslandOrientation,
@@ -29,22 +29,6 @@ type StudyControlsSheetProps = Readonly<{
 }>;
 
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
-const labels: Record<RecallLevel, string> = {
-  again: "Again",
-  hard: "Hard",
-  good: "Good",
-  easy: "Easy",
-};
-const previewColors: Record<
-  RecallLevel,
-  keyof Pick<AppColors, "danger" | "warning" | "success" | "recallEasy">
-> = {
-  again: "danger",
-  hard: "warning",
-  good: "success",
-  easy: "recallEasy",
-};
-
 export function StudyControlsSheet({
   onAudioSideChange,
   onClose,
@@ -96,32 +80,41 @@ export function StudyControlsSheet({
           </View>
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.preview}>
-              <View
-                style={[
-                  styles.previewIsland,
-                  orientation === "horizontal" && styles.previewIslandHorizontal,
-                ]}
-              >
-                {deriveRatingOrder(preferences.ratingDirection).map((level) => (
-                  <View key={level} style={styles.previewAction}>
-                    <View
-                      style={[
-                        styles.previewMarker,
-                        {
-                          backgroundColor: colors[previewColors[level]],
-                        },
-                      ]}
-                    />
-                    <Text style={styles.previewLabel}>{labels[level]}</Text>
-                  </View>
-                ))}
-              </View>
-              <View style={[styles.audioMarker, styles[audioPosition]]}>
-                <SymbolView
-                  name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
-                  size={sizes.icon.small}
-                  tintColor={colors.textPrimary}
-                />
+              <View style={styles.previewStage}>
+                <View
+                  style={[
+                    styles.previewIsland,
+                    orientation === "horizontal" && styles.previewIslandHorizontal,
+                  ]}
+                >
+                  {deriveRatingOrder(preferences.ratingDirection).map((level) => {
+                    const option = recallOptions.find((current) => current.level === level);
+                    if (!option) {
+                      return null;
+                    }
+                    return (
+                      <View key={level} style={styles.previewAction}>
+                        <View
+                          style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}
+                        >
+                          <SymbolView
+                            name={option.symbol}
+                            size={sizes.icon.small}
+                            tintColor={colors.actionPrimaryText}
+                          />
+                        </View>
+                        <Text style={styles.previewLabel}>{option.label}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                <View style={[styles.audioMarker, styles[audioPosition]]}>
+                  <SymbolView
+                    name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
+                    size={sizes.icon.small}
+                    tintColor={colors.textPrimary}
+                  />
+                </View>
               </View>
             </View>
             <OptionGroup
@@ -216,8 +209,8 @@ function OptionGroup<T extends string>({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    above: { top: 14 },
-    below: { bottom: 14 },
+    above: { bottom: "100%", marginBottom: sizes.spacing.small },
+    below: { marginTop: sizes.spacing.small, top: "100%" },
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     content: {
       gap: sizes.spacing.section,
@@ -251,7 +244,7 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.content,
     },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
-    left: { left: 18 },
+    left: { marginRight: sizes.spacing.small, right: "100%" },
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     option: {
       alignItems: "center",
@@ -284,11 +277,12 @@ function createStyles(colors: AppColors) {
       borderColor: colors.border,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      height: 190,
+      height: 220,
       justifyContent: "center",
       position: "relative",
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
+    previewStage: { alignItems: "center", justifyContent: "center", position: "relative" },
     previewIsland: {
       alignItems: "center",
       backgroundColor: colors.controlOverlay,
@@ -301,8 +295,14 @@ function createStyles(colors: AppColors) {
     },
     previewIslandHorizontal: { flexDirection: "row" },
     previewLabel: { color: colors.textMuted, fontSize: fontSize.micro },
-    previewMarker: { borderRadius: sizes.radius.pill, height: 24, width: 24 },
-    right: { right: 18 },
+    previewMarker: {
+      alignItems: "center",
+      borderRadius: sizes.radius.pill,
+      height: 28,
+      justifyContent: "center",
+      width: 28,
+    },
+    right: { left: "100%", marginLeft: sizes.spacing.small },
     scrim: {
       backgroundColor: colors.scrim,
       bottom: 0,

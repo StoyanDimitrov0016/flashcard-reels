@@ -45,6 +45,7 @@ export default function TabLayout() {
             tabBarPressColor: "transparent",
             tabBarPressOpacity: 1,
             tabBarShowIcon: true,
+            tabBarShowLabel: false,
             tabBarStyle: {
               backgroundColor: colors.background,
               borderTopColor: colors.border,
@@ -106,7 +107,7 @@ export default function TabLayout() {
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
                 <SymbolView
-                  name={{ android: "insights", ios: "chart.bar.xaxis", web: "insights" }}
+                  name={{ android: "bar_chart", ios: "chart.bar.fill", web: "bar_chart" }}
                   size={sizes.icon.medium}
                   tintColor={color}
                 />

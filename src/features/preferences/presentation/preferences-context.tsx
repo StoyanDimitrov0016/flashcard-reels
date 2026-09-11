@@ -42,14 +42,22 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
   useEffect(
     function loadPreferences() {
       let active = true;
-      void service.load().then((loadedPreferences) => {
-        if (!active) {
-          return;
-        }
-        preferencesReference.current = loadedPreferences;
-        setPreferences(loadedPreferences);
-        setReady(true);
-      });
+      void service
+        .load()
+        .then((loadedPreferences) => {
+          if (!active) {
+            return;
+          }
+          preferencesReference.current = loadedPreferences;
+          setPreferences(loadedPreferences);
+          setReady(true);
+        })
+        .catch(() => {
+          if (!active) {
+            return;
+          }
+          setReady(true);
+        });
       return function deactivatePreferences() {
         active = false;
       };

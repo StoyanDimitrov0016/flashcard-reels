@@ -119,22 +119,26 @@ export function ReelCard({
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
 
-  const resetHoldFeedback = () => {
+  const clearHoldFeedbackTimer = () => {
     if (holdFeedbackTimer.current !== null) {
       clearTimeout(holdFeedbackTimer.current);
       holdFeedbackTimer.current = null;
     }
+  };
+
+  const resetHoldFeedback = () => {
+    clearHoldFeedbackTimer();
     holdState.current = "idle";
     hideFlashcardToast();
   };
 
   useEffect(function cleanUpHoldFeedback() {
     return function cancelHoldFeedbackOnUnmount() {
-      if (holdFeedbackTimer.current !== null) {
-        clearTimeout(holdFeedbackTimer.current);
+      clearHoldFeedbackTimer();
+      if (holdState.current === "feedback") {
+        hideFlashcardToast();
       }
       holdState.current = "idle";
-      hideFlashcardToast();
     };
   }, []);
 
@@ -175,7 +179,14 @@ export function ReelCard({
     }, HOLD_FEEDBACK_DELAY_MS);
   };
 
-  const cancelFocusHold = () => resetHoldFeedback();
+  const cancelFocusHold = () => {
+    clearHoldFeedbackTimer();
+    const transition = transitionHoldToFocus(holdState.current, "release");
+    holdState.current = transition.state;
+    if (transition.actions.includes("hide-toast")) {
+      hideFlashcardToast();
+    }
+  };
 
   const completeFocusHold = () => {
     if (!canStartFocusHold(isActive, showMainFeedLink)) {
@@ -311,13 +322,6 @@ function createStyles(colors: AppColors) {
     },
     answerContent: { flex: 1 },
     copy: { gap: 22, paddingRight: 56 },
-    controlRail: {
-      alignItems: "center",
-      gap: sizes.spacing.xLarge,
-      position: "absolute",
-      right: sizes.spacing.section,
-      top: "32%",
-    },
     prompt: {
       color: colors.textPrimary,
       fontSize: fontSize.hero,

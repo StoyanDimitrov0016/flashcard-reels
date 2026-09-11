@@ -50,6 +50,7 @@
       "reactCompiler": true
     },
     "extra": {
+      "repositoryUrl": "https://github.com/StoyanDimitrov0016/flashcard-reels",
       "router": {},
       "eas": {
         "projectId": "3420f53b-a597-432c-be5b-cab7114861f8"

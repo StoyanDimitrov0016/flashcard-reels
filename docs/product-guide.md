@@ -38,6 +38,6 @@ Decks, study sessions, review history, and appearance preferences are stored in 
 
 The fifth bottom tab, **You**, groups global preferences into Study Controls, Appearance, Interaction, Learning Data, and About.
 
-Appearance offers **Light**, **Dark**, and **Device**. Interaction controls Audio and Haptics. Study Controls configures the recollection-island position, rating direction, and contextual audio side. Learning Data owns the global learning-progress reset while installed decks remain available. About shows the app name, Expo-configured version, and open-source status.
+Appearance offers **Light**, **Dark**, and **Device**. Interaction controls Audio and Haptics. Study Controls configures the recollection-island position, rating direction, and contextual audio side. Learning Data owns the global learning-progress reset while installed decks remain available. About shows the app name, Expo-configured version, and an Open repository link.
 
 The Hold-to-Focus action in Discover uses a themed top toast and opens Focus only after the long-press threshold; Focus cards do not offer that Discover-only action.
