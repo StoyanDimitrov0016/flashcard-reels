@@ -5,7 +5,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
 import { useAppServices } from "@/infrastructure/app-services";
-import { selectAction } from "@/shared/presentation/haptics";
+
 
 export function useSaveDeckAppearance() {
   const { deckService } = useAppServices();
@@ -20,7 +20,7 @@ export function useSaveDeckAppearance() {
     try {
       await deckService.saveAppearance(appearance);
       invalidateAppearances();
-      selectAction();
+
       return appearance;
     } catch {
       setSaveError("Could not save this palette. Please try again.");

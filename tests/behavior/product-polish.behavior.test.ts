@@ -12,13 +12,13 @@ describe("product polish policies", () => {
   it("hands the exact deck to Focus and navigates to Focus", () => {
     const startFocusedFeed = vi.fn();
     const navigate = vi.fn();
-    const confirm = vi.fn();
 
-    openFocusedFeed("deck-2", startFocusedFeed, navigate, confirm);
+
+    openFocusedFeed("deck-2", startFocusedFeed, navigate);
 
     expect(startFocusedFeed).toHaveBeenCalledWith("deck-2");
     expect(navigate).toHaveBeenCalledWith("/(tabs)/focus");
-    expect(confirm).toHaveBeenCalledOnce();
+
   });
 
   it("matches deck titles and descriptions case-insensitively and clears cleanly", () => {

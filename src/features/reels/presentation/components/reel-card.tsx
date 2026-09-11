@@ -11,6 +11,7 @@ import { ReelHeader } from "@/features/reels/presentation/components/reel-header
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -108,6 +109,7 @@ export function ReelCard({
   width,
 }: ReelCardProps) {
   const { preferences } = usePreferences();
+  const haptics = useHaptics();
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const openFocusedFeed = useOpenFocusedFeed();
@@ -186,6 +188,7 @@ export function ReelCard({
     resetHoldFeedback();
     holdCompleted.current = true;
     lastTapAt.current = 0;
+        haptics.focusCompleted();
     openFocusedFeed(card.deckId, card.id);
   };
 
