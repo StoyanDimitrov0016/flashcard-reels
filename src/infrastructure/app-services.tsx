@@ -7,6 +7,7 @@ import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
 import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
 import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
@@ -70,6 +71,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       learningScheduler
     );
     const learnerProfileRepository = new SQLiteLearnerProfileRepository(drizzleDatabase);
+    const learningProgressResetTransaction = new SQLiteLearningProgressResetTransaction(
+      drizzleDatabase
+    );
     const learnerProfileAggregationTransaction = new SQLiteLearnerProfileAggregationTransaction(
       drizzleDatabase
     );
@@ -110,7 +114,11 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       deckPackagePicker: new ExpoDeckPackagePicker(),
       deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
       flashcardService: new FlashcardServiceImpl(flashcardRepository),
-      learnerProfileService: new LearnerProfileServiceImpl(learnerProfileRepository, clock),
+      learnerProfileService: new LearnerProfileServiceImpl(
+        learnerProfileRepository,
+        clock,
+        learningProgressResetTransaction
+      ),
       reelFeedService: new ReelFeedServiceImpl(
         studyService,
         flashcardMemoryStateRepository,

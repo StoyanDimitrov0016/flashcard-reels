@@ -7,6 +7,7 @@ import {
   type LearnerProfileExplanation,
 } from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type LearnerProgressRow = Readonly<{
@@ -31,16 +32,34 @@ export function useLearnerProgress(): LearnerProgressState & {
   resetDeckProgress: (deckId: string) => Promise<void>;
 } {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
+  const { invalidateLearningProgress, revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<LearnerProgressState>(initialState);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => {
     setState((current) => ({ ...current, loading: true }));
     setRevision((current) => current + 1);
   }, []);
-  const resetCardProgress = (flashcardId: string) =>
-    learnerProfileService.resetCardProgress(flashcardId);
-  const resetDeckProgress = (deckId: string) => learnerProfileService.resetDeckProgress(deckId);
-  const resetAllProgress = () => learnerProfileService.resetAllProgress();
+  const resetCardProgress = useCallback(
+    async (flashcardId: string) => {
+      await learnerProfileService.resetCardProgress(flashcardId);
+      invalidateLearningProgress();
+      refresh();
+    },
+    [invalidateLearningProgress, learnerProfileService, refresh]
+  );
+  const resetDeckProgress = useCallback(
+    async (deckId: string) => {
+      await learnerProfileService.resetDeckProgress(deckId);
+      invalidateLearningProgress();
+      refresh();
+    },
+    [invalidateLearningProgress, learnerProfileService, refresh]
+  );
+  const resetAllProgress = useCallback(async () => {
+    await learnerProfileService.resetAllProgress();
+    invalidateLearningProgress();
+    refresh();
+  }, [invalidateLearningProgress, learnerProfileService, refresh]);
 
   useEffect(
     function loadLearnerProgress() {
@@ -81,7 +100,7 @@ export function useLearnerProgress(): LearnerProgressState & {
         active = false;
       };
     },
-    [deckService, flashcardService, learnerProfileService, revision]
+    [deckService, flashcardService, learnerProfileService, resetRevision, revision]
   );
 
   if (state.error) {

@@ -4,6 +4,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useAppServices } from "@/infrastructure/app-services";
 
 type PreparationState = Readonly<{
@@ -30,6 +31,7 @@ export function usePreparedReelFeed(
   anchorFlashcardId: string | null = null
 ): PreparedReelFeed | null {
   const { reelFeedService } = useAppServices();
+  const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
 
@@ -92,6 +94,7 @@ export function usePreparedReelFeed(
       onSessionStarted,
       reelFeedService,
       replaceExistingSession,
+      resetRevision,
       scope,
     ]
   );
