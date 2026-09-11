@@ -6,6 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
+import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
+import { preferencesService } from "@/infrastructure/preferences-services";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { palette } from "@/shared/presentation/palette";
@@ -49,24 +51,26 @@ export function SuspenseFallback() {
 export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeDatabase}>
-      <AppServicesProvider>
-        <ThemeProvider value={appTheme}>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              animation: "none",
-              contentStyle: styles.appBackground,
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="decks/[deckId]"
-              options={{ animation: "none", contentStyle: styles.appBackground }}
-            />
-          </Stack>
-        </ThemeProvider>
-      </AppServicesProvider>
+      <PreferencesProvider service={preferencesService}>
+        <AppServicesProvider>
+          <ThemeProvider value={appTheme}>
+            <StatusBar style="light" />
+            <Stack
+              screenOptions={{
+                animation: "none",
+                contentStyle: styles.appBackground,
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="decks/[deckId]"
+                options={{ animation: "none", contentStyle: styles.appBackground }}
+              />
+            </Stack>
+          </ThemeProvider>
+        </AppServicesProvider>
+      </PreferencesProvider>
     </SQLiteProvider>
   );
 }
