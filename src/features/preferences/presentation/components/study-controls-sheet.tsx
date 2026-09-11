@@ -137,7 +137,7 @@ export function StudyControlsSheet({
               </View>
             </View>
             <OptionGroup
-              label="Recollection island"
+              label="Position"
               options={positions.map((value) => ({
                 label: value.charAt(0).toUpperCase() + value.slice(1),
                 symbol: getPositionSymbol(value),
@@ -147,7 +147,7 @@ export function StudyControlsSheet({
               onChange={onPositionChange}
             />
             <OptionGroup
-              label="Rating direction"
+              label="Order"
               options={[
                 {
                   label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"),
@@ -164,7 +164,7 @@ export function StudyControlsSheet({
               onChange={onRatingDirectionChange}
             />
             <OptionGroup
-              label="Audio position"
+              label="Audio"
               options={[
                 {
                   label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
@@ -265,18 +265,16 @@ function OptionGroup<T extends string>({
               accessibilityLabel={option.label}
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected, selected: isSelected }}
+              hitSlop={4}
               key={option.value}
               onPress={() => onChange(option.value)}
               style={[styles.option, isSelected && styles.optionSelected]}
             >
               <SymbolView
                 name={option.symbol}
-                size={sizes.icon.small}
+                size={16}
                 tintColor={isSelected ? colors.textPrimary : colors.textSecondary}
               />
-              <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
-                {option.label}
-              </Text>
             </Pressable>
           );
         })}
@@ -328,24 +326,22 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flex: 1,
       justifyContent: "center",
-      minHeight: 44,
-      paddingHorizontal: sizes.spacing.small,
+      height: 36,
+      paddingHorizontal: sizes.spacing.xSmall,
     },
-    optionGroup: { gap: sizes.spacing.small },
+    optionGroup: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+    },
     optionLabel: {
       color: colors.textSecondary,
       fontSize: fontSize.caption,
       fontWeight: fontWeight.bold,
+      width: 56,
     },
     optionSelected: { backgroundColor: colors.controlSelected, borderColor: colors.actionPrimary },
-    optionText: {
-      color: colors.textSecondary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.bold,
-      textAlign: "center",
-    },
-    optionTextSelected: { color: colors.textPrimary },
-    options: { flexDirection: "row", gap: sizes.spacing.small },
+    options: { flex: 1, flexDirection: "row", gap: sizes.spacing.large },
     preview: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
