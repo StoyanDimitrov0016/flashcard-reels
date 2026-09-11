@@ -1,5 +1,5 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type {
   AppPreferences,
@@ -29,6 +29,7 @@ type StudyControlsSheetProps = Readonly<{
 }>;
 
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
+
 export function StudyControlsSheet({
   onAudioSideChange,
   onClose,
@@ -51,9 +52,18 @@ export function StudyControlsSheet({
       />
     </View>
   );
+  const handlePositionChange = (position: RecollectionIslandPosition) => {
+    if (position !== preferences.recollectionIslandPosition) {
+      LayoutAnimation.configureNext({
+        duration: 180,
+        update: { type: LayoutAnimation.Types.easeInEaseOut },
+      });
+    }
+    onPositionChange(position);
+  };
 
   return (
-    <AppBottomSheet onClose={onClose} snapPoints={["92%"]} visible={visible}>
+    <AppBottomSheet onClose={onClose} snapPoints={["70%"]} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -160,7 +170,7 @@ export function StudyControlsSheet({
                 value,
               }))}
               selected={preferences.recollectionIslandPosition}
-              onChange={onPositionChange}
+              onChange={handlePositionChange}
             />
             <OptionGroup
               label="Order"
