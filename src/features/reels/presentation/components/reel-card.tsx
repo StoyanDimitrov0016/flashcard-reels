@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { useRecyclingState } from "@shopify/flash-list";
 
@@ -90,6 +90,10 @@ export function ReelCard({
   const styles = createStyles();
   const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
   const openFocusedFeed = useOpenFocusedFeed();
+  const focusedCardState = { cardId: card.id, recallLevel, revealed } as const;
+  const openFocusWithCurrentCardState = () => {
+    openFocusedFeed(card.deckId, card.id, { cardState: focusedCardState });
+  };
   const [rotation] = useState(() => new Animated.Value(getReelRotationValue(revealed)));
   const holdState = useRef<HoldToFocusState>("idle");
   const holdCompleted = useRef(false);
@@ -114,7 +118,7 @@ export function ReelCard({
     }
   );
 
-  useEffect(
+  useLayoutEffect(
     function synchronizeRotationWithRevealedState() {
       const rotationValue = getReelRotationValue(revealed);
       rotation.stopAnimation();
@@ -212,9 +216,7 @@ export function ReelCard({
     holdCompleted.current = true;
     lastTapAt.current = 0;
     haptics.focusCompleted();
-    openFocusedFeed(card.deckId, card.id, {
-      cardState: { cardId: card.id, recallLevel, revealed },
-    });
+    openFocusWithCurrentCardState();
   };
 
   const frontRotation = rotation.interpolate({
@@ -250,6 +252,7 @@ export function ReelCard({
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
+            onOpenFocus={showMainFeedLink ? undefined : openFocusWithCurrentCardState}
             showMainFeedLink={showMainFeedLink}
           />
           <QuestionFaceContent
@@ -275,6 +278,7 @@ export function ReelCard({
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
+            onOpenFocus={showMainFeedLink ? undefined : openFocusWithCurrentCardState}
             showMainFeedLink={showMainFeedLink}
           />
           <StudyControlLayoutProvider>

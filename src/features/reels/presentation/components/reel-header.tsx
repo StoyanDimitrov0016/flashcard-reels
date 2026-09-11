@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { DeckAppearanceVariant } from "@/features/decks/presentation/deck-appearance-presets";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
@@ -13,6 +12,7 @@ type ReelHeaderProps = Readonly<{
   card: Flashcard;
   deck: Deck;
   deckCardCount: number;
+  onOpenFocus?: () => void;
   showMainFeedLink: boolean;
 }>;
 
@@ -21,9 +21,9 @@ export function ReelHeader({
   card,
   deck,
   deckCardCount,
+  onOpenFocus,
   showMainFeedLink,
 }: ReelHeaderProps) {
-  const openFocusedFeed = useOpenFocusedFeed();
   const label = `${deck.title} ${card.order + 1}/${deckCardCount}`;
 
   return (
@@ -38,7 +38,7 @@ export function ReelHeader({
           accessibilityHint="Opens the Focus tab with this card visible"
           accessibilityLabel={`Focus on ${label}`}
           accessibilityRole="button"
-          onPress={() => openFocusedFeed(card.deckId, card.id)}
+          onPress={onOpenFocus}
           style={styles.labelStack}
         >
           <Text style={[styles.deckLabel, { color: appearance.accent }]}>{label}</Text>
