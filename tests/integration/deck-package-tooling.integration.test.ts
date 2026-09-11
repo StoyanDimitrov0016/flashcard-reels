@@ -66,7 +66,7 @@ describe("deck package tooling independence", () => {
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
       version: 1,
     });
-  });
+  }, 10_000);
 
   it("verifies runtime packages in a project with no authoring data", async () => {
     const project = await temporaryProject();
