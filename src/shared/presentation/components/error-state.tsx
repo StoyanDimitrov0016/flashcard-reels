@@ -1,37 +1,23 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
-import {
-  fontSize,
-  fontWeight,
-  letterSpacing,
-  lineHeight,
-  textStyles,
-} from "@/shared/presentation/typography";
+import { fontWeight, textStyles } from "@/shared/presentation/typography";
 
 type ErrorStateProps = Readonly<{
-  eyebrow?: string;
-  message?: string;
   onHomeAction: () => void;
   onPrimaryAction: () => void;
-  onSecondaryAction?: () => void;
   primaryActionLabel: string;
   homeActionLabel: string;
-  secondaryActionLabel?: string;
   title: string;
 }>;
 
 export function ErrorState({
-  eyebrow,
-  message,
   onHomeAction,
   onPrimaryAction,
-  onSecondaryAction,
   primaryActionLabel,
   homeActionLabel,
-  secondaryActionLabel,
   title,
 }: ErrorStateProps) {
   const { colors } = useAppTheme();
@@ -39,26 +25,21 @@ export function ErrorState({
 
   return (
     <SafeAreaView style={styles.screen}>
-      {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
       <Text accessibilityRole="header" style={styles.title}>
         {title}
       </Text>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
-      <Pressable accessibilityRole="button" onPress={onPrimaryAction} style={styles.primaryButton}>
-        <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
-      </Pressable>
-      {onSecondaryAction && secondaryActionLabel ? (
+      <View style={styles.actionRow}>
+        <Pressable accessibilityRole="button" onPress={onHomeAction} style={styles.secondaryButton}>
+          <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
-          onPress={onSecondaryAction}
-          style={styles.secondaryButton}
+          onPress={onPrimaryAction}
+          style={styles.primaryButton}
         >
-          <Text style={styles.secondaryLabel}>{secondaryActionLabel}</Text>
+          <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
         </Pressable>
-      ) : null}
-      <Pressable accessibilityRole="button" onPress={onHomeAction} style={styles.secondaryButton}>
-        <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
-      </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
@@ -73,27 +54,24 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       padding: sizes.spacing.spacious,
     },
-    eyebrow: {
-      color: colors.danger,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.heavy,
-      letterSpacing: letterSpacing.widest,
-      textTransform: "uppercase",
-    },
     title: {
       color: colors.textPrimary,
       textAlign: "center",
       ...textStyles.screenTitle,
     },
-    message: {
-      color: colors.textSecondary,
-      fontSize: fontSize.footnote,
-      lineHeight: lineHeight.footnote,
-      textAlign: "center",
+    actionRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.medium,
+      justifyContent: "center",
+      marginTop: sizes.spacing.wide,
+      width: "100%",
     },
     primaryButton: {
+      alignItems: "center",
       backgroundColor: colors.actionPrimary,
       borderRadius: sizes.radius.pill,
+      flex: 1,
       paddingHorizontal: sizes.spacing.content,
       paddingVertical: sizes.spacing.xLarge,
     },
@@ -102,6 +80,8 @@ function createStyles(colors: AppColors) {
       ...textStyles.primaryButtonLabel,
     },
     secondaryButton: {
+      alignItems: "center",
+      flex: 1,
       paddingHorizontal: sizes.spacing.section,
       paddingVertical: sizes.spacing.medium,
     },

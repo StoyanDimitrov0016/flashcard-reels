@@ -9,11 +9,10 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return (
     <ErrorState
       homeActionLabel="Go to Home"
-      message="The cards are still safe. Try loading them again."
       onHomeAction={() => router.replace("/(tabs)/(discover)")}
       onPrimaryAction={retry}
       primaryActionLabel="Try again"
-      title="Could not load this deck"
+      title="Couldn’t load deck"
     />
   );
 }

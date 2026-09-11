@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
+import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
@@ -22,15 +23,11 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 
   return (
     <ErrorState
-      eyebrow="Something went wrong"
       homeActionLabel="Go to Home"
-      message="Your study data is safe. Try loading the app again."
       onHomeAction={() => router.replace("/(tabs)/(discover)")}
       onPrimaryAction={retry}
-      onSecondaryAction={() => router.replace("/(tabs)/(discover)")}
       primaryActionLabel="Try again"
-      secondaryActionLabel="Back to Discover"
-      title="The next card could not load."
+      title="Couldn’t load next card"
     />
   );
 }
@@ -84,11 +81,13 @@ export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeDatabase}>
       <DeckContentProvider>
-        <PreferencesProvider service={preferencesService}>
-          <AppServicesProvider>
-            <AppNavigation />
-          </AppServicesProvider>
-        </PreferencesProvider>
+        <LearningProgressResetProvider>
+          <PreferencesProvider service={preferencesService}>
+            <AppServicesProvider>
+              <AppNavigation />
+            </AppServicesProvider>
+          </PreferencesProvider>
+        </LearningProgressResetProvider>
       </DeckContentProvider>
     </SQLiteProvider>
   );
