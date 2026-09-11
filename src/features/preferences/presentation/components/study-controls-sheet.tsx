@@ -85,13 +85,8 @@ export function StudyControlsSheet({
               />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.content}>
-            <View
-              style={[
-                styles.preview,
-                preferences.recollectionIslandPosition === "bottom" && styles.previewBottom,
-              ]}
-            >
+          <ScrollView contentContainerStyle={styles.content} style={styles.scroll}>
+            <View style={styles.preview}>
               <View
                 style={[
                   styles.previewStage,
@@ -106,85 +101,113 @@ export function StudyControlsSheet({
                     orientation === "horizontal" && styles.previewClusterHorizontal,
                   ]}
                 >
-                  {audioBeforeIsland ? audioMarker : null}
                   <View
                     style={[
-                      styles.previewIsland,
-                      orientation === "horizontal" && styles.previewIslandHorizontal,
+                      styles.previewControlsGroup,
+                      orientation === "horizontal" && styles.previewControlsGroupHorizontal,
                     ]}
                   >
-                    {deriveRatingOrder(preferences.ratingDirection).map((level) => {
-                      const option = recallOptions.find((current) => current.level === level);
-                      if (!option) {
-                        return null;
-                      }
-                      return (
-                        <View key={level} style={styles.previewAction}>
-                          <View
-                            style={[
-                              styles.previewMarker,
-                              { backgroundColor: colors[option.color] },
-                            ]}
-                          >
-                            <SymbolView
-                              name={option.symbol}
-                              size={sizes.icon.small}
-                              tintColor={colors.actionPrimaryText}
-                            />
-                          </View>
-                          <Text style={styles.previewLabel}>{option.label}</Text>
-                        </View>
-                      );
-                    })}
+                    {audioBeforeIsland ? audioMarker : null}
+                    <View
+                      style={[
+                        styles.previewIsland,
+                        orientation === "horizontal" && styles.previewIslandHorizontal,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.previewRatingControls,
+                          orientation === "horizontal" && styles.previewRatingControlsHorizontal,
+                        ]}
+                      >
+                        {deriveRatingOrder(preferences.ratingDirection).map((level) => {
+                          const option = recallOptions.find((current) => current.level === level);
+                          if (!option) {
+                            return null;
+                          }
+                          return (
+                            <View
+                              key={level}
+                              style={[
+                                styles.previewAction,
+                                orientation === "horizontal" && styles.previewActionHorizontal,
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.previewMarker,
+                                  { backgroundColor: colors[option.color] },
+                                ]}
+                              >
+                                <SymbolView
+                                  name={option.symbol}
+                                  size={sizes.icon.small}
+                                  tintColor={colors.actionPrimaryText}
+                                />
+                              </View>
+                              <Text style={styles.previewLabel}>{option.label}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+                    {audioBeforeIsland ? null : audioMarker}
                   </View>
-                  {audioBeforeIsland ? null : audioMarker}
                 </View>
               </View>
             </View>
-            <OptionGroup
-              label="Position"
-              options={positions.map((value) => ({
-                label: value.charAt(0).toUpperCase() + value.slice(1),
-                symbol: getPositionSymbol(value),
-                value,
-              }))}
-              selected={preferences.recollectionIslandPosition}
-              onChange={onPositionChange}
-            />
-            <OptionGroup
-              label="Order"
-              options={[
-                {
-                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "forward"),
-                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "forward"),
-                  value: "forward" as const,
-                },
-                {
-                  label: getRatingDirectionLabel(preferences.recollectionIslandPosition, "reverse"),
-                  symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "reverse"),
-                  value: "reverse" as const,
-                },
-              ]}
-              selected={preferences.ratingDirection}
-              onChange={onRatingDirectionChange}
-            />
-            <OptionGroup
-              label="Audio"
-              options={[
-                {
-                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
-                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "primary"),
-                  value: "primary" as const,
-                },
-                {
-                  label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
-                  symbol: getAudioSymbol(preferences.recollectionIslandPosition, "opposite"),
-                  value: "opposite" as const,
-                },
-              ]}
-              selected={preferences.audioSide}
-              onChange={onAudioSideChange}
-            />
+            <View style={styles.controls}>
+              <OptionGroup
+                label="Position"
+                options={positions.map((value) => ({
+                  label: value.charAt(0).toUpperCase() + value.slice(1),
+                  symbol: getPositionSymbol(value),
+                  value,
+                }))}
+                selected={preferences.recollectionIslandPosition}
+                onChange={onPositionChange}
+              />
+              <OptionGroup
+                label="Order"
+                options={[
+                  {
+                    label: getRatingDirectionLabel(
+                      preferences.recollectionIslandPosition,
+                      "forward"
+                    ),
+                    symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "forward"),
+                    value: "forward" as const,
+                  },
+                  {
+                    label: getRatingDirectionLabel(
+                      preferences.recollectionIslandPosition,
+                      "reverse"
+                    ),
+                    symbol: getDirectionSymbol(preferences.recollectionIslandPosition, "reverse"),
+                    value: "reverse" as const,
+                  },
+                ]}
+                selected={preferences.ratingDirection}
+                onChange={onRatingDirectionChange}
+              />
+              <OptionGroup
+                label="Audio"
+                options={[
+                  {
+                    label: getAudioSideLabel(preferences.recollectionIslandPosition, "primary"),
+                    symbol: getAudioSymbol(preferences.recollectionIslandPosition, "primary"),
+                    value: "primary" as const,
+                  },
+                  {
+                    label: getAudioSideLabel(preferences.recollectionIslandPosition, "opposite"),
+                    symbol: getAudioSymbol(preferences.recollectionIslandPosition, "opposite"),
+                    value: "opposite" as const,
+                  },
+                ]}
+                selected={preferences.audioSide}
+                onChange={onAudioSideChange}
+              />
+            </View>
             <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
               <Text style={styles.doneLabel}>Done</Text>
             </Pressable>
@@ -292,10 +315,12 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     content: {
+      flexGrow: 1,
       gap: sizes.spacing.section,
       padding: sizes.spacing.content,
       paddingBottom: sizes.spacing.spacious,
     },
+    controls: { gap: sizes.spacing.section },
     doneButton: {
       alignItems: "center",
       backgroundColor: colors.actionPrimary,
@@ -353,20 +378,37 @@ function createStyles(colors: AppColors) {
       borderColor: colors.border,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      height: 260,
+      flex: 1,
       justifyContent: "center",
+      minHeight: 0,
       overflow: "hidden",
       position: "relative",
     },
-    previewBottom: { height: 320 },
-
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
+    previewActionHorizontal: { flex: 1, minWidth: 0 },
     previewCluster: {
       alignItems: "center",
       flexDirection: "column",
       gap: sizes.spacing.small,
     },
-    previewClusterHorizontal: { flexDirection: "row", width: "100%" },
+    previewClusterHorizontal: {
+      alignItems: "center",
+      alignSelf: "stretch",
+      flexDirection: "row",
+      justifyContent: "center",
+      width: "100%",
+    },
+    previewControlsGroup: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: sizes.spacing.small,
+    },
+    previewControlsGroupHorizontal: {
+      alignSelf: "center",
+      flexDirection: "row",
+      minWidth: 0,
+      width: "90%",
+    },
     previewStage: {
       alignItems: "center",
       alignSelf: "stretch",
@@ -388,12 +430,26 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flexDirection: "column",
       gap: sizes.spacing.medium,
-      padding: sizes.spacing.medium,
+      paddingHorizontal: sizes.spacing.medium,
+      paddingVertical: sizes.spacing.content,
     },
     previewIslandHorizontal: {
       flex: 1,
       flexDirection: "row",
+      minWidth: 0,
+      paddingVertical: sizes.spacing.medium,
+    },
+    previewRatingControls: {
+      alignItems: "center",
+      flexDirection: "column",
+      gap: sizes.spacing.medium,
+    },
+    previewRatingControlsHorizontal: {
+      flex: 1,
+      flexDirection: "row",
+      gap: 0,
       justifyContent: "space-around",
+      minWidth: 0,
     },
     previewLabel: { color: colors.textMuted, fontSize: fontSize.micro },
     previewMarker: {
@@ -411,6 +467,7 @@ function createStyles(colors: AppColors) {
       right: 0,
       top: 0,
     },
+    scroll: { flex: 1 },
     sheet: {
       alignSelf: "center",
       backgroundColor: colors.surface,
