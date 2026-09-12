@@ -5,6 +5,7 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionPosition } from "@/features/study/domain/study-session.repository";
 
 type OpenStudySession = Readonly<{
   created: boolean;
@@ -52,7 +53,10 @@ export interface StudyService {
     fromTargetReelPosition: number,
     throughTargetReelPosition: number
   ): Promise<StudySessionRecurrence[]>;
-  updateSessionReelPosition(sessionId: string, currentReelPosition: number): Promise<boolean>;
+  updateSessionReelPosition(
+    sessionId: string,
+    currentReelPosition: number
+  ): Promise<StudySessionPosition | null>;
   startAttempt(flashcardId: string, reelPosition: number, studySessionId: string): Promise<string>;
   listReviewAttemptsInReelPositionRange(
     sessionId: string,
@@ -62,8 +66,5 @@ export interface StudyService {
   rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean>;
   consumeRecurrence(recurrenceId: string): Promise<boolean>;
   finalizeAttempt(attemptId: string): Promise<void>;
-  finalizeAttemptsOutsideEditableWindow(
-    studySessionId: string,
-    reelPosition: number
-  ): Promise<void>;
+  finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void>;
 }

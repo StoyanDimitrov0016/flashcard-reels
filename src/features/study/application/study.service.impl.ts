@@ -147,7 +147,7 @@ export class StudyServiceImpl implements StudyService {
       return null;
     }
 
-    const candidate = session.currentReelPosition - DETAILED_REVIEW_HISTORY_RETENTION;
+    const candidate = session.furthestReelPosition - DETAILED_REVIEW_HISTORY_RETENTION;
     if (candidate <= session.aggregatedThroughReelPosition) {
       return {
         safeThroughReelPosition: session.aggregatedThroughReelPosition,
@@ -252,7 +252,7 @@ export class StudyServiceImpl implements StudyService {
   async updateSessionReelPosition(
     sessionId: string,
     currentReelPosition: number
-  ): Promise<boolean> {
+  ) {
     return this.studySessionRepository.updateCurrentReelPosition(
       sessionId,
       currentReelPosition,
@@ -366,11 +366,15 @@ export class StudyServiceImpl implements StudyService {
   }
 
   async finalizeAttemptsOutsideEditableWindow(
-    studySessionId: string,
-    reelPosition: number
+    studySessionId: string
   ): Promise<void> {
     await this.serializeFinalization(studySessionId, async () => {
-      const firstEditablePosition = reelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
+      const session = await this.studySessionRepository.findById(studySessionId);
+      if (!session) {
+        return;
+      }
+      const firstEditablePosition =
+        session.furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
       if (firstEditablePosition > 0) {
         const attempts = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
           studySessionId,

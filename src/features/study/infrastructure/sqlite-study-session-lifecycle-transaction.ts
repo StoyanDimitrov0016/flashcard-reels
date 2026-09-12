@@ -47,7 +47,7 @@ export class SQLiteStudySessionLifecycleTransaction<
       if (activeRow && !shouldReplace) {
         transaction
           .update(studySessions)
-          .set({ currentReelPosition: activeRow.currentReelPosition, lastActiveAt: now })
+          .set({ lastActiveAt: now })
           .where(and(eq(studySessions.id, activeRow.id), isNull(studySessions.completedAt)))
           .run();
         return {
@@ -70,6 +70,7 @@ export class SQLiteStudySessionLifecycleTransaction<
         aggregatedThroughReelPosition: -1,
         createdAt: now,
         currentReelPosition: 0,
+        furthestReelPosition: 0,
         deckId,
         id: sessionId,
         lastActiveAt: now,
@@ -83,6 +84,7 @@ export class SQLiteStudySessionLifecycleTransaction<
           completedAt: session.completedAt,
           createdAt: session.createdAt,
           currentReelPosition: session.currentReelPosition,
+          furthestReelPosition: session.furthestReelPosition,
           deckId: session.deckId,
           id: session.id,
           lastActiveAt: session.lastActiveAt,
@@ -100,6 +102,7 @@ export class SQLiteStudySessionLifecycleTransaction<
       aggregatedThroughReelPosition: row.aggregatedThroughReelPosition,
       createdAt: row.createdAt,
       currentReelPosition: row.currentReelPosition,
+      furthestReelPosition: row.furthestReelPosition,
       deckId: row.deckId,
       id: row.id,
       lastActiveAt: row.lastActiveAt,

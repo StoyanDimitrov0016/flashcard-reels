@@ -12,6 +12,7 @@ export type PreparedReelOccurrences = readonly PreparedReelOccurrence[];
 export type PreparedReelFeed = Readonly<{
   occurrences: PreparedReelOccurrences;
   currentReelPosition: number;
+  furthestReelPosition: number;
   loadedFromReelPosition: number;
   loadedThroughReelPosition: number;
   materializedThroughReelPosition: number;

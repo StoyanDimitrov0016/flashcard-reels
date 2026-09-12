@@ -202,6 +202,7 @@ describe("SQLite learning progress reset transaction", () => {
     await database.drizzle.insert(studySessions).values({
       createdAt: REVIEWED_AT,
       currentReelPosition: 0,
+      furthestReelPosition: 0,
       deckId,
       feedState: "{}",
       id,
@@ -244,6 +245,7 @@ describe("SQLite learning progress reset transaction", () => {
       completedAt: REVIEWED_AT,
       createdAt: REVIEWED_AT,
       currentReelPosition: 0,
+      furthestReelPosition: 0,
       feedState: "{}",
       id,
       lastActiveAt: REVIEWED_AT,

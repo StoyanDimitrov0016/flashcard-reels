@@ -1,9 +1,12 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
-import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
+import type {
+  StudySessionPosition,
+  StudySessionRepository,
+} from "@/features/study/domain/study-session.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
 
@@ -27,6 +30,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       completedAt: session.completedAt,
       createdAt: session.createdAt,
       currentReelPosition: session.currentReelPosition,
+      furthestReelPosition: session.furthestReelPosition,
       deckId: session.deckId,
       id: session.id,
       lastActiveAt: session.lastActiveAt,
@@ -98,13 +102,20 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
     sessionId: string,
     currentReelPosition: number,
     lastActiveAt: string
-  ): Promise<boolean> {
+  ): Promise<StudySessionPosition | null> {
     const rows = await this.database
       .update(studySessions)
-      .set({ currentReelPosition, lastActiveAt })
+      .set({
+        currentReelPosition,
+        furthestReelPosition: sql<number>`max(${studySessions.furthestReelPosition}, ${currentReelPosition})`,
+        lastActiveAt,
+      })
       .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
-      .returning({ id: studySessions.id });
-    return rows.length > 0;
+      .returning({
+        currentReelPosition: studySessions.currentReelPosition,
+        furthestReelPosition: studySessions.furthestReelPosition,
+      });
+    return rows[0] ?? null;
   }
 
   private toModel(row: typeof studySessions.$inferSelect): StudySession {
@@ -113,6 +124,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       aggregatedThroughReelPosition: row.aggregatedThroughReelPosition,
       createdAt: row.createdAt,
       currentReelPosition: row.currentReelPosition,
+      furthestReelPosition: row.furthestReelPosition,
       deckId: row.deckId,
       id: row.id,
       lastActiveAt: row.lastActiveAt,

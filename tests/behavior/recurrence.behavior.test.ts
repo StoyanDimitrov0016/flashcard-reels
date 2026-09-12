@@ -223,7 +223,8 @@ describe("intra-session recurrence behavior", () => {
       otherSession.id
     );
 
-    await harness.service.finalizeAttemptsOutsideEditableWindow(session.id, 5);
+    await harness.service.updateSessionReelPosition(session.id, 5);
+    await harness.service.finalizeAttemptsOutsideEditableWindow(session.id);
 
     const finalizedMixedAttempt = await harness.attempts.findById(mixedAttempt);
     const finalizedFocusedAttempt = await harness.attempts.findById(focusedAttempt);

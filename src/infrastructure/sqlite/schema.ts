@@ -125,6 +125,7 @@ export const studySessions = sqliteTable(
     scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
     currentReelPosition: integer("current_reel_position").notNull(),
+    furthestReelPosition: integer("furthest_reel_position").notNull(),
     createdAt: text("created_at").notNull(),
     completedAt: text("completed_at"),
     aggregatedThroughReelPosition: integer("aggregated_through_reel_position")
@@ -139,6 +140,10 @@ export const studySessions = sqliteTable(
       sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
     ),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
+    check(
+      "study_sessions_furthest_reel_position_check",
+      sql`${table.furthestReelPosition} >= ${table.currentReelPosition}`
+    ),
     check(
       "study_sessions_aggregated_through_reel_position_check",
       sql`${table.aggregatedThroughReelPosition} >= -1`

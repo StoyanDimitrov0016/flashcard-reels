@@ -190,7 +190,8 @@ describe("SQLite learning-engine finalization", () => {
     ).memoryState;
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 6);
+    await graph.study.updateSessionReelPosition(testId(900), 6);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
 
     const actual = await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId);
     expect(actual).toMatchObject(expected);
@@ -251,13 +252,15 @@ describe("SQLite learning-engine finalization", () => {
     await rating.rateAttempt(earlierReelAttempt.id, "again", earlierRatingAt, null, null);
 
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 5);
+    await graph.study.updateSessionReelPosition(testId(900), 5);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
 
     const earlierAttemptAfterFirstPass = await attempts.findById(earlierReelAttempt.id);
     expect(earlierAttemptAfterFirstPass?.finalizedAt).toBeNull();
     expect(await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId)).toBeNull();
 
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 6);
+    await graph.study.updateSessionReelPosition(testId(900), 6);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
 
     const scheduler = createLearningScheduler();
     const afterLaterReview = scheduler.review(
@@ -298,9 +301,10 @@ describe("SQLite learning-engine finalization", () => {
       trackingFinalization
     );
 
+    await graph.study.updateSessionReelPosition(testId(900), 6);
     await Promise.all([
-      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 5),
-      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 6),
+      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900)),
+      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900)),
     ]);
 
     const state = await memoryStates.findByFlashcardId(firstAttempt.flashcardId);
@@ -338,10 +342,11 @@ describe("SQLite learning-engine finalization", () => {
     await graph.study.rateAttempt(attemptId, "good");
 
     await completeReelActivation(
-      () => graph.study.updateSessionReelPosition(prepared.studySessionId, 5),
+      async () =>
+        (await graph.study.updateSessionReelPosition(prepared.studySessionId, 5)) !== null,
       async () => undefined,
       () => feed.recordVisibleCard(prepared.studySessionId, card.id),
-      () => graph.study.finalizeAttemptsOutsideEditableWindow(prepared.studySessionId, 5),
+      () => graph.study.finalizeAttemptsOutsideEditableWindow(prepared.studySessionId),
       async () => {
         await feed.extendFeed([card], prepared.studySessionId);
       }
@@ -357,13 +362,15 @@ describe("SQLite learning-engine finalization", () => {
     await rating.rateAttempt(ratedAttempt.id, "good", "2026-01-01T00:01:00.000Z", null, null);
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 5);
+    await graph.study.updateSessionReelPosition(testId(900), 5);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
     const skippedAttemptAfterFirstPass = await attempts.findById(skippedAttempt.id);
     const ratedAttemptAfterFirstPass = await attempts.findById(ratedAttempt.id);
     expect(skippedAttemptAfterFirstPass?.finalizedAt).not.toBeNull();
     expect(ratedAttemptAfterFirstPass?.finalizedAt).toBeNull();
 
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900), 6);
+    await graph.study.updateSessionReelPosition(testId(900), 6);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
     const ratedAttemptAfterSecondPass = await attempts.findById(ratedAttempt.id);
     expect(ratedAttemptAfterSecondPass?.finalizedAt).not.toBeNull();
     expect(await memoryStates.findByFlashcardId(ratedAttempt.flashcardId)).toMatchObject({

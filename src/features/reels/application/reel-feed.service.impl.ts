@@ -117,13 +117,15 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     sourceCards: readonly Flashcard[],
     session: Readonly<{
       currentReelPosition: number;
+      furthestReelPosition: number;
       feedState: string;
       id: string;
     }>,
     additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize,
     anchorFlashcardId: string | null = null
   ): Promise<void> {
-    const targetPosition = session.currentReelPosition + additionalWindow;
+    const targetPosition =
+      Math.max(session.currentReelPosition, session.furthestReelPosition) + additionalWindow;
     const candidates = await this.buildCandidates(sourceCards, session);
     const feedState = parseFeedState(session.feedState);
     await this.materializeUntilTarget(
@@ -171,7 +173,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
 
   private async buildCandidates(
     sourceCards: readonly Flashcard[],
-    session: Readonly<{ currentReelPosition: number; id: string }>
+    session: Readonly<{ furthestReelPosition: number; id: string }>
   ): Promise<FeedCandidate[]> {
     const activeCards = sourceCards.filter((card) => card.active);
     const memoryStates = await this.memoryStateRepository.findByFlashcardIds(
@@ -180,7 +182,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     const pendingRecurrenceCardIds = new Set(
       await this.studyService.listPendingRecurrenceFlashcardIdsFromTargetPosition(
         session.id,
-        session.currentReelPosition
+        session.furthestReelPosition
       )
     );
     const now = this.clock.now();
@@ -262,11 +264,12 @@ export class ReelFeedServiceImpl implements ReelFeedService {
 
   private async buildPreparedFeed(
     sourceCards: readonly Flashcard[],
-    session: Readonly<{ currentReelPosition: number; id: string }>
+    session: Readonly<{ currentReelPosition: number; furthestReelPosition: number; id: string }>
   ): Promise<PreparedReelFeed> {
     const materializedThrough = await this.findMaterializedThrough(
       session.id,
-      session.currentReelPosition + FEED_ENGINE_CONFIG.futureWindowSize
+      Math.max(session.currentReelPosition, session.furthestReelPosition) +
+        FEED_ENGINE_CONFIG.futureWindowSize
     );
     const loadedFromReelPosition = Math.max(
       0,
@@ -300,6 +303,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
 
     return {
       currentReelPosition: session.currentReelPosition,
+      furthestReelPosition: session.furthestReelPosition,
       loadedFromReelPosition,
       loadedThroughReelPosition,
       materializedThroughReelPosition: materializedThrough,

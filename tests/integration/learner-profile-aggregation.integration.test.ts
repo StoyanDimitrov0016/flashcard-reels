@@ -257,7 +257,7 @@ describe("SQLite learner-profile aggregation", () => {
     const opened = await service.openSession("mixed", null, false);
     await createAttempt(opened.session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await service.updateSessionReelPosition(opened.session.id, 130);
-    await service.finalizeAttemptsOutsideEditableWindow(opened.session.id, 130);
+    await service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
 
     expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       againCount: 1,

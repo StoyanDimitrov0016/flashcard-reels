@@ -6,6 +6,7 @@ export type StudySessionFields = Readonly<{
   aggregatedThroughReelPosition: number;
   createdAt: string;
   currentReelPosition: number;
+  furthestReelPosition: number;
   deckId: DeckId | null;
   id: string;
   lastActiveAt: string;
@@ -20,6 +21,7 @@ export class StudySession {
   public readonly feedState: string;
   public readonly deckId: DeckId | null;
   public readonly currentReelPosition: number;
+  public readonly furthestReelPosition: number;
   public readonly createdAt: string;
   public readonly completedAt: string | null;
   public readonly aggregatedThroughReelPosition: number;
@@ -29,6 +31,7 @@ export class StudySession {
     this.aggregatedThroughReelPosition = fields.aggregatedThroughReelPosition;
     this.createdAt = fields.createdAt;
     this.currentReelPosition = fields.currentReelPosition;
+    this.furthestReelPosition = fields.furthestReelPosition;
     this.deckId = fields.deckId;
     this.id = fields.id;
     this.lastActiveAt = fields.lastActiveAt;

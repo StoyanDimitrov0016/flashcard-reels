@@ -133,6 +133,7 @@ CREATE TABLE `study_sessions` (
 	`scope` text NOT NULL,
 	`deck_id` text,
 	`current_reel_position` integer NOT NULL,
+	`furthest_reel_position` integer NOT NULL,
 	`created_at` text NOT NULL,
 	`completed_at` text,
 	`aggregated_through_reel_position` integer DEFAULT -1 NOT NULL,
@@ -141,6 +142,7 @@ CREATE TABLE `study_sessions` (
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
 	CONSTRAINT "study_sessions_scope_deck_check" CHECK(("study_sessions"."scope" = 'mixed' AND "study_sessions"."deck_id" IS NULL) OR ("study_sessions"."scope" = 'focused' AND "study_sessions"."deck_id" IS NOT NULL)),
 	CONSTRAINT "study_sessions_current_reel_position_check" CHECK("study_sessions"."current_reel_position" >= 0),
+	CONSTRAINT "study_sessions_furthest_reel_position_check" CHECK("study_sessions"."furthest_reel_position" >= "study_sessions"."current_reel_position"),
 	CONSTRAINT "study_sessions_aggregated_through_reel_position_check" CHECK("study_sessions"."aggregated_through_reel_position" >= -1)
 );
 --> statement-breakpoint

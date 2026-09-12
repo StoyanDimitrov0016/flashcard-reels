@@ -15,7 +15,10 @@ import type { StudySessionItemRepository } from "@/features/study/domain/study-s
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import { StudySession } from "@/features/study/domain/study-session.model";
-import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
+import type {
+  StudySessionPosition,
+  StudySessionRepository,
+} from "@/features/study/domain/study-session.repository";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type {
   OpenStudySessionResult,
@@ -54,13 +57,15 @@ export function makeSession(
   id: string,
   scope: "mixed" | "focused",
   deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
-  currentReelPosition = 0
+  currentReelPosition = 0,
+  furthestReelPosition = currentReelPosition
 ): StudySession {
   return new StudySession({
     completedAt: null,
     aggregatedThroughReelPosition: -1,
     createdAt: "2026-01-01T00:00:00.000Z",
     currentReelPosition,
+    furthestReelPosition,
     deckId,
     id,
     lastActiveAt: "2026-01-01T00:00:00.000Z",
@@ -261,6 +266,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
           aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
           createdAt: session.createdAt,
           currentReelPosition: session.currentReelPosition,
+          furthestReelPosition: session.furthestReelPosition,
           deckId: session.deckId,
           id: session.id,
           lastActiveAt: session.lastActiveAt,
@@ -323,11 +329,12 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
     sessionId: string,
     currentReelPosition: number,
     lastActiveAt: string
-  ): Promise<boolean> {
+  ): Promise<StudySessionPosition | null> {
     const session = this.sessions.get(sessionId);
     if (!session || session.completedAt !== null) {
-      return false;
+      return null;
     }
+    const furthestReelPosition = Math.max(session.furthestReelPosition, currentReelPosition);
     this.sessions.set(
       sessionId,
       new StudySession({
@@ -335,6 +342,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition,
+        furthestReelPosition,
         deckId: session.deckId,
         id: session.id,
         lastActiveAt,
@@ -342,7 +350,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         feedState: session.feedState,
       })
     );
-    return true;
+    return { currentReelPosition, furthestReelPosition };
   }
 
   async setFeedState(sessionId: string, feedState: string): Promise<boolean> {
@@ -357,6 +365,7 @@ export class InMemoryStudySessionRepository implements StudySessionRepository {
         aggregatedThroughReelPosition: session.aggregatedThroughReelPosition,
         createdAt: session.createdAt,
         currentReelPosition: session.currentReelPosition,
+        furthestReelPosition: session.furthestReelPosition,
         deckId: session.deckId,
         id: session.id,
         lastActiveAt: session.lastActiveAt,
@@ -411,6 +420,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
           aggregatedThroughReelPosition: activeSession.aggregatedThroughReelPosition,
           createdAt: activeSession.createdAt,
           currentReelPosition: activeSession.currentReelPosition,
+          furthestReelPosition: activeSession.furthestReelPosition,
           deckId: activeSession.deckId,
           id: activeSession.id,
           lastActiveAt: now,
@@ -427,6 +437,7 @@ export class InMemoryStudySessionLifecycleTransaction implements StudySessionLif
       aggregatedThroughReelPosition: -1,
       createdAt: now,
       currentReelPosition: 0,
+      furthestReelPosition: 0,
       deckId,
       id: sessionId,
       lastActiveAt: now,

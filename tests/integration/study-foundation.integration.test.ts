@@ -101,7 +101,7 @@ describe("study foundation learner journeys", () => {
     });
     await graph.study.consumeRecurrence(recurrence.id);
     await graph.study.updateSessionReelPosition(opened.studySessionId, 126);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId, 126);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
 
     const profileRows = await database.getAllAsync(
       "SELECT review_count, again_count, good_count FROM learner_profiles ORDER BY flashcard_id"
@@ -278,7 +278,7 @@ describe("study foundation learner journeys", () => {
     const attemptId = await graph.study.startAttempt(cardId, 0, feed.studySessionId);
 
     await graph.study.updateSessionReelPosition(feed.studySessionId, 5);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(feed.studySessionId, 5);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(feed.studySessionId);
 
     const attempt = await graph.attempts.findById(attemptId);
     expect(attempt?.finalizedAt).not.toBeNull();

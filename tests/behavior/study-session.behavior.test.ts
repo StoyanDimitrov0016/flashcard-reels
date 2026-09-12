@@ -51,7 +51,7 @@ describe("study session behavior", () => {
         );
         const persistedSession = await harness.service.findSession(feed.studySessionId);
         observedPositions.push(persistedSession?.currentReelPosition ?? -1);
-        return persisted;
+        return persisted !== null;
       },
       async () => {
         const extendedSession = await harness.service.findSession(feed.studySessionId);
@@ -65,6 +65,41 @@ describe("study session behavior", () => {
     expect(extended.currentReelPosition).toBe(activeReelPosition);
     expect(extended.loadedFromReelPosition).toBe(0);
     expect(extended.loadedThroughReelPosition).toBe(10);
+  });
+
+  it("keeps furthest progress monotonic when the viewport moves backwards", async () => {
+    const harness = createStudyHarness();
+    const opened = await harness.service.openSession("mixed", null, false);
+
+    await expect(harness.service.updateSessionReelPosition(opened.session.id, 5)).resolves.toEqual({
+      currentReelPosition: 5,
+      furthestReelPosition: 5,
+    });
+    await expect(harness.service.updateSessionReelPosition(opened.session.id, 2)).resolves.toEqual({
+      currentReelPosition: 2,
+      furthestReelPosition: 5,
+    });
+
+    await expect(harness.service.findSession(opened.session.id)).resolves.toMatchObject({
+      currentReelPosition: 2,
+      furthestReelPosition: 5,
+    });
+  });
+
+  it("does not reopen a finalized review after backwards navigation", async () => {
+    const harness = createStudyHarness();
+    const opened = await harness.service.openSession("mixed", null, false);
+    const attemptId = await harness.service.startAttempt(makeFlashcard(1).id, 0, opened.session.id);
+    await harness.service.rateAttempt(attemptId, "good");
+
+    await harness.service.updateSessionReelPosition(opened.session.id, 5);
+    await harness.service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
+    await harness.service.updateSessionReelPosition(opened.session.id, 2);
+    await harness.service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
+
+    await expect(harness.attempts.findById(attemptId)).resolves.toMatchObject({
+      finalizedAt: expect.any(String),
+    });
   });
 
   it("completes recurrence and finalization before feed extension", async () => {

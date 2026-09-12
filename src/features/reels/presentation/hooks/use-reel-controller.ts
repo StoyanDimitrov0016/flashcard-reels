@@ -140,22 +140,18 @@ export function useReelController({
       const activation = activationQueue.current.then(async () => {
         await startAttempt(occurrence);
         await completeReelActivation(
-          () =>
-            studyService.updateSessionReelPosition(
+          async () =>
+            (await studyService.updateSessionReelPosition(
               initialFeed.studySessionId,
               occurrence.reelPosition
-            ),
+            )) !== null,
           async () => {
             if (occurrence.recurrenceId) {
               await studyService.consumeRecurrence(occurrence.recurrenceId);
             }
           },
           () => reelFeedService.recordVisibleCard(initialFeed.studySessionId, occurrence.card.id),
-          () =>
-            studyService.finalizeAttemptsOutsideEditableWindow(
-              initialFeed.studySessionId,
-              occurrence.reelPosition
-            ),
+          () => studyService.finalizeAttemptsOutsideEditableWindow(initialFeed.studySessionId),
           () => (shouldExtend ? requestFeedExtension() : Promise.resolve()),
           awaitPendingRatings
         );

@@ -55,6 +55,7 @@ describe("SQLite learner profiles", () => {
     await database.drizzle.insert(studySessions).values({
       createdAt: "2026-01-02T00:00:00.000Z",
       currentReelPosition: 0,
+      furthestReelPosition: 0,
       feedState: "{}",
       id: sessionId,
       lastActiveAt: "2026-01-02T00:00:00.000Z",
