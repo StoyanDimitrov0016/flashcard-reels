@@ -1,0 +1,10 @@
+{
+  "appName": "Flashcard Reels",
+  "androidPackage": "com.flashcardreels.app",
+  "darkCanvas": "#191919",
+  "darkNavigation": "#202020",
+  "lightCanvas": "#FFFFFF",
+  "lightNavigation": "#F7F7F5",
+  "scheme": "flashcard-reels",
+  "slug": "flashcard-reels"
+}

@@ -24,7 +24,7 @@ const stockExpoStarterAssets = [
 
 describe("application asset boundary", () => {
   it("keeps every configured application image present", () => {
-    const appConfig = readFileSync(path.join(repositoryRoot, "app.json"), "utf8");
+    const appConfig = readFileSync(path.join(repositoryRoot, "app.config.ts"), "utf8");
     const configuredImages = [...appConfig.matchAll(/\.\/assets\/images\/[\w@.-]+\.png/g)].map(
       ([asset]) => asset
     );

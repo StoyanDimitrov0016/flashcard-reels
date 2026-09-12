@@ -1,4 +1,5 @@
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
+import nativeIdentity from "@/shared/foundation/native-identity.json";
 
 export type AppColors = Readonly<{
   canvas: string;
@@ -28,9 +29,9 @@ export type AppColors = Readonly<{
 }>;
 
 export const lightColors: AppColors = {
-  canvas: "#FFFFFF",
-  navigation: "#F7F7F5",
-  surfaceRaised: "#FFFFFF",
+  canvas: nativeIdentity.lightCanvas,
+  navigation: nativeIdentity.lightNavigation,
+  surfaceRaised: nativeIdentity.lightCanvas,
   surfaceSubtle: "#F1F1EF",
   surfaceHover: "#EFEFED",
   textPrimary: "#373530",
@@ -45,8 +46,8 @@ export const lightColors: AppColors = {
   error: "#D44C47",
   overlay: "rgba(15,15,15,0.35)",
   actionPrimary: "#373530",
-  actionPrimaryText: "#FFFFFF",
-  studyIslandSurface: "#FFFFFF",
+  actionPrimaryText: nativeIdentity.lightCanvas,
+  studyIslandSurface: nativeIdentity.lightCanvas,
   studyIslandBorder: "rgba(55,53,47,0.22)",
   recallAgain: "#D44C47",
   recallHard: "#C58A16",
@@ -55,8 +56,8 @@ export const lightColors: AppColors = {
 };
 
 export const darkColors: AppColors = {
-  canvas: "#191919",
-  navigation: "#202020",
+  canvas: nativeIdentity.darkCanvas,
+  navigation: nativeIdentity.darkNavigation,
   surfaceRaised: "#252525",
   surfaceSubtle: "#2A2A2A",
   surfaceHover: "#2F2F2F",
@@ -72,7 +73,7 @@ export const darkColors: AppColors = {
   error: "#BE524B",
   overlay: "rgba(0,0,0,0.55)",
   actionPrimary: "#D4D4D4",
-  actionPrimaryText: "#191919",
+  actionPrimaryText: nativeIdentity.darkCanvas,
   studyIslandSurface: "#252525",
   studyIslandBorder: "rgba(255,255,255,0.16)",
   recallAgain: "#BE524B",
