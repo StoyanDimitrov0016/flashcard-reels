@@ -97,9 +97,8 @@ describe("study session behavior", () => {
     await harness.service.updateSessionReelPosition(opened.session.id, 2);
     await harness.service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
 
-    await expect(harness.attempts.findById(attemptId)).resolves.toMatchObject({
-      finalizedAt: expect.any(String),
-    });
+    const attempt = await harness.attempts.findById(attemptId);
+    expect(typeof attempt?.finalizedAt).toBe("string");
   });
 
   it("completes recurrence and finalization before feed extension", async () => {

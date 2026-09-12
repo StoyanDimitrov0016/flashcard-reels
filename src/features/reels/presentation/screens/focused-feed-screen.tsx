@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -32,7 +32,7 @@ function ReadyFocusedFeedContent({
   replaceSession,
   transition,
 }: ReadyFocusedFeedContentProps) {
-  const entryTransition = useRef(transition).current;
+  const [entryTransition] = useState(() => transition);
   const consumed = useRef(false);
   const preparedFeed = usePreparedReelFeed(
     cards,

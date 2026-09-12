@@ -1,0 +1,1 @@
+export const MOUNTED_REEL_HISTORY_LIMIT = 40;

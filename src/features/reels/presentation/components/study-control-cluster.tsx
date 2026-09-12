@@ -11,6 +11,7 @@ type StudyControlClusterProps = Readonly<{
   audioSource: AudioReference;
   isActive: boolean;
   onRate: (level: RecallLevel) => void;
+  ratingEnabled: boolean;
   selectedLevel: RecallLevel | null;
 }>;
 
@@ -18,6 +19,7 @@ export function StudyControlCluster({
   audioSource,
   isActive,
   onRate,
+  ratingEnabled,
   selectedLevel,
 }: StudyControlClusterProps) {
   const { audioEnabled, audioPosition, orientation } = useStudyControlLayout();
@@ -26,7 +28,13 @@ export function StudyControlCluster({
     audioEnabled && audioSource ? (
       <AnswerAudioPlayer isActive={isActive} source={audioSource} />
     ) : null;
-  const controls = <RecallControls onSelect={onRate} selectedLevel={selectedLevel} />;
+  const controls = (
+    <RecallControls
+      onSelect={onRate}
+      ratingEnabled={ratingEnabled}
+      selectedLevel={selectedLevel}
+    />
+  );
 
   return (
     <View style={styles.cluster}>

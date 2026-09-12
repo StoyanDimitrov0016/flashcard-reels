@@ -20,12 +20,40 @@ export function useRecallSession(
       : new Map([[initialCardState.position, initialCardState.recallLevel]]);
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
   const attemptIdsReference = useRef<ReadonlyMap<number, string>>(new Map());
+  const retainedRangeReference = useRef({ fromReelPosition, throughReelPosition });
   const [revealedPositions, setRevealedPositions] = useState<ReadonlySet<number>>(() =>
+    initialCardState?.revealed ? new Set([initialCardState.position]) : new Set()
+  );
+  const revealedPositionsReference = useRef<ReadonlySet<number>>(
     initialCardState?.revealed ? new Set([initialCardState.position]) : new Set()
   );
   const [recallLevels, setRecallLevels] =
     useState<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
   const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
+
+  useEffect(
+    function trimRecallSessionToMountedRange() {
+      retainedRangeReference.current = { fromReelPosition, throughReelPosition };
+      const isRetained = (position: number) =>
+        position >= fromReelPosition && position <= throughReelPosition;
+      const nextAttemptIds = new Map(
+        [...attemptIdsReference.current].filter(([position]) => isRetained(position))
+      );
+      const nextRecallLevels = new Map(
+        [...recallLevelsReference.current].filter(([position]) => isRetained(position))
+      );
+      const nextRevealedPositions = new Set(
+        [...revealedPositionsReference.current].filter((position) => isRetained(position))
+      );
+      attemptIdsReference.current = nextAttemptIds;
+      recallLevelsReference.current = nextRecallLevels;
+      revealedPositionsReference.current = nextRevealedPositions;
+      setAttemptIds(nextAttemptIds);
+      setRecallLevels(nextRecallLevels);
+      setRevealedPositions(nextRevealedPositions);
+    },
+    [fromReelPosition, throughReelPosition]
+  );
 
   useEffect(
     function loadRecallSessionAttempts() {
@@ -52,7 +80,9 @@ export function useRecallSession(
           setAttemptIds(nextAttemptIds);
           if (
             initialCardState?.recallLevel !== null &&
-            initialCardState?.recallLevel !== undefined
+            initialCardState?.recallLevel !== undefined &&
+            initialCardState.position >= fromReelPosition &&
+            initialCardState.position <= throughReelPosition
           ) {
             nextRecallLevels.set(initialCardState.position, initialCardState.recallLevel);
           }
@@ -74,6 +104,12 @@ export function useRecallSession(
   );
 
   const toggleCard = useCallback((reelPosition: number) => {
+    if (
+      reelPosition < retainedRangeReference.current.fromReelPosition ||
+      reelPosition > retainedRangeReference.current.throughReelPosition
+    ) {
+      return;
+    }
     setRevealedPositions((currentPositions) => {
       const nextPositions = new Set(currentPositions);
 
@@ -83,11 +119,18 @@ export function useRecallSession(
         nextPositions.add(reelPosition);
       }
 
+      revealedPositionsReference.current = nextPositions;
       return nextPositions;
     });
   }, []);
 
   const rateCard = useCallback((reelPosition: number, level: RecallLevel) => {
+    if (
+      reelPosition < retainedRangeReference.current.fromReelPosition ||
+      reelPosition > retainedRangeReference.current.throughReelPosition
+    ) {
+      return;
+    }
     const nextLevels = new Map(recallLevelsReference.current).set(reelPosition, level);
     recallLevelsReference.current = nextLevels;
     setRecallLevels(nextLevels);
@@ -99,6 +142,12 @@ export function useRecallSession(
   );
 
   const setAttemptId = useCallback((reelPosition: number, attemptId: string) => {
+    if (
+      reelPosition < retainedRangeReference.current.fromReelPosition ||
+      reelPosition > retainedRangeReference.current.throughReelPosition
+    ) {
+      return;
+    }
     const nextAttemptIds = new Map(attemptIdsReference.current).set(reelPosition, attemptId);
     attemptIdsReference.current = nextAttemptIds;
     setAttemptIds(nextAttemptIds);

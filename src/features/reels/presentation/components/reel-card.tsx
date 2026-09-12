@@ -50,6 +50,7 @@ type ReelCardProps = Readonly<{
   isActive: boolean;
   onFlip: () => void;
   onRate: (level: RecallLevel) => void;
+  ratingEnabled: boolean;
   recallLevel: RecallLevel | null;
   revealed: boolean;
   occurrenceKey: string;
@@ -81,6 +82,7 @@ export function ReelCard({
   isActive,
   onFlip,
   onRate,
+  ratingEnabled,
   recallLevel,
   revealed,
   occurrenceKey,
@@ -320,6 +322,7 @@ export function ReelCard({
                   audioSource={audioSource}
                   isActive={isActive}
                   onRate={onRate}
+                  ratingEnabled={ratingEnabled}
                   selectedLevel={recallLevel}
                 />
               </AnswerControlRegion>

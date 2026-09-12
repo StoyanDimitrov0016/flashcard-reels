@@ -60,7 +60,11 @@ export function useReelController({
   const replaceFeed = useCallback((nextFeed: PreparedReelFeed) => {
     const occurrences = mergeMountedReelOccurrences(
       feedReference.current.occurrences,
-      nextFeed.occurrences
+      nextFeed.occurrences,
+      {
+        currentReelPosition: nextFeed.currentReelPosition,
+        furthestReelPosition: nextFeed.furthestReelPosition,
+      }
     );
     const mountedFeed = {
       ...nextFeed,
@@ -140,11 +144,23 @@ export function useReelController({
       const activation = activationQueue.current.then(async () => {
         await startAttempt(occurrence);
         await completeReelActivation(
-          async () =>
-            (await studyService.updateSessionReelPosition(
+          async () => {
+            const position = await studyService.updateSessionReelPosition(
               initialFeed.studySessionId,
               occurrence.reelPosition
-            )) !== null,
+            );
+            if (!position) {
+              return false;
+            }
+            const nextFeed = {
+              ...feedReference.current,
+              currentReelPosition: position.currentReelPosition,
+              furthestReelPosition: position.furthestReelPosition,
+            };
+            feedReference.current = nextFeed;
+            setFeed(nextFeed);
+            return true;
+          },
           async () => {
             if (occurrence.recurrenceId) {
               await studyService.consumeRecurrence(occurrence.recurrenceId);
@@ -172,11 +188,11 @@ export function useReelController({
   const onRatingSelected = useCallback(
     (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
       const previousLevel = getRecallLevel(occurrence.reelPosition);
-      rateCard(occurrence.reelPosition, level);
       const ratingPersistence = startAttempt(occurrence)
         .then((attemptId) => studyService.rateAttempt(attemptId, level))
         .then((updated) => {
           if (updated) {
+            rateCard(occurrence.reelPosition, level);
             if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
               void reelFeedService
                 .refreshFeed(sourceCardsReference.current, initialFeed.studySessionId)

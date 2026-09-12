@@ -11,12 +11,11 @@ import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type RecallControlsProps = Readonly<{
   onSelect: (level: RecallLevel) => void;
+  ratingEnabled: boolean;
   selectedLevel: RecallLevel | null;
 }>;
 
-const HORIZONTAL_RECALL_ACTION_MIN_WIDTH = 44;
-
-export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps) {
+export function RecallControls({ onSelect, ratingEnabled, selectedLevel }: RecallControlsProps) {
   const { orientation, ratingOrder } = useStudyControlLayout();
   const { colors } = useAppTheme();
   const styles = createStyles(colors, orientation);
@@ -34,7 +33,8 @@ export function RecallControls({ onSelect, selectedLevel }: RecallControlsProps)
           <Pressable
             accessibilityLabel={"Recall level: " + label}
             accessibilityRole="button"
-            accessibilityState={{ selected }}
+            accessibilityState={{ disabled: !ratingEnabled, selected }}
+            disabled={!ratingEnabled}
             key={level}
             onPress={() => {
               haptics.ratingSelected();
@@ -74,7 +74,7 @@ function createStyles(colors: AppColors, orientation: "horizontal" | "vertical")
       alignItems: "center",
       flex: orientation === "horizontal" ? 1 : undefined,
       gap: sizes.spacing.xSmall,
-      minWidth: orientation === "horizontal" ? HORIZONTAL_RECALL_ACTION_MIN_WIDTH : undefined,
+      minWidth: orientation === "horizontal" ? 44 : undefined,
     },
     iconCircle: {
       alignItems: "center",

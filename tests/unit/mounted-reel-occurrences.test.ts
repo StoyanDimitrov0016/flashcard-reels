@@ -17,7 +17,8 @@ describe("mounted reel occurrence merging", () => {
   it("appends future positions without duplicating the overlap", () => {
     const result = mergeMountedReelOccurrences(
       [0, 1, 2, 3, 4, 5].map((position) => occurrence(position, position + 1)),
-      [3, 4, 5, 6, 7, 8].map((position) => occurrence(position, position + 1))
+      [3, 4, 5, 6, 7, 8].map((position) => occurrence(position, position + 1)),
+      { currentReelPosition: 3, furthestReelPosition: 8 }
     );
 
     expect(result.map(({ reelPosition }) => reelPosition)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
@@ -26,7 +27,10 @@ describe("mounted reel occurrence merging", () => {
   it("replaces a refreshed occurrence at the same absolute position", () => {
     const existing = occurrence(7, 1);
     const refreshed = occurrence(7, 2);
-    const result = mergeMountedReelOccurrences([existing], [refreshed]);
+    const result = mergeMountedReelOccurrences([existing], [refreshed], {
+      currentReelPosition: 7,
+      furthestReelPosition: 7,
+    });
 
     expect(result).toHaveLength(1);
     expect(result[0]).toBe(refreshed);
@@ -36,7 +40,8 @@ describe("mounted reel occurrence merging", () => {
   it("preserves earlier mounted occurrences when a bounded window moves forward", () => {
     const result = mergeMountedReelOccurrences(
       [0, 1, 2, 3, 4, 5].map((position) => occurrence(position, position + 1)),
-      [8, 9, 10].map((position) => occurrence(position, 1))
+      [8, 9, 10].map((position) => occurrence(position, 1)),
+      { currentReelPosition: 8, furthestReelPosition: 10 }
     );
 
     expect(result.map(({ reelPosition }) => reelPosition)).toEqual([0, 1, 2, 3, 4, 5, 8, 9, 10]);
@@ -45,10 +50,33 @@ describe("mounted reel occurrence merging", () => {
   it("always returns ascending absolute positions with one occurrence per position", () => {
     const result = mergeMountedReelOccurrences(
       [4, 2, 4].map((position, index) => occurrence(position, index + 1)),
-      [3, 2].map((position, index) => occurrence(position, index + 4))
+      [3, 2].map((position, index) => occurrence(position, index + 4)),
+      { currentReelPosition: 2, furthestReelPosition: 4 }
     );
 
     expect(result.map(({ reelPosition }) => reelPosition)).toEqual([2, 3, 4]);
     expect(new Set(result.map(({ reelPosition }) => reelPosition)).size).toBe(result.length);
+  });
+
+  it("trims old mounted history by absolute furthest progress", () => {
+    const result = mergeMountedReelOccurrences(
+      Array.from({ length: 70 }, (_, position) => occurrence(position, position + 1)),
+      [60, 70, 71].map((position) => occurrence(position, 1)),
+      { currentReelPosition: 60, furthestReelPosition: 70 }
+    );
+
+    expect(result.map(({ reelPosition }) => reelPosition)).toEqual(
+      Array.from({ length: 42 }, (_, index) => index + 30)
+    );
+  });
+
+  it("retains the current visible occurrence when it is behind the retention floor", () => {
+    const result = mergeMountedReelOccurrences(
+      [2, 55, 56, 57, 58, 59, 60].map((position) => occurrence(position, 1)),
+      [2, 3, 4].map((position) => occurrence(position, 2)),
+      { currentReelPosition: 2, furthestReelPosition: 60 }
+    );
+
+    expect(result.map(({ reelPosition }) => reelPosition)).toEqual([2, 3, 4, 55, 56, 57, 58, 59, 60]);
   });
 });

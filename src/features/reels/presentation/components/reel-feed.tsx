@@ -6,6 +6,7 @@ import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck
 import { useDecks } from "@/features/decks/presentation/hooks/use-decks";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
+import { getFirstEditableReelPosition } from "@/features/reels/application/reel-extension-policy";
 import { useReelController } from "@/features/reels/presentation/hooks/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
@@ -110,6 +111,9 @@ export function ReelFeed({
           deck={deck}
           deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}
           height={height}
+          ratingEnabled={
+            item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)
+          }
           isActive={item.reelPosition === activeReelPosition}
           onFlip={() => toggleCard(item.reelPosition)}
           onRate={(level) => onRatingSelected(item, level)}
@@ -134,12 +138,19 @@ export function ReelFeed({
       revealedPositions,
       showMainFeedLink,
       toggleCard,
+      feed.furthestReelPosition,
       width,
     ]
   );
   const extraData = useMemo(
-    () => ({ activeIndex, activeReelPosition, recallLevels, revealedPositions }),
-    [activeIndex, activeReelPosition, recallLevels, revealedPositions]
+    () => ({
+      activeIndex,
+      activeReelPosition,
+      furthestReelPosition: feed.furthestReelPosition,
+      recallLevels,
+      revealedPositions,
+    }),
+    [activeIndex, activeReelPosition, feed.furthestReelPosition, recallLevels, revealedPositions]
   );
   const handleEndReached = useCallback(() => {
     void requestFeedExtension().catch(() => undefined);
@@ -157,6 +168,7 @@ export function ReelFeed({
           initialScrollIndex={feed.occurrences.length > 0 ? activeIndex : undefined}
           key={`reel-feed-${height}-${width}`}
           keyExtractor={keyExtractor}
+          maintainVisibleContentPosition={{ disabled: false }}
           onEndReached={handleEndReached}
           onEndReachedThreshold={1}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
