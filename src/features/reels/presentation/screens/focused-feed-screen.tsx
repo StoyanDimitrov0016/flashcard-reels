@@ -20,7 +20,7 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
   deckId: DeckId;
-  onSessionStarted: () => void;
+  onSessionStarted: (sessionId: string) => void;
   replaceSession: boolean;
   transition: FocusTransition | null;
 }>;
@@ -46,7 +46,7 @@ function ReadyFocusedFeedContent({
     function consumePreparedFocusedFeedTransition() {
       if (preparedFeed && !consumed.current) {
         consumed.current = true;
-        onSessionStarted();
+        onSessionStarted(preparedFeed.studySessionId);
       }
     },
     [onSessionStarted, preparedFeed]
@@ -68,7 +68,7 @@ function ReadyFocusedFeedContent({
 
 type ReadyFocusedFeedProps = Readonly<{
   focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
-  onSessionStarted: () => void;
+  onSessionStarted: (sessionId: string) => void;
 }>;
 
 function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedProps) {
@@ -93,7 +93,7 @@ export default function FocusedFeedScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { consumeFocusedFeedTransition, focusedFeed, focusRestoring } = useFeedScope();
+  const { confirmFocusedFeedSession, focusedFeed, focusRestoring } = useFeedScope();
 
   let content: React.ReactNode;
   if (focusedFeed.status === "empty") {
@@ -107,7 +107,7 @@ export default function FocusedFeedScreen() {
       <ReadyFocusedFeed
         focusedFeed={focusedFeed}
         key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
-        onSessionStarted={consumeFocusedFeedTransition}
+        onSessionStarted={confirmFocusedFeedSession}
       />
     );
   }

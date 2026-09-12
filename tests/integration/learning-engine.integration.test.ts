@@ -347,7 +347,7 @@ describe("SQLite learning-engine finalization", () => {
       async () => undefined,
       () => feed.recordVisibleCard(prepared.studySessionId, card.id),
       () => graph.study.finalizeAttemptsOutsideEditableWindow(prepared.studySessionId),
-      () => graph.study.compactSessionRuntimeData(prepared.studySessionId),
+      () => graph.study.compactSessionRuntimeData(prepared.studySessionId, 0),
       async () => {
         await feed.extendFeed([card], prepared.studySessionId);
       }

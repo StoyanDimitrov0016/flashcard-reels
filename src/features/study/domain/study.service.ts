@@ -20,7 +20,7 @@ export interface StudyService {
     replaceExisting: boolean
   ): Promise<OpenStudySession>;
   completeSession(sessionId: string): Promise<void>;
-  compactSessionRuntimeData(sessionId: string): Promise<void>;
+  compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void>;
   findSession(sessionId: string): Promise<StudySession | null>;
   findSessionByScope(scope: StudySessionScope): Promise<StudySession | null>;
   recoverPendingCompletedSessionAggregation(limit?: number): Promise<void>;

@@ -7,7 +7,10 @@ import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall
 import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import { useAppServices } from "@/infrastructure/app-services";
-import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
+import {
+  completeReelActivation,
+  shouldCompactSessionRuntimeData,
+} from "@/features/reels/application/reel-position-extension";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 
 type UseReelControllerParameters = Readonly<{
@@ -142,9 +145,11 @@ export function useReelController({
       const shouldExtend = shouldExtendReelFeed(localIndex, currentFeed.occurrences.length);
 
       const activation = activationQueue.current.then(async () => {
+        let compactionPosition: number | null = null;
         await startAttempt(occurrence);
         await completeReelActivation(
           async () => {
+            const previousFurthestReelPosition = feedReference.current.furthestReelPosition;
             const position = await studyService.updateSessionReelPosition(
               initialFeed.studySessionId,
               occurrence.reelPosition
@@ -159,6 +164,14 @@ export function useReelController({
             };
             feedReference.current = nextFeed;
             setFeed(nextFeed);
+            if (
+              shouldCompactSessionRuntimeData(
+                previousFurthestReelPosition,
+                position.furthestReelPosition
+              )
+            ) {
+              compactionPosition = position.furthestReelPosition;
+            }
             return true;
           },
           async () => {
@@ -168,7 +181,13 @@ export function useReelController({
           },
           () => reelFeedService.recordVisibleCard(initialFeed.studySessionId, occurrence.card.id),
           () => studyService.finalizeAttemptsOutsideEditableWindow(initialFeed.studySessionId),
-          () => studyService.compactSessionRuntimeData(initialFeed.studySessionId),
+          () =>
+            compactionPosition === null
+              ? Promise.resolve()
+              : studyService.compactSessionRuntimeData(
+                  initialFeed.studySessionId,
+                  compactionPosition
+                ),
           () => (shouldExtend ? requestFeedExtension() : Promise.resolve()),
           awaitPendingRatings
         );

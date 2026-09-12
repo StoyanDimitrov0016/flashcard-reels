@@ -154,7 +154,7 @@ describe("study foundation learner journeys", () => {
       Array.from({ length: 125 }, (_, index) => index + 6)
     );
     await graph.study.updateSessionReelPosition(opened.studySessionId, 125);
-    await graph.study.compactSessionRuntimeData(opened.studySessionId);
+    await graph.study.compactSessionRuntimeData(opened.studySessionId, 160);
 
     const itemsAfterCompaction = await graph.items.listBySessionId(opened.studySessionId);
     expect(itemsAfterCompaction.every((item) => item.reelPosition >= 25)).toBe(true);

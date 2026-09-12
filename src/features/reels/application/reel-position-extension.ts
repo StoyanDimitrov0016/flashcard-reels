@@ -1,3 +1,16 @@
+import { SESSION_COMPACTION_INTERVAL } from "@/features/study/domain/review-attempts";
+
+export function shouldCompactSessionRuntimeData(
+  previousFurthestReelPosition: number,
+  nextFurthestReelPosition: number
+): boolean {
+  return (
+    nextFurthestReelPosition > previousFurthestReelPosition &&
+    Math.floor(nextFurthestReelPosition / SESSION_COMPACTION_INTERVAL) >
+      Math.floor(previousFurthestReelPosition / SESSION_COMPACTION_INTERVAL)
+  );
+}
+
 export async function persistPositionThenExtend(
   persistPosition: () => Promise<boolean>,
   extendFeed: () => Promise<void>

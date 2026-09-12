@@ -1,10 +1,11 @@
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
 import {
-  consumeFocusedFeedTransition as consumeFocusedFeedTransitionState,
+  confirmFocusedFeedSession,
   createFocusedFeedState,
+  reconcileFocusedFeedState,
   type FocusedFeedState,
 } from "@/features/reels/presentation/focused-feed-state";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
@@ -22,7 +23,7 @@ type FeedScopeContextValue = Readonly<{
     anchorFlashcardId?: string,
     options?: FocusedFeedOptions
   ) => void;
-  consumeFocusedFeedTransition: () => void;
+  confirmFocusedFeedSession: (sessionId: string) => void;
 }>;
 
 const FeedScopeContext = createContext<FeedScopeContextValue | null>(null);
@@ -32,19 +33,19 @@ type FeedScopeProviderProps = Readonly<{ children: ReactNode }>;
 export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const [focusedFeed, setFocusedFeed] = useState<FocusedFeedState>({ status: "empty" });
   const focusLifecycle = useFocusedFeedLifecycle();
-  const restoredFocusedFeed = useMemo(() => {
-    const deckId = focusLifecycle.session?.deckId;
-    return focusLifecycle.resolved && focusedFeed.status === "empty" && deckId
-      ? {
-          deckId,
-          replaceSession: false,
-          revision: 1,
-          status: "ready" as const,
-          transition: null,
-        }
-      : null;
-  }, [focusedFeed.status, focusLifecycle.resolved, focusLifecycle.session?.deckId]);
-  const visibleFocusedFeed = restoredFocusedFeed ?? focusedFeed;
+
+  useEffect(
+    function reconcileFocusedFeedLifecycle() {
+      if (!focusLifecycle.resolved) {
+        return;
+      }
+      const session = focusLifecycle.session;
+      const persistedSession =
+        !session || session.deckId === null ? null : { deckId: session.deckId, id: session.id };
+      setFocusedFeed((currentFeed) => reconcileFocusedFeedState(currentFeed, persistedSession));
+    },
+    [focusLifecycle.resolved, focusLifecycle.revision, focusLifecycle.session]
+  );
 
   const startFocusedFeed = useCallback(
     (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
@@ -55,17 +56,13 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
     []
   );
 
-  const consumeFocusedFeedTransition = useCallback(() => {
-    setFocusedFeed((currentFeed) =>
-      currentFeed.status === "ready" && currentFeed.replaceSession
-        ? consumeFocusedFeedTransitionState(currentFeed)
-        : currentFeed
-    );
+  const confirmSession = useCallback((sessionId: string) => {
+    setFocusedFeed((currentFeed) => confirmFocusedFeedSession(currentFeed, sessionId));
   }, []);
 
   const contextValue = {
-    consumeFocusedFeedTransition,
-    focusedFeed: visibleFocusedFeed,
+    confirmFocusedFeedSession: confirmSession,
+    focusedFeed,
     focusRestoring: !focusLifecycle.resolved,
     startFocusedFeed,
   };

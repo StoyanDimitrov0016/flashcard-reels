@@ -15,9 +15,15 @@ export type FocusedFeedState =
       deckId: DeckId;
       replaceSession: boolean;
       revision: number;
+      sessionId: string | null;
       status: "ready";
       transition: FocusTransition | null;
     }>;
+
+export type PersistedFocusedSession = Readonly<{
+  deckId: DeckId;
+  id: string;
+}>;
 
 export function createFocusedFeedState(
   current: FocusedFeedState,
@@ -40,11 +46,44 @@ export function createFocusedFeedState(
     deckId,
     replaceSession: true,
     revision: current.status === "ready" ? current.revision + 1 : 1,
+    sessionId: null,
     status: "ready",
     transition,
   };
 }
 
-export function consumeFocusedFeedTransition(state: FocusedFeedState): FocusedFeedState {
-  return state.status === "ready" ? { ...state, replaceSession: false, transition: null } : state;
+export function confirmFocusedFeedSession(
+  state: FocusedFeedState,
+  sessionId: string
+): FocusedFeedState {
+  return state.status === "ready"
+    ? { ...state, replaceSession: false, sessionId, transition: null }
+    : state;
+}
+
+export function reconcileFocusedFeedState(
+  current: FocusedFeedState,
+  persistedSession: PersistedFocusedSession | null
+): FocusedFeedState {
+  if (current.status === "ready" && current.replaceSession && current.sessionId === null) {
+    return current;
+  }
+  if (!persistedSession) {
+    return current.status === "empty" ? current : { status: "empty" };
+  }
+  if (
+    current.status === "ready" &&
+    current.deckId === persistedSession.deckId &&
+    current.sessionId === persistedSession.id
+  ) {
+    return current;
+  }
+  return {
+    deckId: persistedSession.deckId,
+    replaceSession: false,
+    revision: current.status === "ready" ? current.revision + 1 : 1,
+    sessionId: persistedSession.id,
+    status: "ready",
+    transition: null,
+  };
 }

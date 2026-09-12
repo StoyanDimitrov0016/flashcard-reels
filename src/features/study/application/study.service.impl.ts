@@ -9,7 +9,6 @@ import {
   FOREGROUND_AGGREGATION_CHUNK_LIMIT,
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
-  SESSION_COMPACTION_INTERVAL,
 } from "@/features/study/domain/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
@@ -54,7 +53,6 @@ export class StudyServiceImpl implements StudyService {
   private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
-  private readonly compactionWatermarks = new Map<string, number>();
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -117,28 +115,19 @@ export class StudyServiceImpl implements StudyService {
     await this.aggregateCompletedSession(sessionId);
   }
 
-  async compactSessionRuntimeData(sessionId: string): Promise<void> {
+  async compactSessionRuntimeData(
+    sessionId: string,
+    furthestReelPosition: number
+  ): Promise<void> {
     const maintenance = this.studySessionMaintenanceTransaction;
     if (!maintenance) {
       return;
     }
-    const session = await this.studySessionRepository.findById(sessionId);
-    if (!session) {
-      return;
-    }
-    const compactionBoundary = Math.floor(
-      session.furthestReelPosition / SESSION_COMPACTION_INTERVAL
-    );
-    const previousBoundary = this.compactionWatermarks.get(sessionId);
-    if (previousBoundary !== undefined && compactionBoundary <= previousBoundary) {
-      return;
-    }
     const minimumRetainedReelPosition =
-      session.furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
+      furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
     if (minimumRetainedReelPosition > 0) {
       await maintenance.compact(sessionId, minimumRetainedReelPosition);
     }
-    this.compactionWatermarks.set(sessionId, compactionBoundary);
   }
 
   async findSession(sessionId: string): Promise<StudySession | null> {

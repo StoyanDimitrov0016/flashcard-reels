@@ -5,7 +5,8 @@ import {
   type FocusedFeedOptions,
 } from "@/features/reels/presentation/open-focused-feed";
 import {
-  consumeFocusedFeedTransition,
+  confirmFocusedFeedSession,
+  reconcileFocusedFeedState,
   type FocusedFeedState,
 } from "@/features/reels/presentation/focused-feed-state";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
@@ -51,6 +52,7 @@ describe("focus state handoff", () => {
       deckId: "deck-1",
       replaceSession: true,
       revision: 4,
+      sessionId: null,
       status: "ready",
       transition: {
         anchorFlashcardId: "card-1",
@@ -58,12 +60,86 @@ describe("focus state handoff", () => {
       },
     };
 
-    expect(consumeFocusedFeedTransition(state)).toEqual({
+    const confirmed = confirmFocusedFeedSession(state, "session-a");
+    expect(confirmed).toEqual({
       deckId: "deck-1",
       replaceSession: false,
       revision: 4,
+      sessionId: "session-a",
       status: "ready",
       transition: null,
     });
+    expect(reconcileFocusedFeedState(confirmed, { deckId: "deck-1", id: "session-a" })).toBe(
+      confirmed
+    );
+  });
+
+  it("keeps the same state identity when lifecycle rediscovers the prepared session", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-1",
+      replaceSession: false,
+      revision: 4,
+      sessionId: "session-a",
+      status: "ready",
+      transition: null,
+    };
+
+    expect(reconcileFocusedFeedState(state, { deckId: "deck-1", id: "session-a" })).toBe(state);
+  });
+
+  it("remounts exactly once when lifecycle replaces an expired session", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-1",
+      replaceSession: false,
+      revision: 4,
+      sessionId: "session-a",
+      status: "ready",
+      transition: null,
+    };
+
+    expect(reconcileFocusedFeedState(state, { deckId: "deck-1", id: "session-b" })).toEqual({
+      deckId: "deck-1",
+      replaceSession: false,
+      revision: 5,
+      sessionId: "session-b",
+      status: "ready",
+      transition: null,
+    });
+  });
+
+  it("adopts a different valid persisted Focus deck and session", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-1",
+      replaceSession: false,
+      revision: 4,
+      sessionId: "session-a",
+      status: "ready",
+      transition: null,
+    };
+
+    expect(reconcileFocusedFeedState(state, { deckId: "deck-2", id: "session-b" })).toEqual({
+      deckId: "deck-2",
+      replaceSession: false,
+      revision: 5,
+      sessionId: "session-b",
+      status: "ready",
+      transition: null,
+    });
+  });
+
+  it("does not let lifecycle overwrite an explicit transition still being prepared", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-2",
+      replaceSession: true,
+      revision: 5,
+      sessionId: null,
+      status: "ready",
+      transition: {
+        anchorFlashcardId: "card-2",
+        cardState: { cardId: "card-2", recallLevel: "easy", revealed: true },
+      },
+    };
+
+    expect(reconcileFocusedFeedState(state, { deckId: "deck-1", id: "session-a" })).toBe(state);
   });
 });
