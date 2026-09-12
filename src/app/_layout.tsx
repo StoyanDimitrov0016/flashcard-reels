@@ -1,7 +1,9 @@
 import { SQLiteProvider } from "expo-sqlite";
 import { Stack, ThemeProvider, type ErrorBoundaryProps, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet } from "react-native";
+import * as SystemUI from "expo-system-ui";
+import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
@@ -46,6 +48,13 @@ function AppNavigation() {
   const { colors, resolvedScheme } = useAppTheme();
   const { ready } = usePreferences();
 
+  useEffect(
+    function synchronizeNativeRootBackground() {
+      void SystemUI.setBackgroundColorAsync(colors.canvas).catch(() => undefined);
+    },
+    [colors.canvas]
+  );
+
   if (!ready) {
     return (
       <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
@@ -56,7 +65,7 @@ function AppNavigation() {
 
   return (
     <ThemeProvider value={getRouterTheme(resolvedScheme, colors)}>
-      <>
+      <View style={[styles.navigationRoot, { backgroundColor: colors.canvas }]}>
         <StatusBar style={resolvedScheme === "dark" ? "light" : "dark"} />
         <Stack
           screenOptions={{
@@ -72,7 +81,7 @@ function AppNavigation() {
           />
         </Stack>
         <FlashcardToastHost />
-      </>
+      </View>
     </ThemeProvider>
   );
 }
@@ -95,4 +104,5 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   fallbackScreen: { flex: 1 },
+  navigationRoot: { flex: 1 },
 });

@@ -41,8 +41,8 @@ export function FlashcardProgressSheet({
     <AppBottomSheet contentHeight={height * 0.5} onClose={onClose} visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
-          <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
-            {card ? `${card.order + 1} ${card.question}` : ""}
+          <Text accessibilityRole="header" style={styles.title}>
+            {card ? `#${card.order + 1}` : ""}
           </Text>
           <Pressable
             accessibilityLabel="Close card progress"
