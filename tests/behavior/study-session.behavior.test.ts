@@ -119,11 +119,21 @@ describe("study session behavior", () => {
         events.push("finalization");
       },
       async () => {
+        events.push("compaction");
+      },
+      async () => {
         events.push("extension");
       }
     );
 
-    expect(events).toEqual(["position", "recurrence", "visible", "finalization", "extension"]);
+    expect(events).toEqual([
+      "position",
+      "recurrence",
+      "visible",
+      "finalization",
+      "compaction",
+      "extension",
+    ]);
   });
 
   it("waits for pending rating persistence before finalization", async () => {
@@ -143,6 +153,7 @@ describe("study session behavior", () => {
       async () => {
         events.push("finalization");
       },
+      async () => undefined,
       async () => undefined,
       async () => {
         events.push("barrier-start");
@@ -195,6 +206,7 @@ describe("study session behavior", () => {
         async () => {
           events.push("finalization");
         },
+        async () => undefined,
         async () => {
           events.push("extension");
         }

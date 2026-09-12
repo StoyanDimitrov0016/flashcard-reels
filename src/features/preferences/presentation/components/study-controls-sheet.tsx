@@ -4,7 +4,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -47,7 +46,6 @@ export function StudyControlsSheet({
 }: StudyControlsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { height } = useWindowDimensions();
   const layout = resolveStudyControlLayout(preferences);
   const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
@@ -71,7 +69,7 @@ export function StudyControlsSheet({
   };
 
   return (
-    <AppBottomSheet contentHeight={height * 0.75} onClose={onClose} visible={visible}>
+    <AppBottomSheet onClose={onClose} size="half-full" visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -319,7 +317,12 @@ function OptionGroup<T extends string>({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    closeButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     content: {
       flex: 1,
       gap: sizes.spacing.screen,
@@ -333,7 +336,7 @@ function createStyles(colors: AppColors) {
       backgroundColor: colors.actionPrimary,
       borderRadius: sizes.radius.pill,
       justifyContent: "center",
-      minHeight: 48,
+      minHeight: sizes.control.standard,
     },
     doneLabel: {
       color: colors.actionPrimaryText,
@@ -356,7 +359,7 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flex: 1,
       justifyContent: "center",
-      height: 36,
+      height: sizes.control.compact,
       paddingHorizontal: sizes.spacing.xSmall,
     },
     optionGroup: {
@@ -388,7 +391,7 @@ function createStyles(colors: AppColors) {
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
     previewActionSide: { gap: sizes.spacing.xSmall / 2 },
-    previewActionHorizontal: { minWidth: 42 },
+    previewActionHorizontal: { minWidth: sizes.touchTarget.minimum },
     previewCluster: {
       alignItems: "center",
       flexDirection: "column",

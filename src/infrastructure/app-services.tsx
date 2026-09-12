@@ -25,6 +25,7 @@ import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructu
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
+import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { createLearningScheduler } from "@/features/learning-engine";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
@@ -86,6 +87,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const studySessionLifecycleTransaction = new SQLiteStudySessionLifecycleTransaction(
       drizzleDatabase
     );
+    const studySessionMaintenanceTransaction = new SQLiteStudySessionMaintenanceTransaction(
+      drizzleDatabase
+    );
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
     const { answerAudioRepository, deckInstaller } = createDeckPackageServices(
@@ -105,7 +109,8 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       studySessionLifecycleTransaction,
       reviewAttemptFinalizationTransaction,
       Math.random,
-      learnerProfileAggregationTransaction
+      learnerProfileAggregationTransaction,
+      studySessionMaintenanceTransaction
     );
 
     return {

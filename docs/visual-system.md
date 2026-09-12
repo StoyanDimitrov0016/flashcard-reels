@@ -22,7 +22,9 @@ The Study Island is a normal layout sibling of answer content:
 - right places vertical controls after the answer and reserves their width;
 - bottom places horizontal controls below the answer and above the Gesture Footer.
 
-The horizontal island is intrinsic and content-sized. It never overlays answer text or stretches to fill the card. `StudyControlCluster` owns only the local recall/audio composition; its parent owns placement.
+The horizontal island uses the named `sizes.study.horizontalIsland` rule: it occupies 80% of the bottom control region and is capped at 360 points, centered by its parent. It never overlays answer text or stretches beyond that bound. Side islands use the stable `sizes.study.sideControlRegion` width. `StudyControlCluster` owns only the local recall/audio composition; its parent owns placement.
+
+Shared touch targets, controls, inputs, answer width, sheet widths, and Study Island geometry are defined in `src/shared/presentation/sizes.ts`; component StyleSheets use those tokens for composition.
 
 `StudyControlLayoutContext` carries only resolved presentation configuration. `resolveStudyControlLayout()` is shared by the real card and the Study Controls preview, while rating state, callbacks, audio source, and active-session state remain explicit props.
 

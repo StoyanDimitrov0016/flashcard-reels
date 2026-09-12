@@ -55,7 +55,7 @@ function createStyles(colors: AppColors) {
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "center",
-      minHeight: 44,
+      minHeight: sizes.touchTarget.minimum,
       paddingBottom: sizes.spacing.small,
       paddingTop: sizes.spacing.small,
       rowGap: sizes.spacing.small,

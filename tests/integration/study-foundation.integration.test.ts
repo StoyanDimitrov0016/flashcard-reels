@@ -125,6 +125,48 @@ describe("study foundation learner journeys", () => {
     ).toEqual({ count: 2 });
   });
 
+  it("compacts durable session history without removing review attempts or pending recurrences", async () => {
+    const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const firstCard = at(focusCards, 0);
+    const pendingCard = at(focusCards, 1);
+    const firstAttempt = await graph.study.startAttempt(firstCard.id, 0, opened.studySessionId);
+    const pendingAttempt = await graph.study.startAttempt(pendingCard.id, 1, opened.studySessionId);
+    await graph.study.rateAttempt(firstAttempt, "again");
+    await graph.study.rateAttempt(pendingAttempt, "again");
+
+    const recurrencesBefore = await graph.recurrences.listBySessionId(opened.studySessionId);
+    const consumedRecurrence = recurrencesBefore.find(
+      (recurrence) => recurrence.sourceAttemptId === firstAttempt
+    );
+    const pendingRecurrence = recurrencesBefore.find(
+      (recurrence) => recurrence.sourceAttemptId === pendingAttempt
+    );
+    if (!consumedRecurrence || !pendingRecurrence) {
+      throw new Error("Expected both recurrence fixtures");
+    }
+    await graph.study.consumeRecurrence(consumedRecurrence.id);
+
+    await graph.study.appendSessionItems(
+      opened.studySessionId,
+      Array.from({ length: 125 }, () => at(focusCards, 2)),
+      JSON.stringify({ recentCardIds: [] }),
+      6,
+      Array.from({ length: 125 }, (_, index) => index + 6)
+    );
+    await graph.study.updateSessionReelPosition(opened.studySessionId, 125);
+    await graph.study.compactSessionRuntimeData(opened.studySessionId);
+
+    const itemsAfterCompaction = await graph.items.listBySessionId(opened.studySessionId);
+    expect(itemsAfterCompaction.every((item) => item.reelPosition >= 25)).toBe(true);
+    const firstAttemptAfterCompaction = await graph.attempts.findById(firstAttempt);
+    const pendingAttemptAfterCompaction = await graph.attempts.findById(pendingAttempt);
+    expect(firstAttemptAfterCompaction).not.toBeNull();
+    expect(pendingAttemptAfterCompaction).not.toBeNull();
+    const recurrencesAfter = await graph.recurrences.listBySessionId(opened.studySessionId);
+    expect(recurrencesAfter.some((recurrence) => recurrence.id === consumedRecurrence.id)).toBe(false);
+    expect(recurrencesAfter.some((recurrence) => recurrence.id === pendingRecurrence.id)).toBe(true);
+  });
+
   it("keeps feed selection independent from learner-profile counters", async () => {
     const initial = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const initialIds = initial.occurrences.map((occurrence) => occurrence.card.id);

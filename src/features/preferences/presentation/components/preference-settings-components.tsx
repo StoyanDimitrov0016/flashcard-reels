@@ -169,7 +169,7 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      height: 36,
+      height: sizes.control.compact,
       paddingHorizontal: sizes.spacing.small,
     },
     segmentContent: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },

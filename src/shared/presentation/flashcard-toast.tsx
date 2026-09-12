@@ -82,7 +82,7 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flexDirection: "row",
       gap: sizes.spacing.small,
-      minHeight: 44,
+      minHeight: sizes.touchTarget.minimum,
       paddingHorizontal: sizes.spacing.content,
       paddingVertical: sizes.spacing.medium,
     },

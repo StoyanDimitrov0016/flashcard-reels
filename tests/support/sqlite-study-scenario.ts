@@ -12,6 +12,7 @@ import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/inf
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
+import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
@@ -47,7 +48,8 @@ export function createScenarioGraph(
     finalizationTransaction ??
       new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, scheduler),
     random,
-    new SQLiteLearnerProfileAggregationTransaction(database.drizzle)
+    new SQLiteLearnerProfileAggregationTransaction(database.drizzle),
+    new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
   return {
     attempts,

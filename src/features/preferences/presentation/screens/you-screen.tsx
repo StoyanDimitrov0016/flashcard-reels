@@ -158,8 +158,8 @@ function createStyles(colors: AppColors) {
     aboutCopy: { flex: 1, gap: sizes.spacing.xSmall },
     aboutIcon: {
       borderRadius: sizes.radius.medium,
-      height: 44,
-      width: 44,
+      height: sizes.touchTarget.minimum,
+      width: sizes.touchTarget.minimum,
     },
     aboutRow: {
       alignItems: "center",

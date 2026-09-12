@@ -168,6 +168,7 @@ export function useReelController({
           },
           () => reelFeedService.recordVisibleCard(initialFeed.studySessionId, occurrence.card.id),
           () => studyService.finalizeAttemptsOutsideEditableWindow(initialFeed.studySessionId),
+          () => studyService.compactSessionRuntimeData(initialFeed.studySessionId),
           () => (shouldExtend ? requestFeedExtension() : Promise.resolve()),
           awaitPendingRatings
         );

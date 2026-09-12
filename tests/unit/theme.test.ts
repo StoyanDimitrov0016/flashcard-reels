@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { darkColors, getAppColors, lightColors } from "@/shared/presentation/theme-colors";
+import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, lineHeight } from "@/shared/presentation/typography";
 
 describe("semantic application themes", () => {
@@ -59,5 +60,19 @@ describe("semantic application themes", () => {
   it("keeps answer typography dedicated to the flashcard answer surface", () => {
     expect(fontSize.flashcardAnswer).toBe(25);
     expect(lineHeight.flashcardAnswer).toBe(33);
+  });
+
+  it("keeps shared control and study layout metrics named", () => {
+    expect(sizes.touchTarget.minimum).toBe(44);
+    expect(sizes.control).toMatchObject({ compact: 36, standard: 48, audio: 48 });
+    expect(sizes.study).toMatchObject({
+      answerMaxWidth: 480,
+      horizontalIsland: { maxWidth: 360, width: "80%" },
+      recallIcon: 40,
+      sideControlRegion: 84,
+      sideEdgeOffset: 14,
+    });
+    expect(sizes.sheet).toEqual({ maxWidthCompact: 560, maxWidthWide: 680 });
+    expect(sizes.input.standard).toBe(48);
   });
 });

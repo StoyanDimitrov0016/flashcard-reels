@@ -8,6 +8,8 @@ import {
   EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
   FOREGROUND_AGGREGATION_CHUNK_LIMIT,
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
+  PERSISTED_SESSION_FEED_HISTORY_LIMIT,
+  SESSION_COMPACTION_INTERVAL,
 } from "@/features/study/domain/review-attempts";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
@@ -19,6 +21,7 @@ import {
   orderReviewAttemptsForFinalization,
 } from "@/features/study/application/review-attempt-finalization-order";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
@@ -49,7 +52,9 @@ export class StudyServiceImpl implements StudyService {
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
   private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
+  private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
+  private readonly compactionWatermarks = new Map<string, number>();
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -63,7 +68,8 @@ export class StudyServiceImpl implements StudyService {
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
     random: RandomSource = Math.random,
-    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null
+    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null,
+    studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
@@ -77,6 +83,7 @@ export class StudyServiceImpl implements StudyService {
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
     this.learnerProfileAggregationTransaction = learnerProfileAggregationTransaction;
+    this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
   }
 
   async openSession(
@@ -108,6 +115,30 @@ export class StudyServiceImpl implements StudyService {
     await this.finalizeAllAttempts(sessionId);
     await this.studySessionRepository.complete(sessionId, this.clock.now());
     await this.aggregateCompletedSession(sessionId);
+  }
+
+  async compactSessionRuntimeData(sessionId: string): Promise<void> {
+    const maintenance = this.studySessionMaintenanceTransaction;
+    if (!maintenance) {
+      return;
+    }
+    const session = await this.studySessionRepository.findById(sessionId);
+    if (!session) {
+      return;
+    }
+    const compactionBoundary = Math.floor(
+      session.furthestReelPosition / SESSION_COMPACTION_INTERVAL
+    );
+    const previousBoundary = this.compactionWatermarks.get(sessionId);
+    if (previousBoundary !== undefined && compactionBoundary <= previousBoundary) {
+      return;
+    }
+    const minimumRetainedReelPosition =
+      session.furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
+    if (minimumRetainedReelPosition > 0) {
+      await maintenance.compact(sessionId, minimumRetainedReelPosition);
+    }
+    this.compactionWatermarks.set(sessionId, compactionBoundary);
   }
 
   async findSession(sessionId: string): Promise<StudySession | null> {

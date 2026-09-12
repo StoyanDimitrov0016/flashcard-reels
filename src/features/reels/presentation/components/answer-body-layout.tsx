@@ -100,7 +100,7 @@ function createStyles(
       fontWeight: fontWeight.semibold,
       letterSpacing: letterSpacing.tight,
       lineHeight: lineHeight.flashcardAnswer,
-      maxWidth: 480,
+      maxWidth: sizes.study.answerMaxWidth,
     },
     answerPrompt: {
       color: promptColor,
@@ -125,10 +125,10 @@ function createStyles(
       paddingTop: sizes.spacing.medium,
     },
     controlRegionSide: {
-      minWidth: 84,
+      minWidth: sizes.study.sideControlRegion,
       paddingHorizontal: sizes.spacing.xSmall,
     },
-    controlRegionLeft: { marginLeft: -sizes.spacing.xxLarge },
-    controlRegionRight: { marginRight: -sizes.spacing.xxLarge },
+    controlRegionLeft: { marginLeft: -sizes.study.sideEdgeOffset },
+    controlRegionRight: { marginRight: -sizes.study.sideEdgeOffset },
   });
 }

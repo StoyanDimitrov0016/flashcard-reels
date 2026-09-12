@@ -347,7 +347,12 @@ function createStyles(colors: AppColors) {
       color: colors.textTertiary,
       fontSize: fontSize.caption,
     },
-    clearButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    clearButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     deck: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
@@ -400,7 +405,7 @@ function createStyles(colors: AppColors) {
     },
     importButton: {
       alignItems: "center",
-      height: 36,
+      height: sizes.control.compact,
       justifyContent: "center",
       width: 36,
     },
@@ -410,7 +415,7 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.pill,
-      height: 36,
+      height: sizes.control.compact,
       justifyContent: "center",
       width: 36,
     },
@@ -425,7 +430,12 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
     },
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 48 },
+    searchInput: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.callout,
+      height: sizes.input.standard,
+    },
     searchShell: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,

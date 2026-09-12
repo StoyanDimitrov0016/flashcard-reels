@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
@@ -19,10 +19,9 @@ type FlashcardDetailsSheetProps = Readonly<{
 export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardDetailsSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { height } = useWindowDimensions();
 
   return (
-    <AppBottomSheet contentHeight={height * 0.5} onClose={onClose} visible={card !== null}>
+    <AppBottomSheet onClose={onClose} size="half" visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -78,7 +77,12 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.content,
       paddingTop: 0,
     },
-    iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    iconButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     question: {
       color: colors.textPrimary,
       fontSize: fontSize.title2,

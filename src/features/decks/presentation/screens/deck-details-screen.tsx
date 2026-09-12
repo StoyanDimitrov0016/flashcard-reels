@@ -296,7 +296,12 @@ function createStyles(colors: AppColors) {
       paddingTop: sizes.spacing.small,
     },
     headingCopy: { flex: 1 },
-    infoButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    infoButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     list: {
       gap: sizes.spacing.medium,
       paddingBottom: sizes.spacing.content,
@@ -311,7 +316,12 @@ function createStyles(colors: AppColors) {
       textAlign: "center",
       width: 22,
     },
-    resetButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    resetButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     question: {
       color: colors.textPrimary,
       flex: 1,
@@ -320,7 +330,12 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.subhead,
     },
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    searchInput: { color: colors.textPrimary, flex: 1, fontSize: fontSize.callout, height: 44 },
+    searchInput: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.callout,
+      height: sizes.input.standard,
+    },
     searchShell: {
       alignItems: "center",
       borderBottomColor: colors.borderSubtle,

@@ -27,7 +27,7 @@ export function ResetProgressSheet({
   const styles = createStyles(colors);
 
   return (
-    <AppBottomSheet dismissible={!busy} onClose={onCancel} visible={isPresented}>
+    <AppBottomSheet dismissible={!busy} onClose={onCancel} size="content" visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.iconShell}>
           <SymbolView
@@ -132,7 +132,7 @@ function createStyles(colors: AppColors) {
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
       gap: sizes.spacing.xLarge,
-      maxWidth: 560,
+      maxWidth: sizes.sheet.maxWidthCompact,
       paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
       paddingTop: sizes.spacing.small,

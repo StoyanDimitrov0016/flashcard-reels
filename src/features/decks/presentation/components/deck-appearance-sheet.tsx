@@ -86,7 +86,7 @@ export function DeckAppearanceSheet({
 }: DeckAppearanceSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const columnCount = width >= 680 ? 4 : 3;
   const renderPreset: ListRenderItem<DeckAppearancePreset> = ({ item }) => (
     <PresetItem
@@ -98,7 +98,7 @@ export function DeckAppearanceSheet({
   );
 
   return (
-    <AppBottomSheet contentHeight={height * 0.82} onClose={onDismiss} visible={isPresented}>
+    <AppBottomSheet onClose={onDismiss} size="full" visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -143,7 +143,12 @@ export function DeckAppearanceSheet({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    closeButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    closeButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     error: {
       color: colors.error,
       fontSize: fontSize.footnote,
@@ -183,7 +188,7 @@ function createStyles(colors: AppColors) {
       flex: 1,
       borderTopLeftRadius: sizes.radius.panel,
       borderTopRightRadius: sizes.radius.panel,
-      maxWidth: 680,
+      maxWidth: sizes.sheet.maxWidthWide,
       paddingBottom: sizes.spacing.content,
       width: "100%",
     },

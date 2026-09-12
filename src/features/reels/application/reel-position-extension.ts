@@ -28,6 +28,7 @@ export async function completeReelActivation(
   consumeRecurrence: () => Promise<void>,
   recordVisibleCard: () => Promise<void>,
   finalizeAttempts: () => Promise<void>,
+  compactSession: () => Promise<void>,
   extendFeed: () => Promise<void>,
   awaitPendingRatings: () => Promise<void> = async () => undefined
 ): Promise<boolean> {
@@ -38,6 +39,7 @@ export async function completeReelActivation(
   await recordVisibleCard();
   await awaitPendingRatings();
   await finalizeAttempts();
+  await compactSession();
   await extendFeed();
   return true;
 }

@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -22,7 +22,6 @@ type DeckInfoSheetProps = Readonly<{
 export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckInfoSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { height } = useWindowDimensions();
   const reviewedProfiles = cards.flatMap((card) => {
     const profile = profiles.get(card.id);
     return profile && profile.reviewCount > 0 ? [profile] : [];
@@ -40,7 +39,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
         );
 
   return (
-    <AppBottomSheet contentHeight={height * 0.5} onClose={onClose} visible={visible}>
+    <AppBottomSheet onClose={onClose} size="half" visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -111,7 +110,12 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.content,
       paddingTop: 0,
     },
-    iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
+    iconButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     metric: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
     metricLabel: { color: colors.textTertiary, fontSize: fontSize.caption },
     metrics: { flexDirection: "row" },
