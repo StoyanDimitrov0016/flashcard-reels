@@ -68,9 +68,11 @@ function createStyles(colors: AppColors, orientation: "horizontal" | "vertical")
       gap: orientation === "horizontal" ? 0 : sizes.spacing.medium,
       paddingHorizontal: sizes.spacing.medium,
       paddingVertical: sizes.spacing.medium,
+      width: orientation === "horizontal" ? "80%" : undefined,
     },
     action: {
       alignItems: "center",
+      flex: orientation === "horizontal" ? 1 : undefined,
       gap: sizes.spacing.xSmall,
       minWidth: orientation === "horizontal" ? HORIZONTAL_RECALL_ACTION_MIN_WIDTH : undefined,
     },

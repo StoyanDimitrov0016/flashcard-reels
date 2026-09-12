@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -47,9 +46,9 @@ export default function ProgressScreen() {
         ) : (
           <>
             <View style={styles.summaryRow}>
-              <SummaryFact icon="cards" label="Cards" value={rows.length} />
-              <SummaryFact icon="reviewed" label="Reviewed" value={reviewedCount} />
-              <SummaryFact icon="new" label="New" value={rows.length - reviewedCount} />
+              <SummaryFact label="Cards" value={rows.length} />
+              <SummaryFact label="Reviewed" value={reviewedCount} />
+              <SummaryFact label="New" value={rows.length - reviewedCount} />
             </View>
             <View style={styles.deckList}>
               {decks.map((deck) => {
@@ -117,28 +116,16 @@ function renderRefreshControl(refreshing: boolean, onRefresh: () => void, colors
 }
 
 type SummaryFactProps = Readonly<{
-  icon: "cards" | "new" | "reviewed";
   label: string;
   value: number;
 }>;
 
-function SummaryFact({ icon, label, value }: SummaryFactProps) {
+function SummaryFact({ label, value }: SummaryFactProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const summaryColors = {
-    cards: colors.actionPrimary,
-    new: colors.warning,
-    reviewed: colors.success,
-  };
-  const symbols = {
-    cards: { android: "library_books", ios: "books.vertical.fill", web: "library_books" },
-    new: { android: "auto_awesome", ios: "sparkles", web: "auto_awesome" },
-    reviewed: { android: "check_box", ios: "checkmark.square.fill", web: "check_box" },
-  } as const;
 
   return (
     <View style={styles.summaryFact}>
-      <SymbolView name={symbols[icon]} size={sizes.icon.medium} tintColor={summaryColors[icon]} />
       <Text style={styles.summaryValue}>{value}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
@@ -163,7 +150,7 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.xLarge,
       minHeight: 82,
       overflow: "hidden",
-      paddingRight: sizes.spacing.medium,
+      paddingRight: sizes.spacing.xLarge,
     },
     deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
     deckHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.small },
@@ -204,7 +191,8 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flex: 1,
       gap: sizes.spacing.xSmall,
-      padding: sizes.spacing.xLarge,
+      paddingHorizontal: sizes.spacing.small,
+      paddingVertical: sizes.spacing.medium,
     },
     summaryLabel: { color: colors.textTertiary, fontSize: fontSize.caption },
     summaryRow: { flexDirection: "row", gap: sizes.spacing.medium },

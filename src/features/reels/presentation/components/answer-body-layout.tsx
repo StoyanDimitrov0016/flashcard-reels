@@ -46,6 +46,8 @@ export function AnswerControlRegion({ children }: AnswerControlRegionProps) {
       style={[
         styles.controlRegion,
         position === "bottom" ? styles.controlRegionBottom : styles.controlRegionSide,
+        position === "left" && styles.controlRegionLeft,
+        position === "right" && styles.controlRegionRight,
       ]}
     >
       {children}
@@ -126,5 +128,7 @@ function createStyles(
       minWidth: 84,
       paddingHorizontal: sizes.spacing.xSmall,
     },
+    controlRegionLeft: { marginLeft: -sizes.spacing.xxLarge },
+    controlRegionRight: { marginRight: -sizes.spacing.xxLarge },
   });
 }

@@ -71,7 +71,7 @@ export function StudyControlsSheet({
   };
 
   return (
-    <AppBottomSheet contentHeight={height * 0.7} onClose={onClose} visible={visible}>
+    <AppBottomSheet contentHeight={height * 0.75} onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>
@@ -373,6 +373,7 @@ function createStyles(colors: AppColors) {
     optionSelected: { backgroundColor: colors.surfaceHover, borderColor: colors.actionPrimary },
     options: { flex: 1, flexDirection: "row", gap: sizes.spacing.large },
     preview: {
+      alignSelf: "center",
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderSubtle,
@@ -383,6 +384,7 @@ function createStyles(colors: AppColors) {
       minHeight: 160,
       overflow: "hidden",
       position: "relative",
+      width: "75%",
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
     previewActionSide: { gap: sizes.spacing.xSmall / 2 },
