@@ -14,7 +14,7 @@
     "tools/**"
   ],
   "options": { "typeAware": true },
-  "jsPlugins": ["./tools/oxlint-plugin-flashcards/index.js"],
+  "jsPlugins": ["./tools/oxlint-plugin-flashcards/index.cjs"],
   "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
   "rules": {
     "eqeqeq": "error",
@@ -49,6 +49,7 @@
     "react-perf/jsx-no-new-object-as-prop": "off",
     "typescript/consistent-type-imports": "error",
     "typescript/no-explicit-any": "error",
+    "typescript/no-deprecated": "error",
     "typescript/no-floating-promises": "error",
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-assignment": "error",

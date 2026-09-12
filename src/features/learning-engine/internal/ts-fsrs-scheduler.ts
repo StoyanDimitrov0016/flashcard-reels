@@ -55,6 +55,8 @@ function toFsrsCard(state: LearnerMemoryState): Card {
     due: new Date(state.dueAt),
     stability: state.stability,
     difficulty: state.difficulty,
+    // ts-fsrs 5 requires this deprecated field until its version 6 Card shape lands.
+    // oxlint-disable-next-line typescript/no-deprecated
     elapsed_days: state.elapsedDays,
     scheduled_days: state.scheduledDays,
     learning_steps: state.learningSteps,
@@ -81,10 +83,13 @@ function toFsrsState(state: SchedulerMemoryState["state"]): State {
 }
 
 function toMemoryState(flashcardId: string, card: Card): SchedulerMemoryState {
+  // ts-fsrs 5 still returns this deprecated field as its scheduler-computed interval.
+  // oxlint-disable-next-line typescript/no-deprecated
+  const elapsedDays = card.elapsed_days;
   return {
     dueAt: card.due.toISOString(),
     difficulty: card.difficulty,
-    elapsedDays: Math.max(0, Math.trunc(card.elapsed_days)),
+    elapsedDays: Math.max(0, Math.trunc(elapsedDays)),
     flashcardId,
     lapses: Math.max(0, Math.trunc(card.lapses)),
     lastReviewAt: card.last_review?.toISOString() ?? null,

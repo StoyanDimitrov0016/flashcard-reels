@@ -53,14 +53,11 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     replaceExistingSession: boolean,
     anchorFlashcardId: string | null = null
   ): Promise<PreparedReelFeed> {
-    let openedSession = await this.studyService.openSession(scope, deckId, replaceExistingSession);
-    const hasItems =
-      (await this.studyService.findMaxSessionBaseFeedPosition(openedSession.session.id)) !== null;
-
-    if (!openedSession.created && !hasItems) {
-      await this.studyService.completeSession(openedSession.session.id);
-      openedSession = await this.studyService.openSession(scope, deckId, true);
-    }
+    const openedSession = await this.studyService.openSession(
+      scope,
+      deckId,
+      replaceExistingSession
+    );
 
     await this.ensureMaterialized(
       cards,

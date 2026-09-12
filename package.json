@@ -2,6 +2,7 @@
   "name": "flashcard-reels",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -17,7 +18,7 @@
     "lint:report": "oxlint --type-aware .",
     "lint:strict": "oxlint --type-aware --deny-warnings .",
     "typecheck": "tsc --noEmit",
-    "test:architecture": "node tools/oxlint-plugin-flashcards/tests/rules.test.js",
+    "test:architecture": "node tools/oxlint-plugin-flashcards/tests/rules.test.cjs",
     "check:dead-code": "knip",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",

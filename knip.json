@@ -4,7 +4,7 @@
     "src/app/**/*.{ts,tsx}",
     "src/features/learning-engine/index.ts",
     "scripts/**/*.mjs",
-    "*.config.{js,mjs,ts}",
+    "*.config.{cjs,ts}",
     "expo-env.d.ts",
     "tests/**/*.test.ts"
   ],

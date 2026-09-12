@@ -223,13 +223,15 @@ describe("SQLite study sessions", () => {
     const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, first.studySessionId);
     await graph.study.rateAttempt(attemptId, "easy");
     clock.advance(FOCUS_SESSION_INACTIVITY_TIMEOUT_MS);
+    const resumedAfterExpiry = await graph.study.resumeFocusedSession();
+    expect(resumedAfterExpiry?.id).not.toBe(first.studySessionId);
     const expiredReplacement = await graph.feed.prepareFeed(
       focusCards,
       "focused",
       TEST_DECK_ID,
       false
     );
-    expect(expiredReplacement.studySessionId).not.toBe(first.studySessionId);
+    expect(expiredReplacement.studySessionId).toBe(resumedAfterExpiry?.id);
     const expiredSession = await graph.sessions.findById(first.studySessionId);
     expect(expiredSession?.completedAt).not.toBeNull();
     const other = await graph.feed.prepareFeed(otherCards, "focused", OTHER_DECK_ID, false);
@@ -263,6 +265,12 @@ describe("SQLite study sessions", () => {
       deckId: OTHER_DECK_ID,
       id: replacement.session.id,
     });
+
+    const explicitFirst = graph.study.openSession("focused", TEST_DECK_ID, true);
+    const lifecycleAfter = graph.study.resumeFocusedSession();
+    const [nextReplacement, nextResume] = await Promise.all([explicitFirst, lifecycleAfter]);
+    expect(nextResume?.id).toBe(nextReplacement.session.id);
+    expect(nextResume?.deckId).toBe(TEST_DECK_ID);
   });
 
   it("keeps Discover persistent across reconstruction and independent Focus lifecycle", async () => {
