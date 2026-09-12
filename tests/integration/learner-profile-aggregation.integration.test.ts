@@ -23,7 +23,7 @@ import {
   makeFlashcard,
   makeSession,
   testId,
-} from "../support/study-test-support";
+} from "../support/study-fixtures";
 
 describe("SQLite learner-profile aggregation", () => {
   let database: NodeSqliteDatabase;

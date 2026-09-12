@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
-import { makeFlashcard } from "../support/study-test-support";
+import { makeFlashcard } from "../support/study-fixtures";
 
 function occurrence(reelPosition: number, cardIndex: number) {
   const card = makeFlashcard(cardIndex);

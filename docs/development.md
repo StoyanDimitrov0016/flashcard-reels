@@ -67,7 +67,7 @@ npm run db:generate    # generate a Drizzle migration
 npm run db:check       # validate schema and migrations
 ```
 
-The repository intentionally uses one clean baseline migration because the pre-refinement database has no production data to preserve. After this migration reset, delete or recreate local development databases before launching the app; the old migration chain is not compatible with the new local baseline. Commit the generated baseline and metadata with future schema changes.
+Phase 0 uses one clean `0000` migration baseline. Whenever that baseline is regenerated, recreate local development databases before launching the app. Commit the generated baseline and metadata with schema changes.
 
 ## Android preview builds
 

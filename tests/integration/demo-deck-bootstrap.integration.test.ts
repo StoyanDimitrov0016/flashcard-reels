@@ -12,7 +12,7 @@ import type {
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { TestClock } from "../support/study-test-support";
+import { TestClock } from "../support/study-fixtures";
 
 const demoId = "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873";
 

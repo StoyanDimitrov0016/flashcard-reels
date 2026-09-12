@@ -25,7 +25,7 @@ import {
   TEST_DECK_ID,
   TestClock,
   testId,
-} from "../support/study-test-support";
+} from "../support/study-fixtures";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
 

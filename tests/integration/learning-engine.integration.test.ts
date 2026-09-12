@@ -25,7 +25,7 @@ import {
   makeFlashcard,
   makeSession,
   testId,
-} from "../support/study-test-support";
+} from "../support/study-fixtures";
 
 const RATED_AT_AGAIN = "2026-01-01T00:01:00.000Z";
 const RATED_AT_HARD = "2026-01-01T00:02:00.000Z";

@@ -27,7 +27,7 @@
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:preferences": "vitest run tests/unit/preferences.test.ts tests/unit/theme.test.ts tests/unit/study-control-layout.test.ts tests/unit/haptics.test.ts tests/behavior/hold-to-focus.behavior.test.ts",
+    "test:preferences": "vitest run tests/unit/preferences.test.ts tests/unit/theme.test.ts tests/unit/study-control-layout.test.ts tests/unit/haptics.test.ts tests/unit/hold-to-focus.test.ts",
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
     "check:android": "npm run decks:check && expo export --platform android",

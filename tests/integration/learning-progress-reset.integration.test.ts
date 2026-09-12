@@ -13,7 +13,7 @@ import {
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { makeFlashcard, OTHER_DECK_ID, TEST_DECK_ID, testId } from "../support/study-test-support";
+import { makeFlashcard, OTHER_DECK_ID, TEST_DECK_ID, testId } from "../support/study-fixtures";
 
 const RESET_AT = "2026-02-01T00:00:00.000Z";
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";

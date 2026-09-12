@@ -10,7 +10,7 @@ import {
 } from "@/infrastructure/sqlite/schema";
 import { eq } from "drizzle-orm";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/study-test-support";
+import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/study-fixtures";
 
 describe("SQLite learner profiles", () => {
   let database: NodeSqliteDatabase;

@@ -24,7 +24,7 @@ import {
   SequenceIdGenerator,
   TestClock,
   testId,
-} from "../support/study-test-support";
+} from "../support/study-fixtures";
 
 describe("SQLite study persistence", () => {
   let database: NodeSqliteDatabase;
@@ -720,9 +720,6 @@ describe("SQLite study persistence", () => {
     const tables = await database.getAllAsync(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
     );
-    const legacyTable = await database.getFirstAsync(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'flashcard_reviews'"
-    );
 
     expect(tables).toEqual([
       { name: "deck_appearances" },
@@ -735,7 +732,6 @@ describe("SQLite study persistence", () => {
       { name: "study_session_recurrences" },
       { name: "study_sessions" },
     ]);
-    expect(legacyTable).toBeNull();
   });
 
   it("keeps the application-owned default cover for a future deck", async () => {

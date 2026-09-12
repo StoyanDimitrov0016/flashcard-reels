@@ -6,7 +6,7 @@ import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { decks } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { TEST_DECK_ID } from "../support/study-test-support";
+import { TEST_DECK_ID } from "../support/study-fixtures";
 
 describe("deck appearance persistence", () => {
   let database: NodeSqliteDatabase;

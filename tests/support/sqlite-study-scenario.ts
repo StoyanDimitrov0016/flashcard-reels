@@ -17,7 +17,7 @@ import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrast
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { NodeSqliteDatabase } from "./node-sqlite-database";
-import type { SequenceIdGenerator, TestClock } from "./study-test-support";
+import type { SequenceIdGenerator, TestClock } from "./study-fixtures";
 
 export type ScenarioGraph = ReturnType<typeof createScenarioGraph>;
 

@@ -15,7 +15,7 @@ import {
   TEST_DECK_ID,
   TestClock,
   testId,
-} from "../support/study-test-support";
+} from "../support/study-fixtures";
 
 function cards(deckId: string, count: number, firstId: number): Flashcard[] {
   return Array.from(
@@ -125,43 +125,43 @@ describe("study foundation learner journeys", () => {
     ).toEqual({ count: 2 });
   });
 
-  it("compacts durable session history without removing review attempts or pending recurrences", async () => {
+  it("keeps a 1,000-position SQLite session bounded, durable, and resumable", async () => {
     const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const firstCard = at(focusCards, 0);
     const pendingCard = at(focusCards, 1);
     const firstAttempt = await graph.study.startAttempt(firstCard.id, 0, opened.studySessionId);
-    const pendingAttempt = await graph.study.startAttempt(pendingCard.id, 1, opened.studySessionId);
     await graph.study.rateAttempt(firstAttempt, "again");
-    await graph.study.rateAttempt(pendingAttempt, "again");
-
-    const recurrencesBefore = await graph.recurrences.listBySessionId(opened.studySessionId);
-    const consumedRecurrence = recurrencesBefore.find(
-      (recurrence) => recurrence.sourceAttemptId === firstAttempt
+    const consumedRecurrence = at(
+      await graph.recurrences.listBySessionId(opened.studySessionId),
+      0
     );
-    const pendingRecurrence = recurrencesBefore.find(
-      (recurrence) => recurrence.sourceAttemptId === pendingAttempt
-    );
-    if (!consumedRecurrence || !pendingRecurrence) {
-      throw new Error("Expected both recurrence fixtures");
-    }
     await graph.study.consumeRecurrence(consumedRecurrence.id);
 
-    await graph.study.appendSessionItems(
-      opened.studySessionId,
-      Array.from({ length: 125 }, () => at(focusCards, 2)),
-      JSON.stringify({ recentCardIds: [] }),
-      6,
-      Array.from({ length: 125 }, (_, index) => index + 6)
+    const pendingAttempt = await graph.study.startAttempt(
+      pendingCard.id,
+      990,
+      opened.studySessionId
     );
-    await graph.study.updateSessionReelPosition(opened.studySessionId, 125);
-    await graph.study.compactSessionRuntimeData(opened.studySessionId, 160);
+    await graph.study.rateAttempt(pendingAttempt, "again");
+    const pendingRecurrence = at(
+      (await graph.recurrences.listBySessionId(opened.studySessionId)).filter(
+        (recurrence) => recurrence.sourceAttemptId === pendingAttempt
+      ),
+      0
+    );
+
+    await graph.study.updateSessionReelPosition(opened.studySessionId, 1_000);
+    await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
+    await graph.study.compactSessionRuntimeData(opened.studySessionId, 1_000);
+    await graph.study.updateSessionReelPosition(opened.studySessionId, 950);
 
     const itemsAfterCompaction = await graph.items.listBySessionId(opened.studySessionId);
-    expect(itemsAfterCompaction.every((item) => item.reelPosition >= 25)).toBe(true);
-    const firstAttemptAfterCompaction = await graph.attempts.findById(firstAttempt);
-    const pendingAttemptAfterCompaction = await graph.attempts.findById(pendingAttempt);
-    expect(firstAttemptAfterCompaction).not.toBeNull();
-    expect(pendingAttemptAfterCompaction).not.toBeNull();
+    expect(itemsAfterCompaction.length).toBeLessThanOrEqual(106);
+    expect(itemsAfterCompaction.every((item) => item.reelPosition >= 900)).toBe(true);
+    expect(await graph.attempts.findById(firstAttempt)).toMatchObject({ rating: "again" });
+    expect(await graph.attempts.findById(pendingAttempt)).toMatchObject({ rating: "again" });
+    expect(await graph.memoryStates.findByFlashcardId(firstCard.id)).not.toBeNull();
     const recurrencesAfter = await graph.recurrences.listBySessionId(opened.studySessionId);
     expect(recurrencesAfter.some((recurrence) => recurrence.id === consumedRecurrence.id)).toBe(
       false
@@ -169,6 +169,17 @@ describe("study foundation learner journeys", () => {
     expect(recurrencesAfter.some((recurrence) => recurrence.id === pendingRecurrence.id)).toBe(
       true
     );
+
+    const persisted = await graph.sessions.findById(opened.studySessionId);
+    expect(persisted).toMatchObject({ currentReelPosition: 950, furthestReelPosition: 1_000 });
+    graph = createScenarioGraph(database, clock, ids);
+    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    expect(resumed).toMatchObject({
+      currentReelPosition: 950,
+      furthestReelPosition: 1_000,
+      studySessionId: opened.studySessionId,
+    });
+    expect(resumed.loadedFromReelPosition).toBeGreaterThanOrEqual(900);
   });
 
   it("keeps feed selection independent from learner-profile counters", async () => {
