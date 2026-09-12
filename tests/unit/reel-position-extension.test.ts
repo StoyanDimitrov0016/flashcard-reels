@@ -6,6 +6,10 @@ import {
 } from "@/features/reels/application/reel-position-extension";
 import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
 
+async function failIfCalled(): Promise<void> {
+  throw new Error("must not run");
+}
+
 describe("absolute reel position mapping", () => {
   it("clamps the persisted position into the loaded window", () => {
     expect(getLocalReelIndex(5_000, 4_950, 151)).toBe(50);
@@ -65,11 +69,16 @@ describe("reel activation ordering", () => {
   });
 
   it("stops when position persistence fails", async () => {
-    const effect = async () => {
-      throw new Error("must not run");
-    };
     await expect(
-      completeReelActivation(async () => false, effect, effect, effect, effect, effect, effect)
+      completeReelActivation(
+        async () => false,
+        failIfCalled,
+        failIfCalled,
+        failIfCalled,
+        failIfCalled,
+        failIfCalled,
+        failIfCalled
+      )
     ).resolves.toBe(false);
   });
 });

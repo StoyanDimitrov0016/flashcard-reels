@@ -23,6 +23,13 @@ npm start
 
 Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or web.
 
+## Test
+
+`npm run verify` runs the complete automated verification. Unit tests cover pure deterministic
+logic, integration tests use real SQLite/filesystem/application boundaries, and architecture tests
+protect static module and resource contracts. Native gesture and presentation checks remain in the
+manual device checklist.
+
 ## Documentation
 
 - [Product guide](docs/product-guide.md)

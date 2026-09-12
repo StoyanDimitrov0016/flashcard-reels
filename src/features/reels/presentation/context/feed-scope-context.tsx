@@ -42,6 +42,8 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
       const session = focusLifecycle.session;
       const persistedSession =
         !session || session.deckId === null ? null : { deckId: session.deckId, id: session.id };
+      // The lifecycle hook is an external AppState-backed source, so reconciliation belongs here.
+      // oxlint-disable-next-line react/set-state-in-effect
       setFocusedFeed((currentFeed) => reconcileFocusedFeedState(currentFeed, persistedSession));
     },
     [focusLifecycle.resolved, focusLifecycle.revision, focusLifecycle.session]

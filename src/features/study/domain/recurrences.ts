@@ -2,13 +2,13 @@ import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export type RandomSource = () => number;
 
-export type RecurrenceConfiguration = Readonly<{
+type RecurrenceConfiguration = Readonly<{
   baseDistance: number;
   jitterMaximum: number;
   jitterMinimum: number;
 }>;
 
-export const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<
+const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<
   Partial<Record<RecallLevel, RecurrenceConfiguration>>
 > = {
   again: { baseDistance: 8, jitterMaximum: 2, jitterMinimum: -2 },

@@ -115,16 +115,12 @@ export class StudyServiceImpl implements StudyService {
     await this.aggregateCompletedSession(sessionId);
   }
 
-  async compactSessionRuntimeData(
-    sessionId: string,
-    furthestReelPosition: number
-  ): Promise<void> {
+  async compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void> {
     const maintenance = this.studySessionMaintenanceTransaction;
     if (!maintenance) {
       return;
     }
-    const minimumRetainedReelPosition =
-      furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
+    const minimumRetainedReelPosition = furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
     if (minimumRetainedReelPosition > 0) {
       await maintenance.compact(sessionId, minimumRetainedReelPosition);
     }

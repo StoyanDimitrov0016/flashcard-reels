@@ -22,7 +22,8 @@ The learning engine is a deep internal module. It decides memory-aware feed orde
 
 ## Verification boundaries
 
-- Pure scheduler and composer behavior lives under `tests/unit` and `tests/behavior` and does not open SQLite.
-- SQLite-backed application and persistence flows live under `tests/integration`; the former scenario test is named as an integration test.
-- `tests/support` contains shared clocks, repositories, and SQLite fixture construction. Application fixtures use Drizzle; raw SQL is reserved for schema, migration, constraint, trigger, and aggregate-query assertions.
-- `E2E` is reserved for device-level user-visible tests. SQLite service tests are integration tests.
+- Pure scheduler, composer, and policy behavior lives under `tests/unit` and does not open SQLite.
+- SQLite-backed application, session, FSRS, aggregation, package, and filesystem flows live under `tests/integration`.
+- `tests/support` contains deterministic fixtures and real SQLite graph construction, not alternate repositories or study behavior.
+- Static public-module and runtime-resource contracts live under `tests/architecture`.
+- Native gestures and presentation are verified with the manual device checklist.

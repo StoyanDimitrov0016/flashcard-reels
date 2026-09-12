@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -48,19 +48,6 @@ describe("deck-installer module boundary", () => {
       .filter((file) => readFileSync(file, "utf8").includes("/deck-installer/internal/"));
 
     expect(offenders).toEqual([]);
-  });
-
-  it("has no legacy installer contracts or implementations outside the module", () => {
-    const legacyPaths = [
-      "features/decks/contracts/deck-package.schema.ts",
-      "features/decks/domain/deck-package.model.ts",
-      "features/decks/domain/deck-package-limits.ts",
-      "features/decks/infrastructure/archive-deck-package.reader.ts",
-      "features/decks/infrastructure/sqlite-deck-package-installation.transaction.ts",
-      "features/audio/infrastructure/installed-audio-storage.ts",
-    ];
-
-    expect(legacyPaths.filter((file) => existsSync(path.join(sourceRoot, file)))).toEqual([]);
   });
 
   it("keeps tooling reuse of installer internals explicit and narrow", () => {

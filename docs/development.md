@@ -58,6 +58,11 @@ npm run verify         # complete project verification
 
 Run `npm test` while developing to keep Vitest in watch mode.
 
+Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
+`tests/integration` exercises real SQLite, filesystem, and application boundaries, and
+`tests/architecture` protects static module and runtime-resource invariants. Native gestures and
+presentation remain in the manual device checklist.
+
 ## Database changes
 
 The local database schema is defined in `src/infrastructure/sqlite/schema.ts`.

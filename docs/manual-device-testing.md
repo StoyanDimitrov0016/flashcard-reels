@@ -35,6 +35,11 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 ## Phase 0 runtime stabilization smoke sequence
 
 - [ ] Launch in both dark and light/device theme.
+- [ ] Vertically page cards and horizontally page all five primary tabs; confirm the gestures do not conflict.
+- [ ] Hold a Discover card to enter Focus and confirm the revealed side and selected rating carry over once.
+- [ ] Background Focus past its inactivity timeout, resume, and confirm it opens the replacement session without replaying handoff state.
+- [ ] Verify the Study Island in left, right, and bottom layouts.
+- [ ] Open deck details, appearance, preferences, and reset flows and confirm their native bottom sheets present and dismiss correctly.
 - [ ] Import a new deck after opening Discovery, return to Discovery, and keep swiping until cards from the imported deck appear without an app restart.
 - [ ] Swipe through at least 30 reels in Discover and confirm there is no finite ending.
 - [ ] Swipe through at least 30 reels in Focus and watch for same-card flicker at materialization boundaries.

@@ -42,7 +42,7 @@ function at<T>(values: readonly T[], index: number): T {
   return value;
 }
 
-describe("study foundation learner journeys", () => {
+describe("SQLite study sessions", () => {
   let database: NodeSqliteDatabase;
   let clock: TestClock;
   let ids: SequenceIdGenerator;
@@ -131,10 +131,8 @@ describe("study foundation learner journeys", () => {
     const pendingCard = at(focusCards, 1);
     const firstAttempt = await graph.study.startAttempt(firstCard.id, 0, opened.studySessionId);
     await graph.study.rateAttempt(firstAttempt, "again");
-    const consumedRecurrence = at(
-      await graph.recurrences.listBySessionId(opened.studySessionId),
-      0
-    );
+    const initialRecurrences = await graph.recurrences.listBySessionId(opened.studySessionId);
+    const consumedRecurrence = at(initialRecurrences, 0);
     await graph.study.consumeRecurrence(consumedRecurrence.id);
 
     const pendingAttempt = await graph.study.startAttempt(
@@ -143,10 +141,9 @@ describe("study foundation learner journeys", () => {
       opened.studySessionId
     );
     await graph.study.rateAttempt(pendingAttempt, "again");
+    const scheduledRecurrences = await graph.recurrences.listBySessionId(opened.studySessionId);
     const pendingRecurrence = at(
-      (await graph.recurrences.listBySessionId(opened.studySessionId)).filter(
-        (recurrence) => recurrence.sourceAttemptId === pendingAttempt
-      ),
+      scheduledRecurrences.filter((recurrence) => recurrence.sourceAttemptId === pendingAttempt),
       0
     );
 
