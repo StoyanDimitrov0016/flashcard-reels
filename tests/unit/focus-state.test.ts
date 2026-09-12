@@ -6,6 +6,7 @@ import {
 } from "@/features/reels/presentation/open-focused-feed";
 import {
   confirmFocusedFeedSession,
+  createFocusedFeedState,
   reconcileFocusedFeedState,
   type FocusedFeedState,
 } from "@/features/reels/presentation/focused-feed-state";
@@ -60,7 +61,7 @@ describe("focus state handoff", () => {
       },
     };
 
-    const confirmed = confirmFocusedFeedSession(state, "session-a");
+    const confirmed = confirmFocusedFeedSession(state, "session-a", 4);
     expect(confirmed).toEqual({
       deckId: "deck-1",
       replaceSession: false,
@@ -72,6 +73,31 @@ describe("focus state handoff", () => {
     expect(reconcileFocusedFeedState(confirmed, { deckId: "deck-1", id: "session-a" })).toBe(
       confirmed
     );
+  });
+
+  it("ignores preparation confirmation from an obsolete Focus revision", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-2",
+      replaceSession: true,
+      revision: 5,
+      sessionId: null,
+      status: "ready",
+      transition: null,
+    };
+
+    expect(confirmFocusedFeedSession(state, "session-a", 4)).toBe(state);
+  });
+
+  it("does not reuse a preparation revision after Focus becomes empty", () => {
+    const first = createFocusedFeedState({ revision: 0, status: "empty" }, "deck-1");
+    const emptied = reconcileFocusedFeedState(
+      confirmFocusedFeedSession(first, "session-a", first.revision),
+      null
+    );
+    const second = createFocusedFeedState(emptied, "deck-2");
+
+    expect(second.revision).toBe(first.revision + 1);
+    expect(confirmFocusedFeedSession(second, "session-a", first.revision)).toBe(second);
   });
 
   it("keeps the same state identity when lifecycle rediscovers the prepared session", () => {

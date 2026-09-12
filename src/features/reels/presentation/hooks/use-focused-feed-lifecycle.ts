@@ -1,20 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AppState } from "react-native";
 
 import type { StudySession } from "@/features/study/domain/study-session.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
-type FocusLifecycleState = Readonly<{
-  revision: number;
-  resolved: boolean;
-  session: StudySession | null;
-}>;
-
-const initialState: FocusLifecycleState = { resolved: false, revision: 0, session: null };
-
-export function useFocusedFeedLifecycle(): FocusLifecycleState {
+export function useFocusedFeedLifecycle(onEvaluated: (session: StudySession | null) => void): void {
   const { studyService } = useAppServices();
-  const [state, setState] = useState<FocusLifecycleState>(initialState);
 
   useEffect(
     function synchronizeFocusedFeedLifecycle() {
@@ -28,13 +19,9 @@ export function useFocusedFeedLifecycle(): FocusLifecycleState {
         }
         evaluationInFlight = true;
         try {
-          const resumed = await evaluateFocusedSession(sessionService);
+          const resumed = await sessionService.resumeFocusedSession();
           if (!disposed) {
-            setState((current) => ({
-              resolved: true,
-              revision: current.revision + 1,
-              session: resumed,
-            }));
+            onEvaluated(resumed);
           }
         } finally {
           evaluationInFlight = false;
@@ -52,19 +39,6 @@ export function useFocusedFeedLifecycle(): FocusLifecycleState {
         subscription.remove();
       };
     },
-    [studyService]
+    [onEvaluated, studyService]
   );
-
-  return state;
-}
-
-async function evaluateFocusedSession(
-  studyService: ReturnType<typeof useAppServices>["studyService"]
-): Promise<StudySession | null> {
-  const activeSession = await studyService.findSessionByScope("focused");
-  if (!activeSession || activeSession.deckId === null) {
-    return null;
-  }
-  const resumed = await studyService.openSession("focused", activeSession.deckId, false);
-  return resumed.session;
 }

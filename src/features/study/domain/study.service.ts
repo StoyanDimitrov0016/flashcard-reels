@@ -19,6 +19,7 @@ export interface StudyService {
     deckId: DeckId | null,
     replaceExisting: boolean
   ): Promise<OpenStudySession>;
+  resumeFocusedSession(): Promise<StudySession | null>;
   completeSession(sessionId: string): Promise<void>;
   compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void>;
   findSession(sessionId: string): Promise<StudySession | null>;

@@ -20,7 +20,8 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
   deckId: DeckId;
-  onSessionStarted: (sessionId: string) => void;
+  expectedRevision: number;
+  onSessionStarted: (sessionId: string, expectedRevision: number) => void;
   replaceSession: boolean;
   transition: FocusTransition | null;
 }>;
@@ -28,6 +29,7 @@ type ReadyFocusedFeedContentProps = Readonly<{
 function ReadyFocusedFeedContent({
   cards,
   deckId,
+  expectedRevision,
   onSessionStarted,
   replaceSession,
   transition,
@@ -46,10 +48,10 @@ function ReadyFocusedFeedContent({
     function consumePreparedFocusedFeedTransition() {
       if (preparedFeed && !consumed.current) {
         consumed.current = true;
-        onSessionStarted(preparedFeed.studySessionId);
+        onSessionStarted(preparedFeed.studySessionId, expectedRevision);
       }
     },
-    [onSessionStarted, preparedFeed]
+    [expectedRevision, onSessionStarted, preparedFeed]
   );
   if (!preparedFeed) {
     return <LoadingState />;
@@ -68,7 +70,7 @@ function ReadyFocusedFeedContent({
 
 type ReadyFocusedFeedProps = Readonly<{
   focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
-  onSessionStarted: (sessionId: string) => void;
+  onSessionStarted: (sessionId: string, expectedRevision: number) => void;
 }>;
 
 function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedProps) {
@@ -82,6 +84,7 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
     <ReadyFocusedFeedContent
       cards={cards}
       deckId={focusedFeed.deckId}
+      expectedRevision={focusedFeed.revision}
       onSessionStarted={onSessionStarted}
       replaceSession={focusedFeed.replaceSession}
       transition={focusedFeed.transition}

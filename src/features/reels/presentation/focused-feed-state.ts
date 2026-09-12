@@ -10,7 +10,7 @@ export type FocusTransition = Readonly<{
 }>;
 
 export type FocusedFeedState =
-  | Readonly<{ status: "empty" }>
+  | Readonly<{ revision: number; status: "empty" }>
   | Readonly<{
       deckId: DeckId;
       replaceSession: boolean;
@@ -45,7 +45,7 @@ export function createFocusedFeedState(
   return {
     deckId,
     replaceSession: true,
-    revision: current.status === "ready" ? current.revision + 1 : 1,
+    revision: current.revision + 1,
     sessionId: null,
     status: "ready",
     transition,
@@ -54,9 +54,10 @@ export function createFocusedFeedState(
 
 export function confirmFocusedFeedSession(
   state: FocusedFeedState,
-  sessionId: string
+  sessionId: string,
+  expectedRevision: number
 ): FocusedFeedState {
-  return state.status === "ready"
+  return state.status === "ready" && state.revision === expectedRevision
     ? { ...state, replaceSession: false, sessionId, transition: null }
     : state;
 }
@@ -69,7 +70,7 @@ export function reconcileFocusedFeedState(
     return current;
   }
   if (!persistedSession) {
-    return current.status === "empty" ? current : { status: "empty" };
+    return current.status === "empty" ? current : { revision: current.revision, status: "empty" };
   }
   if (
     current.status === "ready" &&
@@ -81,7 +82,7 @@ export function reconcileFocusedFeedState(
   return {
     deckId: persistedSession.deckId,
     replaceSession: false,
-    revision: current.status === "ready" ? current.revision + 1 : 1,
+    revision: current.revision + 1,
     sessionId: persistedSession.id,
     status: "ready",
     transition: null,

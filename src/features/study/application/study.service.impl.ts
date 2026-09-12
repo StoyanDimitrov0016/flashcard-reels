@@ -53,6 +53,7 @@ export class StudyServiceImpl implements StudyService {
   private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
+  private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
 
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
@@ -92,6 +93,29 @@ export class StudyServiceImpl implements StudyService {
     if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
       throw new Error("Study session scope and deck must agree");
     }
+    return scope === "focused"
+      ? this.serializeFocusedSessionLifecycle(() =>
+          this.openSessionDirect(scope, deckId, replaceExisting)
+        )
+      : this.openSessionDirect(scope, deckId, replaceExisting);
+  }
+
+  async resumeFocusedSession(): Promise<StudySession | null> {
+    return this.serializeFocusedSessionLifecycle(async () => {
+      const activeSession = await this.studySessionRepository.findActiveByScope("focused");
+      if (!activeSession || activeSession.deckId === null) {
+        return null;
+      }
+      const resumed = await this.openSessionDirect("focused", activeSession.deckId, false);
+      return resumed.session;
+    });
+  }
+
+  private async openSessionDirect(
+    scope: StudySessionScope,
+    deckId: DeckId | null,
+    replaceExisting: boolean
+  ): Promise<OpenStudySession> {
     await this.recoverPendingCompletedSessionAggregation();
 
     const createdAt = this.clock.now();
@@ -107,6 +131,15 @@ export class StudyServiceImpl implements StudyService {
     }
     await this.aggregateActiveSessionIfEligible(opened.session.id);
     return opened;
+  }
+
+  private serializeFocusedSessionLifecycle<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.focusedSessionLifecycleQueue.then(operation, operation);
+    this.focusedSessionLifecycleQueue = result.then(
+      () => undefined,
+      () => undefined
+    );
+    return result;
   }
 
   async completeSession(sessionId: string): Promise<void> {
