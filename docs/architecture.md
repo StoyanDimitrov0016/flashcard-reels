@@ -23,6 +23,8 @@ Within a feature, the layers have distinct responsibilities:
 
 `src/infrastructure/app-services.tsx` is the composition root. It connects application services to SQLite repositories, package storage, installed audio, and the UI. Expo document picking, package file access, and audio filesystem access are isolated in feature infrastructure. Convention checks prevent presentation and domain code from importing persistence details directly.
 
+Primary navigation is the provider-owned `expo-router/js-top-tabs` pager in `src/app/(tabs)/_layout.tsx`. It intentionally keeps `react-native-pager-view` and `react-native-tab-view` so the five bottom-positioned destinations can be reached by tab press or horizontal swipe across the page surface. Vertical swipes remain owned by study feeds.
+
 ## Deck packages
 
 Deck content is transported as `.fcrdeck` ZIP-compatible archives. Contract validation, ZIP reading, limits, serialization, package-audio lifecycle, and SQLite installation live under `src/features/decks/deck-installer/internal`. The module's public `index.ts` exposes application-owned file/result types, typed validation/version errors, and `installFromFile`. The Library screen selects a file and invokes that boundary; bundled byte installation remains an internal composition concern. Presentation maps installer results and errors to short feedback while retaining the technical error object in hook state. The `decks:inspect` and `decks:test:generate` commands intentionally reuse the internal canonical reader, schema, and writer through explicit script-level architecture exceptions; they do not provide installation or package-management operations.

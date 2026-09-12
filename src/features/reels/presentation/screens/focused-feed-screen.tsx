@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,10 +10,10 @@ import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
 import {
   useFeedScope,
+  type FocusTransition,
   type FocusedFeedState,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
-import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
@@ -21,8 +22,7 @@ type ReadyFocusedFeedContentProps = Readonly<{
   deckId: DeckId;
   onSessionStarted: () => void;
   replaceSession: boolean;
-  anchorFlashcardId: string | null;
-  options?: FocusedFeedOptions;
+  transition: FocusTransition | null;
 }>;
 
 function ReadyFocusedFeedContent({
@@ -30,16 +30,26 @@ function ReadyFocusedFeedContent({
   deckId,
   onSessionStarted,
   replaceSession,
-  anchorFlashcardId,
-  options,
+  transition,
 }: ReadyFocusedFeedContentProps) {
+  const entryTransition = useRef(transition).current;
+  const consumed = useRef(false);
   const preparedFeed = usePreparedReelFeed(
     cards,
     "focused",
     deckId,
     replaceSession,
-    onSessionStarted,
-    anchorFlashcardId
+    entryTransition?.anchorFlashcardId ?? null
+  );
+
+  useEffect(
+    function consumePreparedFocusedFeedTransition() {
+      if (preparedFeed && !consumed.current) {
+        consumed.current = true;
+        onSessionStarted();
+      }
+    },
+    [onSessionStarted, preparedFeed]
   );
   if (!preparedFeed) {
     return <LoadingState />;
@@ -51,7 +61,7 @@ function ReadyFocusedFeedContent({
       preparedFeed={preparedFeed}
       showMainFeedLink
       sourceCards={cards}
-      initialCardState={options?.cardState}
+      initialCardState={entryTransition?.cardState}
     />
   );
 }
@@ -74,8 +84,7 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
       deckId={focusedFeed.deckId}
       onSessionStarted={onSessionStarted}
       replaceSession={focusedFeed.replaceSession}
-      anchorFlashcardId={focusedFeed.anchorFlashcardId}
-      options={focusedFeed.options}
+      transition={focusedFeed.transition}
     />
   );
 }
@@ -84,8 +93,7 @@ export default function FocusedFeedScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { consumeFocusedFeedReplacement, focusedFeed, focusRestoring, focusRevision } =
-    useFeedScope();
+  const { consumeFocusedFeedTransition, focusedFeed, focusRestoring } = useFeedScope();
 
   let content: React.ReactNode;
   if (focusedFeed.status === "empty") {
@@ -98,8 +106,8 @@ export default function FocusedFeedScreen() {
     content = (
       <ReadyFocusedFeed
         focusedFeed={focusedFeed}
-        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}-${focusRevision}`}
-        onSessionStarted={consumeFocusedFeedReplacement}
+        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
+        onSessionStarted={consumeFocusedFeedTransition}
       />
     );
   }

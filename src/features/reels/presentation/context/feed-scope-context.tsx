@@ -1,31 +1,30 @@
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
+import {
+  consumeFocusedFeedTransition as consumeFocusedFeedTransitionState,
+  createFocusedFeedState,
+  type FocusedFeedState,
+} from "@/features/reels/presentation/focused-feed-state";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
+
+export { consumeFocusedFeedTransition } from "@/features/reels/presentation/focused-feed-state";
+export type {
+  FocusTransition,
+  FocusedFeedState,
+} from "@/features/reels/presentation/focused-feed-state";
 
 type FeedScopeContextValue = Readonly<{
   focusedFeed: FocusedFeedState;
   focusRestoring: boolean;
-  focusRevision: number;
   startFocusedFeed: (
     deckId: DeckId,
     anchorFlashcardId?: string,
     options?: FocusedFeedOptions
   ) => void;
-  consumeFocusedFeedReplacement: () => void;
+  consumeFocusedFeedTransition: () => void;
 }>;
-
-export type FocusedFeedState =
-  | Readonly<{ status: "empty" }>
-  | Readonly<{
-      deckId: DeckId;
-      replaceSession: boolean;
-      revision: number;
-      status: "ready";
-      anchorFlashcardId: string | null;
-      options?: FocusedFeedOptions;
-    }>;
 
 const FeedScopeContext = createContext<FeedScopeContextValue | null>(null);
 
@@ -34,47 +33,43 @@ type FeedScopeProviderProps = Readonly<{ children: ReactNode }>;
 export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const [focusedFeed, setFocusedFeed] = useState<FocusedFeedState>({ status: "empty" });
   const focusLifecycle = useFocusedFeedLifecycle();
-  const restoredFocusedFeed =
-    focusedFeed.status === "empty" &&
-    focusLifecycle.session !== null &&
-    focusLifecycle.session.deckId !== null
-      ? {
-          deckId: focusLifecycle.session.deckId,
-          replaceSession: false,
-          revision: focusLifecycle.revision,
-          status: "ready" as const,
-          anchorFlashcardId: null,
-        }
-      : null;
-  const visibleFocusedFeed = restoredFocusedFeed ?? focusedFeed;
+  useEffect(
+    function restoreFocusedFeedDestination() {
+      const deckId = focusLifecycle.session?.deckId;
+      if (!focusLifecycle.resolved || focusedFeed.status !== "empty" || !deckId) {
+        return;
+      }
+      setFocusedFeed({
+        deckId,
+        replaceSession: false,
+        revision: 1,
+        status: "ready",
+        transition: null,
+      });
+    },
+    [focusedFeed.status, focusLifecycle.resolved, focusLifecycle.session?.deckId]
+  );
 
-  const startFocusedFeed = (
-    deckId: DeckId,
-    anchorFlashcardId?: string,
-    options?: FocusedFeedOptions
-  ) => {
-    setFocusedFeed((currentFeed) => ({
-      deckId,
-      replaceSession: true,
-      revision: currentFeed.status === "ready" ? currentFeed.revision + 1 : 1,
-      status: "ready",
-      anchorFlashcardId: anchorFlashcardId ?? null,
-      options,
-    }));
-  };
+  const startFocusedFeed = useCallback(
+    (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
+      setFocusedFeed((currentFeed) =>
+        createFocusedFeedState(currentFeed, deckId, anchorFlashcardId, options)
+      );
+    },
+    []
+  );
 
-  const consumeFocusedFeedReplacement = () => {
+  const consumeFocusedFeedTransition = useCallback(() => {
     setFocusedFeed((currentFeed) =>
       currentFeed.status === "ready" && currentFeed.replaceSession
-        ? { ...currentFeed, replaceSession: false }
+        ? consumeFocusedFeedTransitionState(currentFeed)
         : currentFeed
     );
-  };
+  }, []);
 
   const contextValue = {
-    consumeFocusedFeedReplacement,
-    focusedFeed: visibleFocusedFeed,
-    focusRevision: focusLifecycle.revision,
+    consumeFocusedFeedTransition,
+    focusedFeed,
     focusRestoring: !focusLifecycle.resolved,
     startFocusedFeed,
   };

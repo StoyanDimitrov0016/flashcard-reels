@@ -4,6 +4,10 @@ import {
   openFocusedFeed,
   type FocusedFeedOptions,
 } from "@/features/reels/presentation/open-focused-feed";
+import {
+  consumeFocusedFeedTransition,
+  type FocusedFeedState,
+} from "@/features/reels/presentation/focused-feed-state";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 const focusHandoffCases: readonly (readonly [boolean, RecallLevel | null])[] = [
@@ -41,4 +45,25 @@ describe("focus state handoff", () => {
       expect(options.cardState).toEqual({ cardId: "card-1", recallLevel, revealed });
     }
   );
+
+  it("consumes the entry transition without changing the persistent Focus identity", () => {
+    const state: FocusedFeedState = {
+      deckId: "deck-1",
+      replaceSession: true,
+      revision: 4,
+      status: "ready",
+      transition: {
+        anchorFlashcardId: "card-1",
+        cardState: { cardId: "card-1", recallLevel: "hard", revealed: true },
+      },
+    };
+
+    expect(consumeFocusedFeedTransition(state)).toEqual({
+      deckId: "deck-1",
+      replaceSession: false,
+      revision: 4,
+      status: "ready",
+      transition: null,
+    });
+  });
 });

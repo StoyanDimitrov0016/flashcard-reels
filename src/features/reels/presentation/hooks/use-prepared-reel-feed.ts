@@ -28,7 +28,6 @@ export function usePreparedReelFeed(
   scope: StudySessionScope,
   deckId: DeckId | null,
   replaceExistingSession: boolean,
-  onSessionStarted?: () => void,
   anchorFlashcardId: string | null = null
 ): PreparedReelFeed | null {
   const { reelFeedService } = useAppServices();
@@ -65,11 +64,6 @@ export function usePreparedReelFeed(
                 resetRevision,
                 scope,
               };
-              void nextPromise
-                .then(() => {
-                  onSessionStarted?.();
-                })
-                .catch(() => undefined);
               return nextPromise;
             })();
 
@@ -96,7 +90,6 @@ export function usePreparedReelFeed(
       anchorFlashcardId,
       cards,
       deckId,
-      onSessionStarted,
       reelFeedService,
       replaceExistingSession,
       resetRevision,
