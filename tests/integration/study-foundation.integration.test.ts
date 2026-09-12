@@ -163,8 +163,12 @@ describe("study foundation learner journeys", () => {
     expect(firstAttemptAfterCompaction).not.toBeNull();
     expect(pendingAttemptAfterCompaction).not.toBeNull();
     const recurrencesAfter = await graph.recurrences.listBySessionId(opened.studySessionId);
-    expect(recurrencesAfter.some((recurrence) => recurrence.id === consumedRecurrence.id)).toBe(false);
-    expect(recurrencesAfter.some((recurrence) => recurrence.id === pendingRecurrence.id)).toBe(true);
+    expect(recurrencesAfter.some((recurrence) => recurrence.id === consumedRecurrence.id)).toBe(
+      false
+    );
+    expect(recurrencesAfter.some((recurrence) => recurrence.id === pendingRecurrence.id)).toBe(
+      true
+    );
   });
 
   it("keeps feed selection independent from learner-profile counters", async () => {

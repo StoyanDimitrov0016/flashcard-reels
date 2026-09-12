@@ -1,11 +1,5 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import {
-  LayoutAnimation,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type {
   AppPreferences,

@@ -4,9 +4,9 @@ import type { StudySessionMaintenanceTransaction } from "@/features/study/applic
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { studySessionItems, studySessionRecurrences } from "@/infrastructure/sqlite/schema";
 
-export class SQLiteStudySessionMaintenanceTransaction<TRunResult = unknown>
-  implements StudySessionMaintenanceTransaction
-{
+export class SQLiteStudySessionMaintenanceTransaction<
+  TRunResult = unknown,
+> implements StudySessionMaintenanceTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {

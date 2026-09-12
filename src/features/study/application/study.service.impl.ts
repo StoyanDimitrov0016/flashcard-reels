@@ -280,10 +280,7 @@ export class StudyServiceImpl implements StudyService {
     );
   }
 
-  async updateSessionReelPosition(
-    sessionId: string,
-    currentReelPosition: number
-  ) {
+  async updateSessionReelPosition(sessionId: string, currentReelPosition: number) {
     return this.studySessionRepository.updateCurrentReelPosition(
       sessionId,
       currentReelPosition,
@@ -396,9 +393,7 @@ export class StudyServiceImpl implements StudyService {
     });
   }
 
-  async finalizeAttemptsOutsideEditableWindow(
-    studySessionId: string
-  ): Promise<void> {
+  async finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void> {
     await this.serializeFinalization(studySessionId, async () => {
       const session = await this.studySessionRepository.findById(studySessionId);
       if (!session) {

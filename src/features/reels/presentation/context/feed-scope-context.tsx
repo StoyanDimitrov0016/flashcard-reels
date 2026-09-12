@@ -9,7 +9,6 @@ import {
 } from "@/features/reels/presentation/focused-feed-state";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 
-export { consumeFocusedFeedTransition } from "@/features/reels/presentation/focused-feed-state";
 export type {
   FocusTransition,
   FocusedFeedState,

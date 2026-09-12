@@ -4,7 +4,7 @@ Flashcard Reels separates application chrome from learning content.
 
 ## Application palette
 
-`src/shared/presentation/theme-colors.ts` is the single source of truth for the light and dark application palettes. `useAppTheme()` resolves the active scheme and exposes semantic roles for the canvas, navigation, surfaces, text, borders, interaction, overlays, sheets, and recall actions. App screens, navigation, settings, sheets, gesture chrome, and Study Island controls consume these roles rather than deck colors.
+`src/shared/presentation/theme-colors.ts` is the single source of truth for the light and dark application palettes, built from the dependency-light identity foundation in `src/shared/foundation/native-identity.json`. `useAppTheme()` resolves the active scheme and exposes semantic roles for the canvas, navigation, surfaces, text, borders, interaction, overlays, sheets, and recall actions. App screens, navigation, settings, sheets, gesture chrome, and Study Island controls consume these roles rather than deck colors. `app.config.ts` uses the same foundation for splash and adaptive-icon launch surfaces.
 
 ## Deck appearance
 
@@ -25,6 +25,8 @@ The Study Island is a normal layout sibling of answer content:
 The horizontal island uses the named `sizes.study.horizontalIsland` rule: it occupies 80% of the bottom control region and is capped at 360 points, centered by its parent. It never overlays answer text or stretches beyond that bound. Side islands use the stable `sizes.study.sideControlRegion` width. `StudyControlCluster` owns only the local recall/audio composition; its parent owns placement.
 
 Shared touch targets, controls, inputs, answer width, sheet widths, and Study Island geometry are defined in `src/shared/presentation/sizes.ts`; component StyleSheets use those tokens for composition.
+
+`AppBottomSheet` is the shared sheet contract. Callers select `content`, `half`, `full`, or `half-full`; the wrapper maps those semantic sizes to Expo dynamic sizing or supported snap points.
 
 `StudyControlLayoutContext` carries only resolved presentation configuration. `resolveStudyControlLayout()` is shared by the real card and the Study Controls preview, while rating state, callbacks, audio source, and active-session state remain explicit props.
 

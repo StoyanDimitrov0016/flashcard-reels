@@ -6,7 +6,7 @@ The learning engine is a deep internal module. It decides memory-aware feed orde
 - Review attempts are the historical events. Their rating remains editable until finalization.
 - Learner profiles aggregate finalized ratings for reporting and progress views.
 - Flashcard memory states store the application-owned FSRS scheduler state separately from profile statistics.
-- The last five reel positions remain editable. A swipe without a rating is an unrated attempt, finalized as a skip.
+- The editable review tail is the last five positions relative to the session's furthest viewed position. A swipe without a rating is an unrated attempt, finalized as a skip.
 - FSRS is applied exactly once when a rated attempt is finalized, using the attempt's `ratedAt` timestamp. Unrated finalized attempts do not create memory state.
 - The editable tail is provisional: immediate `Again` and `Hard` recurrence reacts to provisional ratings, while FSRS waits for finalization.
 - Repeated reviews for one flashcard are applied exactly once in ascending final `ratedAt` order across the whole session, with reel position and attempt ID as deterministic tie-breakers. A review is deferred if an earlier same-card rating is still unfinalized.
@@ -16,7 +16,8 @@ The learning engine is a deep internal module. It decides memory-aware feed orde
 - The scheduler adapter uses `ts-fsrs` with `enable_short_term: false`, `enable_fuzz: false`, and the library's default retention and maximum interval.
 - Discover and Focus share the same feed composer. Discover supplies active cards from all active decks; Focus supplies active cards from one deck.
 - The composer uses simple due/retrievability pressure, new-card, and low-pressure groups. It checks recency across all groups before relaxing it, then uses injected randomness within the selected group. It does not use learner-profile counters.
-- Study sessions still materialize a bounded future window. Memory updates, recurrence consumption, and finalization complete before a new feed chunk is materialized.
+- Study sessions still materialize a bounded future window, keep mounted occurrence state and recall-session maps bounded, and compact old runtime materialization rows as the furthest position advances. Memory updates, recurrence consumption, and finalization complete before a new feed chunk is materialized.
+- Moving backwards changes the current position but not the furthest-position checkpoint, so finalized reviews cannot become editable again. Review attempts remain durable after runtime feed rows are compacted.
 - Recent-card state tracks actual visible appearances, including normal materialization, recurrence, and anchor cards. Pre-materialization alone does not count as an appearance.
 
 ## Verification boundaries

@@ -77,6 +77,8 @@ describe("mounted reel occurrence merging", () => {
       { currentReelPosition: 2, furthestReelPosition: 60 }
     );
 
-    expect(result.map(({ reelPosition }) => reelPosition)).toEqual([2, 3, 4, 55, 56, 57, 58, 59, 60]);
+    expect(result.map(({ reelPosition }) => reelPosition)).toEqual([
+      2, 3, 4, 55, 56, 57, 58, 59, 60,
+    ]);
   });
 });

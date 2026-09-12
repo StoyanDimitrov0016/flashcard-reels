@@ -29,14 +29,13 @@ export function mergeMountedReelOccurrences(
   const firstEditablePosition = getFirstEditableReelPosition(retention.furthestReelPosition);
   const incomingPositions = new Set(incoming.map(({ reelPosition }) => reelPosition));
 
-  const result = [...occurrencesByPosition.values()]
-    .filter(
-      ({ reelPosition }) =>
-        incomingPositions.has(reelPosition) ||
-        reelPosition === retention.currentReelPosition ||
-        reelPosition >= minimumMountedPosition ||
-        reelPosition >= firstEditablePosition
-    );
+  const result = [...occurrencesByPosition.values()].filter(
+    ({ reelPosition }) =>
+      incomingPositions.has(reelPosition) ||
+      reelPosition === retention.currentReelPosition ||
+      reelPosition >= minimumMountedPosition ||
+      reelPosition >= firstEditablePosition
+  );
   // oxlint-disable-next-line unicorn/no-array-sort -- ES2022 is the app's configured runtime library; this is a fresh array.
   result.sort((left, right) => left.reelPosition - right.reelPosition);
   return result;

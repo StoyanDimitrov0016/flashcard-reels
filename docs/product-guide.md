@@ -16,6 +16,8 @@ Ratings shape later study:
 
 Hold a card in Discover to start a focused session for its deck.
 
+When Discover opens Focus from a card, Focus keeps that same card, reveal side, selected recall rating, and visual rotation. The handoff is consumed once, so a later remount does not replay stale transition state or flash the question side.
+
 ## Deck library
 
 The **Library** starts with one small offline demo deck. Import `.fcrdeck` files there to add larger libraries. From there you can:
@@ -45,3 +47,5 @@ Appearance offers **Light**, **Dark**, and **Device**. Interaction controls Audi
 The Hold-to-Focus action in Discover uses a themed top toast and opens Focus only after the long-press threshold; Focus cards do not offer that Discover-only action.
 
 Deck appearance is stored by preset ID, so changing the application appearance changes the rendered deck variant without changing the deck's selected identity. Reel cards use structural header, body, and footer regions; the Study Island reserves layout space beside or below answer content.
+
+Only the furthest viewed position advances the editable study tail. Scrolling backwards cannot reopen finalized reviews; old feed materialization can be compacted while the review attempt history remains available to Progress and future aggregation.

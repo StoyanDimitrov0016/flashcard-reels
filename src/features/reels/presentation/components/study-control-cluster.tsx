@@ -29,11 +29,7 @@ export function StudyControlCluster({
       <AnswerAudioPlayer isActive={isActive} source={audioSource} />
     ) : null;
   const controls = (
-    <RecallControls
-      onSelect={onRate}
-      ratingEnabled={ratingEnabled}
-      selectedLevel={selectedLevel}
-    />
+    <RecallControls onSelect={onRate} ratingEnabled={ratingEnabled} selectedLevel={selectedLevel} />
   );
 
   return (

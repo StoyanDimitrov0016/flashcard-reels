@@ -33,7 +33,7 @@ One small demo package is generated from the dedicated `data/demo-deck` source a
 
 ## Local persistence
 
-Expo SQLite stores decks, flashcards, appearance settings, study sessions, feed positions, review attempts, recurrences, and learner profiles. Drizzle ORM defines the schema in `src/infrastructure/sqlite/schema.ts`; the reset migration baseline lives in `drizzle/`. Decks store a package version; flashcards use canonical `order` ordering and an `active` flag.
+Expo SQLite stores decks, flashcards, appearance settings, study sessions, feed positions, review attempts, recurrences, and learner profiles. Drizzle ORM defines the schema in `src/infrastructure/sqlite/schema.ts`; the reset migration baseline lives in `drizzle/`. Decks store a package version; flashcards use canonical `order` ordering and an `active` flag. Study sessions persist both `currentReelPosition` and monotonic `furthestReelPosition`; backwards navigation changes only the current position.
 
 The database uses constraints and transactions to preserve invariants such as one active session per scope, one card per reel position, valid recall ratings, internally consistent learner-profile counters, and collision-free package reordering. Normal flashcard lists and counts return active cards only; direct ID lookups can still resolve inactive historical rows.
 
@@ -43,7 +43,9 @@ Installed package audio is staged in temporary application-owned storage, activa
 
 ## Study behavior
 
-Mixed and focused sessions are independent and persist their prepared feed order. The feed is materialized in small batches around the current reel position. The last five visible reels form an editable provisional tail; activation persists position, consumes recurrence, finalizes newly committed attempts, records the visible card, and only then extends the feed.
+Mixed and focused sessions are independent and persist their prepared feed order. The feed is materialized in small batches around the furthest viewed position and the mounted occurrence history is bounded. The editable tail is derived from furthest viewed position, so backwards scrolling cannot reopen finalized reviews. Activation runs in this order: persist position → consume recurrence → record the visible card → await pending rating persistence → finalize committed attempts → compact session runtime data when due → extend/materialize the feed.
+
+Runtime feed rows and consumed recurrence reservations are compacted transactionally after the furthest-position watermark advances, while review attempts remain durable for learning history and aggregation. Focus handoffs carry one-shot transition state containing the originating card, reveal side, selected rating, and rotation state; the Focus screen consumes that transition once after its prepared feed is ready.
 
 An **Again** rating schedules the card roughly eight positions later, while **Hard** schedules it roughly sixteen positions later; jitter prevents a rigid pattern. The learning engine composes the materialized feed from pressure, new-card, and low-pressure groups, respecting recent-card variety across groups before relaxing recency. Finalized repeated reviews are applied to FSRS in global `ratedAt` order per card, while learner-profile counters remain reporting data. Recent history records cards when they become visible, including recurrence and anchors.
 

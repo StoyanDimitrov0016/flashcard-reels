@@ -46,7 +46,5 @@ export function createFocusedFeedState(
 }
 
 export function consumeFocusedFeedTransition(state: FocusedFeedState): FocusedFeedState {
-  return state.status === "ready"
-    ? { ...state, replaceSession: false, transition: null }
-    : state;
+  return state.status === "ready" ? { ...state, replaceSession: false, transition: null } : state;
 }
