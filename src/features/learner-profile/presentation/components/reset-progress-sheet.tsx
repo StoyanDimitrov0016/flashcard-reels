@@ -133,8 +133,9 @@ function createStyles(colors: AppColors) {
       borderTopRightRadius: sizes.radius.panel,
       gap: sizes.spacing.xLarge,
       maxWidth: 560,
-      padding: sizes.spacing.content,
       paddingBottom: sizes.spacing.spacious,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: sizes.spacing.small,
       width: "100%",
     },
     title: {

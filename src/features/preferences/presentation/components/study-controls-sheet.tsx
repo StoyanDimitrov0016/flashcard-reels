@@ -323,8 +323,9 @@ function createStyles(colors: AppColors) {
     content: {
       flex: 1,
       gap: sizes.spacing.screen,
-      padding: sizes.spacing.content,
       paddingBottom: sizes.spacing.content,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: sizes.spacing.small,
     },
     controls: { gap: sizes.spacing.section },
     doneButton: {
@@ -343,7 +344,9 @@ function createStyles(colors: AppColors) {
       alignItems: "flex-start",
       flexDirection: "row",
       gap: sizes.spacing.medium,
-      padding: sizes.spacing.content,
+      paddingBottom: sizes.spacing.small,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: 0,
     },
     headingCopy: { flex: 1, gap: sizes.spacing.small },
     option: {

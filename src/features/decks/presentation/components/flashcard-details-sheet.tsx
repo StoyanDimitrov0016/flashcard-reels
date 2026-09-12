@@ -22,11 +22,11 @@ export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardD
   const { height } = useWindowDimensions();
 
   return (
-    <AppBottomSheet contentHeight={height * 0.82} onClose={onClose} visible={card !== null}>
+    <AppBottomSheet contentHeight={height * 0.5} onClose={onClose} visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Card {card ? card.order + 1 : ""}
+          <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
+            {card ? `${card.order + 1} ${card.question}` : ""}
           </Text>
           <Pressable
             accessibilityLabel="Close card details"
@@ -66,14 +66,17 @@ function createStyles(colors: AppColors) {
     answerRow: { alignItems: "flex-start", flexDirection: "row", gap: sizes.spacing.section },
     content: {
       gap: sizes.spacing.section,
-      padding: sizes.spacing.content,
       paddingBottom: sizes.spacing.spacious,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: sizes.spacing.small,
     },
     header: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      padding: sizes.spacing.content,
+      paddingBottom: sizes.spacing.small,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: 0,
     },
     iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     question: {

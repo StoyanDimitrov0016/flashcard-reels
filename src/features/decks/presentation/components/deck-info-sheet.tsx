@@ -40,7 +40,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
         );
 
   return (
-    <AppBottomSheet contentHeight={height * 0.7} onClose={onClose} visible={visible}>
+    <AppBottomSheet contentHeight={height * 0.5} onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={styles.title}>
@@ -93,8 +93,9 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     content: {
       gap: sizes.spacing.section,
-      padding: sizes.spacing.content,
       paddingBottom: sizes.spacing.spacious,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: sizes.spacing.small,
     },
     description: {
       color: colors.textSecondary,
@@ -106,7 +107,9 @@ function createStyles(colors: AppColors) {
       flexDirection: "row",
       gap: sizes.spacing.medium,
       justifyContent: "space-between",
-      padding: sizes.spacing.content,
+      paddingBottom: sizes.spacing.small,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: 0,
     },
     iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
     metric: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
