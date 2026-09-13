@@ -8,7 +8,7 @@ export function resolveAppBottomSheetConfig(size: AppBottomSheetSize): Readonly<
     return { enableDynamicSizing: true };
   }
   if (size === "half") {
-    return { enableDynamicSizing: false, snapPoints: ["50%"] };
+    return { enableDynamicSizing: false, snapPoints: ["50%", "100%"] };
   }
   if (size === "full") {
     return { enableDynamicSizing: false, snapPoints: ["100%"] };

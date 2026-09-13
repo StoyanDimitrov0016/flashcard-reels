@@ -8,7 +8,7 @@ describe("AppBottomSheet semantic sizes", () => {
   });
 
   it.each([
-    ["half", ["50%"]],
+    ["half", ["50%", "100%"]],
     ["full", ["100%"]],
     ["half-full", ["50%", "100%"]],
   ] as const)("maps %s to the supported snap points", (size, snapPoints) => {

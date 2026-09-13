@@ -36,7 +36,9 @@ export function AppBottomSheet({
       onClose={onClose}
       snapPoints={config.snapPoints}
     >
-      <BottomSheetView style={styles.content}>{children}</BottomSheetView>
+      <BottomSheetView style={config.snapPoints ? styles.fixedContent : styles.content}>
+        {children}
+      </BottomSheetView>
     </BottomSheet>
   );
 }
@@ -45,5 +47,6 @@ function createStyles(backgroundColor: string) {
   return StyleSheet.create({
     background: { backgroundColor },
     content: { backgroundColor },
+    fixedContent: { backgroundColor, flex: 1 },
   });
 }
