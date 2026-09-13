@@ -341,7 +341,7 @@ function createStyles() {
     face: { backfaceVisibility: "hidden", position: "absolute" },
     page: {
       flex: 1,
-      paddingBottom: sizes.spacing.screen,
+      paddingBottom: sizes.spacing.content,
       paddingHorizontal: sizes.spacing.spacious,
       paddingTop: sizes.spacing.screen,
     },

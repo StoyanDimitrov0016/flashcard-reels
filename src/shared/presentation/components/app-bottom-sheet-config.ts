@@ -1,6 +1,7 @@
-export type AppBottomSheetSize = "content" | "half" | "full" | "half-full";
+export type AppBottomSheetSize = "content" | "half" | "large" | "full";
 
 export function resolveAppBottomSheetConfig(size: AppBottomSheetSize): Readonly<{
+  contentHeightRatio?: number;
   enableDynamicSizing: boolean;
   snapPoints?: string[];
 }> {
@@ -13,5 +14,5 @@ export function resolveAppBottomSheetConfig(size: AppBottomSheetSize): Readonly<
   if (size === "full") {
     return { enableDynamicSizing: false, snapPoints: ["100%"] };
   }
-  return { enableDynamicSizing: false, snapPoints: ["50%", "100%"] };
+  return { contentHeightRatio: 0.75, enableDynamicSizing: true };
 }

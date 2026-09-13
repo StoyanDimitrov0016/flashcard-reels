@@ -63,7 +63,7 @@ export function StudyControlsSheet({
   };
 
   return (
-    <AppBottomSheet onClose={onClose} size="half-full" visible={visible}>
+    <AppBottomSheet onClose={onClose} size="large" visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <View style={styles.headingCopy}>

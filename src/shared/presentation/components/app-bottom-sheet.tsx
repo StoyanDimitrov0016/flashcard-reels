@@ -1,6 +1,6 @@
 import { BottomSheet, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import type { ReactNode } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
 
 import { useAppTheme } from "@/shared/presentation/theme";
 import {
@@ -24,8 +24,12 @@ export function AppBottomSheet({
   visible,
 }: AppBottomSheetProps) {
   const { colors } = useAppTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const styles = createStyles(colors.surfaceRaised);
   const config = resolveAppBottomSheetConfig(size);
+  const contentHeight = config.contentHeightRatio
+    ? windowHeight * config.contentHeightRatio
+    : undefined;
 
   return (
     <BottomSheet
@@ -36,7 +40,12 @@ export function AppBottomSheet({
       onClose={onClose}
       snapPoints={config.snapPoints}
     >
-      <BottomSheetView style={config.snapPoints ? styles.fixedContent : styles.content}>
+      <BottomSheetView
+        style={[
+          config.snapPoints ? styles.fixedContent : styles.content,
+          contentHeight === undefined ? null : { height: contentHeight },
+        ]}
+      >
         {children}
       </BottomSheetView>
     </BottomSheet>
