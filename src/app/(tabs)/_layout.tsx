@@ -38,9 +38,7 @@ export default function TabLayout() {
           tabBarPosition="bottom"
           screenOptions={{
             sceneStyle: { backgroundColor: colors.canvas },
-            animationEnabled: false,
             tabBarActiveTintColor: colors.actionPrimary,
-            tabBarAndroidRipple: { borderless: false, color: "transparent" },
             tabBarIndicatorStyle: { height: 0 },
             tabBarInactiveTintColor: colors.textTertiary,
             tabBarPressColor: "transparent",
