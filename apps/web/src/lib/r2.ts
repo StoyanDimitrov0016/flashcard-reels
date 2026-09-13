@@ -1,31 +1,23 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getR2Environment } from "@/config/server-environment";
 
 const DOWNLOAD_TTL_SECONDS = 15 * 60;
 
-function requiredEnvironmentVariable(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
-}
-
-function r2Client(): S3Client {
-  return new S3Client({
+export async function createAuthorizedDeckDownload(objectKey: string) {
+  const environment = getR2Environment();
+  const client = new S3Client({
     region: "auto",
-    endpoint: `https://${requiredEnvironmentVariable("R2_ACCOUNT_ID")}.r2.cloudflarestorage.com`,
+    endpoint: `https://${environment.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-      accessKeyId: requiredEnvironmentVariable("R2_ACCESS_KEY_ID"),
-      secretAccessKey: requiredEnvironmentVariable("R2_SECRET_ACCESS_KEY"),
+      accessKeyId: environment.R2_ACCESS_KEY_ID,
+      secretAccessKey: environment.R2_SECRET_ACCESS_KEY,
     },
   });
-}
-
-/** Call only after authenticating the requester and authorizing access to objectKey. */
-export async function createAuthorizedDeckDownload(objectKey: string) {
   const url = await getSignedUrl(
-    r2Client(),
+    client,
     new GetObjectCommand({
-      Bucket: requiredEnvironmentVariable("R2_BUCKET_NAME"),
+      Bucket: environment.R2_BUCKET_NAME,
       Key: objectKey,
       ResponseContentDisposition: `attachment; filename="${objectKey.split("/").at(-1)}"`,
       ResponseContentType: "application/octet-stream",
