@@ -1,0 +1,16 @@
+:root {
+  --canvas: #fff; --navigation: #f7f7f5; --surface-raised: #fff;
+  --surface-subtle: #f1f1ef; --surface-hover: #efefed; --text-primary: #373530;
+  --text-secondary: #787774; --text-tertiary: #9b9a97; --border-subtle: rgba(55,53,47,.12);
+  --border-strong: rgba(55,53,47,.22); --interactive: #2383e2; --interactive-hover: #0b6bcb;
+  --success: #2e7d32; --warning: #c58a16; --error: #d44c47;
+  --action-primary: #373530; --action-primary-text: #fff;
+}
+.dark {
+  --canvas: #191919; --navigation: #202020; --surface-raised: #252525;
+  --surface-subtle: #2a2a2a; --surface-hover: #2f2f2f; --text-primary: #d4d4d4;
+  --text-secondary: #9b9b9b; --text-tertiary: #737373; --border-subtle: rgba(255,255,255,.08);
+  --border-strong: rgba(255,255,255,.16); --interactive: #2383e2; --interactive-hover: #4a9ef0;
+  --success: #4f9768; --warning: #c19138; --error: #be524b;
+  --action-primary: #d4d4d4; --action-primary-text: #191919;
+}
