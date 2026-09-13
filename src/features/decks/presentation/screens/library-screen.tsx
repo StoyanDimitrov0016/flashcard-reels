@@ -234,7 +234,6 @@ export default function LibraryScreen() {
     void savePreset(deckId, preset).then((appearance) => {
       if (appearance) {
         setAppearanceOverrides((current) => new Map(current).set(deckId, appearance));
-        setSelectedEntry(null);
       }
     });
   };

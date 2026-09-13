@@ -53,24 +53,24 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
       accessibilityState={{ busy: pending, checked: selected, disabled: pendingPreset !== null }}
       disabled={pendingPreset !== null}
       onPress={() => onSelect(preset)}
-      style={({ pressed }) => [
-        styles.preset,
-        { backgroundColor: previewColors.background },
-        selected && { borderColor: previewColors.accent },
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.preset, pressed && styles.pressed]}
     >
       <View style={[styles.swatch, { backgroundColor: previewColors.background }]}>
         <View style={[styles.swatchAccent, { backgroundColor: previewColors.accent }]} />
       </View>
-      <Text style={[styles.presetName, { color: previewColors.textPrimary }]}>{preset.name}</Text>
-      {pending && <ActivityIndicator color={previewColors.accent} size="small" />}
-      {!pending && selected ? (
-        <SymbolView
-          name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
-          size={sizes.icon.medium}
-          tintColor={previewColors.accent}
-        />
+      <Text style={styles.presetName}>{preset.name}</Text>
+      {pending || selected ? (
+        <View pointerEvents="none" style={styles.presetStatus}>
+          {pending ? (
+            <ActivityIndicator color={previewColors.accent} size="small" />
+          ) : (
+            <SymbolView
+              name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
+              size={sizes.icon.medium}
+              tintColor={previewColors.accent}
+            />
+          )}
+        </View>
       ) : null}
     </Pressable>
   );
@@ -98,15 +98,12 @@ export function DeckAppearanceSheet({
   );
 
   return (
-    <AppBottomSheet onClose={onDismiss} size="full" visible={isPresented}>
+    <AppBottomSheet onClose={onDismiss} size="medium" visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
-          <View style={styles.headingCopy}>
-            <Text accessibilityRole="header" style={styles.title}>
-              Deck appearance
-            </Text>
-            <Text style={styles.subtitle}>Choose a curated, high-contrast theme.</Text>
-          </View>
+          <Text accessibilityRole="header" style={styles.title}>
+            Deck appearance
+          </Text>
           <Pressable
             accessibilityLabel="Close deck appearance"
             accessibilityRole="button"
@@ -155,20 +152,16 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: sizes.spacing.content,
     },
     header: {
-      alignItems: "flex-start",
+      alignItems: "center",
       flexDirection: "row",
       gap: sizes.spacing.medium,
       paddingBottom: sizes.spacing.small,
       paddingHorizontal: sizes.spacing.content,
       paddingTop: 0,
     },
-    headingCopy: { flex: 1, gap: sizes.spacing.small },
     list: { gap: sizes.spacing.medium, padding: sizes.spacing.content, paddingTop: 0 },
     preset: {
       alignItems: "center",
-      borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.card,
-      borderWidth: 2,
       flex: 1,
       gap: sizes.spacing.medium,
       minHeight: 104,
@@ -179,6 +172,11 @@ function createStyles(colors: AppColors) {
       textAlign: "center",
       fontSize: fontSize.footnote,
       fontWeight: fontWeight.bold,
+    },
+    presetStatus: {
+      position: "absolute",
+      right: sizes.spacing.medium,
+      top: sizes.spacing.medium,
     },
     pressed: { opacity: 0.72 },
     row: { gap: sizes.spacing.medium },
@@ -193,7 +191,6 @@ function createStyles(colors: AppColors) {
       width: "100%",
     },
     listView: { flex: 1 },
-    subtitle: { color: colors.textSecondary, fontSize: fontSize.body },
     swatch: {
       borderColor: colors.borderStrong,
       borderRadius: sizes.radius.medium,
@@ -203,6 +200,6 @@ function createStyles(colors: AppColors) {
       width: "100%",
     },
     swatchAccent: { height: "100%", opacity: 0.88, width: "55%" },
-    title: { color: colors.textPrimary, ...textStyles.screenTitle },
+    title: { color: colors.textPrimary, flex: 1, ...textStyles.screenTitle },
   });
 }

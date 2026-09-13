@@ -14,13 +14,17 @@ describe("AppBottomSheet semantic sizes", () => {
     });
   });
 
-  it.each([
-    ["half", ["50%", "100%"]],
-    ["full", ["100%"]],
-  ] as const)("maps %s to the supported snap points", (size, snapPoints) => {
-    expect(resolveAppBottomSheetConfig(size)).toEqual({
+  it("maps medium to content-driven 60% sizing", () => {
+    expect(resolveAppBottomSheetConfig("medium")).toEqual({
+      contentHeightRatio: 0.6,
+      enableDynamicSizing: true,
+    });
+  });
+
+  it("maps half to the supported snap points", () => {
+    expect(resolveAppBottomSheetConfig("half")).toEqual({
       enableDynamicSizing: false,
-      snapPoints,
+      snapPoints: ["50%", "100%"],
     });
   });
 });
