@@ -61,6 +61,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const deckRepository = new SQLiteDeckRepository(drizzleDatabase);
     const deckAppearanceRepository = new SQLiteDeckAppearanceRepository(drizzleDatabase);
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
+    const flashcardService = new FlashcardServiceImpl(flashcardRepository);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
     const learningScheduler = createLearningScheduler();
@@ -92,11 +93,6 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     );
     const clock = new SystemClock();
     const idGenerator = new UuidGenerator();
-    const { answerAudioRepository, deckInstaller } = createDeckPackageServices(
-      drizzleDatabase,
-      clock,
-      deckRepository
-    );
     const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
       studySessionRepository,
@@ -112,17 +108,25 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       learnerProfileAggregationTransaction,
       studySessionMaintenanceTransaction
     );
+    const { answerAudioRepository, deckInstaller } = createDeckPackageServices(
+      drizzleDatabase,
+      clock,
+      deckRepository,
+      studyService
+    );
 
     return {
       answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
       deckInstaller,
       deckPackagePicker: new ExpoDeckPackagePicker(),
       deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
-      flashcardService: new FlashcardServiceImpl(flashcardRepository),
+      flashcardService,
       learnerProfileService: new LearnerProfileServiceImpl(
         learnerProfileRepository,
         clock,
-        learningProgressResetTransaction
+        learningProgressResetTransaction,
+        studyService,
+        flashcardService
       ),
       reelFeedService: new ReelFeedServiceImpl(
         studyService,

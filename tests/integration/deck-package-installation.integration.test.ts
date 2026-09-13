@@ -16,7 +16,12 @@ import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { deckAppearances } from "@/infrastructure/sqlite/schema";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+import {
+  deckAppearances,
+  flashcardMemoryStates,
+  flashcardReviewAttempts,
+} from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, type ScenarioGraph } from "../support/sqlite-study-scenario";
 import {
@@ -215,7 +220,8 @@ function createImporter(
   audio = new MemoryAudioStorage(),
   installation: DeckPackageInstallationTransaction = new SQLiteDeckPackageInstallationTransaction(
     database.drizzle
-  )
+  ),
+  sessionSettlement: StudySessionSettlement | null = null
 ) {
   const deckRepository = new SQLiteDeckRepository(database.drizzle);
   return {
@@ -226,7 +232,8 @@ function createImporter(
       audio,
       clock,
       { read: async () => new Uint8Array() },
-      deckRepository
+      deckRepository,
+      sessionSettlement
     ),
   };
 }
@@ -548,6 +555,174 @@ describe("deck package installation", () => {
         historicalSessionId
       )
     ).toEqual(finalizedAttemptBefore);
+  });
+
+  it("settles recent ratings through FSRS before an installed deck changes", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const { importer } = createImporter(
+      database,
+      clock,
+      new MemoryAudioStorage(),
+      installation,
+      graph.study
+    );
+    const sourceCard = card(testId(19), 0);
+    await importer.installFromBytes(validArchive(1, [sourceCard]));
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      sourceCard.id
+    );
+    if (!installedCard) {
+      throw new Error("Missing installed card");
+    }
+    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(
+      installedCard.id,
+      feed.currentReelPosition,
+      feed.studySessionId
+    );
+    await graph.study.rateAttempt(attemptId, "good");
+
+    await importer.installFromBytes(validArchive(2, [card(sourceCard.id, 0, "Updated")]));
+
+    const completedSession = await graph.sessions.findById(feed.studySessionId);
+    expect(completedSession?.completedAt).not.toBeNull();
+    const finalizedRows = await database.drizzle
+      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.id, attemptId));
+    expect(finalizedRows[0]?.finalizedAt).not.toBeNull();
+    expect(
+      await database.drizzle
+        .select({ flashcardId: flashcardMemoryStates.flashcardId })
+        .from(flashcardMemoryStates)
+        .where(eq(flashcardMemoryStates.flashcardId, installedCard.id))
+    ).toEqual([{ flashcardId: installedCard.id }]);
+    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+      reviewCount: 1,
+    });
+  });
+
+  it("recovers and finalizes a completed import-invalidated session after interruption", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const { importer } = createImporter(database, clock);
+    const sourceCard = card(testId(20), 0);
+    await importer.installFromBytes(validArchive(1, [sourceCard]));
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      sourceCard.id
+    );
+    if (!installedCard) {
+      throw new Error("Missing installed card");
+    }
+    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(
+      installedCard.id,
+      feed.currentReelPosition,
+      feed.studySessionId
+    );
+    await graph.study.rateAttempt(attemptId, "good");
+
+    await importer.installFromBytes(validArchive(2, [card(sourceCard.id, 0, "Updated")]));
+    expect(
+      await database.drizzle
+        .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+        .from(flashcardReviewAttempts)
+        .where(eq(flashcardReviewAttempts.id, attemptId))
+    ).toEqual([{ finalizedAt: null }]);
+
+    await graph.study.recoverPendingCompletedSessionAggregation();
+
+    const recoveredRows = await database.drizzle
+      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.id, attemptId));
+    expect(recoveredRows[0]?.finalizedAt).not.toBeNull();
+    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+      reviewCount: 1,
+    });
+    expect(
+      await database.drizzle
+        .select({ flashcardId: flashcardMemoryStates.flashcardId })
+        .from(flashcardMemoryStates)
+        .where(eq(flashcardMemoryStates.flashcardId, installedCard.id))
+    ).toEqual([{ flashcardId: installedCard.id }]);
+  });
+
+  it("settles a rated mixed session before installing a different new deck", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const { importer } = createImporter(
+      database,
+      clock,
+      new MemoryAudioStorage(),
+      installation,
+      graph.study
+    );
+    const sourceCard = card(testId(21), 0);
+    await importer.installFromBytes(validArchive(1, [sourceCard]));
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      sourceCard.id
+    );
+    if (!installedCard) {
+      throw new Error("Missing installed card");
+    }
+    const feed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
+    const attemptId = await graph.study.startAttempt(
+      installedCard.id,
+      feed.currentReelPosition,
+      feed.studySessionId
+    );
+    await graph.study.rateAttempt(attemptId, "good");
+
+    await importer.installFromBytes(validArchive(1, [card(testId(22), 0)], OTHER_DECK_ID));
+
+    const completedSession = await graph.sessions.findById(feed.studySessionId);
+    expect(completedSession?.completedAt).not.toBeNull();
+    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+      reviewCount: 1,
+    });
+    expect(
+      await database.drizzle
+        .select({ flashcardId: flashcardMemoryStates.flashcardId })
+        .from(flashcardMemoryStates)
+        .where(eq(flashcardMemoryStates.flashcardId, installedCard.id))
+    ).toEqual([{ flashcardId: installedCard.id }]);
+  });
+
+  it("does not settle an active session for a same-version no-op import", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const { importer } = createImporter(
+      database,
+      clock,
+      new MemoryAudioStorage(),
+      installation,
+      graph.study
+    );
+    const sourceCard = card(testId(23), 0);
+    const bytes = validArchive(1, [sourceCard]);
+    await importer.installFromBytes(bytes);
+    const installedCard = await new SQLiteFlashcardRepository(database.drizzle).findById(
+      sourceCard.id
+    );
+    if (!installedCard) {
+      throw new Error("Missing installed card");
+    }
+    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+
+    await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({ status: "no-op" });
+
+    expect(await graph.sessions.findById(feed.studySessionId)).toMatchObject({
+      completedAt: null,
+    });
   });
 
   it("completes the active mixed session when a new deck is installed", async () => {

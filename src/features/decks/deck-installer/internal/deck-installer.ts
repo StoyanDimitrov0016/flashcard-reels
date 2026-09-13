@@ -1,4 +1,5 @@
 import type { Clock } from "@/shared/domain/clock";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import {
   DeckPackageVersionError,
   type DeckInstallResult,
@@ -23,6 +24,7 @@ export class DeckInstallerImpl implements DeckInstaller {
   private readonly clock: Clock;
   private readonly fileReader: DeckPackageFileReader;
   private readonly versionRepository: InstalledDeckVersionRepository;
+  private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
     reader: DeckPackageReader,
@@ -30,7 +32,8 @@ export class DeckInstallerImpl implements DeckInstaller {
     audioStorage: DeckAudioStorage,
     clock: Clock,
     fileReader: DeckPackageFileReader,
-    versionRepository: InstalledDeckVersionRepository
+    versionRepository: InstalledDeckVersionRepository,
+    sessionSettlement: StudySessionSettlement | null = null
   ) {
     this.reader = reader;
     this.installation = installation;
@@ -38,6 +41,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     this.clock = clock;
     this.fileReader = fileReader;
     this.versionRepository = versionRepository;
+    this.sessionSettlement = sessionSettlement;
   }
 
   async installFromFile(file: DeckPackageFile): Promise<DeckInstallResult> {
@@ -59,6 +63,11 @@ export class DeckInstallerImpl implements DeckInstaller {
         `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${installedVersion}`
       );
     }
+
+    await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(
+      deckPackage.id,
+      installedVersion !== null
+    );
 
     const stagedAudio = await this.audioStorage.stage(deckPackage);
     let audioActivated = false;

@@ -87,7 +87,6 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
         and(
           eq(flashcardReviewAttempts.studySessionId, studySessions.id),
           gt(flashcardReviewAttempts.reelPosition, studySessions.aggregatedThroughReelPosition),
-          isNotNull(flashcardReviewAttempts.finalizedAt),
           isNotNull(flashcardReviewAttempts.rating),
           isNotNull(flashcardReviewAttempts.ratedAt)
         )

@@ -6,13 +6,7 @@ import type {
   DeckPackageInstallationTransaction,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import {
-  decks,
-  deckAppearances,
-  flashcardReviewAttempts,
-  flashcards,
-  studySessions,
-} from "@/infrastructure/sqlite/schema";
+import { decks, deckAppearances, flashcards, studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckPackageInstallationTransaction<
   TRunResult = unknown,
@@ -169,16 +163,6 @@ export class SQLiteDeckPackageInstallationTransaction<
         )
         .all();
       for (const session of affectedSessions) {
-        transaction
-          .update(flashcardReviewAttempts)
-          .set({ finalizedAt: now, updatedAt: now })
-          .where(
-            and(
-              eq(flashcardReviewAttempts.studySessionId, session.id),
-              isNull(flashcardReviewAttempts.finalizedAt)
-            )
-          )
-          .run();
         transaction
           .update(studySessions)
           .set({ completedAt: now })

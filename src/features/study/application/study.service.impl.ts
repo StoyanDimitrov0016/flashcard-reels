@@ -21,6 +21,7 @@ import {
 } from "@/features/study/application/review-attempt-finalization-order";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type {
   OpenStudySessionResult,
   StudySessionLifecycleTransaction,
@@ -38,7 +39,7 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 export type OpenStudySession = OpenStudySessionResult;
 
-export class StudyServiceImpl implements StudyService {
+export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
   private readonly studySessionRepository: StudySessionRepository;
@@ -148,6 +149,20 @@ export class StudyServiceImpl implements StudyService {
     await this.aggregateCompletedSession(sessionId);
   }
 
+  async settleActiveSessionsAffectedByDeck(deckId: DeckId, includeFocused: boolean): Promise<void> {
+    const mixed = await this.studySessionRepository.findActiveByScope("mixed");
+    if (mixed) {
+      await this.completeSession(mixed.id);
+    }
+    if (!includeFocused) {
+      return;
+    }
+    const focused = await this.studySessionRepository.findActiveByScope("focused");
+    if (focused?.deckId === deckId) {
+      await this.completeSession(focused.id);
+    }
+  }
+
   async compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void> {
     const maintenance = this.studySessionMaintenanceTransaction;
     if (!maintenance) {
@@ -180,7 +195,7 @@ export class StudyServiceImpl implements StudyService {
       if (!session) {
         return;
       }
-      await this.aggregateCompletedSession(session.id);
+      await this.finalizeAndAggregateCompletedSession(session.id);
       await recoverNext(index + 1);
     };
     await recoverNext(0);

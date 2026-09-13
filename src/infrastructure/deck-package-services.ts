@@ -8,11 +8,13 @@ import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-dec
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { Clock } from "@/shared/domain/clock";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
 export function createDeckPackageServices(
   database: DrizzleDatabase,
   clock: Clock,
-  existingDeckRepository?: DeckRepository
+  existingDeckRepository?: DeckRepository,
+  sessionSettlement: StudySessionSettlement | null = null
 ) {
   const audioStorage = new InstalledAudioStorage();
   const deckRepository = existingDeckRepository ?? new SQLiteDeckRepository(database);
@@ -22,7 +24,8 @@ export function createDeckPackageServices(
     audioStorage,
     clock,
     new ExpoDeckPackageFileReader(),
-    deckRepository
+    deckRepository,
+    sessionSettlement
   );
   return {
     answerAudioRepository: audioStorage,

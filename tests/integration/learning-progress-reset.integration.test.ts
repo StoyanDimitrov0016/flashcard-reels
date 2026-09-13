@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
 
 import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
 import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import {
   decks,
   flashcardMemoryStates,
@@ -13,7 +17,15 @@ import {
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { makeFlashcard, OTHER_DECK_ID, TEST_DECK_ID, testId } from "../support/study-fixtures";
+import { createScenarioGraph } from "../support/sqlite-study-scenario";
+import {
+  makeFlashcard,
+  OTHER_DECK_ID,
+  SequenceIdGenerator,
+  TEST_DECK_ID,
+  TestClock,
+  testId,
+} from "../support/study-fixtures";
 
 const RESET_AT = "2026-02-01T00:00:00.000Z";
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
@@ -132,6 +144,60 @@ describe("SQLite learning progress reset transaction", () => {
         "SELECT COUNT(*) AS count FROM study_sessions WHERE completed_at IS NULL"
       )
     ).toEqual({ count: 0 });
+  });
+
+  it("settles a mixed session before deck reset so unrelated recent progress survives", async () => {
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const flashcardRepository = new SQLiteFlashcardRepository(database.drizzle);
+    const flashcardService = new FlashcardServiceImpl(flashcardRepository);
+    const settlingService = new LearnerProfileServiceImpl(
+      new SQLiteLearnerProfileRepository(database.drizzle),
+      clock,
+      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      graph.study,
+      flashcardService
+    );
+    const deckCard = await flashcardRepository.findById(makeFlashcard(1).id);
+    const otherDeckCard = await flashcardRepository.findById(makeFlashcard(3, OTHER_DECK_ID).id);
+    if (!deckCard || !otherDeckCard) {
+      throw new Error("Missing reset scenario cards");
+    }
+    const feed = await graph.feed.prepareFeed([deckCard, otherDeckCard], "mixed", null, false);
+    const deckOccurrence = feed.occurrences.find(({ card }) => card.id === deckCard.id);
+    const otherOccurrence = feed.occurrences.find(({ card }) => card.id === otherDeckCard.id);
+    if (!deckOccurrence || !otherOccurrence) {
+      throw new Error("Missing reset scenario occurrences");
+    }
+    const deckAttempt = await graph.study.startAttempt(
+      deckCard.id,
+      deckOccurrence.reelPosition,
+      feed.studySessionId
+    );
+    const otherAttempt = await graph.study.startAttempt(
+      otherDeckCard.id,
+      otherOccurrence.reelPosition,
+      feed.studySessionId
+    );
+    await graph.study.rateAttempt(deckAttempt, "good");
+    await graph.study.rateAttempt(otherAttempt, "good");
+
+    await settlingService.resetDeckProgress(TEST_DECK_ID);
+
+    expect(await profileRow(1)).toMatchObject({ reviewCount: 0 });
+    const resetProfile = await database.drizzle
+      .select({ resetAt: learnerProfiles.resetAt })
+      .from(learnerProfiles)
+      .where(eq(learnerProfiles.flashcardId, deckCard.id));
+    expect(resetProfile[0]?.resetAt).not.toBeNull();
+    expect(await profileRow(3)).toMatchObject({ resetAt: null, reviewCount: 1 });
+    expect(await memoryRow(1)).toBeNull();
+    expect(await memoryRow(3)).not.toBeNull();
+    const preservedAttempt = await database.drizzle
+      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.id, otherAttempt));
+    expect(preservedAttempt[0]?.finalizedAt).not.toBeNull();
   });
 
   async function insertDeck(id: string, title: string): Promise<void> {
