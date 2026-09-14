@@ -37,6 +37,25 @@ function DeckGridSkeleton() {
   );
 }
 
+function CatalogError({ message, onRetry }: Readonly<{ message: string; onRetry: () => void }>) {
+  return (
+    <>
+      <AppHeader />
+      <section className="mx-auto max-w-6xl px-6 pb-20 pt-12">
+        <div className="flex flex-col items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-6 py-12 text-center">
+          <AlertCircle className="size-6 text-[var(--error)]" />
+          <h1 className="mt-4 text-lg font-semibold">Library unavailable</h1>
+          <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">{message}</p>
+          <Button className="mt-6" onClick={onRetry} variant="outline">
+            <RefreshCw data-icon="inline-start" className="size-4" />
+            Try again
+          </Button>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function DeckCatalog() {
   const query = useQuery(deckCatalogQueryOptions);
   const downloadMutation = useMutation(downloadDeckMutationOptions);
@@ -51,59 +70,36 @@ export function DeckCatalog() {
     return (
       <>
         <AppHeader />
-        <section className="mx-auto max-w-6xl px-6 pb-10 pt-12 sm:pt-16">
-          <Skeleton className="h-14 max-w-xl" />
-          <Skeleton className="mt-5 h-6 max-w-2xl" />
-          <Skeleton className="mt-6 h-11 max-w-xl" />
+        <section className="mx-auto max-w-6xl px-6 pb-8 pt-10">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="mt-5 h-11 max-w-xl" />
         </section>
         <DeckGridSkeleton />
       </>
     );
   }
   if (query.isError) {
-    return (
-      <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="flex flex-col items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-6 py-12 text-center">
-          <AlertCircle className="size-6 text-[var(--error)]" />
-          <h1 className="mt-4 text-lg font-semibold">Library unavailable</h1>
-          <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
-            {query.error.message}
-          </p>
-          <Button className="mt-6" onClick={() => query.refetch()} variant="outline">
-            <RefreshCw data-icon="inline-start" className="size-4" />
-            Try again
-          </Button>
-        </div>
-      </section>
-    );
+    return <CatalogError message={query.error.message} onRetry={() => query.refetch()} />;
   }
 
   return (
     <>
       <AppHeader />
-      <section className="mx-auto max-w-6xl px-6 pb-10 pt-12 sm:pt-16">
-        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">
-          Learn in motion.
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-secondary)]">
-          Browse generated decks, inspect their cards, and send a private download to your phone.
-        </p>
-        <DeckSearchForm onSearch={onSearch} />
-      </section>
-      <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="mb-5 flex items-center justify-between text-sm text-[var(--text-secondary)]">
-          <span>
-            {decks.length} {search ? "matching" : "published"} decks
+      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight">Decks</h1>
+          <span className="text-sm text-[var(--text-secondary)]">
+            {decks.length} of {query.data.length}
           </span>
-          <span>Choose a deck to inspect its cards.</span>
         </div>
-        {decks.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--border-strong)] px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
-            No decks match this search.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {decks.map((deck) => (
+        <DeckSearchForm onSearch={onSearch} />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {decks.length === 0 ? (
+            <p className="col-span-full rounded-xl border border-dashed border-[var(--border-strong)] px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
+              No decks match this search.
+            </p>
+          ) : (
+            decks.map((deck) => (
               <article
                 className="group relative flex min-h-64 flex-col justify-between rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 shadow-sm transition-colors hover:border-[var(--interactive)] hover:bg-[var(--surface-hover)]"
                 key={deck.id}
@@ -125,7 +121,7 @@ export function DeckCatalog() {
                     {deck.description}
                   </p>
                 </div>
-                <div className="relative flex items-center justify-end gap-2">
+                <div className="relative z-10 flex items-center justify-end gap-2">
                   <Button
                     aria-label={"Inspect " + deck.title}
                     asChild
@@ -159,15 +155,15 @@ export function DeckCatalog() {
                   </Button>
                 </div>
               </article>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
         {downloadMutation.isError ? (
           <p className="mt-4 text-sm text-[var(--error)]" role="alert">
             {downloadMutation.error.message}
           </p>
         ) : null}
-      </section>
+      </main>
     </>
   );
 }
