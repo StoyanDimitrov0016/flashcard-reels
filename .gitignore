@@ -28,6 +28,9 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# Temporary agent/user audit notes
+/progress/
+
 # local and generated files
 .DS_Store
 flashcard-reels-decks.zip
