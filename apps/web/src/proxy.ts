@@ -5,10 +5,14 @@ const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
 
 export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  if (PUBLIC_PATHS.has(path)) return NextResponse.next();
+  if (PUBLIC_PATHS.has(path)) {
+    return NextResponse.next();
+  }
 
   const authenticated = await isValidSessionToken(request.cookies.get(sessionCookie.name)?.value);
-  if (authenticated) return NextResponse.next();
+  if (authenticated) {
+    return NextResponse.next();
+  }
 
   if (path.startsWith("/api/")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

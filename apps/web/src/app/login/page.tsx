@@ -13,7 +13,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Enter the shared team password to continue.
         </p>
         <form action="/api/auth/login" method="post" className="mt-8 space-y-4">
-          <label className="block text-sm font-medium" htmlFor="password">Password</label>
+          <label className="block text-sm font-medium" htmlFor="password">
+            Password
+          </label>
           <input
             autoComplete="current-password"
             autoFocus
@@ -24,7 +26,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             type="password"
           />
           {error ? <p className="text-sm text-[var(--error)]">Incorrect password.</p> : null}
-          <button className="h-11 w-full rounded-md bg-[var(--action-primary)] px-4 font-medium text-[var(--action-primary-text)]" type="submit">
+          <button
+            className="h-11 w-full rounded-md bg-[var(--action-primary)] px-4 font-medium text-[var(--action-primary-text)]"
+            type="submit"
+          >
             Continue
           </button>
         </form>

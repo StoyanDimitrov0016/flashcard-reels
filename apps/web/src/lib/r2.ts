@@ -22,7 +22,7 @@ export async function createAuthorizedDeckDownload(objectKey: string) {
       ResponseContentDisposition: `attachment; filename="${objectKey.split("/").at(-1)}"`,
       ResponseContentType: "application/octet-stream",
     }),
-    { expiresIn: DOWNLOAD_TTL_SECONDS },
+    { expiresIn: DOWNLOAD_TTL_SECONDS }
   );
   return { url, expiresAt: new Date(Date.now() + DOWNLOAD_TTL_SECONDS * 1000).toISOString() };
 }

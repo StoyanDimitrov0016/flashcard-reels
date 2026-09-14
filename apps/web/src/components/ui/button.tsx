@@ -1,6 +1,6 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -9,20 +9,23 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-[var(--action-primary)] text-[var(--action-primary-text)] hover:opacity-90",
-        outline: "border border-[var(--border-strong)] bg-transparent hover:bg-[var(--surface-hover)]",
+        outline:
+          "border border-[var(--border-strong)] bg-transparent hover:bg-[var(--surface-hover)]",
       },
       size: { default: "h-10 px-4 py-2", lg: "h-11 px-8" },
     },
     defaultVariants: { variant: "default", size: "default" },
-  },
+  }
 );
 
-type ButtonProps = React.ComponentPropsWithoutRef<"button"> &
+type ButtonProps = ComponentPropsWithoutRef<"button"> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean };
 
 function Button({ asChild, className, variant, size, ...props }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, className }));
-  if (asChild) return <Slot className={classes} {...props} />;
+  if (asChild) {
+    return <Slot className={classes} {...props} />;
+  }
   return <button className={classes} {...props} />;
 }
 

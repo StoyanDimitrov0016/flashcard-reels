@@ -2,21 +2,35 @@
   "name": "flashcard-reels",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@11.6.0",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "dev:mobile": "turbo run dev --filter=@flashcard-reels/mobile",
     "dev:web": "turbo run dev --filter=@flashcard-reels/web",
     "build": "turbo run build",
-    "check": "turbo run check",
-    "lint": "turbo run lint",
+    "format": "oxfmt --write . && node apps/mobile/scripts/format-react-component-conventions.mjs --write && oxfmt --write .",
+    "format:check": "oxfmt --check . && node apps/mobile/scripts/format-react-component-conventions.mjs",
+    "conventions": "node apps/mobile/scripts/check-conventions.mjs",
+    "lint": "oxlint --type-aware --quiet .",
+    "lint:report": "oxlint --type-aware .",
+    "lint:strict": "oxlint --type-aware --deny-warnings .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "format": "turbo run format"
+    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck"
   },
-  "devDependencies": { "turbo": "^2.5.8" },
-  "engines": { "node": ">=22" },
+  "devDependencies": {
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "oxlint-tsgolint": "^7.0.2001",
+    "turbo": "^2.5.8"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@11.6.0",
   "allowScripts": {
     "better-sqlite3@13.0.3": true,
     "esbuild@0.18.20": true,

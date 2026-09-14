@@ -11,11 +11,16 @@ export default function Home() {
         Learn in motion. Keep every deck with you.
       </h1>
       <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--text-secondary)]">
-        Flashcard Reels is becoming a web-backed library with private deck files in Cloudflare R2 and short-lived downloads for the mobile app.
+        Flashcard Reels is becoming a web-backed library with private deck files in Cloudflare R2
+        and short-lived downloads for the mobile app.
       </p>
       <div className="mt-10 flex flex-wrap gap-3">
-        <Button size="lg"><Download className="mr-2 size-4" /> Browse decks soon</Button>
-        <Button size="lg" variant="outline">Open the mobile app</Button>
+        <Button size="lg">
+          <Download className="mr-2 size-4" /> Browse decks soon
+        </Button>
+        <Button size="lg" variant="outline">
+          Open the mobile app
+        </Button>
       </div>
     </main>
   );

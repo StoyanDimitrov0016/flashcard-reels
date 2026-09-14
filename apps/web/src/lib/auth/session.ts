@@ -15,7 +15,7 @@ async function signature(expiresAt: string): Promise<string> {
     new TextEncoder().encode(AUTH_SESSION_SECRET),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["sign"]
   );
   return encode(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(expiresAt)));
 }
@@ -26,10 +26,16 @@ export async function createSessionToken(): Promise<string> {
 }
 
 export async function isValidSessionToken(token: string | undefined): Promise<boolean> {
-  if (!token) return false;
+  if (!token) {
+    return false;
+  }
   const [expiresAt, suppliedSignature, extra] = token.split(".");
-  if (!expiresAt || !suppliedSignature || extra || !/^\d+$/.test(expiresAt)) return false;
-  if (Number(expiresAt) <= Date.now()) return false;
+  if (!expiresAt || !suppliedSignature || extra || !/^\d+$/.test(expiresAt)) {
+    return false;
+  }
+  if (Number(expiresAt) <= Date.now()) {
+    return false;
+  }
   return suppliedSignature === (await signature(expiresAt));
 }
 
