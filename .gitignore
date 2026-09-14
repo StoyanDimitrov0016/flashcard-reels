@@ -30,6 +30,7 @@ yarn-error.*
 
 # local and generated files
 .DS_Store
+flashcard-reels-decks.zip
 *.pem
 .env*.local
 *.tsbuildinfo
