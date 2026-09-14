@@ -1,4 +1,4 @@
-import { LockKeyhole, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -12,13 +12,7 @@ export function AppHeader() {
           </span>
           <span className="font-semibold tracking-tight">Flashcard Reels</span>
         </Link>
-        <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-          <span className="hidden items-center gap-2 sm:flex">
-            <LockKeyhole className="size-4" />
-            Internal library
-          </span>
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </div>
     </header>
   );
