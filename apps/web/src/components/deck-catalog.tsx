@@ -45,7 +45,18 @@ export function DeckCatalog() {
   const decks = query.data?.filter((deck) => deck.title.toLowerCase().includes(search)) ?? [];
 
   if (query.isPending) {
-    return <DeckGridSkeleton />;
+    return (
+      <>
+        <AppHeader />
+        <section className="mx-auto max-w-6xl px-6 pb-10 pt-12 sm:pt-16">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="mt-4 h-14 max-w-xl" />
+          <Skeleton className="mt-5 h-6 max-w-2xl" />
+          <Skeleton className="mt-6 h-11 max-w-xl" />
+        </section>
+        <DeckGridSkeleton />
+      </>
+    );
   }
   if (query.isError) {
     return (
