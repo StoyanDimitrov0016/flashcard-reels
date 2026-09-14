@@ -21,30 +21,35 @@ export default async function DeckPage({ params }: { params: Promise<{ deckId: s
       <AppHeader />
       <section className="mx-auto max-w-4xl px-6 pb-20 pt-10 sm:pt-14">
         <Link
+          aria-label="Back to decks"
           className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           href="/"
+          title="Back to decks"
         >
           <ArrowLeft className="size-4" />
-          Back to library
         </Link>
         <div className="mt-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--interactive)]">
-              Flashcard browser
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{deck.title}</h1>
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{deck.title}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
               {deck.description}
             </p>
           </div>
-          <Button asChild variant="outline">
-            <a href={"/api/decks/" + deck.id + "/download"}>
-              <Download data-icon="inline-start" className="size-4" />
-              Download deck
-            </a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              aria-label="Download deck"
+              asChild
+              className="size-10 p-0"
+              title="Download deck"
+              variant="outline"
+            >
+              <a href={"/api/decks/" + deck.id + "/download"}>
+                <Download className="size-4" />
+              </a>
+            </Button>
+            <DeckTransferCard deckId={deck.id} />
+          </div>
         </div>
-        <DeckTransferCard deckId={deck.id} />
         <FlashcardBrowser deck={deck} />
       </section>
     </main>

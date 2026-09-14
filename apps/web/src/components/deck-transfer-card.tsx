@@ -1,8 +1,17 @@
 "use client";
 
-import { Smartphone } from "lucide-react";
+import { QrCode, Smartphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useSyncExternalStore } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function DeckTransferCard({ deckId }: Readonly<{ deckId: string }>) {
   const mounted = useSyncExternalStore(
@@ -11,32 +20,45 @@ export function DeckTransferCard({ deckId }: Readonly<{ deckId: string }>) {
     () => false
   );
   const value = mounted ? window.location.origin + "/decks/" + deckId : "";
+
   return (
-    <aside className="mt-8 flex flex-col items-center gap-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-6 text-center sm:flex-row sm:text-left">
-      <div className="flex size-40 items-center justify-center rounded-xl bg-white p-3">
-        {mounted ? (
-          <QRCodeSVG
-            aria-label="QR code for protected deck page"
-            marginSize={4}
-            level="H"
-            size={144}
-            title="Scan to open this deck"
-            value={value}
-          />
-        ) : (
-          <span className="text-xs text-[var(--text-tertiary)]">Preparing code...</span>
-        )}
-      </div>
-      <div>
-        <p className="flex items-center justify-center gap-2 text-sm font-semibold sm:justify-start">
-          <Smartphone className="size-4 text-[var(--interactive)]" />
-          Continue on your phone
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          aria-label="Show phone transfer QR code"
+          className="size-10 p-0"
+          title="Show QR code"
+          variant="outline"
+        >
+          <QrCode className="size-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Open on your phone</DialogTitle>
+          <DialogDescription>
+            Scan the code to open this protected deck page on your phone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-center rounded-xl bg-white p-5">
+          {mounted ? (
+            <QRCodeSVG
+              aria-label="QR code for protected deck page"
+              level="H"
+              marginSize={4}
+              size={220}
+              title="Scan to open this deck"
+              value={value}
+            />
+          ) : (
+            <span className="py-24 text-xs text-[var(--text-tertiary)]">Preparing code...</span>
+          )}
+        </div>
+        <p className="flex items-center justify-center gap-2 text-xs text-[var(--text-tertiary)]">
+          <Smartphone className="size-3.5" />
+          Sign in on the phone before downloading.
         </p>
-        <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--text-secondary)]">
-          Scan this code to open the protected deck page on your phone. Sign in there before
-          downloading.
-        </p>
-      </div>
-    </aside>
+      </DialogContent>
+    </Dialog>
   );
 }
