@@ -13,6 +13,14 @@ npm install
 npm start
 ```
 
+The root `npm start` command delegates to `apps/mobile`. If invoking Expo
+directly, run it from that directory instead:
+
+```bash
+cd apps/mobile
+npx expo start
+```
+
 From the Expo terminal, scan the QR code or press `a`, `i`, or `w` for Android, iOS, or web.
 
 ## Local Windows emulator workaround

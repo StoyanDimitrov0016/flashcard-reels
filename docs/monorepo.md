@@ -10,7 +10,10 @@ The repository is an npm-workspaces Turborepo:
 
 Run commands from the repository root:
 
-- `npm run dev:mobile` starts Expo.
+- `npm run dev:mobile` starts Expo through Turborepo.
+- `npm start` starts Expo directly from the mobile workspace.
+- `npm run android`, `npm run ios`, and `npm run web:mobile` launch the
+  corresponding Expo target from the mobile workspace.
 - `npm run dev:web` starts Next.js.
 - `npm run build` builds deployable workspaces.
 - `npm run check` runs each workspace's checks through Turborepo.
@@ -18,6 +21,11 @@ Run commands from the repository root:
 
 For Vercel, import this repository and set the project root directory to `apps/web`.
 The web workspace's `.env.example` lists the server-only Cloudflare R2 settings.
+
+Expo commands must resolve the app package at `apps/mobile`, where
+`expo-router/entry` is configured as the application entrypoint. Running
+`npx expo start` or `npx expo export` from the repository root bypasses that
+configuration and makes Expo look for a root-level `App` file.
 
 ## Styling decision
 
