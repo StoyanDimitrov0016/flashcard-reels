@@ -19,7 +19,8 @@
     "lint:strict": "oxlint --type-aware --deny-warnings .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck"
+    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
+    "r2:push-decks": "node --experimental-strip-types --env-file=apps/web/.env.local scripts/push-decks-to-r2.mjs"
   },
   "devDependencies": {
     "oxfmt": "latest",
