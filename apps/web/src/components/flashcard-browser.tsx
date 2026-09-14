@@ -57,9 +57,12 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
   };
 
   return (
-    <div className="mt-10 grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
-        <form onSubmit={handleSubmit(submitFlashcardSearch)}>
+    <div className="mt-8 grid gap-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[22rem_minmax(0,1fr)]">
+      <aside className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:border-r lg:border-[var(--border-subtle)] lg:pr-5">
+        <form
+          className="sticky top-0 z-10 bg-[var(--canvas)] pb-3"
+          onSubmit={handleSubmit(submitFlashcardSearch)}
+        >
           <label className="sr-only" htmlFor="flashcard-search">
             Search flashcards
           </label>
@@ -133,12 +136,11 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
           </p>
         ) : (
           <>
-            <div className="mb-4 flex items-center justify-between text-sm text-[var(--text-secondary)]">
+            <div className="mb-4 flex items-center text-sm text-[var(--text-secondary)]">
               <span>
                 {String(activeIndex + 1).padStart(2, "0")} /{" "}
                 {String(filteredCards.length).padStart(2, "0")}
               </span>
-              <span>Use arrow keys to browse</span>
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
               <div
@@ -148,7 +150,7 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
             </div>
             <div className="mt-6 [perspective:1200px]">
               <div
-                className="relative min-h-[25rem] w-full transition-transform duration-500 ease-out [transform-style:preserve-3d]"
+                className="relative min-h-[clamp(28rem,58vh,42rem)] w-full transition-transform duration-500 ease-out [transform-style:preserve-3d]"
                 style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
               >
                 <article

@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export function AppHeader() {
   return (
     <header className="border-b border-[var(--border-subtle)] bg-[var(--navigation)]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-[1500px] items-center justify-between px-6 py-4 lg:px-10">
         <Link className="flex items-center gap-3" href="/">
           <Image
             alt=""
