@@ -1,64 +1,32 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "categories": {
-    "correctness": "error",
-    "perf": "error",
-    "suspicious": "error"
-  },
+  "categories": { "correctness": "error", "perf": "error", "suspicious": "error" },
   "ignorePatterns": [
-    ".expo/**",
-    "dist/**",
-    "drizzle/**",
-    "node_modules/**",
-    "scripts/**",
-    "tools/**"
+    ".next/**", ".turbo/**", "node_modules/**", "apps/*/.next/**", "apps/*/.expo/**",
+    "apps/*/dist/**", "apps/mobile/drizzle/**", "apps/mobile/scripts/**",
+    "apps/mobile/tools/**", "apps/web/next-env.d.ts"
   ],
   "options": { "typeAware": true },
-  "jsPlugins": ["./tools/oxlint-plugin-flashcards/index.cjs"],
+  "jsPlugins": ["./apps/mobile/tools/oxlint-plugin-flashcards/index.cjs"],
   "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
   "rules": {
-    "eqeqeq": "error",
-    "curly": ["error", "all"],
-    "no-console": "error",
-    "no-debugger": "error",
-    "no-duplicate-imports": "error",
-    "no-nested-ternary": "error",
+    "eqeqeq": "error", "curly": ["error", "all"], "no-console": "error",
+    "no-debugger": "error", "no-duplicate-imports": "error", "no-nested-ternary": "error",
     "unicorn/no-await-expression-member": "error",
-    "no-restricted-imports": [
-      "error",
-      {
-        "paths": [
-          {
-            "importNames": ["useMemo"],
-            "message": "React Compiler handles memoization; do not add manual memoization.",
-            "name": "react"
-          }
-        ]
-      }
-    ],
-    "react/jsx-no-useless-fragment": "error",
-    "react/exhaustive-deps": "error",
-    "react/exhaustive-effect-dependencies": "off",
-    "react/jsx-no-constructed-context-values": "off",
+    "no-restricted-imports": ["error", { "paths": [{ "importNames": ["useMemo"], "message": "React Compiler handles memoization; do not add manual memoization.", "name": "react" }] }],
+    "react/jsx-no-useless-fragment": "error", "react/exhaustive-deps": "error",
+    "react/exhaustive-effect-dependencies": "off", "react/jsx-no-constructed-context-values": "off",
     "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
-    "react/no-array-index-key": "error",
-    "react/react-in-jsx-scope": "off",
-    "react/style-prop-object": "off",
-    "react-perf/jsx-no-new-array-as-prop": "off",
-    "react-perf/jsx-no-new-function-as-prop": "off",
-    "react-perf/jsx-no-new-object-as-prop": "off",
-    "typescript/consistent-type-imports": "error",
-    "typescript/no-explicit-any": "error",
-    "typescript/no-deprecated": "error",
-    "typescript/no-floating-promises": "error",
-    "typescript/no-non-null-assertion": "error",
-    "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unused-vars": "error",
-    "flashcards/no-service-locator-in-presentation": "error",
+    "react/no-array-index-key": "error", "react/react-in-jsx-scope": "off",
+    "react/style-prop-object": "off", "react-perf/jsx-no-new-array-as-prop": "off",
+    "react-perf/jsx-no-new-function-as-prop": "off", "react-perf/jsx-no-new-object-as-prop": "off",
+    "typescript/consistent-type-imports": "error", "typescript/no-explicit-any": "error",
+    "typescript/no-deprecated": "error", "typescript/no-floating-promises": "error",
+    "typescript/no-non-null-assertion": "error", "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unused-vars": "error", "flashcards/no-service-locator-in-presentation": "error",
     "flashcards/no-engine-policy-in-presentation": "error",
     "flashcards/no-persistence-orchestration-in-react-effect": "warn",
-    "flashcards/no-ui-index-as-domain-position": "warn",
-    "flashcards/no-zod-in-domain": "error",
+    "flashcards/no-ui-index-as-domain-position": "warn", "flashcards/no-zod-in-domain": "error",
     "flashcards/require-local-const-arrow-functions": "error",
     "flashcards/require-named-react-effect-callback": "error",
     "flashcards/require-named-react-effect-cleanup": "error",
@@ -66,76 +34,37 @@
   },
   "overrides": [
     {
-      "files": ["src/features/**/presentation/**", "src/app/**/*.ts", "src/app/**/*.tsx"],
-      "excludeFiles": ["src/app/_layout.tsx"],
+      "files": ["apps/web/**/*.ts", "apps/web/**/*.tsx"],
       "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              { "group": ["@/infrastructure/sqlite/**"] },
-              { "group": ["@/features/**/infrastructure/**"] },
-              { "group": ["drizzle-orm/**"] },
-              { "group": ["expo-sqlite"] },
-              { "group": ["better-sqlite3"] }
-            ]
-          }
-        ]
+        "curly": "off", "import/no-unassigned-import": "off", "no-console": "off",
+        "no-restricted-imports": "off", "unicorn/no-await-expression-member": "off"
       }
     },
     {
-      "files": ["src/features/**/domain/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "react",
-                  "react-native",
-                  "expo-router",
-                  "expo-status-bar",
-                  "expo-sqlite",
-                  "drizzle-orm/**",
-                  "zod",
-                  "@/features/**/presentation/**",
-                  "@/features/**/infrastructure/**",
-                  "@/infrastructure/**",
-                  "@/shared/presentation/**"
-                ]
-              },
-              { "allowImportNamePattern": "^AudioSource$", "group": ["expo-audio"] }
-            ]
-          }
-        ]
-      }
+      "files": ["apps/mobile/src/features/**/presentation/**", "apps/mobile/src/app/**/*.ts", "apps/mobile/src/app/**/*.tsx"],
+      "excludeFiles": ["apps/mobile/src/app/_layout.tsx"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["@/infrastructure/sqlite/**"] }, { "group": ["@/features/**/infrastructure/**"] },
+        { "group": ["drizzle-orm/**"] }, { "group": ["expo-sqlite"] }, { "group": ["better-sqlite3"] }
+      ] }] }
     },
     {
-      "files": ["src/features/**/application/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              { "group": ["@/features/**/presentation/**"] },
-              { "group": ["@/features/**/infrastructure/**"] },
-              { "group": ["@/infrastructure/sqlite/**"] }
-            ]
-          }
-        ]
-      }
+      "files": ["apps/mobile/src/features/**/domain/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["react", "react-native", "expo-router", "expo-status-bar", "expo-sqlite", "drizzle-orm/**", "zod", "@/features/**/presentation/**", "@/features/**/infrastructure/**", "@/infrastructure/**", "@/shared/presentation/**"] },
+        { "allowImportNamePattern": "^AudioSource$", "group": ["expo-audio"] }
+      ] }] }
     },
     {
-      "files": ["src/features/**/infrastructure/**", "src/infrastructure/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [{ "group": ["@/features/**/presentation/**"] }]
-          }
-        ]
-      }
+      "files": ["apps/mobile/src/features/**/application/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["@/features/**/presentation/**"] }, { "group": ["@/features/**/infrastructure/**"] },
+        { "group": ["@/infrastructure/sqlite/**"] }
+      ] }] }
+    },
+    {
+      "files": ["apps/mobile/src/features/**/infrastructure/**", "apps/mobile/src/infrastructure/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [{ "group": ["@/features/**/presentation/**"] }] }] }
     }
   ]
 }
