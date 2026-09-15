@@ -18,12 +18,17 @@
     "format": "oxfmt --write . && node apps/mobile/scripts/format-react-component-conventions.mjs --write && oxfmt --write .",
     "format:check": "oxfmt --check . && node apps/mobile/scripts/format-react-component-conventions.mjs",
     "conventions": "node apps/mobile/scripts/check-conventions.mjs",
+    "check:architecture": "npm run test:architecture -w @flashcard-reels/mobile",
+    "check:android": "npm run check:android -w @flashcard-reels/mobile",
+    "doctor": "npm run doctor -w @flashcard-reels/mobile",
     "lint": "oxlint --type-aware --deny-warnings .",
     "lint:report": "oxlint --type-aware .",
     "lint:strict": "oxlint --type-aware --deny-warnings .",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
+    "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck && npm run check:architecture",
+    "verify": "npm run check && npm test && npm run build",
+    "verify:mobile": "npm run verify -w @flashcard-reels/mobile",
     "r2:push-decks": "node --experimental-strip-types --env-file=apps/web/.env.local scripts/push-decks-to-r2.mjs"
   },
   "devDependencies": {
