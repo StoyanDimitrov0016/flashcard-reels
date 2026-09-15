@@ -17,10 +17,15 @@ Run commands from the repository root:
 - `npm run dev:web` starts Next.js.
 - `npm run build` builds deployable workspaces.
 - `npm run check` runs each workspace's checks through Turborepo.
-- `npm test` runs the mobile test suite through Turborepo.
+- `npm test` runs the mobile and web test suites through Turborepo.
+- `npm run verify` runs root checks, all tests, and deployable builds.
+- `npm run verify:mobile` runs the extended Expo and Android validation path.
 
 For Vercel, import this repository and set the project root directory to `apps/web`.
-The web workspace's `.env.example` lists the server-only Cloudflare R2 settings.
+The web workspace's `.env.example` lists the server-only Cloudflare R2 settings. Leave
+`DECK_TRANSFER_ORIGIN` empty in Vercel so transfer links use the incoming public HTTPS
+origin. Set it only when an explicit public origin or private-network development host is
+required; validation rejects public plain-HTTP origins.
 
 Expo commands must resolve the app package at `apps/mobile`, where
 `expo-router/entry` is configured as the application entrypoint. Running
@@ -36,8 +41,16 @@ That boundary allows a future StyleX package without migrating the source palett
 
 ## R2 download boundary
 
-`apps/web/src/lib/r2.ts` implements short-lived presigned GET URLs, but it is not
-connected to a public route. The eventual Route Handler must authenticate the user
-and authorize the requested deck before calling it. Mobile should request a URL,
-download the `.fcrdeck` file into app storage, then pass it through the existing
-deck installer.
+The authenticated `GET /api/decks/<deck-id>/download` route creates a compact,
+short-lived `/t/<token>` URL for QR transfer. The public transfer route verifies the
+signed token and redirects the mobile client to a short-lived R2 presigned URL, so R2
+credentials and the verbose signature never appear in the QR code. The mobile app then
+downloads the `.fcrdeck` file directly from R2 and passes it through the existing deck
+installer.
+
+## Automation
+
+`.github/workflows/ci.yml` runs strict formatting, conventions, lint, type checks,
+architecture rules, all tests, a production-dependency audit, the web build, database
+validation, dead-code checks, Expo Doctor, and an Android export. EAS production builds
+are intentionally separate and run manually or from `mobile-v*` tags.
