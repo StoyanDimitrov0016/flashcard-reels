@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
 import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
+import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import {
   resolveDeckDetailsMode,
@@ -22,6 +23,7 @@ import {
 } from "@/features/decks/presentation/deck-details-mode";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
@@ -86,11 +88,13 @@ export default function DeckDetailsScreen() {
   const mode = resolveDeckDetailsMode(modeParameter);
   const showProgress = showsLearningProgress(mode);
   const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
+  const { deleteDeck, deleting, error: deleteError } = useDeleteDeck();
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showDeckInfo, setShowDeckInfo] = useState(false);
+  const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -152,7 +156,22 @@ export default function DeckDetailsScreen() {
               tintColor={colors.error}
             />
           </Pressable>
-        ) : null}
+        ) : (
+          <Pressable
+            accessibilityLabel={`Delete ${deck?.title ?? "deck"}`}
+            accessibilityRole="button"
+            disabled={deck === null || deleting}
+            hitSlop={4}
+            onPress={() => setDeletePresented(true)}
+            style={styles.headerActionButton}
+          >
+            <SymbolView
+              name={{ android: "delete", ios: "trash.fill", web: "delete" }}
+              size={sizes.icon.medium}
+              tintColor={colors.error}
+            />
+          </Pressable>
+        )}
       </ScreenHeader>
       <View style={styles.body}>
         <View style={styles.header}>
@@ -255,6 +274,29 @@ export default function DeckDetailsScreen() {
           scope={`${deck?.title ?? "deck"} progress`}
         />
       ) : null}
+      {!showProgress ? (
+        <DeleteDeckSheet
+          busy={deleting}
+          deck={deletePresented ? deck : null}
+          error={deleteError}
+          onCancel={() => {
+            if (!deleting) {
+              setDeletePresented(false);
+            }
+          }}
+          onConfirm={() => {
+            if (!deck) {
+              return;
+            }
+            void deleteDeck(deck.id).then((deleted) => {
+              if (deleted) {
+                setDeletePresented(false);
+                router.back();
+              }
+            });
+          }}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -315,6 +357,12 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
       textAlign: "center",
       width: 22,
+    },
+    headerActionButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
     },
     resetButton: {
       alignItems: "center",

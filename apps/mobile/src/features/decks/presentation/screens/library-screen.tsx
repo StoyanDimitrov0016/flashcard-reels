@@ -21,6 +21,7 @@ import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-se
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
 import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
 import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
 import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
@@ -198,10 +199,11 @@ export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
-  const { error: importError, importPackage, importing } = useImportDeckPackage();
+  const { error: importError, importFromDevice, importFromUrl, importing } = useImportDeckPackage();
   const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
   const [query, setQuery] = useState("");
   const [importFeedback, setImportFeedback] = useState<DeckImportFeedback | null>(null);
+  const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
   const [appearanceOverrides, setAppearanceOverrides] = useState(
     () => new Map<string, DeckAppearance>()
@@ -215,15 +217,20 @@ export default function LibraryScreen() {
   const sheetAppearance = selectedEntry
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
     : null;
-  const importStatus = importError ? getDeckImportErrorFeedback(importError) : importFeedback;
+  const importStatus =
+    importError && !importSheetPresented ? getDeckImportErrorFeedback(importError) : importFeedback;
 
-  const handleImport = async () => {
+  const handleImport = async (
+    importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
+  ) => {
     setImportFeedback(null);
-    const result = await importPackage();
+    const result = await importDeck();
     if (result) {
       setImportFeedback(getDeckImportResultFeedback(result));
       refresh();
+      return true;
     }
+    return false;
   };
 
   const selectPreset = (preset: DeckAppearancePreset) => {
@@ -261,7 +268,7 @@ export default function LibraryScreen() {
           accessibilityRole="button"
           disabled={importing}
           hitSlop={4}
-          onPress={() => void handleImport()}
+          onPress={() => setImportSheetPresented(true)}
           style={styles.importButton}
         >
           <SymbolView
@@ -334,6 +341,18 @@ export default function LibraryScreen() {
         onSelect={selectPreset}
         pendingPreset={pendingPreset}
       />
+      <ImportDeckSheet
+        errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}
+        importing={importing}
+        onBrowse={() => handleImport(importFromDevice)}
+        onClose={() => {
+          if (!importing) {
+            setImportSheetPresented(false);
+          }
+        }}
+        onScan={(url) => handleImport(() => importFromUrl(url))}
+        visible={importSheetPresented}
+      />
     </SafeAreaView>
   );
 }
@@ -341,7 +360,11 @@ export default function LibraryScreen() {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     accent: { alignSelf: "stretch", width: 4 },
-    actions: { alignItems: "center", flexDirection: "row", paddingRight: sizes.spacing.medium },
+    actions: {
+      alignItems: "center",
+      flexDirection: "column",
+      paddingRight: sizes.spacing.medium,
+    },
     cardCount: {
       color: colors.textTertiary,
       fontSize: fontSize.caption,
