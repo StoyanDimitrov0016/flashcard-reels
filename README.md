@@ -38,6 +38,10 @@ npm run dev:web
 
 See [Web portal](docs/web-portal.md) for deployment, authentication, R2, and phone-transfer details.
 
+For focused workspace work, use `npm run check:mobile`, `npm run check:web`, or
+`npm run doctor` from the repository root. See the [monorepo guide](docs/monorepo.md)
+for command and configuration ownership.
+
 ## Test
 
 `npm run verify` runs the complete automated verification. Unit tests cover pure deterministic

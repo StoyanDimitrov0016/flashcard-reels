@@ -16,7 +16,12 @@ Run commands from the repository root:
   corresponding Expo target from the mobile workspace.
 - `npm run dev:web` starts Next.js.
 - `npm run build` builds deployable workspaces.
-- `npm run check` runs each workspace's checks through Turborepo.
+- `npm run check` runs repository-wide formatting, conventions, lint, workspace
+  type checks, and mobile architecture checks.
+- `npm run check:mobile`, `npm run check:web`, and `npm run check:tokens` run one
+  workspace check without remembering package names.
+- `npm run lint:mobile`, `npm run lint:web`, `npm run typecheck:mobile`, and
+  `npm run typecheck:web` provide the same focused workflow for individual tools.
 - `npm test` runs the mobile and web test suites through Turborepo.
 - `npm run verify` runs root checks, all tests, and deployable builds.
 - `npm run verify:mobile` runs the extended Expo and Android validation path.
@@ -38,12 +43,11 @@ Expo commands must resolve the app package at `apps/mobile`, where
 `npx expo start` or `npx expo export` from the repository root bypasses that
 configuration and makes Expo look for a root-level `App` file.
 
-TypeScript configuration is workspace-owned as well. The root `tsconfig.json`
-is intentionally a no-emit coordinator with only a declaration anchor, so
-repository-level TypeScript commands do not inherit Expo settings or scan the
-whole monorepo. Run
-`npm run typecheck` from the root to delegate to the mobile, web, and design-token
-workspace configurations.
+TypeScript policy is shared through the root `tsconfig.base.json`. Each workspace
+extends it and keeps its framework-specific additions local: Expo owns the mobile
+base, Next.js owns the web integration, and the design-token package stays
+framework-neutral. Type checking is delegated by Turborepo; there is no root
+TypeScript source set to compile.
 
 ## Styling decision
 
