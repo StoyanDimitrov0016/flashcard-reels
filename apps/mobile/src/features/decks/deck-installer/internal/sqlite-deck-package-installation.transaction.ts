@@ -6,7 +6,13 @@ import type {
   DeckPackageInstallationTransaction,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import { decks, deckAppearances, flashcards, studySessions } from "@/infrastructure/sqlite/schema";
+import {
+  decks,
+  deckAppearances,
+  flashcards,
+  removedDecks,
+  studySessions,
+} from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckPackageInstallationTransaction<
   TRunResult = unknown,
@@ -38,6 +44,8 @@ export class SQLiteDeckPackageInstallationTransaction<
           `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${existingDeck.version}`
         );
       }
+
+      transaction.delete(removedDecks).where(eq(removedDecks.id, deckPackage.id)).run();
 
       const incomingIds = deckPackage.cards.map((card) => card.id);
       const cardsWithMatchingIds =

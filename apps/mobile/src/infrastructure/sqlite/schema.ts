@@ -20,6 +20,10 @@ export const decks = sqliteTable("decks", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const removedDecks = sqliteTable("removed_decks", {
+  id: text("id").primaryKey().notNull(),
+});
+
 export const deckAppearances = sqliteTable("deck_appearances", {
   deckId: text("deck_id")
     .primaryKey()
@@ -271,6 +275,7 @@ export const studySessionRecurrences = sqliteTable(
 
 export const databaseSchema = {
   decks,
+  removedDecks,
   deckAppearances,
   flashcards,
   learnerProfiles,

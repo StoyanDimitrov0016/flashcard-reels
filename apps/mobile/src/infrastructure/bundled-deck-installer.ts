@@ -22,6 +22,9 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
   const { installBundledPackage } = createDeckPackageServices(database, clock, deckRepository);
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
+    if (await deckRepository.wasRemoved(definition.id)) {
+      continue;
+    }
     const installedVersion = await deckRepository.findVersion(definition.id);
     if (!shouldInstallBundledDeck(installedVersion, definition.version)) {
       continue;
