@@ -1,4 +1,23 @@
+// oxlint-disable-next-line import/no-unassigned-import -- Environment secrets must stay server-only.
+import "server-only";
 import * as z from "zod";
+
+function isSecureOrPrivateOrigin(value: string): boolean {
+  const url = new URL(value);
+  if (url.protocol === "https:") {
+    return true;
+  }
+  const hostname = url.hostname;
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname.endsWith(".local") ||
+    hostname.startsWith("10.") ||
+    hostname.startsWith("192.168.") ||
+    /^172\.(?:1[6-9]|2\d|3[01])\./.test(hostname)
+  );
+}
 
 export const InternalPasswordEnvironmentSchema = z.compile(
   z.object({ INTERNAL_APP_PASSWORD: z.string().min(12) })
@@ -15,7 +34,12 @@ export const R2EnvironmentSchema = z.compile(
   })
 );
 export const DeckTransferEnvironmentSchema = z.compile(
-  z.object({ DECK_TRANSFER_ORIGIN: z.url({ protocol: /^https?$/ }).optional() })
+  z.object({
+    DECK_TRANSFER_ORIGIN: z
+      .url({ protocol: /^https?$/ })
+      .refine(isSecureOrPrivateOrigin, "Use HTTPS or a private development origin.")
+      .optional(),
+  })
 );
 
 export function getInternalPasswordEnvironment() {

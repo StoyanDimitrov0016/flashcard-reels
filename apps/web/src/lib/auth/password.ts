@@ -1,4 +1,5 @@
-// oxlint-disable-next-line import/no-unassigned-import -- Marks this module as server-only for Next.js.\nimport "server-only";
+// oxlint-disable-next-line import/no-unassigned-import -- Marks this module as server-only for Next.js.
+import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { getInternalPasswordEnvironment } from "@/config/server-environment";
 
