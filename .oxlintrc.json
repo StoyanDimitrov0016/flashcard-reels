@@ -85,18 +85,23 @@
     "typescript/no-unused-vars": "error",
     "vitest/require-mock-type-parameters": "off",
     "vitest/require-to-throw-message": "off",
-    "vitest/valid-expect": "off",
-    "flashcards/no-service-locator-in-presentation": "error",
-    "flashcards/no-engine-policy-in-presentation": "error",
-    "flashcards/no-persistence-orchestration-in-react-effect": "warn",
-    "flashcards/no-ui-index-as-domain-position": "warn",
-    "flashcards/no-zod-in-domain": "error",
-    "flashcards/require-local-const-arrow-functions": "error",
-    "flashcards/require-named-react-effect-callback": "error",
-    "flashcards/require-named-react-effect-cleanup": "error",
-    "flashcards/no-await-in-conditional-expression": "error"
+    "vitest/valid-expect": "off"
   },
   "overrides": [
+    {
+      "files": ["apps/mobile/src/**/*.ts", "apps/mobile/src/**/*.tsx"],
+      "rules": {
+        "flashcards/no-service-locator-in-presentation": "error",
+        "flashcards/no-engine-policy-in-presentation": "error",
+        "flashcards/no-persistence-orchestration-in-react-effect": "warn",
+        "flashcards/no-ui-index-as-domain-position": "warn",
+        "flashcards/no-zod-in-domain": "error",
+        "flashcards/require-local-const-arrow-functions": "error",
+        "flashcards/require-named-react-effect-callback": "error",
+        "flashcards/require-named-react-effect-cleanup": "error",
+        "flashcards/no-await-in-conditional-expression": "error"
+      }
+    },
     {
       "files": [
         "apps/mobile/src/features/**/presentation/**",
