@@ -39,28 +39,31 @@ describe("deck package tooling independence", () => {
         recursive: true,
       }
     );
-    const result = spawnSync(
-      process.execPath,
-      [
-        "--experimental-strip-types",
-        path.join(process.cwd(), "scripts", "generate-demo-deck-package.mjs"),
-      ],
-      {
-        cwd: project,
-        encoding: "utf8",
-        env: { ...process.env, DEMO_PACKAGE_OUTPUT: "generated/demo.fcrdeck" },
-      }
-    );
-
-    expect(result.status, result.stderr).toBe(0);
-    const generated = new Uint8Array(
-      await readFile(path.join(project, "generated", "demo.fcrdeck"))
-    );
+    const generateArchive = (timezone: string) => {
+      const output = `generated/demo-${timezone.replace("/", "-")}.fcrdeck`;
+      const result = spawnSync(
+        process.execPath,
+        [
+          "--experimental-strip-types",
+          path.join(process.cwd(), "scripts", "generate-demo-deck-package.mjs"),
+        ],
+        {
+          cwd: project,
+          encoding: "utf8",
+          env: { ...process.env, DEMO_PACKAGE_OUTPUT: output, TZ: timezone },
+        }
+      );
+      expect(result.status, result.stderr).toBe(0);
+      return path.join(project, output);
+    };
+    const generated = new Uint8Array(await readFile(generateArchive("UTC")));
+    const generatedInSofia = new Uint8Array(await readFile(generateArchive("Europe/Sofia")));
     const checkedIn = new Uint8Array(
       await readFile(
         path.join(process.cwd(), "assets", "decks", "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873.fcrdeck")
       )
     );
+    expect(generatedInSofia).toEqual(generated);
     expect(generated).toEqual(checkedIn);
     expect(new ArchiveDeckPackageReader().read(generated)).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",

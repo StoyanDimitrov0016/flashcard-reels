@@ -2,7 +2,9 @@ import { strToU8, zipSync } from "fflate";
 
 import { DeckPackageSchema, type DeckPackageDocument } from "./deck-package.schema.ts";
 
-const stableZipModificationTime = new Date("1980-01-01T00:00:00.000Z");
+// ZIP timestamps have no timezone. fflate reads local Date fields, so construct a fixed local
+// wall-clock value to keep archive bytes identical on developer machines and CI runners.
+const stableZipModificationTime = new Date(1980, 0, 1, 0, 0, 0);
 
 export function createDeckPackageArchive(
   document: DeckPackageDocument,
