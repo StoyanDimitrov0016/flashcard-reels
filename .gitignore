@@ -5,6 +5,10 @@ node_modules/
 .turbo/
 .next/
 
+# Local Android/Gradle caches
+/.gradle-home/
+**/.gradle/
+
 # Expo
 .expo/
 dist/
