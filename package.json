@@ -18,7 +18,7 @@
     "format": "oxfmt --write . && node apps/mobile/scripts/format-react-component-conventions.mjs --write && oxfmt --write .",
     "format:check": "oxfmt --check . && node apps/mobile/scripts/format-react-component-conventions.mjs",
     "conventions": "node apps/mobile/scripts/check-conventions.mjs",
-    "lint": "oxlint --type-aware --quiet .",
+    "lint": "oxlint --type-aware --deny-warnings .",
     "lint:report": "oxlint --type-aware .",
     "lint:strict": "oxlint --type-aware --deny-warnings .",
     "test": "turbo run test",

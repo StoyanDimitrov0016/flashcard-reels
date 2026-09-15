@@ -19,10 +19,27 @@
     "scripts/**"
   ],
   "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error",
     "typeAware": true
   },
   "jsPlugins": ["./apps/mobile/tools/oxlint-plugin-flashcards/index.cjs"],
-  "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
+  "plugins": [
+    "import",
+    "jsx-a11y",
+    "nextjs",
+    "oxc",
+    "react",
+    "react-perf",
+    "typescript",
+    "unicorn",
+    "vitest"
+  ],
+  "settings": {
+    "next": {
+      "rootDir": "apps/web/"
+    }
+  },
   "rules": {
     "eqeqeq": "error",
     "curly": ["error", "all"],
@@ -66,6 +83,9 @@
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unused-vars": "error",
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-to-throw-message": "off",
+    "vitest/valid-expect": "off",
     "flashcards/no-service-locator-in-presentation": "error",
     "flashcards/no-engine-policy-in-presentation": "error",
     "flashcards/no-persistence-orchestration-in-react-effect": "warn",

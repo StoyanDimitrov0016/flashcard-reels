@@ -36,7 +36,6 @@ export function mergeMountedReelOccurrences(
       reelPosition >= minimumMountedPosition ||
       reelPosition >= firstEditablePosition
   );
-  // oxlint-disable-next-line unicorn/no-array-sort -- ES2022 is the app's configured runtime library; this is a fresh array.
   result.sort((left, right) => left.reelPosition - right.reelPosition);
   return result;
 }

@@ -211,8 +211,9 @@ export default function LibraryScreen() {
   const visibleEntries = entries
     .filter(({ deck }) => matchesDeckSearch(deck, query))
     .map((entry) => ({
-      ...entry,
       appearance: appearanceOverrides.get(entry.deck.id) ?? entry.appearance,
+      cardCount: entry.cardCount,
+      deck: entry.deck,
     }));
   const sheetAppearance = selectedEntry
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)

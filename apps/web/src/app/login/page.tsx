@@ -18,7 +18,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </label>
           <input
             autoComplete="current-password"
-            autoFocus
             className="h-11 w-full rounded-md border border-[var(--border-strong)] bg-[var(--canvas)] px-3 outline-none focus:ring-2 focus:ring-[var(--interactive)]"
             id="password"
             name="password"

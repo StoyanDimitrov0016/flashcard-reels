@@ -12,14 +12,9 @@ export function createDeckPackageArchive(
   const archive: Record<string, Uint8Array> = {
     "deck.json": strToU8(JSON.stringify(deck, null, 2)),
   };
-  const sortedAudioFiles = Object.entries(audioFiles).reduce<[string, Uint8Array][]>(
-    (entries, entry) => {
-      const insertionIndex = entries.findIndex(([path]) => path.localeCompare(entry[0]) > 0);
-      return insertionIndex < 0
-        ? [...entries, entry]
-        : [...entries.slice(0, insertionIndex), entry, ...entries.slice(insertionIndex)];
-    },
-    []
+  // oxlint-disable-next-line unicorn/no-array-sort -- Object.entries creates the array being sorted.
+  const sortedAudioFiles = Object.entries(audioFiles).sort(([leftPath], [rightPath]) =>
+    leftPath.localeCompare(rightPath)
   );
   for (const [path, content] of sortedAudioFiles) {
     archive[path] = content;

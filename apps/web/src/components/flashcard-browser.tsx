@@ -114,22 +114,7 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
           ))}
         </div>
       </aside>
-      <section
-        aria-label="Flashcard carousel"
-        aria-roledescription="carousel"
-        className="min-w-0"
-        onKeyDown={(event) => {
-          if (event.key === "ArrowLeft") {
-            event.preventDefault();
-            goToCard(Math.max(activeIndex - 1, 0));
-          }
-          if (event.key === "ArrowRight") {
-            event.preventDefault();
-            goToCard(Math.min(activeIndex + 1, filteredCards.length - 1));
-          }
-        }}
-        tabIndex={0}
-      >
+      <section aria-label="Flashcard carousel" aria-roledescription="carousel" className="min-w-0">
         {!card ? (
           <p className="rounded-xl border border-dashed border-[var(--border-strong)] px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
             No cards match this search.
