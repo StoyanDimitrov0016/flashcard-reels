@@ -14,6 +14,9 @@ export const R2EnvironmentSchema = z.compile(
     R2_BUCKET_NAME: z.string().regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/),
   })
 );
+export const DeckTransferEnvironmentSchema = z.compile(
+  z.object({ DECK_TRANSFER_ORIGIN: z.url({ protocol: /^https?$/ }).optional() })
+);
 
 export function getInternalPasswordEnvironment() {
   return InternalPasswordEnvironmentSchema.parse(process.env);
@@ -23,4 +26,7 @@ export function getSessionEnvironment() {
 }
 export function getR2Environment() {
   return R2EnvironmentSchema.parse(process.env);
+}
+export function getDeckTransferEnvironment() {
+  return DeckTransferEnvironmentSchema.parse(process.env);
 }

@@ -5,7 +5,7 @@ const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
 
 export default async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  if (PUBLIC_PATHS.has(path)) {
+  if (PUBLIC_PATHS.has(path) || path.startsWith("/t/")) {
     return NextResponse.next();
   }
 
