@@ -3,7 +3,7 @@
 The repository is an npm-workspaces Turborepo:
 
 - `apps/mobile` — the existing Expo application.
-- `apps/web` — the Next.js App Router application deployed from Vercel.
+- `apps/web` — the internal Next.js App Router deck portal deployed at [flashcard-reels.vercel.app](https://flashcard-reels.vercel.app/).
 - `packages/design-tokens` — framework-neutral TypeScript colors and CSS custom properties.
 
 ## Commands
@@ -23,14 +23,27 @@ Run commands from the repository root:
 
 For Vercel, import this repository and set the project root directory to `apps/web`.
 The web workspace's `.env.example` lists the server-only Cloudflare R2 settings. Leave
-`DECK_TRANSFER_ORIGIN` empty in Vercel so transfer links use the incoming public HTTPS
-origin. Set it only when an explicit public origin or private-network development host is
-required; validation rejects public plain-HTTP origins.
+`DECK_TRANSFER_ORIGIN` unset in Vercel so transfer links use the incoming public HTTPS
+origin. A blank value is also treated as unset. Set it only when an explicit public
+origin or private-network development host is required; validation rejects public
+plain-HTTP origins.
+
+The current deployment is password-protected for internal use. The web catalog
+lists the curated R2-backed decks, while the mobile app remains the study and
+learning-data client. See [Web portal](web-portal.md) for the user flow and
+environment variables.
 
 Expo commands must resolve the app package at `apps/mobile`, where
 `expo-router/entry` is configured as the application entrypoint. Running
 `npx expo start` or `npx expo export` from the repository root bypasses that
 configuration and makes Expo look for a root-level `App` file.
+
+TypeScript configuration is workspace-owned as well. The root `tsconfig.json`
+is intentionally a no-emit coordinator with only a declaration anchor, so
+repository-level TypeScript commands do not inherit Expo settings or scan the
+whole monorepo. Run
+`npm run typecheck` from the root to delegate to the mobile, web, and design-token
+workspace configurations.
 
 ## Styling decision
 

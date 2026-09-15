@@ -2,26 +2,41 @@
 
 Flashcard Reels turns technical study into a fast, swipeable feed. Review short questions across JavaScript, React, system design, databases, computer science, and operating systems, then rate your recall so difficult cards return more often.
 
-The app includes a compact built-in demo, mixed and deck-focused study modes, local progress tracking, customizable deck colors, and portable `.fcrdeck` deck-package imports.
+The project contains two connected products:
 
-Importing external `.fcrdeck` files is the normal path for larger libraries. The demo and external files use the same validated installer, versioning, audio storage, and learner-history-preserving update flow.
+- an Expo/React Native mobile app for local-first study;
+- an internal Next.js/Vercel portal for browsing, inspecting, and transferring larger deck libraries.
 
-## Try the Android app
+The mobile app includes a bundled demo deck, mixed and deck-focused study modes, offline audio, local progress tracking, customizable deck appearances, and portable `.fcrdeck` imports. The portal can transfer a deck directly to the app with a short-lived QR code.
 
-[Install the Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/e9d91528-d45a-4476-88f2-8c9c6b945539)
+## Try the current builds
 
-This is a preview build distributed outside Google Play. Android will ask you to approve installation from your browser or file manager. The build link is accessible to anyone who has it.
+[Install the latest Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/7ead0247-4974-48b9-abe3-9784b4fab465)
+
+[Open the internal web deck portal](https://flashcard-reels.vercel.app/)
+
+The APK is an EAS internal-distribution preview, not a Google Play release. Android may ask you to allow installation from your browser or file manager. The Expo build link is accessible to anyone who has it.
+
+The Vercel site is currently for internal use and requires the shared team password. After signing in, use the portal to search the deck catalog, inspect cards, download a `.fcrdeck` package, or show a transfer QR code for the mobile app.
 
 ## Run locally
 
-You need Node.js, npm, and the Expo Go app or a supported simulator.
+You need Node.js 22+, npm 11+, and the Expo Go app or a supported simulator.
 
 ```bash
 npm install
 npm start
 ```
 
-Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or web.
+Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or the mobile web target.
+
+To run the Vercel portal locally, configure its server-only environment variables first, then run:
+
+```bash
+npm run dev:web
+```
+
+See [Web portal](docs/web-portal.md) for deployment, authentication, R2, and phone-transfer details.
 
 ## Test
 
@@ -33,10 +48,11 @@ manual device checklist.
 ## Documentation
 
 - [Product guide](docs/product-guide.md)
+- [Web portal](docs/web-portal.md)
 - [Architecture](docs/architecture.md)
 - [Deck package format](docs/deck-packages.md)
 - [Development guide](docs/development.md)
 - [Audio generation](docs/audio-generation.md)
 - [Android manual testing](docs/manual-device-testing.md)
 
-Built with Expo, React Native, TypeScript, SQLite, and Drizzle ORM.
+Built with Expo, React Native, TypeScript, SQLite, Drizzle ORM, Next.js, Tailwind CSS, and Cloudflare R2.

@@ -10,8 +10,7 @@ data/demo-deck/
     └── <card-id>.answer.mp3
 ```
 
-The repository contains no full technical-library source or raw technical audio. To change the
-demo, edit its canonical `deck.json` and replace its one to three MP3 files. Audio names follow
+To change the demo, edit its canonical `deck.json` and replace its MP3 files. Audio names follow
 the normal `<card-id>.<side>.mp3` package contract and must reference cards in the document.
 
 Generate and validate the runtime package with:

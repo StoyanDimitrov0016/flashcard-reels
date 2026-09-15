@@ -93,9 +93,11 @@ eas build --platform android --profile preview
 
 Share the resulting Expo build page with testers. Internal build URLs are accessible to anyone with the link by default; Expo project settings can require sign-in when restricted access is needed. These APKs are preview artifacts, not Google Play releases.
 
+The current preview is available from the [latest APK build page](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/7ead0247-4974-48b9-abe3-9784b4fab465).
+
 ## Android production builds
 
-The `production` profile produces the Android release artifact and increments the remote build version. Start it manually from EAS, or push a `mobile-v*` tag to run `.eas/workflows/create-production-android.yml`:
+The `production` profile produces the Android release artifact and increments the remote build version. Start it manually from EAS:
 
 ```bash
 cd apps/mobile

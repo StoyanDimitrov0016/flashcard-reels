@@ -18,6 +18,16 @@ Use a preview APK and a physical Android device. Mark each item after verifying 
 - [ ] Study imported cards and verify audio where present.
 - [ ] Restart the app; confirm the imported deck and learner state remain.
 
+## Web portal QR transfer
+
+- [ ] Sign in to the internal [web deck portal](https://flashcard-reels.vercel.app/).
+- [ ] Search for a deck, open its details, and verify card search and reveal/hide behavior.
+- [ ] Show the deck's phone-transfer QR code.
+- [ ] In the app, choose Library → Import → Scan QR code and grant camera access.
+- [ ] Scan the QR code; confirm the app reports download/import progress and concise success feedback.
+- [ ] Confirm the imported deck, audio, version, and learner-history behavior match a local-file import.
+- [ ] Retry with an expired or invalid code; confirm no partial deck or permanent audio is left behind.
+
 ## Version behavior
 
 Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-deck generator.
