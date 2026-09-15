@@ -50,6 +50,14 @@ const config: ExpoConfig = {
     ],
     "expo-document-picker",
     [
+      "expo-camera",
+      {
+        cameraPermission: "Allow Flashcard Reels to scan deck transfer QR codes.",
+        microphonePermission: false,
+        recordAudioAndroid: false,
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         backgroundColor: nativeIdentity.lightCanvas,
