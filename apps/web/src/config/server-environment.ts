@@ -35,10 +35,13 @@ export const R2EnvironmentSchema = z.compile(
 );
 export const DeckTransferEnvironmentSchema = z.compile(
   z.object({
-    DECK_TRANSFER_ORIGIN: z
-      .url({ protocol: /^https?$/ })
-      .refine(isSecureOrPrivateOrigin, "Use HTTPS or a private development origin.")
-      .optional(),
+    DECK_TRANSFER_ORIGIN: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z
+        .url({ protocol: /^https?$/ })
+        .refine(isSecureOrPrivateOrigin, "Use HTTPS or a private development origin.")
+        .optional()
+    ),
   })
 );
 

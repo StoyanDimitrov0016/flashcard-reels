@@ -22,6 +22,14 @@ describe("deck transfer origins", () => {
     );
   });
 
+  it("treats an explicitly blank override as unset", () => {
+    process.env.DECK_TRANSFER_ORIGIN = "";
+
+    expect(resolveDeckTransferOrigin("https://flashcard-reels.vercel.app/api/decks")).toBe(
+      "https://flashcard-reels.vercel.app"
+    );
+  });
+
   it("allows private HTTP origins for development", () => {
     process.env.DECK_TRANSFER_ORIGIN = "http://10.173.64.56:3000/path";
 
