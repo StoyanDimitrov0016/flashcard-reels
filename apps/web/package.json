@@ -10,7 +10,8 @@
     "check": "npm run lint && npm run typecheck",
     "lint": "oxlint --type-aware --quiet .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "typegen": "next typegen"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
