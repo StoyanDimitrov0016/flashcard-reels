@@ -8,6 +8,7 @@ import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/s
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -92,6 +93,19 @@ describe("SQLite study persistence", () => {
     await expect(
       sessions.create(makeSession(testId(202), "mixed", TEST_DECK_ID))
     ).rejects.toThrow();
+  });
+
+  it("cascades all deck-owned study data when a deck is removed", async () => {
+    await sessions.create(makeSession(testId(200), "mixed"));
+    await sessions.create(makeSession(testId(201), "focused", TEST_DECK_ID));
+
+    await expect(
+      new SQLiteDeckRepository(database.drizzle).remove(TEST_DECK_ID)
+    ).resolves.toBeUndefined();
+    await expect(database.getAllAsync("PRAGMA foreign_key_check")).resolves.toEqual([]);
+    await expect(
+      database.getAllAsync("SELECT id FROM flashcards WHERE deck_id = ?", TEST_DECK_ID)
+    ).resolves.toEqual([]);
   });
 
   it("enforces one active session per scope while permitting completed history", async () => {
@@ -728,6 +742,7 @@ describe("SQLite study persistence", () => {
       { name: "flashcard_review_attempts" },
       { name: "flashcards" },
       { name: "learner_profiles" },
+      { name: "removed_decks" },
       { name: "study_session_items" },
       { name: "study_session_recurrences" },
       { name: "study_sessions" },
