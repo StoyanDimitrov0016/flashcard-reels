@@ -29,6 +29,7 @@ export function createDeckPackageServices(
   );
   return {
     answerAudioRepository: audioStorage,
+    deckAudioRemover: audioStorage,
     deckInstaller: installer as DeckInstaller,
     installBundledPackage: (bytes: Uint8Array) => installer.installFromBytes(bytes),
   };

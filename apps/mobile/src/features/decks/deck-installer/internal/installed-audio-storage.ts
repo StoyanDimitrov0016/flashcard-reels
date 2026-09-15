@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from "expo-file-system";
 
 import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
+import type { DeckAudioRemover } from "@/features/decks/domain/deck.service";
 import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
 import type {
   DeckAudioStorage,
@@ -10,7 +11,9 @@ import type {
 
 const AUDIO_ROOT_NAME = "deck-audio";
 
-export class InstalledAudioStorage implements DeckAudioStorage, AnswerAudioRepository {
+export class InstalledAudioStorage
+  implements DeckAudioStorage, AnswerAudioRepository, DeckAudioRemover
+{
   private readonly stagedDirectories = new Map<string, Directory>();
 
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
@@ -54,6 +57,13 @@ export class InstalledAudioStorage implements DeckAudioStorage, AnswerAudioRepos
 
   async removeVersion(deckId: string, version: number): Promise<void> {
     const directory = new Directory(this.audioRoot(), deckId, String(version));
+    if (directory.exists) {
+      directory.delete();
+    }
+  }
+
+  async removeDeck(deckId: string): Promise<void> {
+    const directory = new Directory(this.audioRoot(), deckId);
     if (directory.exists) {
       directory.delete();
     }

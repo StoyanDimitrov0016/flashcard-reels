@@ -8,4 +8,9 @@ export interface DeckService {
   getAppearances(deckIds: readonly DeckId[]): Promise<DeckAppearance[]>;
   saveAppearance(appearance: DeckAppearance): Promise<void>;
   list(): Promise<Deck[]>;
+  remove(id: DeckId): Promise<void>;
+}
+
+export interface DeckAudioRemover {
+  removeDeck(deckId: DeckId): Promise<void>;
 }

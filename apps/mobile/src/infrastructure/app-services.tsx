@@ -38,10 +38,13 @@ import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 import { createDeckPackageServices } from "@/infrastructure/deck-package-services";
 import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
+import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
+import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 
 type AppServices = Readonly<{
   answerAudioService: AnswerAudioService;
   deckInstaller: DeckInstaller;
+  deckPackageDownloader: DeckPackageDownloader;
   deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
   flashcardService: FlashcardService;
@@ -108,7 +111,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       learnerProfileAggregationTransaction,
       studySessionMaintenanceTransaction
     );
-    const { answerAudioRepository, deckInstaller } = createDeckPackageServices(
+    const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices(
       drizzleDatabase,
       clock,
       deckRepository,
@@ -118,8 +121,14 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     return {
       answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
       deckInstaller,
+      deckPackageDownloader: new ExpoDeckPackageDownloader(),
       deckPackagePicker: new ExpoDeckPackagePicker(),
-      deckService: new DeckServiceImpl(deckRepository, deckAppearanceRepository),
+      deckService: new DeckServiceImpl(
+        deckRepository,
+        deckAppearanceRepository,
+        deckAudioRemover,
+        studyService
+      ),
       flashcardService,
       learnerProfileService: new LearnerProfileServiceImpl(
         learnerProfileRepository,
