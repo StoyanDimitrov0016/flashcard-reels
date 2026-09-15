@@ -13,6 +13,14 @@ npm install
 npm start
 ```
 
+The root `npm start` command delegates to `apps/mobile`. If invoking Expo
+directly, run it from that directory instead:
+
+```bash
+cd apps/mobile
+npx expo start
+```
+
 From the Expo terminal, scan the QR code or press `a`, `i`, or `w` for Android, iOS, or web.
 
 ## Local Windows emulator workaround
@@ -29,14 +37,14 @@ Start the emulator, wait for Android to finish booting, and open the app in
 Expo Go:
 
 ```powershell
-npm run android:machine:start
+npm run android:machine:start -w @flashcard-reels/mobile
 ```
 
 Press `Ctrl+C` to stop the foreground Metro process. To clean up Metro on port
 8081, the local emulator, and adb together, run:
 
 ```powershell
-npm run android:machine:stop
+npm run android:machine:stop -w @flashcard-reels/mobile
 ```
 
 The helper accepts `FLASHCARD_ANDROID_EMULATOR` and `FLASHCARD_ANDROID_AVD`
@@ -50,13 +58,14 @@ in-app developer menu.
 ## Quality checks
 
 ```bash
-npm run check          # formatting, conventions, lint, and TypeScript
-npm run test:run       # test suite once
-npm run check:android  # export the Android bundle
-npm run verify         # complete project verification
+npm run check          # formatting, conventions, lint, types, and architecture rules
+npm test               # all workspace test suites once
+npm run check:android  # validate deck assets and export the Android bundle
+npm run verify         # root checks, tests, and production builds
+npm run verify:mobile  # extended mobile validation, including Expo Doctor
 ```
 
-Run `npm test` while developing to keep Vitest in watch mode.
+Run a workspace's `vitest` command directly with `--watch` when an interactive test loop is useful.
 
 Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
 `tests/integration` exercises real SQLite, filesystem, and application boundaries, and
@@ -65,11 +74,11 @@ presentation remain in the manual device checklist.
 
 ## Database changes
 
-The local database schema is defined in `src/infrastructure/sqlite/schema.ts`.
+The local database schema is defined in `apps/mobile/src/infrastructure/sqlite/schema.ts`.
 
 ```bash
-npm run db:generate    # generate a Drizzle migration
-npm run db:check       # validate schema and migrations
+npm run db:generate -w @flashcard-reels/mobile # generate a Drizzle migration
+npm run db:check -w @flashcard-reels/mobile    # validate schema and migrations
 ```
 
 Phase 0 uses one clean `0000` migration baseline. Whenever that baseline is regenerated, recreate local development databases before launching the app. Commit the generated baseline and metadata with schema changes.
@@ -84,6 +93,17 @@ eas build --platform android --profile preview
 
 Share the resulting Expo build page with testers. Internal build URLs are accessible to anyone with the link by default; Expo project settings can require sign-in when restricted access is needed. These APKs are preview artifacts, not Google Play releases.
 
+## Android production builds
+
+The `production` profile produces the Android release artifact and increments the remote build version. Start it manually from EAS, or push a `mobile-v*` tag to run `.eas/workflows/create-production-android.yml`:
+
+```bash
+cd apps/mobile
+eas build --platform android --profile production
+```
+
+Repository pull requests and pushes to `main` are validated by GitHub Actions. EAS remains the release-build system and uses the Expo project's EAS credentials.
+
 ## Deck authoring, runtime assets, and exports
 
 The dedicated six-card/two-audio demo source lives under `data/demo-deck` and is excluded from EAS uploads. `assets/decks` contains only the generated demo package required at runtime. Installed state is SQLite plus versioned application-owned audio; larger libraries arrive through external `.fcrdeck` import.
@@ -93,8 +113,8 @@ Startup reads the demo asset only when it is absent or newer than the installed 
 After changing the source library or recordings, run:
 
 ```powershell
-npm.cmd run decks:packages
-npm.cmd run decks:check
+npm.cmd run decks:packages -w @flashcard-reels/mobile
+npm.cmd run decks:check -w @flashcard-reels/mobile
 ```
 
 See [Audio generation](audio-generation.md) before changing the source content or rebuilding recordings.
@@ -104,14 +124,14 @@ See [Audio generation](audio-generation.md) before changing the source content o
 Inspect a package without installing it:
 
 ```powershell
-npm.cmd run decks:inspect -- path/to/deck.fcrdeck
+npm.cmd run decks:inspect -w @flashcard-reels/mobile -- path/to/deck.fcrdeck
 ```
 
 Generate a small package from an editable JSON fixture:
 
 ```powershell
-npm.cmd run decks:test:generate -- data/test-decks/versioned/v1/deck.json tmp/v1.fcrdeck
-npm.cmd run decks:test:generate -- data/test-decks/versioned/v2/deck.json tmp/v2.fcrdeck
+npm.cmd run decks:test:generate -w @flashcard-reels/mobile -- data/test-decks/versioned/v1/deck.json tmp/v1.fcrdeck
+npm.cmd run decks:test:generate -w @flashcard-reels/mobile -- data/test-decks/versioned/v2/deck.json tmp/v2.fcrdeck
 ```
 
 The versioned fixtures share a deck ID and demonstrate an unchanged card, an edited card, a removed card, a new card, and optional audio. The generator and inspector use the same package contract and reader as the app; neither command installs or changes app data.

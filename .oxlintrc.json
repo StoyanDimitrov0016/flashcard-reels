@@ -6,16 +6,40 @@
     "suspicious": "error"
   },
   "ignorePatterns": [
-    ".expo/**",
-    "dist/**",
-    "drizzle/**",
+    ".next/**",
+    ".turbo/**",
     "node_modules/**",
-    "scripts/**",
-    "tools/**"
+    "apps/*/.next/**",
+    "apps/*/.expo/**",
+    "apps/*/dist/**",
+    "apps/mobile/drizzle/**",
+    "apps/mobile/scripts/**",
+    "apps/mobile/tools/**",
+    "apps/web/next-env.d.ts",
+    "scripts/**"
   ],
-  "options": { "typeAware": true },
-  "jsPlugins": ["./tools/oxlint-plugin-flashcards/index.cjs"],
-  "plugins": ["import", "react", "react-perf", "typescript", "unicorn"],
+  "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error",
+    "typeAware": true
+  },
+  "jsPlugins": ["./apps/mobile/tools/oxlint-plugin-flashcards/index.cjs"],
+  "plugins": [
+    "import",
+    "jsx-a11y",
+    "nextjs",
+    "oxc",
+    "react",
+    "react-perf",
+    "typescript",
+    "unicorn",
+    "vitest"
+  ],
+  "settings": {
+    "next": {
+      "rootDir": "apps/web/"
+    }
+  },
   "rules": {
     "eqeqeq": "error",
     "curly": ["error", "all"],
@@ -40,7 +64,12 @@
     "react/exhaustive-deps": "error",
     "react/exhaustive-effect-dependencies": "off",
     "react/jsx-no-constructed-context-values": "off",
-    "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
+    "react/no-unstable-nested-components": [
+      "error",
+      {
+        "allowAsProps": true
+      }
+    ],
     "react/no-array-index-key": "error",
     "react/react-in-jsx-scope": "off",
     "react/style-prop-object": "off",
@@ -54,37 +83,59 @@
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unused-vars": "error",
-    "flashcards/no-service-locator-in-presentation": "error",
-    "flashcards/no-engine-policy-in-presentation": "error",
-    "flashcards/no-persistence-orchestration-in-react-effect": "warn",
-    "flashcards/no-ui-index-as-domain-position": "warn",
-    "flashcards/no-zod-in-domain": "error",
-    "flashcards/require-local-const-arrow-functions": "error",
-    "flashcards/require-named-react-effect-callback": "error",
-    "flashcards/require-named-react-effect-cleanup": "error",
-    "flashcards/no-await-in-conditional-expression": "error"
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-to-throw-message": "off",
+    "vitest/valid-expect": "off"
   },
   "overrides": [
     {
-      "files": ["src/features/**/presentation/**", "src/app/**/*.ts", "src/app/**/*.tsx"],
-      "excludeFiles": ["src/app/_layout.tsx"],
+      "files": ["apps/mobile/src/**/*.ts", "apps/mobile/src/**/*.tsx"],
+      "rules": {
+        "flashcards/no-service-locator-in-presentation": "error",
+        "flashcards/no-engine-policy-in-presentation": "error",
+        "flashcards/no-persistence-orchestration-in-react-effect": "warn",
+        "flashcards/no-ui-index-as-domain-position": "warn",
+        "flashcards/no-zod-in-domain": "error",
+        "flashcards/require-local-const-arrow-functions": "error",
+        "flashcards/require-named-react-effect-callback": "error",
+        "flashcards/require-named-react-effect-cleanup": "error",
+        "flashcards/no-await-in-conditional-expression": "error"
+      }
+    },
+    {
+      "files": [
+        "apps/mobile/src/features/**/presentation/**",
+        "apps/mobile/src/app/**/*.ts",
+        "apps/mobile/src/app/**/*.tsx"
+      ],
+      "excludeFiles": ["apps/mobile/src/app/_layout.tsx"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
-              { "group": ["@/infrastructure/sqlite/**"] },
-              { "group": ["@/features/**/infrastructure/**"] },
-              { "group": ["drizzle-orm/**"] },
-              { "group": ["expo-sqlite"] },
-              { "group": ["better-sqlite3"] }
+              {
+                "group": ["@/infrastructure/sqlite/**"]
+              },
+              {
+                "group": ["@/features/**/infrastructure/**"]
+              },
+              {
+                "group": ["drizzle-orm/**"]
+              },
+              {
+                "group": ["expo-sqlite"]
+              },
+              {
+                "group": ["better-sqlite3"]
+              }
             ]
           }
         ]
       }
     },
     {
-      "files": ["src/features/**/domain/**"],
+      "files": ["apps/mobile/src/features/**/domain/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -105,34 +156,50 @@
                   "@/shared/presentation/**"
                 ]
               },
-              { "allowImportNamePattern": "^AudioSource$", "group": ["expo-audio"] }
+              {
+                "allowImportNamePattern": "^AudioSource$",
+                "group": ["expo-audio"]
+              }
             ]
           }
         ]
       }
     },
     {
-      "files": ["src/features/**/application/**"],
+      "files": ["apps/mobile/src/features/**/application/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
-              { "group": ["@/features/**/presentation/**"] },
-              { "group": ["@/features/**/infrastructure/**"] },
-              { "group": ["@/infrastructure/sqlite/**"] }
+              {
+                "group": ["@/features/**/presentation/**"]
+              },
+              {
+                "group": ["@/features/**/infrastructure/**"]
+              },
+              {
+                "group": ["@/infrastructure/sqlite/**"]
+              }
             ]
           }
         ]
       }
     },
     {
-      "files": ["src/features/**/infrastructure/**", "src/infrastructure/**"],
+      "files": [
+        "apps/mobile/src/features/**/infrastructure/**",
+        "apps/mobile/src/infrastructure/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
-            "patterns": [{ "group": ["@/features/**/presentation/**"] }]
+            "patterns": [
+              {
+                "group": ["@/features/**/presentation/**"]
+              }
+            ]
           }
         ]
       }

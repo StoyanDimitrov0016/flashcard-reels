@@ -1,0 +1,494 @@
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type ListRenderItem,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import {
+  resolveDeckAppearance,
+  type DeckAppearancePreset,
+} from "@/features/decks/presentation/deck-appearance-presets";
+import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
+import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
+import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
+import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
+import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
+import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
+import {
+  getDeckImportErrorFeedback,
+  getDeckImportResultFeedback,
+  type DeckImportFeedback,
+} from "@/features/decks/presentation/deck-import-feedback";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import {
+  FOCUS_HOLD_DURATION_MS,
+  HOLD_FEEDBACK_DELAY_MS,
+} from "@/features/reels/presentation/hold-to-focus";
+import {
+  hideFlashcardToast,
+  showFocusedToast,
+  showHoldToast,
+} from "@/shared/presentation/flashcard-toast";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { screenLayout } from "@/shared/presentation/screen-layout";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+
+type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];
+type DeckRowProps = Readonly<{
+  entry: CatalogEntry;
+  onAppearance: () => void;
+  onFocus: () => void;
+  onViewCards: () => void;
+}>;
+
+function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
+  const { colors, resolvedScheme } = useAppTheme();
+  const styles = createStyles(colors);
+  const { appearance, cardCount, deck } = entry;
+  const deckColors = resolveDeckAppearance(appearance.presetId, resolvedScheme);
+  const longPressHandled = useRef(false);
+  const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const haptics = useHaptics();
+
+  const clearHoldFeedback = () => {
+    if (holdFeedbackTimer.current !== null) {
+      clearTimeout(holdFeedbackTimer.current);
+      holdFeedbackTimer.current = null;
+    }
+    hideFlashcardToast();
+  };
+
+  useEffect(function cleanUpHoldFeedback() {
+    return function cancelIncompleteHoldFeedback() {
+      if (holdFeedbackTimer.current !== null) {
+        clearTimeout(holdFeedbackTimer.current);
+        holdFeedbackTimer.current = null;
+      }
+      if (!longPressHandled.current) {
+        hideFlashcardToast();
+      }
+    };
+  }, []);
+
+  return (
+    <View style={styles.deck}>
+      <View style={[styles.accent, { backgroundColor: deckColors.accent }]} />
+      <Pressable
+        accessibilityHint="Tap to view deck cards. Hold to study this deck in Focus."
+        accessibilityLabel={deck.title}
+        accessibilityRole="button"
+        delayLongPress={FOCUS_HOLD_DURATION_MS}
+        onLongPress={() => {
+          clearHoldFeedback();
+          longPressHandled.current = true;
+          haptics.focusCompleted();
+          showFocusedToast();
+          onFocus();
+        }}
+        onPressIn={() => {
+          clearHoldFeedback();
+          holdFeedbackTimer.current = setTimeout(() => {
+            holdFeedbackTimer.current = null;
+            showHoldToast();
+          }, HOLD_FEEDBACK_DELAY_MS);
+        }}
+        onPressOut={() => {
+          if (!longPressHandled.current) {
+            clearHoldFeedback();
+          }
+        }}
+        onPress={() => {
+          if (longPressHandled.current) {
+            longPressHandled.current = false;
+            return;
+          }
+          onViewCards();
+        }}
+        style={styles.deckBody}
+      >
+        <DeckCover accentColor={deckColors.accent} asset={deck.coverAsset} />
+        <View style={styles.deckCopy}>
+          <View style={styles.deckHeading}>
+            <Text numberOfLines={2} style={styles.deckTitle}>
+              {deck.title}
+            </Text>
+            <Text style={styles.cardCount}>{cardCount} cards</Text>
+          </View>
+          <Text numberOfLines={2} style={styles.description}>
+            {deck.description}
+          </Text>
+        </View>
+      </Pressable>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityLabel={`Change ${deck.title} appearance`}
+          accessibilityRole="button"
+          hitSlop={4}
+          onPress={onAppearance}
+          style={styles.iconButton}
+        >
+          <SymbolView
+            name={{ android: "palette", ios: "paintpalette.fill", web: "palette" }}
+            size={sizes.icon.small}
+            tintColor={colors.textSecondary}
+          />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function LibrarySkeleton() {
+  const styles = createStyles(useAppTheme().colors);
+
+  return (
+    <View accessibilityLabel="Loading deck library" style={styles.skeletonList}>
+      {["first", "second", "third"].map((key) => (
+        <View key={key} style={[styles.deck, styles.skeletonDeck]}>
+          <View style={styles.skeletonAccent} />
+          <View style={styles.skeletonCopy}>
+            <View style={styles.skeletonTitle} />
+            <View style={styles.skeletonLine} />
+            <View style={styles.skeletonShortLine} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function EmptyLibrarySearch() {
+  const styles = createStyles(useAppTheme().colors);
+
+  return (
+    <View style={styles.empty}>
+      <Text style={styles.emptyTitle}>No decks found</Text>
+      <Text style={styles.emptyCopy}>Try another title or description.</Text>
+    </View>
+  );
+}
+
+function EmptyLibrary() {
+  const styles = createStyles(useAppTheme().colors);
+
+  return (
+    <View style={styles.empty}>
+      <Text style={styles.emptyTitle}>Your library is empty</Text>
+      <Text style={styles.emptyCopy}>Import a local .fcrdeck file to add a deck.</Text>
+    </View>
+  );
+}
+
+export default function LibraryScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+  const router = useRouter();
+  const openFocusedFeed = useOpenFocusedFeed();
+  const { entries, loading, refresh } = useDeckCatalog();
+  const { error: importError, importFromDevice, importFromUrl, importing } = useImportDeckPackage();
+  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
+  const [query, setQuery] = useState("");
+  const [importFeedback, setImportFeedback] = useState<DeckImportFeedback | null>(null);
+  const [importSheetPresented, setImportSheetPresented] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
+  const [appearanceOverrides, setAppearanceOverrides] = useState(
+    () => new Map<string, DeckAppearance>()
+  );
+  const visibleEntries = entries
+    .filter(({ deck }) => matchesDeckSearch(deck, query))
+    .map((entry) => ({
+      appearance: appearanceOverrides.get(entry.deck.id) ?? entry.appearance,
+      cardCount: entry.cardCount,
+      deck: entry.deck,
+    }));
+  const sheetAppearance = selectedEntry
+    ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
+    : null;
+  const importStatus =
+    importError && !importSheetPresented ? getDeckImportErrorFeedback(importError) : importFeedback;
+
+  const handleImport = async (
+    importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
+  ) => {
+    setImportFeedback(null);
+    const result = await importDeck();
+    if (result) {
+      setImportFeedback(getDeckImportResultFeedback(result));
+      refresh();
+      return true;
+    }
+    return false;
+  };
+
+  const selectPreset = (preset: DeckAppearancePreset) => {
+    if (!selectedEntry) {
+      return;
+    }
+    const deckId = selectedEntry.deck.id;
+    void savePreset(deckId, preset).then((appearance) => {
+      if (appearance) {
+        setAppearanceOverrides((current) => new Map(current).set(deckId, appearance));
+      }
+    });
+  };
+
+  const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (
+    <DeckRow
+      entry={item}
+      onAppearance={() => {
+        clearSaveError();
+        setSelectedEntry(item);
+      }}
+      onFocus={() => openFocusedFeed(item.deck.id)}
+      onViewCards={() => router.push(getDeckDetailsHref(item.deck.id, "library"))}
+    />
+  );
+
+  return (
+    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
+      <ScreenHeader>
+        <Text accessibilityRole="header" style={styles.screenTitle}>
+          Library
+        </Text>
+        <Pressable
+          accessibilityLabel="Import deck package"
+          accessibilityRole="button"
+          disabled={importing}
+          hitSlop={4}
+          onPress={() => setImportSheetPresented(true)}
+          style={styles.importButton}
+        >
+          <SymbolView
+            name={{ android: "file_download", ios: "square.and.arrow.down", web: "download" }}
+            size={sizes.icon.small}
+            tintColor={colors.textPrimary}
+          />
+        </Pressable>
+      </ScreenHeader>
+      <View style={styles.body}>
+        {importStatus ? (
+          <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
+            {importStatus.message}
+          </Text>
+        ) : null}
+        <View style={styles.searchShell}>
+          <SymbolView
+            name={{ android: "search", ios: "magnifyingglass", web: "search" }}
+            size={sizes.icon.small}
+            tintColor={colors.textTertiary}
+          />
+          <TextInput
+            accessibilityLabel="Search deck library"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={setQuery}
+            placeholder="Search decks…"
+            placeholderTextColor={colors.textTertiary}
+            style={styles.searchInput}
+            value={query}
+          />
+          {query ? (
+            <Pressable
+              accessibilityLabel="Clear deck search"
+              accessibilityRole="button"
+              onPress={() => setQuery("")}
+              style={styles.clearButton}
+            >
+              <SymbolView
+                name={{ android: "cancel", ios: "xmark.circle.fill", web: "cancel" }}
+                size={sizes.icon.small}
+                tintColor={colors.textTertiary}
+              />
+            </Pressable>
+          ) : null}
+        </View>
+        {loading ? (
+          <LibrarySkeleton />
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.list}
+            data={visibleEntries}
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={({ deck }) => deck.id}
+            ListEmptyComponent={query.trim() ? EmptyLibrarySearch : EmptyLibrary}
+            renderItem={renderItem}
+            style={styles.listView}
+          />
+        )}
+      </View>
+      <DeckAppearanceSheet
+        appearance={sheetAppearance}
+        error={saveError}
+        isPresented={selectedEntry !== null}
+        onDismiss={() => {
+          if (!pendingPreset) {
+            setSelectedEntry(null);
+          }
+        }}
+        onSelect={selectPreset}
+        pendingPreset={pendingPreset}
+      />
+      <ImportDeckSheet
+        errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}
+        importing={importing}
+        onBrowse={() => handleImport(importFromDevice)}
+        onClose={() => {
+          if (!importing) {
+            setImportSheetPresented(false);
+          }
+        }}
+        onScan={(url) => handleImport(() => importFromUrl(url))}
+        visible={importSheetPresented}
+      />
+    </SafeAreaView>
+  );
+}
+
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    accent: { alignSelf: "stretch", width: 4 },
+    actions: {
+      alignItems: "center",
+      flexDirection: "column",
+      paddingRight: sizes.spacing.medium,
+    },
+    cardCount: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption,
+    },
+    clearButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
+    deck: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      minHeight: 84,
+      overflow: "hidden",
+    },
+    deckBody: {
+      alignItems: "center",
+      flex: 1,
+      flexDirection: "row",
+      gap: sizes.spacing.xLarge,
+      minHeight: 84,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.large,
+    },
+    deckCopy: { flex: 1, gap: sizes.spacing.xSmall },
+    deckHeading: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: sizes.spacing.small,
+      justifyContent: "space-between",
+    },
+    deckTitle: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.callout,
+      fontWeight: fontWeight.bold,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      lineHeight: lineHeight.footnote,
+    },
+    empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
+    emptyCopy: { color: colors.textSecondary, fontSize: fontSize.body },
+    emptyTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title2,
+      fontWeight: fontWeight.bold,
+    },
+    body: {
+      flex: 1,
+      gap: sizes.spacing.section,
+      paddingHorizontal: sizes.spacing.content,
+      paddingTop: screenLayout.contentTopGap,
+    },
+    importButton: {
+      alignItems: "center",
+      height: sizes.control.compact,
+      justifyContent: "center",
+      width: 36,
+    },
+    importError: { color: colors.error, fontSize: fontSize.caption },
+    importSuccess: { color: colors.success, fontSize: fontSize.caption },
+    iconButton: {
+      alignItems: "center",
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.pill,
+      height: sizes.control.compact,
+      justifyContent: "center",
+      width: 36,
+    },
+    list: {
+      gap: sizes.spacing.medium,
+      paddingBottom: sizes.spacing.content,
+    },
+    listView: { flex: 1 },
+    screenTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title1,
+      fontWeight: fontWeight.heavy,
+    },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
+    searchInput: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: fontSize.callout,
+      height: sizes.input.standard,
+    },
+    searchShell: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      paddingLeft: sizes.spacing.section,
+    },
+    skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
+    skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
+    skeletonDeck: { paddingHorizontal: sizes.spacing.content },
+    skeletonLine: {
+      backgroundColor: colors.borderSubtle,
+      borderRadius: 3,
+      height: 12,
+      width: "85%",
+    },
+    skeletonList: { gap: sizes.spacing.xxLarge },
+    skeletonShortLine: {
+      backgroundColor: colors.borderSubtle,
+      borderRadius: 3,
+      height: 10,
+      width: "35%",
+    },
+    skeletonTitle: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: 3,
+      height: 21,
+      width: "55%",
+    },
+  });
+}

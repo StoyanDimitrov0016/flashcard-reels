@@ -1,7 +1,9 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
 # dependencies
 node_modules/
+
+# Turborepo and Next.js
+.turbo/
+.next/
 
 # Expo
 .expo/
@@ -26,19 +28,15 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
+# Temporary agent/user audit notes
+/progress/
+
+# local and generated files
 .DS_Store
+flashcard-reels-decks.zip
 *.pem
-
-# local env files
 .env*.local
-
-# typescript
 *.tsbuildinfo
-
 example
-
-# generated native folders
-/ios
-/android
-
+ios/
+android/

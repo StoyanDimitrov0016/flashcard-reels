@@ -56,4 +56,4 @@ An **Again** rating schedules the card roughly eight positions later, while **Ha
 - Architecture tests protect narrow static module and runtime-resource invariants.
 - The manual device checklist covers React Native gestures and native presentation.
 
-`npm run verify` runs the static checks, test suite, database checks, runtime-package validation, Expo Doctor, and Android export.
+`npm run verify` runs repository checks, every workspace test suite, and deployable builds. `npm run verify:mobile` adds database checks, dead-code analysis, runtime-package validation, Expo Doctor, and Android export.
