@@ -1,5 +1,7 @@
 # Visual system
 
+Recovery UI uses one contextual title, a short explanation, and relevant actions. Technical details remain collapsed. Use subheadings only to separate genuinely distinct groups; avoid decorative pills, dot-separated labels, nested headings, and repeated explanations. Controls groups related settings and places reset alongside other data actions.
+
 Flashcard Reels separates application chrome from deck content.
 
 The application palette owns navigation, generic surfaces, sheets, overlays, gesture chrome, and Study Island controls. Deck appearance owns the card background, accent, question, answer, and secondary card copy.

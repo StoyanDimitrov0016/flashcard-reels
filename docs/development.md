@@ -1,5 +1,13 @@
 # Development guide
 
+## JSX and error conventions
+
+React permits JSX variables; avoiding local JSX staging is a project readability convention, not a claim that it is invalid React. Derive conditions/data above the return, keep markup in the returned tree, and extract substantial reused branches into named, module-scope components. Keep hooks unconditional. See [React conditional rendering](https://react.dev/learn/conditional-rendering).
+
+The mobile Oxlint plugin enforces `flashcards/no-local-jsx-variables` for directly staged JSX inside named components, and `flashcards/prefer-jsx-and` for JSX-child ternaries with one JSX branch and one `null` branch. These deliberately narrow rules do not prohibit render callbacks, module-level constants, two meaningful alternatives, or nullable props/data. They have no automatic fixes: `count && <View />` renders `0`; use `count > 0`, another explicit boolean predicate, or deliberate boolean coercion instead.
+
+`unicorn/custom-error-definition` is disabled because our errors delegate their name to the shared object constructor; the syntactic rule cannot validate that contract. Runtime error-contract tests, rather than repeated suppression comments, check names, inheritance, codes and causes. Other lint rules remain enabled.
+
 ## Prerequisites
 
 - Node.js and npm
