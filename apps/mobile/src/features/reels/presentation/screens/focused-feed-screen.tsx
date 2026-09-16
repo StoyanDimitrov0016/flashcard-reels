@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -96,22 +96,67 @@ export default function FocusedFeedScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { confirmFocusedFeedSession, focusedFeed, focusRestoring } = useFeedScope();
+  const {
+    confirmFocusedFeedSession,
+    focusedFeed,
+    focusRestoring,
+    restorationError,
+    retryFocusedFeedRestoration,
+  } = useFeedScope();
 
   let content: React.ReactNode;
   if (focusedFeed.status === "empty") {
-    content = focusRestoring ? (
-      <LoadingState />
-    ) : (
-      <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />
-    );
+    if (restorationError) {
+      content = (
+        <View style={styles.recoveryState}>
+          <Text accessibilityRole="header" style={styles.recoveryTitle}>
+            Focus could not be restored
+          </Text>
+          <Text style={styles.recoveryCopy}>
+            Try again or choose a deck to start a new focused feed.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={retryFocusedFeedRestoration}
+            style={styles.button}
+          >
+            <Text style={styles.buttonLabel}>Try again</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.navigate("../library")}
+            style={styles.button}
+          >
+            <Text style={styles.buttonLabel}>Choose a deck</Text>
+          </Pressable>
+        </View>
+      );
+    } else {
+      content = focusRestoring ? (
+        <LoadingState />
+      ) : (
+        <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />
+      );
+    }
   } else {
     content = (
-      <ReadyFocusedFeed
-        focusedFeed={focusedFeed}
-        key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
-        onSessionStarted={confirmFocusedFeedSession}
-      />
+      <View style={styles.content}>
+        {restorationError ? (
+          <View style={styles.notice}>
+            <Text accessibilityRole="alert" style={styles.recoveryCopy}>
+              Focus could not be refreshed. Your current feed is still available.
+            </Text>
+            <Pressable accessibilityRole="button" onPress={retryFocusedFeedRestoration}>
+              <Text style={styles.buttonLabel}>Retry restore</Text>
+            </Pressable>
+          </View>
+        ) : null}
+        <ReadyFocusedFeed
+          focusedFeed={focusedFeed}
+          key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
+          onSessionStarted={confirmFocusedFeedSession}
+        />
+      </View>
     );
   }
 
@@ -124,6 +169,24 @@ export default function FocusedFeedScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    button: {
+      backgroundColor: colors.actionPrimary,
+      borderRadius: 999,
+      marginTop: 12,
+      paddingHorizontal: 22,
+      paddingVertical: 13,
+    },
+    buttonLabel: { color: colors.actionPrimaryText, fontWeight: "700" },
+    content: { flex: 1 },
+    notice: { alignItems: "center", padding: 12 },
+    recoveryCopy: { color: colors.textSecondary, textAlign: "center" },
+    recoveryState: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 36,
+    },
+    recoveryTitle: { color: colors.textPrimary, fontSize: 20, fontWeight: "800" },
     screen: { backgroundColor: colors.canvas, flex: 1 },
   });
 }

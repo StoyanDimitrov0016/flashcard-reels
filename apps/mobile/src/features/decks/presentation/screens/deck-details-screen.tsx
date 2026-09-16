@@ -36,6 +36,8 @@ import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/us
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 type CardRowProps = Readonly<{
   card: Flashcard;
@@ -116,9 +118,10 @@ export default function DeckDetailsScreen() {
         haptics.resetCompleted();
         setResetPresented(false);
       })
-      .catch(() =>
-        setResetError("The reset could not be completed. Your progress was not changed.")
-      )
+      .catch((error: unknown) => {
+        reportError(error, "Deck progress reset failure");
+        setResetError(getErrorFeedback(error).message);
+      })
       .finally(() => setResetting(false));
   };
 

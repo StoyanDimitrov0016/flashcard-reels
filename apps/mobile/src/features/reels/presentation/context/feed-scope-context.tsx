@@ -11,6 +11,8 @@ import {
 import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import type { StudySession } from "@/features/study/domain/study-session.model";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 export type {
   FocusTransition,
@@ -20,6 +22,8 @@ export type {
 type FeedScopeContextValue = Readonly<{
   focusedFeed: FocusedFeedState;
   focusRestoring: boolean;
+  restorationError: Error | null;
+  retryFocusedFeedRestoration: () => void;
   startFocusedFeed: (
     deckId: DeckId,
     anchorFlashcardId?: string,
@@ -31,10 +35,14 @@ type FeedScopeContextValue = Readonly<{
 type FeedScopeOwnerState = Readonly<{
   focusedFeed: FocusedFeedState;
   lifecycleResolved: boolean;
+  restorationError: Error | null;
+  retryKey: number;
 }>;
 
 type FeedScopeEvent =
   | Readonly<{ session: PersistedFocusedSession | null; type: "lifecycle" }>
+  | Readonly<{ error: Error; type: "lifecycle-failed" }>
+  | Readonly<{ type: "retry-lifecycle" }>
   | Readonly<{
       anchorFlashcardId?: string;
       deckId: DeckId;
@@ -47,6 +55,8 @@ const FeedScopeContext = createContext<FeedScopeContextValue | null>(null);
 const initialOwnerState: FeedScopeOwnerState = {
   focusedFeed: { revision: 0, status: "empty" },
   lifecycleResolved: false,
+  restorationError: null,
+  retryKey: 0,
 };
 
 function reduceFeedScope(state: FeedScopeOwnerState, event: FeedScopeEvent): FeedScopeOwnerState {
@@ -54,6 +64,19 @@ function reduceFeedScope(state: FeedScopeOwnerState, event: FeedScopeEvent): Fee
     return {
       focusedFeed: reconcileFocusedFeedState(state.focusedFeed, event.session),
       lifecycleResolved: true,
+      restorationError: null,
+      retryKey: state.retryKey,
+    };
+  }
+  if (event.type === "lifecycle-failed") {
+    return { ...state, lifecycleResolved: true, restorationError: event.error };
+  }
+  if (event.type === "retry-lifecycle") {
+    return {
+      ...state,
+      lifecycleResolved: false,
+      restorationError: null,
+      retryKey: state.retryKey + 1,
     };
   }
   if (event.type === "start") {
@@ -88,7 +111,21 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
       type: "lifecycle",
     });
   }, []);
-  useFocusedFeedLifecycle(handleLifecycleEvaluation);
+  const handleLifecycleFailure = useCallback((error: unknown) => {
+    reportError(error, "Focused-feed restoration failure");
+    dispatch({
+      error: toOperationError(error, {
+        code: "FOCUS_RESTORE_FAILED",
+        context: { operation: "focused-feed.restore" },
+        message: "The focused study session could not be restored",
+      }),
+      type: "lifecycle-failed",
+    });
+  }, []);
+  const retryFocusedFeedRestoration = useCallback(() => {
+    dispatch({ type: "retry-lifecycle" });
+  }, []);
+  useFocusedFeedLifecycle(handleLifecycleEvaluation, handleLifecycleFailure, ownerState.retryKey);
 
   const startFocusedFeed = useCallback(
     (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
@@ -104,6 +141,8 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
     confirmFocusedFeedSession: confirmSession,
     focusedFeed: ownerState.focusedFeed,
     focusRestoring: !ownerState.lifecycleResolved,
+    restorationError: ownerState.restorationError,
+    retryFocusedFeedRestoration,
     startFocusedFeed,
   };
 

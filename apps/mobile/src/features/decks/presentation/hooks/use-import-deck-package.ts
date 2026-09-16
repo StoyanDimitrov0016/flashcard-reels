@@ -5,6 +5,8 @@ import type { DeckPackageSelection } from "@/features/decks/application/deck-pac
 import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 type ImportState = Readonly<{ error: Error | null; importing: boolean }>;
 
@@ -35,16 +37,21 @@ export function useImportDeckPackage(): ImportState & {
       setState({ error: null, importing: false });
       return result;
     } catch (error) {
-      const normalized =
-        error instanceof Error ? error : new Error("Could not import deck package");
+      const normalized = toOperationError(error, {
+        code: "DECK_OPERATION_FAILED",
+        context: { operation: "deck-import" },
+        message: "Could not import deck package",
+      });
+      reportError(normalized, "Deck import failure");
       setState({ error: normalized, importing: false });
       return null;
     } finally {
       if (removeAfterInstall && selection) {
         try {
           deckPackageDownloader.remove(selection);
-        } catch {
+        } catch (error) {
           // Cache cleanup must not obscure the import result.
+          reportError(error, "Deck import cleanup failure");
         }
       }
     }

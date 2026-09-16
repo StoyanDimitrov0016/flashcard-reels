@@ -13,6 +13,7 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 type PreferencesContextValue = Readonly<{
   preferences: AppPreferences;
@@ -59,13 +60,13 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
           if (!active) {
             return;
           }
-          setStorageError(
-            toOperationError(error, {
-              code: "PREFERENCES_READ_FAILED",
-              context: { operation: "preferences.load" },
-              message: "Preferences could not be loaded. Using defaults.",
-            })
-          );
+          const normalized = toOperationError(error, {
+            code: "PREFERENCES_READ_FAILED",
+            context: { operation: "preferences.load" },
+            message: "Preferences could not be loaded. Using defaults.",
+          });
+          reportError(normalized, "Preferences read failure");
+          setStorageError(normalized);
           setReady(true);
         });
       return function deactivatePreferences() {
@@ -83,15 +84,15 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
       .catch(() => undefined)
       .then(() => service.save(nextPreferences))
       .then(() => setStorageError(null))
-      .catch((error: unknown) =>
-        setStorageError(
-          toOperationError(error, {
-            code: "PREFERENCES_WRITE_FAILED",
-            context: { operation: "preferences.save" },
-            message: "Preferences could not be saved. Changes may be lost when you close the app.",
-          })
-        )
-      );
+      .catch((error: unknown) => {
+        const normalized = toOperationError(error, {
+          code: "PREFERENCES_WRITE_FAILED",
+          context: { operation: "preferences.save" },
+          message: "Preferences could not be saved. Changes may be lost when you close the app.",
+        });
+        reportError(normalized, "Preferences write failure");
+        setStorageError(normalized);
+      });
   };
 
   const contextValue: PreferencesContextValue = {

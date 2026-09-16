@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { requestAppDataReset } from "@/infrastructure/app-recovery";
+import { toError } from "@/shared/errors/normalize-error";
+import { ErrorDetails } from "@/shared/presentation/components/error-details";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { reportError } from "@/shared/presentation/errors/report-error";
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize } from "@/shared/presentation/typography";
@@ -11,7 +15,7 @@ export function AppResetAction() {
   const styles = createStyles(colors);
   const [confirming, setConfirming] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<Error | null>(null);
 
   if (Platform.OS === "web") {
     return (
@@ -52,9 +56,9 @@ export function AppResetAction() {
                 setRequested(true);
                 setFailure(null);
               } catch (error) {
-                setFailure(
-                  `Could not schedule reset: ${String(error)}. You can clear app storage in Android Settings instead.`
-                );
+                const normalized = toError(error, "The app-data reset could not be scheduled");
+                reportError(normalized, "App reset request failure");
+                setFailure(normalized);
               }
             }}
             style={styles.button}
@@ -75,9 +79,13 @@ export function AppResetAction() {
         </>
       )}
       {failure ? (
-        <Text accessibilityRole="alert" selectable style={styles.text}>
-          {failure}
-        </Text>
+        <>
+          <Text accessibilityRole="alert" style={styles.text}>
+            {getErrorFeedback(failure).message} You can clear app storage in device settings
+            instead.
+          </Text>
+          <ErrorDetails error={failure} />
+        </>
       ) : null}
     </View>
   );

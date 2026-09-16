@@ -4,7 +4,11 @@ import { AppState } from "react-native";
 import type { StudySession } from "@/features/study/domain/study-session.model";
 import { useAppServices } from "@/infrastructure/app-services";
 
-export function useFocusedFeedLifecycle(onEvaluated: (session: StudySession | null) => void): void {
+export function useFocusedFeedLifecycle(
+  onEvaluated: (session: StudySession | null) => void,
+  onEvaluationFailed: (error: unknown) => void,
+  retryKey: number
+): void {
   const { studyService } = useAppServices();
 
   useEffect(
@@ -23,6 +27,10 @@ export function useFocusedFeedLifecycle(onEvaluated: (session: StudySession | nu
           if (!disposed) {
             onEvaluated(resumed);
           }
+        } catch (error) {
+          if (!disposed) {
+            onEvaluationFailed(error);
+          }
         } finally {
           evaluationInFlight = false;
         }
@@ -39,6 +47,6 @@ export function useFocusedFeedLifecycle(onEvaluated: (session: StudySession | nu
         subscription.remove();
       };
     },
-    [onEvaluated, studyService]
+    [onEvaluationFailed, onEvaluated, retryKey, studyService]
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 
 import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
@@ -37,12 +37,16 @@ export function ReelFeed({
   });
   const {
     answerAudioService,
+    extensionError,
+    fatalError,
     feed,
     onOccurrenceBecameActive,
     onRatingSelected,
+    refreshError,
     requestFeedExtension,
     recallLevels,
     revealedPositions,
+    retryFeedExtension,
     toggleCard,
   } = controller;
   const { handleLayout, viewport } = useReelViewport();
@@ -156,9 +160,27 @@ export function ReelFeed({
     void requestFeedExtension().catch(() => undefined);
   }, [requestFeedExtension]);
   const keyExtractor = useCallback((occurrence: PreparedReelOccurrence) => occurrence.key, []);
+  if (fatalError) {
+    throw fatalError;
+  }
 
   return (
     <View onLayout={handleLayout} style={styles.feed}>
+      {extensionError ? (
+        <View style={styles.extensionNotice}>
+          <Text accessibilityRole="alert" style={styles.noticeText}>
+            More cards could not be loaded.
+          </Text>
+          <Pressable accessibilityRole="button" onPress={retryFeedExtension}>
+            <Text style={styles.retryLabel}>Try again</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {refreshError ? (
+        <Text accessibilityRole="alert" style={styles.refreshNotice}>
+          The feed could not be refreshed. Your saved rating is still recorded.
+        </Text>
+      ) : null}
       {!metadataReady ? <LoadingState accessibilityLabel="Preparing cards" /> : null}
       {metadataReady && height > 0 && width > 0 ? (
         <FlashList
@@ -184,6 +206,15 @@ export function ReelFeed({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    extensionNotice: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceRaised,
+      gap: 8,
+      padding: 12,
+    },
     feed: { backgroundColor: colors.canvas, flex: 1 },
+    noticeText: { color: colors.textSecondary, textAlign: "center" },
+    refreshNotice: { color: colors.textSecondary, padding: 8, textAlign: "center" },
+    retryLabel: { color: colors.actionPrimary, fontWeight: "700" },
   });
 }

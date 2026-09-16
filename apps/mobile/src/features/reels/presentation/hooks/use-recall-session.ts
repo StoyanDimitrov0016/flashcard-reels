@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 export function useRecallSession(
   studyService: StudyService,
@@ -30,6 +31,7 @@ export function useRecallSession(
   const [recallLevels, setRecallLevels] =
     useState<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
   const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   useEffect(
     function trimRecallSessionToMountedRange() {
@@ -68,6 +70,7 @@ export function useRecallSession(
           if (!active) {
             return;
           }
+          setLoadError(null);
           const nextAttemptIds = new Map<number, string>();
           const nextRecallLevels = new Map<number, RecallLevel>();
           for (const attempt of attempts) {
@@ -89,7 +92,17 @@ export function useRecallSession(
           recallLevelsReference.current = nextRecallLevels;
           setRecallLevels(nextRecallLevels);
         })
-        .catch(() => undefined);
+        .catch((error: unknown) => {
+          if (active) {
+            setLoadError(
+              toOperationError(error, {
+                code: "STUDY_PERSISTENCE_FAILED",
+                context: { operation: "review-attempts.load" },
+                message: "Review attempts could not be loaded",
+              })
+            );
+          }
+        });
 
       return function cancelRecallSessionAttemptLoad() {
         active = false;
@@ -157,6 +170,7 @@ export function useRecallSession(
     attemptIds,
     getAttemptId,
     getRecallLevel,
+    loadError,
     rateCard,
     recallLevels,
     revealedPositions,
