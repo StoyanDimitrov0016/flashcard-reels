@@ -16,7 +16,9 @@ export class NodeSqliteDatabase {
   constructor() {
     this.database = new Database(":memory:");
     this.database.pragma("foreign_keys = ON");
-    const migrationDirectory = fileURLToPath(new URL("../../drizzle", import.meta.url));
+    // Keep filesystem resolution out of Vite's browser-asset new URL transform.
+    const moduleUrl = import.meta.url;
+    const migrationDirectory = fileURLToPath(new URL("../../drizzle", moduleUrl));
     for (const migrationFile of orderedMigrationFiles(readdirSync(migrationDirectory))) {
       this.database.exec(readFileSync(`${migrationDirectory}/${migrationFile}`, "utf8"));
     }
