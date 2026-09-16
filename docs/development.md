@@ -67,6 +67,8 @@ npm run verify:mobile  # extended mobile validation, including Expo Doctor
 
 Run a workspace's `vitest` command directly with `--watch` when an interactive test loop is useful.
 
+CI uses `.github/actions/setup-workspace` in every job to install Node 22, the exact npm version declared in root `package.json`, and dependencies with root `npm ci`. The npm cache stores downloaded packages, not installed `node_modules`; the committed lockfile determines dependency versions. Mobile validation prints the checked-out commit and installed Expo version before running Doctor. Keep Doctor's compatibility check enabled and update the mobile manifest and root lockfile together when Expo recommends a patch. Re-running an old workflow run does not pick up newer commits. Feature branches are validated by pull requests targeting `main`; simply pushing a feature branch does not trigger this workflow.
+
 Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
 `tests/integration` exercises real SQLite, filesystem, and application boundaries, and
 `tests/architecture` protects static module and runtime-resource invariants. Native gestures and
