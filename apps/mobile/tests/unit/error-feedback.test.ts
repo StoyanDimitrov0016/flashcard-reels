@@ -28,4 +28,18 @@ describe("error feedback", () => {
       recovery: "retry",
     });
   });
+
+  it.each([
+    ["PREFERENCES_READ_FAILED", "Some settings could not be loaded. Using defaults."],
+    [
+      "PREFERENCES_WRITE_FAILED",
+      "Some settings could not be saved reliably. Changes may be lost when you close the app.",
+    ],
+  ] as const)("keeps %s feedback aligned with its operation", (code, message) => {
+    expect(
+      getErrorFeedback(
+        new AppError({ code, message: "technical details", name: "PreferencesError" })
+      )
+    ).toEqual({ message, recovery: "none" });
+  });
 });

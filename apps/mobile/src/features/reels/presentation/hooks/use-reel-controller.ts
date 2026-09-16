@@ -187,14 +187,13 @@ export function useReelController({
       replaceFeed(nextFeed);
       setRefreshError(null);
     } catch (error) {
-      setRefreshError(
-        toOperationError(error, {
-          code: "VIEW_LOAD_FAILED",
-          context: { operation: "reel-feed.refresh" },
-          message: "The feed could not be refreshed",
-        })
-      );
-      reportError(error, "Feed refresh failure");
+      const normalized = toOperationError(error, {
+        code: "VIEW_LOAD_FAILED",
+        context: { operation: "reel-feed.refresh" },
+        message: "The feed could not be refreshed",
+      });
+      setRefreshError(normalized);
+      reportError(normalized, "Feed refresh failure");
     }
   }, [initialFeed.studySessionId, reelFeedService, replaceFeed]);
 

@@ -112,13 +112,14 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
     });
   }, []);
   const handleLifecycleFailure = useCallback((error: unknown) => {
-    reportError(error, "Focused-feed restoration failure");
+    const normalized = toOperationError(error, {
+      code: "FOCUS_RESTORE_FAILED",
+      context: { operation: "focused-feed.restore" },
+      message: "The focused study session could not be restored",
+    });
+    reportError(normalized, "Focused-feed restoration failure");
     dispatch({
-      error: toOperationError(error, {
-        code: "FOCUS_RESTORE_FAILED",
-        context: { operation: "focused-feed.restore" },
-        message: "The focused study session could not be restored",
-      }),
+      error: normalized,
       type: "lifecycle-failed",
     });
   }, []);

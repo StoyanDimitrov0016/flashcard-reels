@@ -48,8 +48,13 @@ export function getErrorFeedback(error: unknown): ErrorFeedback {
     case "FEED_EXTENSION_FAILED":
       return { message: "More cards could not be loaded.", recovery: "retry" };
     case "PREFERENCES_READ_FAILED":
+      return { message: "Some settings could not be loaded. Using defaults.", recovery: "none" };
     case "PREFERENCES_WRITE_FAILED":
-      return { message: "Some settings could not be saved reliably.", recovery: "none" };
+      return {
+        message:
+          "Some settings could not be saved reliably. Changes may be lost when you close the app.",
+        recovery: "none",
+      };
     case "DECK_OPERATION_FAILED":
       return { message: "That deck change could not be completed.", recovery: "retry" };
     case "PROGRESS_RESET_FAILED":
