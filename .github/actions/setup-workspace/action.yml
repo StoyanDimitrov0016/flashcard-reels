@@ -1,0 +1,17 @@
+name: Set up workspace
+description: Install the declared npm version and locked workspace dependencies
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: package-lock.json
+    - name: Use the repository's npm version
+      shell: bash
+      run: npm install --global "$(node --print 'require("./package.json").packageManager')"
+    - name: Install locked dependencies
+      shell: bash
+      run: npm ci
