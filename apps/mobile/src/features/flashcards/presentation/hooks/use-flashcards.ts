@@ -13,11 +13,17 @@ type FlashcardsState = Readonly<{
 }>;
 
 const initialState: FlashcardsState = { cards: [], error: null, loading: true };
+type LoadedFlashcardsState = FlashcardsState &
+  Readonly<{ deckId: DeckId | null; revision: number | null }>;
 
 export function useFlashcards(deckId: DeckId | null): FlashcardsState {
   const { flashcardService } = useAppServices();
   const { revision } = useDeckContentRevision();
-  const [state, setState] = useState<FlashcardsState>(initialState);
+  const [state, setState] = useState<LoadedFlashcardsState>({
+    ...initialState,
+    deckId: null,
+    revision: null,
+  });
 
   useEffect(
     function loadFlashcards() {
@@ -32,12 +38,14 @@ export function useFlashcards(deckId: DeckId | null): FlashcardsState {
             cards = await flashcardService.list();
           }
           if (active) {
-            setState({ cards, error: null, loading: false });
+            setState({ cards, deckId, revision, error: null, loading: false });
           }
         } catch (error) {
           if (active) {
             setState({
               cards: [],
+              deckId,
+              revision,
               error: toOperationError(error, {
                 code: "VIEW_LOAD_FAILED",
                 context: { deckId: deckId ?? null, operation: "flashcards.load" },
@@ -57,6 +65,10 @@ export function useFlashcards(deckId: DeckId | null): FlashcardsState {
     [deckId, flashcardService, revision]
   );
 
+  // Gate during render: replacement effects have not run yet when content changes.
+  if (state.deckId !== deckId || state.revision !== revision) {
+    return initialState;
+  }
   if (state.error) {
     throw state.error;
   }
