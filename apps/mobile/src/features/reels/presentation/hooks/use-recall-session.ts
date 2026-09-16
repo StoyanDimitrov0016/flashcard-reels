@@ -13,7 +13,8 @@ export function useRecallSession(
     position: number;
     recallLevel: RecallLevel | null;
     revealed: boolean;
-  }>
+  }>,
+  onLoadError?: (error: Error) => void
 ) {
   const initialRecallLevels =
     initialCardState?.recallLevel === null || initialCardState?.recallLevel === undefined
@@ -94,13 +95,13 @@ export function useRecallSession(
         })
         .catch((error: unknown) => {
           if (active) {
-            setLoadError(
-              toOperationError(error, {
-                code: "STUDY_PERSISTENCE_FAILED",
-                context: { operation: "review-attempts.load" },
-                message: "Review attempts could not be loaded",
-              })
-            );
+            const normalized = toOperationError(error, {
+              code: "STUDY_PERSISTENCE_FAILED",
+              context: { operation: "review-attempts.load" },
+              message: "Review attempts could not be loaded",
+            });
+            onLoadError?.(normalized);
+            setLoadError(normalized);
           }
         });
 
@@ -108,7 +109,14 @@ export function useRecallSession(
         active = false;
       };
     },
-    [fromReelPosition, initialCardState, studyService, studySessionId, throughReelPosition]
+    [
+      fromReelPosition,
+      initialCardState,
+      onLoadError,
+      studyService,
+      studySessionId,
+      throughReelPosition,
+    ]
   );
 
   const getAttemptId = useCallback(

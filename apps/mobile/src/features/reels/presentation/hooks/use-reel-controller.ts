@@ -58,14 +58,6 @@ export function useReelController({
         : undefined,
     [initialCardState, initialFeed]
   );
-  const recallSession = useRecallSession(
-    studyService,
-    initialFeed.studySessionId,
-    feed.loadedFromReelPosition,
-    feed.loadedThroughReelPosition,
-    initialRecallState
-  );
-  const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
 
   const recordCriticalFailure = useCallback((error: unknown): Error => {
     const normalized = toOperationError(error, {
@@ -79,6 +71,16 @@ export function useReelController({
     }
     return criticalFailureReference.current;
   }, []);
+
+  const recallSession = useRecallSession(
+    studyService,
+    initialFeed.studySessionId,
+    feed.loadedFromReelPosition,
+    feed.loadedThroughReelPosition,
+    initialRecallState,
+    recordCriticalFailure
+  );
+  const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
 
   const replaceFeed = useCallback((nextFeed: PreparedReelFeed) => {
     const occurrences = mergeMountedReelOccurrences(
