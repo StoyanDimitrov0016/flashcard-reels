@@ -1,15 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 
 import type { StudySession } from "@/features/study/domain/study-session.model";
 import { useAppServices } from "@/infrastructure/app-services";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+
+export type FocusedFeedEvaluation = Readonly<{
+  session: StudySession | null;
+  requestedDeckAvailable: boolean;
+}>;
+type EvaluationRequest = Readonly<{
+  revision: number;
+  requestedDeckId: DeckId | null;
+  retryKey: number;
+}>;
 
 export function useFocusedFeedLifecycle(
-  onEvaluated: (session: StudySession | null) => void,
+  onEvaluated: (evaluation: FocusedFeedEvaluation) => void,
   onEvaluationFailed: (error: unknown) => void,
-  retryKey: number
-): void {
-  const { studyService } = useAppServices();
+  retryKey: number,
+  requestedDeckId: DeckId | null
+): boolean {
+  const { deckService, studyService } = useAppServices();
+  const { revision } = useDeckContentRevision();
+  const [completedRequest, setCompletedRequest] = useState<EvaluationRequest | null>(null);
 
   useEffect(
     function synchronizeFocusedFeedLifecycle() {
@@ -24,8 +39,10 @@ export function useFocusedFeedLifecycle(
         evaluationInFlight = true;
         try {
           const resumed = await sessionService.resumeFocusedSession();
+          const requestedDeckAvailable =
+            requestedDeckId === null || (await deckService.findById(requestedDeckId)) !== null;
           if (!disposed) {
-            onEvaluated(resumed);
+            onEvaluated({ session: resumed, requestedDeckAvailable });
           }
         } catch (error) {
           if (!disposed) {
@@ -33,6 +50,9 @@ export function useFocusedFeedLifecycle(
           }
         } finally {
           evaluationInFlight = false;
+          if (!disposed) {
+            setCompletedRequest({ revision, requestedDeckId, retryKey });
+          }
         }
       };
 
@@ -47,6 +67,20 @@ export function useFocusedFeedLifecycle(
         subscription.remove();
       };
     },
-    [onEvaluationFailed, onEvaluated, retryKey, studyService]
+    [
+      deckService,
+      onEvaluationFailed,
+      onEvaluated,
+      requestedDeckId,
+      retryKey,
+      revision,
+      studyService,
+    ]
+  );
+  return (
+    completedRequest === null ||
+    completedRequest.revision !== revision ||
+    completedRequest.requestedDeckId !== requestedDeckId ||
+    completedRequest.retryKey !== retryKey
   );
 }

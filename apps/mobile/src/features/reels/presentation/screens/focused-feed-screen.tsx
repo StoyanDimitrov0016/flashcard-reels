@@ -130,7 +130,7 @@ export default function FocusedFeedScreen() {
     retryFocusedFeedRestoration,
   } = useFeedScope();
 
-  const isReady = focusedFeed.status === "ready";
+  const isReady = focusedFeed.status === "ready" && !focusRestoring;
   const hasRestorationError = restorationError !== null;
   const showRecovery = !isReady && hasRestorationError;
   const showLoading = !isReady && !hasRestorationError && focusRestoring;
