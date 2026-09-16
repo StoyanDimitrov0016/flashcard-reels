@@ -1,52 +1,29 @@
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
-import { useEffect, useState } from "react";
-import Constants from "expo-constants";
+import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import type { ReactNode } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
-import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
-import { describeError } from "@/shared/application/error-details";
 import { sizes } from "@/shared/presentation/sizes";
-import { fontWeight, textStyles } from "@/shared/presentation/typography";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-type ErrorStateProps = Readonly<{
-  onHomeAction?: () => void;
-  onPrimaryAction: () => void;
-  primaryActionLabel: string;
-  homeActionLabel?: string;
-  title: string;
-  error?: Error;
+export type ErrorStateAction = Readonly<{
+  label: string;
+  onPress: () => void;
+  kind?: "primary" | "secondary";
 }>;
 
-export function ErrorState({
-  onHomeAction,
-  onPrimaryAction,
-  primaryActionLabel,
-  homeActionLabel,
-  title,
-  error,
-}: ErrorStateProps) {
-  const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
-  const styles = createStyles(colors);
-  const [detailsVisible, setDetailsVisible] = useState(false);
+type ErrorStateProps = Readonly<{
+  title: string;
+  message: string;
+  actions: readonly ErrorStateAction[];
+  colors?: AppColors;
+  children?: ReactNode;
+}>;
 
-  useEffect(
-    function reportOriginalError() {
-      if (error) {
-        // oxlint-disable-next-line no-console -- Preserve the original exception in device logs.
-        console.error("[Flashcard Reels] Route failure", describeError(error));
-      }
-    },
-    [error]
-  );
+export function ErrorState({ title, message, actions, colors, children }: ErrorStateProps) {
+  const colorScheme = useColorScheme();
+  const palette = colors ?? getAppColors(colorScheme === "dark" ? "dark" : "light");
+  const styles = createStyles(palette);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -54,46 +31,24 @@ export function ErrorState({
         <Text accessibilityRole="header" style={styles.title}>
           {title}
         </Text>
+        <Text style={styles.message}>{message}</Text>
         <View style={styles.actionRow}>
-          {onHomeAction ? (
+          {actions.map((action) => (
             <Pressable
               accessibilityRole="button"
-              onPress={onHomeAction}
-              style={styles.secondaryButton}
+              key={action.label}
+              onPress={action.onPress}
+              style={action.kind === "secondary" ? styles.secondaryButton : styles.primaryButton}
             >
-              <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
+              <Text
+                style={action.kind === "secondary" ? styles.secondaryLabel : styles.primaryLabel}
+              >
+                {action.label}
+              </Text>
             </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityRole="button"
-            onPress={onPrimaryAction}
-            style={styles.primaryButton}
-          >
-            <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
-          </Pressable>
+          ))}
         </View>
-        {error ? (
-          <>
-            <Text style={styles.secondaryLabel}>
-              Retrying does not erase your data. Try again or use recovery below.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setDetailsVisible(!detailsVisible)}
-              style={styles.secondaryButton}
-            >
-              <Text style={styles.secondaryLabel}>
-                {detailsVisible ? "Hide error details" : "Show error details"}
-              </Text>
-            </Pressable>
-            {detailsVisible ? (
-              <Text selectable style={styles.secondaryLabel}>
-                {`App ${Constants.expoConfig?.version ?? "unknown"} · ${Platform.OS} ${Platform.Version}\n${describeError(error)}`}
-              </Text>
-            ) : null}
-          </>
-        ) : null}
-        <AppResetAction />
+        {children}
       </ScrollView>
     </SafeAreaView>
   );
@@ -101,7 +56,12 @@ export function ErrorState({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    screen: { backgroundColor: colors.canvas, flex: 1 },
+    actionRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: sizes.spacing.medium,
+    },
     content: {
       alignItems: "center",
       backgroundColor: colors.canvas,
@@ -110,40 +70,36 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       padding: sizes.spacing.spacious,
     },
-    title: {
-      color: colors.textPrimary,
-      textAlign: "center",
-      ...textStyles.screenTitle,
-    },
-    actionRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      justifyContent: "center",
-      marginTop: sizes.spacing.wide,
-      width: "100%",
-    },
+    message: { color: colors.textSecondary, fontSize: fontSize.body, textAlign: "center" },
     primaryButton: {
       alignItems: "center",
       backgroundColor: colors.actionPrimary,
-      borderRadius: sizes.radius.pill,
-      flex: 1,
-      paddingHorizontal: sizes.spacing.content,
-      paddingVertical: sizes.spacing.xLarge,
+      borderRadius: sizes.radius.medium,
+      justifyContent: "center",
+      minHeight: sizes.touchTarget.minimum,
+      paddingHorizontal: sizes.spacing.large,
     },
     primaryLabel: {
       color: colors.actionPrimaryText,
-      ...textStyles.primaryButtonLabel,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
     },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
     secondaryButton: {
       alignItems: "center",
-      flex: 1,
-      paddingHorizontal: sizes.spacing.section,
-      paddingVertical: sizes.spacing.medium,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.medium,
+      borderWidth: sizes.border,
+      justifyContent: "center",
+      minHeight: sizes.touchTarget.minimum,
+      paddingHorizontal: sizes.spacing.large,
     },
-    secondaryLabel: {
-      color: colors.textSecondary,
-      fontWeight: fontWeight.bold,
+    secondaryLabel: { color: colors.textPrimary, fontSize: fontSize.body },
+    title: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title1,
+      fontWeight: fontWeight.heavy,
+      textAlign: "center",
     },
   });
 }

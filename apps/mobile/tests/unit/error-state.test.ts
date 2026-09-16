@@ -26,20 +26,18 @@ vi.mock("@/infrastructure/app-recovery", () => ({ requestAppDataReset: vi.fn() }
 
 import { ErrorState } from "@/shared/presentation/components/error-state";
 
-describe("route recovery without app providers", () => {
-  it("renders a usable root fallback without PreferencesProvider or navigation", () => {
+describe("presentational error state without app providers", () => {
+  it("renders a usable fallback without PreferencesProvider or navigation", () => {
     const markup = renderToStaticMarkup(
       createElement(ErrorState, {
-        error: new Error("Database migration failed"),
-        onPrimaryAction: vi.fn(),
-        primaryActionLabel: "Try again",
+        actions: [{ label: "Try again", onPress: vi.fn() }],
+        message: "The app could not finish starting.",
         title: "Couldn’t start the app",
       })
     );
     expect(markup).toContain("Couldn’t start the app");
+    expect(markup).toContain("The app could not finish starting.");
     expect(markup).toContain("Try again");
-    expect(markup).toContain("Show error details");
-    expect(markup).toContain("Reset all app data");
-    expect(markup).not.toContain("Go to Home");
+    expect(markup).not.toContain("Reset all app data");
   });
 });

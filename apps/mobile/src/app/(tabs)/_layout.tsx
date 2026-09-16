@@ -1,30 +1,31 @@
 import { TopTabs } from "expo-router/js-top-tabs";
-import { useRouter, type ErrorBoundaryProps } from "expo-router";
+import { type ErrorBoundaryProps } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useEffect } from "react";
 import type { ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
-import { ErrorState } from "@/shared/presentation/components/error-state";
+import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
+import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
+import { reportError } from "@/shared/presentation/errors/report-error";
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 
 type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
-export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const router = useRouter();
+export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
 
-  return (
-    <ErrorState
-      error={error}
-      homeActionLabel="Go to Home"
-      onHomeAction={() => router.replace("/(tabs)/(discover)")}
-      onPrimaryAction={retry}
-      primaryActionLabel="Try again"
-      title="Couldn’t load this section"
-    />
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  useEffect(
+    function reportTabsFailure() {
+      reportError(error, "Tabs section failure");
+    },
+    [error]
   );
+
+  return <ViewErrorState allowAppRecovery error={error} retry={retry} scope="section" />;
 }
 
 export default function TabLayout() {

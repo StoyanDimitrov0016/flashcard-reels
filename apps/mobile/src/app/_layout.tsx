@@ -11,9 +11,9 @@ import { usePreferences } from "@/features/preferences/presentation/hooks/use-pr
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
-import { ErrorState } from "@/shared/presentation/components/error-state";
-import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
-import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
+import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
+import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { preferencesService } from "@/infrastructure/preferences-services";
@@ -24,14 +24,7 @@ import { getAppColors } from "@/shared/presentation/theme-colors";
 import "../../global.css";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  return (
-    <ErrorState
-      error={error}
-      onPrimaryAction={retry}
-      primaryActionLabel="Try again"
-      title="Couldn’t start the app"
-    />
-  );
+  return <GlobalErrorState error={error} retry={retry} />;
 }
 
 export function SuspenseFallback() {
@@ -41,10 +34,11 @@ export function SuspenseFallback() {
     <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
       <ActivityIndicator color={colors.textPrimary} size="large" />
       <Text style={{ color: colors.textPrimary }}>Starting the app…</Text>
-      <AppResetAction />
     </SafeAreaView>
   );
 }
+
+export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
 
 function AppNavigation() {
   const { colors, resolvedScheme } = useAppTheme();
@@ -58,11 +52,7 @@ function AppNavigation() {
   );
 
   if (!ready) {
-    return (
-      <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
-        <LoadingState label="Loading your preferences…" />
-      </SafeAreaView>
-    );
+    return <StartupLoadingState label="Loading your preferences…" />;
   }
 
   return (
@@ -111,12 +101,12 @@ export default function RootLayout() {
     throw preparationError;
   }
   if (!prepared) {
-    return <SuspenseFallback />;
+    return <StartupLoadingState />;
   }
 
   return (
     <View style={styles.navigationRoot}>
-      {!databaseReady ? <SuspenseFallback /> : null}
+      {!databaseReady ? <StartupLoadingState /> : null}
       <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeAppDatabase}>
         <DeckContentProvider>
           <LearningProgressResetProvider>
