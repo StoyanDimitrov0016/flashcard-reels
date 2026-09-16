@@ -1,9 +1,9 @@
-import { SQLiteProvider } from "expo-sqlite";
-import { Stack, ThemeProvider, type ErrorBoundaryProps, useRouter } from "expo-router";
+import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
+import { Stack, ThemeProvider, type ErrorBoundaryProps } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
-import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
@@ -12,34 +12,36 @@ import { DeckContentProvider } from "@/features/decks/presentation/context/deck-
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 import { ErrorState } from "@/shared/presentation/components/error-state";
+import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { preferencesService } from "@/infrastructure/preferences-services";
 import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
+import { prepareAppStorage } from "@/infrastructure/app-recovery";
+import { getAppColors } from "@/shared/presentation/theme-colors";
 // oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
 import "../../global.css";
 
-export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
-  const router = useRouter();
-
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <ErrorState
-      homeActionLabel="Go to Home"
-      onHomeAction={() => router.replace("/(tabs)/(discover)")}
+      error={error}
       onPrimaryAction={retry}
       primaryActionLabel="Try again"
-      title="Couldn’t load next card"
+      title="Couldn’t start the app"
     />
   );
 }
 
 export function SuspenseFallback() {
-  const { colors } = useAppTheme();
+  const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
 
   return (
     <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
-      <LoadingState />
+      <ActivityIndicator color={colors.textPrimary} size="large" />
+      <Text style={{ color: colors.textPrimary }}>Starting the app…</Text>
+      <AppResetAction />
     </SafeAreaView>
   );
 }
@@ -87,22 +89,50 @@ function AppNavigation() {
 }
 
 export default function RootLayout() {
+  const [prepared, setPrepared] = useState(false);
+  const [databaseReady, setDatabaseReady] = useState(false);
+  const [preparationError, setPreparationError] = useState<Error | null>(null);
+  const initializeAppDatabase = useCallback(async (database: SQLiteDatabase) => {
+    await initializeDatabase(database);
+    setDatabaseReady(true);
+  }, []);
+
+  useEffect(function prepareLocalStorage() {
+    try {
+      prepareAppStorage();
+      // oxlint-disable-next-line react/set-state-in-effect -- Gate database mounting on external storage recovery after commit.
+      setPrepared(true);
+    } catch (error) {
+      setPreparationError(error instanceof Error ? error : new Error(String(error)));
+    }
+  }, []);
+
+  if (preparationError) {
+    throw preparationError;
+  }
+  if (!prepared) {
+    return <SuspenseFallback />;
+  }
+
   return (
-    <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeDatabase}>
-      <DeckContentProvider>
-        <LearningProgressResetProvider>
-          <PreferencesProvider service={preferencesService}>
-            <AppServicesProvider>
-              <AppNavigation />
-            </AppServicesProvider>
-          </PreferencesProvider>
-        </LearningProgressResetProvider>
-      </DeckContentProvider>
-    </SQLiteProvider>
+    <View style={styles.navigationRoot}>
+      {!databaseReady ? <SuspenseFallback /> : null}
+      <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeAppDatabase}>
+        <DeckContentProvider>
+          <LearningProgressResetProvider>
+            <PreferencesProvider service={preferencesService}>
+              <AppServicesProvider>
+                <AppNavigation />
+              </AppServicesProvider>
+            </PreferencesProvider>
+          </LearningProgressResetProvider>
+        </DeckContentProvider>
+      </SQLiteProvider>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fallbackScreen: { flex: 1 },
+  fallbackScreen: { flex: 1, alignItems: "center", justifyContent: "center" },
   navigationRoot: { flex: 1 },
 });
