@@ -12,12 +12,12 @@ import {
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
-import { describeError } from "@/shared/application/error-details";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type PreferencesContextValue = Readonly<{
   preferences: AppPreferences;
   ready: boolean;
-  storageError: string | null;
+  storageError: Error | null;
   resolvedScheme: ResolvedColorScheme;
   setAppearance: (appearance: AppearancePreference) => void;
   setAudioEnabled: (enabled: boolean) => void;
@@ -38,7 +38,7 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
   const deviceScheme = useColorScheme();
   const [preferences, setPreferences] = useState<AppPreferences>(defaultAppPreferences);
   const [ready, setReady] = useState(false);
-  const [storageError, setStorageError] = useState<string | null>(null);
+  const [storageError, setStorageError] = useState<Error | null>(null);
   const preferencesReference = useRef(defaultAppPreferences);
   const writeQueue = useRef(Promise.resolve());
 
@@ -60,7 +60,11 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
             return;
           }
           setStorageError(
-            `Preferences could not be loaded. Using defaults.\n${describeError(error)}`
+            toOperationError(error, {
+              code: "PREFERENCES_READ_FAILED",
+              context: { operation: "preferences.load" },
+              message: "Preferences could not be loaded. Using defaults.",
+            })
           );
           setReady(true);
         });
@@ -81,7 +85,11 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
       .then(() => setStorageError(null))
       .catch((error: unknown) =>
         setStorageError(
-          `Preferences could not be saved. Changes may be lost when you close the app.\n${describeError(error)}`
+          toOperationError(error, {
+            code: "PREFERENCES_WRITE_FAILED",
+            context: { operation: "preferences.save" },
+            message: "Preferences could not be saved. Changes may be lost when you close the app.",
+          })
         )
       );
   };

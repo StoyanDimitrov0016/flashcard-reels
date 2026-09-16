@@ -7,6 +7,8 @@ import type { LearnerProfile } from "@/features/learner-profile/domain/learner-p
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { OperationError } from "@/shared/errors/operation-error";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{
   cards: Flashcard[];
@@ -40,7 +42,11 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
       ])
         .then(async ([deck, cards, appearance]) => {
           if (!deck) {
-            throw new Error("Deck not found");
+            throw new OperationError({
+              code: "DECK_NOT_FOUND",
+              context: { deckId, operation: "deck-details.load" },
+              message: "Deck not found",
+            });
           }
           if (active) {
             const profiles = await learnerProfileService.findByFlashcardIds(
@@ -57,7 +63,11 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
               appearance: null,
               cards: [],
               deck: null,
-              error: error instanceof Error ? error : new Error("Could not load deck cards"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId, operation: "deck-details.load" },
+                message: "Could not load deck cards",
+              }),
               loading: false,
               profiles: new Map(),
             });

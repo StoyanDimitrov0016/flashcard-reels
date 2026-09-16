@@ -4,6 +4,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type FlashcardsState = Readonly<{
   cards: Flashcard[];
@@ -37,7 +38,11 @@ export function useFlashcards(deckId: DeckId | null): FlashcardsState {
           if (active) {
             setState({
               cards: [],
-              error: error instanceof Error ? error : new Error("Could not load flashcards"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId: deckId ?? null, operation: "flashcards.load" },
+                message: "Could not load flashcards",
+              }),
               loading: false,
             });
           }

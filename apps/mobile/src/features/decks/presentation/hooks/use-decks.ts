@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import { useAppServices } from "@/infrastructure/app-services";
+import { OperationError } from "@/shared/errors/operation-error";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DecksState = Readonly<{
   decks: ReadonlyMap<DeckId, Deck>;
@@ -31,7 +33,11 @@ export function useDecks(deckIds: DeckId[]): DecksState {
           const decks = requestedDeckIds.map((deckId) => {
             const deck = decksById.get(deckId);
             if (!deck) {
-              throw new Error(`Missing deck ${deckId}`);
+              throw new OperationError({
+                code: "DECK_NOT_FOUND",
+                context: { deckId, operation: "decks.load" },
+                message: `Missing deck ${deckId}`,
+              });
             }
             return [deckId, deck] as const;
           });
@@ -43,7 +49,11 @@ export function useDecks(deckIds: DeckId[]): DecksState {
           if (active) {
             setState({
               decks: new Map(),
-              error: error instanceof Error ? error : new Error("Could not load decks"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "decks.load" },
+                message: "Could not load decks",
+              }),
               loading: false,
             });
           }

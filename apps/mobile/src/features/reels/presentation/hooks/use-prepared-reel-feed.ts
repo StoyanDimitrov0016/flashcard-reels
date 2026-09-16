@@ -6,6 +6,7 @@ import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type PreparationState = Readonly<{
   error: Error | null;
@@ -76,7 +77,11 @@ export function usePreparedReelFeed(
         .catch((error: unknown) => {
           if (active) {
             setState({
-              error: error instanceof Error ? error : new Error("Could not prepare reel feed"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "reel-feed.prepare" },
+                message: "Could not prepare reel feed",
+              }),
               feed: null,
             });
           }

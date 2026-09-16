@@ -17,8 +17,13 @@ import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-b
 import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { preferencesService } from "@/infrastructure/preferences-services";
-import { DATABASE_NAME, initializeDatabase } from "@/infrastructure/sqlite/database";
+import {
+  DATABASE_NAME,
+  handleSQLiteProviderError,
+  initializeDatabase,
+} from "@/infrastructure/sqlite/database";
 import { prepareAppStorage } from "@/infrastructure/app-recovery";
+import { toError } from "@/shared/errors/normalize-error";
 import { getAppColors } from "@/shared/presentation/theme-colors";
 // oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
 import "../../global.css";
@@ -93,7 +98,7 @@ export default function RootLayout() {
       // oxlint-disable-next-line react/set-state-in-effect -- Gate database mounting on external storage recovery after commit.
       setPrepared(true);
     } catch (error) {
-      setPreparationError(error instanceof Error ? error : new Error(String(error)));
+      setPreparationError(toError(error, "Could not prepare app storage"));
     }
   }, []);
 
@@ -107,7 +112,11 @@ export default function RootLayout() {
   return (
     <View style={styles.navigationRoot}>
       {!databaseReady ? <StartupLoadingState /> : null}
-      <SQLiteProvider databaseName={DATABASE_NAME} onInit={initializeAppDatabase}>
+      <SQLiteProvider
+        databaseName={DATABASE_NAME}
+        onError={handleSQLiteProviderError}
+        onInit={initializeAppDatabase}
+      >
         <DeckContentProvider>
           <LearningProgressResetProvider>
             <PreferencesProvider service={preferencesService}>

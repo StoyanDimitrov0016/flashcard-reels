@@ -57,6 +57,7 @@ import {
   prepareAppStorage,
   requestAppDataReset,
 } from "@/infrastructure/app-recovery";
+import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const marker = "documents/flashcard-reels-reset-pending";
 
@@ -120,7 +121,14 @@ describe("full app recovery", () => {
     state.files.add("documents/SQLite/flashcard-reels.db");
     state.files.add("documents/deck-audio");
     state.failOn = "documents/deck-audio";
-    expect(applyPendingAppDataReset).toThrow("Storage unavailable");
+    let caught: unknown;
+    try {
+      applyPendingAppDataReset();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(RecoveryError);
+    expect(caught).toHaveProperty("cause.message", "Storage unavailable");
     expect(state.files.has(marker)).toBe(true);
     state.failOn = "";
     applyPendingAppDataReset();
@@ -131,6 +139,6 @@ describe("full app recovery", () => {
     state.platform = "web";
     applyPendingAppDataReset();
     expect(state.deleted).toEqual([]);
-    expect(requestAppDataReset).toThrow("Full reset is available in the Android and iOS app");
+    expect(requestAppDataReset).toThrow(RecoveryError);
   });
 });
