@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { describeError } from "@/shared/application/error-details";
 import { getAppColors } from "@/shared/presentation/theme-colors";
@@ -10,7 +10,7 @@ type ErrorDetailsProps = Readonly<{ error: unknown }>;
 
 export function ErrorDetails({ error }: ErrorDetailsProps) {
   const [visible, setVisible] = useState(false);
-  const colors = getAppColors("light");
+  const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
 
   return (
     <View style={styles.container}>
