@@ -6,17 +6,29 @@ export type DeckInstallResult = Readonly<{
   version: number;
 }>;
 
-export class DeckPackageValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DeckPackageValidationError";
+import { AppError } from "@/shared/errors/app-error";
+
+export class DeckPackageValidationError extends AppError {
+  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
+  constructor(message: string, options?: ErrorOptions) {
+    super({
+      name: "DeckPackageValidationError",
+      code: "DECK_PACKAGE_INVALID",
+      message,
+      cause: options?.cause,
+    });
   }
 }
 
-export class DeckPackageVersionError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DeckPackageVersionError";
+export class DeckPackageVersionError extends AppError {
+  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
+  constructor(message: string, options?: ErrorOptions) {
+    super({
+      name: "DeckPackageVersionError",
+      code: "DECK_PACKAGE_VERSION_CONFLICT",
+      message,
+      cause: options?.cause,
+    });
   }
 }
 

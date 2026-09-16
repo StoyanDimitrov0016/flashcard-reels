@@ -148,7 +148,8 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       files = this.decompress(bytes);
     } catch (error) {
       throw new DeckPackageValidationError(
-        `Could not read .fcrdeck archive: ${error instanceof Error ? error.message : "invalid ZIP"}`
+        `Could not read .fcrdeck archive: ${error instanceof Error ? error.message : "invalid ZIP"}`,
+        { cause: error }
       );
     }
 
@@ -205,7 +206,8 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       return JSON.parse(strFromU8(bytes)) as unknown;
     } catch (error) {
       throw new DeckPackageValidationError(
-        `Malformed deck.json: ${error instanceof Error ? error.message : "invalid JSON"}`
+        `Malformed deck.json: ${error instanceof Error ? error.message : "invalid JSON"}`,
+        { cause: error }
       );
     }
   }

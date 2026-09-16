@@ -47,6 +47,7 @@
     "no-debugger": "error",
     "no-duplicate-imports": "error",
     "no-nested-ternary": "error",
+    "unicorn/custom-error-definition": "error",
     "unicorn/no-await-expression-member": "error",
     "no-restricted-imports": [
       "error",
