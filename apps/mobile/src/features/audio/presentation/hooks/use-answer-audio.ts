@@ -5,7 +5,7 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/presentation/errors/report-error";
 
-type PlaybackFailure = Readonly<{ error: Error; reference: AudioReference }>;
+type PlaybackFailure = Readonly<{ error: Error; uri: string | null }>;
 
 export function useAnswerAudio(reference: AudioReference) {
   const source: AudioSource = reference;
@@ -20,11 +20,12 @@ export function useAnswerAudio(reference: AudioReference) {
         message: "Audio is unavailable for this card",
       });
       reportError(playbackError, "Audio playback failure");
-      setPlaybackFailure({ error: playbackError, reference });
+      setPlaybackFailure({ error: playbackError, uri: reference?.uri ?? null });
     },
     [reference]
   );
-  const playbackError = playbackFailure?.reference === reference ? playbackFailure.error : null;
+  const playbackError =
+    playbackFailure?.uri === (reference?.uri ?? null) ? playbackFailure.error : null;
 
   useEffect(
     function synchronizeEmptyAudioSource() {
