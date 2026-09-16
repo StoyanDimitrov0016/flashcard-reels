@@ -8,21 +8,25 @@ import { sizes } from "@/shared/presentation/sizes";
 import { getTopToastOffset } from "@/shared/presentation/toast-layout";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-type ToastConfigProps = Readonly<{ focused?: boolean }>;
+type ToastConfigProps = Readonly<{ focused?: boolean; success?: boolean }>;
 type FlashcardToastProps = Readonly<ToastConfigParams<ToastConfigProps>>;
 
 function FlashcardToast({ text1, props }: FlashcardToastProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const focused = props?.focused ?? false;
+  const success = props?.success ?? false;
+  const focusIcon = focused
+    ? ({ android: "center_focus_strong", ios: "scope", web: "center_focus_strong" } as const)
+    : ({ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" } as const);
 
   return (
     <View accessibilityLiveRegion="polite" style={styles.toast}>
       <SymbolView
         name={
-          focused
-            ? { android: "center_focus_strong", ios: "scope", web: "center_focus_strong" }
-            : { android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }
+          success
+            ? { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }
+            : focusIcon
         }
         size={sizes.icon.small}
         tintColor={colors.interactive}
@@ -35,8 +39,20 @@ function FlashcardToast({ text1, props }: FlashcardToastProps) {
 const toastConfig: ToastConfig = {
   flashcardReels: (props) => <FlashcardToast {...props} />,
 };
+let activeToast: "focus" | "success" | null = null;
+
+export function showSuccessToast(message: string): void {
+  activeToast = "success";
+  Toast.show({
+    props: { success: true },
+    text1: message,
+    type: "flashcardReels",
+    visibilityTime: 2500,
+  });
+}
 
 export function showHoldToast(): void {
+  activeToast = "focus";
   Toast.show({
     autoHide: false,
     props: { focused: false },
@@ -47,6 +63,7 @@ export function showHoldToast(): void {
 }
 
 export function showFocusedToast(): void {
+  activeToast = "focus";
   Toast.show({
     props: { focused: true },
     text1: "Focused on this deck",
@@ -56,7 +73,10 @@ export function showFocusedToast(): void {
 }
 
 export function hideFlashcardToast(): void {
-  Toast.hide();
+  if (activeToast === "focus") {
+    activeToast = null;
+    Toast.hide();
+  }
 }
 
 export function FlashcardToastHost() {
