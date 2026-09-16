@@ -12,10 +12,12 @@ import {
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
+import { describeError } from "@/shared/application/error-details";
 
 type PreferencesContextValue = Readonly<{
   preferences: AppPreferences;
   ready: boolean;
+  storageError: string | null;
   resolvedScheme: ResolvedColorScheme;
   setAppearance: (appearance: AppearancePreference) => void;
   setAudioEnabled: (enabled: boolean) => void;
@@ -36,6 +38,7 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
   const deviceScheme = useColorScheme();
   const [preferences, setPreferences] = useState<AppPreferences>(defaultAppPreferences);
   const [ready, setReady] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const preferencesReference = useRef(defaultAppPreferences);
   const writeQueue = useRef(Promise.resolve());
 
@@ -52,10 +55,13 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
           setPreferences(loadedPreferences);
           setReady(true);
         })
-        .catch(() => {
+        .catch((error: unknown) => {
           if (!active) {
             return;
           }
+          setStorageError(
+            `Preferences could not be loaded. Using defaults.\n${describeError(error)}`
+          );
           setReady(true);
         });
       return function deactivatePreferences() {
@@ -72,12 +78,18 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
     writeQueue.current = writeQueue.current
       .catch(() => undefined)
       .then(() => service.save(nextPreferences))
-      .catch(() => undefined);
+      .then(() => setStorageError(null))
+      .catch((error: unknown) =>
+        setStorageError(
+          `Preferences could not be saved. Changes may be lost when you close the app.\n${describeError(error)}`
+        )
+      );
   };
 
   const contextValue: PreferencesContextValue = {
     preferences,
     ready,
+    storageError,
     resolvedScheme: resolveColorScheme(
       preferences.appearance,
       deviceScheme === "light" || deviceScheme === "dark" ? deviceScheme : null

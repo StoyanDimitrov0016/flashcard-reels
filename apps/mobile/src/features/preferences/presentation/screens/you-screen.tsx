@@ -17,6 +17,7 @@ import { StudyControlsSheet } from "@/features/preferences/presentation/componen
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -27,6 +28,7 @@ export default function YouScreen() {
   const styles = createStyles(colors);
   const {
     preferences,
+    storageError,
     setAppearance,
     setAudioEnabled,
     setAudioSide,
@@ -105,6 +107,14 @@ export default function YouScreen() {
               onPress={openRepository}
               title="Open repository"
             />
+          </PreferenceSection>
+          <PreferenceSection title="App recovery">
+            {storageError ? (
+              <Text accessibilityRole="alert" selectable style={styles.rowDetail}>
+                {storageError}
+              </Text>
+            ) : null}
+            <AppResetAction />
           </PreferenceSection>
         </View>
       </ScrollView>
