@@ -296,11 +296,16 @@ export function useReelController({
       const ratingPersistence = startAttempt(occurrence)
         .then((attemptId) => studyService.rateAttempt(attemptId, level))
         .then((updated) => {
-          if (updated) {
-            rateCard(occurrence.reelPosition, level);
-            if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
-              void refreshFeed();
-            }
+          if (!updated) {
+            throw new OperationError({
+              code: "STUDY_PERSISTENCE_FAILED",
+              context: { operation: "study-attempt.rate" },
+              message: "The selected rating could not be saved",
+            });
+          }
+          rateCard(occurrence.reelPosition, level);
+          if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
+            void refreshFeed();
           }
         })
         .catch((error: unknown) => {
