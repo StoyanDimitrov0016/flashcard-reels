@@ -10,6 +10,7 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
+import { OperationError } from "@/shared/errors/operation-error";
 
 const resultMessages: Record<DeckInstallResult["status"], string> = {
   installed: "Deck installed.",
@@ -38,6 +39,14 @@ describe("deck import presentation feedback", () => {
   });
 
   it.each([
+    [
+      new OperationError({ code: "DECK_DOWNLOAD_FAILED", message: "HTTP 404" }),
+      "Couldn’t download this deck. Check your connection or get a new QR code.",
+    ],
+    [
+      new OperationError({ code: "DECK_DOWNLOAD_TIMED_OUT", message: "timeout" }),
+      "The download took too long. Check your connection and scan again.",
+    ],
     [new DeckPackageValidationError("malformed ZIP"), "That deck package is invalid or damaged."],
     [
       new DeckPackageVersionError("version 1 is older"),

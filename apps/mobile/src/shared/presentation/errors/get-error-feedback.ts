@@ -57,6 +57,16 @@ export function getErrorFeedback(error: unknown): ErrorFeedback {
       };
     case "DECK_OPERATION_FAILED":
       return { message: "That deck change could not be completed.", recovery: "retry" };
+    case "DECK_DOWNLOAD_FAILED":
+      return {
+        message: "Couldn’t download this deck. Check your connection or get a new QR code.",
+        recovery: "retry",
+      };
+    case "DECK_DOWNLOAD_TIMED_OUT":
+      return {
+        message: "The download took too long. Check your connection and try again.",
+        recovery: "retry",
+      };
     case "PROGRESS_RESET_FAILED":
       return { message: "The learning-progress reset could not be completed.", recovery: "retry" };
     case "AUDIO_PLAYBACK_FAILED":

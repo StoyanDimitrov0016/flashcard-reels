@@ -3,6 +3,7 @@ import {
   DeckPackageVersionError,
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
+import { AppError } from "@/shared/errors/app-error";
 
 export type DeckImportFeedback = Readonly<{
   message: string;
@@ -19,6 +20,18 @@ export function getDeckImportResultFeedback(result: DeckInstallResult): DeckImpo
 }
 
 export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
+  if (error instanceof AppError && error.code === "DECK_DOWNLOAD_TIMED_OUT") {
+    return {
+      message: "The download took too long. Check your connection and scan again.",
+      tone: "error",
+    };
+  }
+  if (error instanceof AppError && error.code === "DECK_DOWNLOAD_FAILED") {
+    return {
+      message: "Couldn’t download this deck. Check your connection or get a new QR code.",
+      tone: "error",
+    };
+  }
   if (error instanceof DeckPackageValidationError) {
     return { message: "That deck package is invalid or damaged.", tone: "error" };
   }
