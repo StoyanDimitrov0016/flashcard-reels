@@ -58,20 +58,18 @@ export default function YouScreen() {
           <PreferenceSection title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
           </PreferenceSection>
-          <PreferenceSection title="Study island">
+          <PreferenceSection title="Interaction">
             <PreferenceRow
               detail={
                 preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
                 preferences.recollectionIslandPosition.slice(1) +
-                " · " +
-                (preferences.ratingDirection === "forward" ? "Forward" : "Reverse")
+                ", " +
+                (preferences.ratingDirection === "forward" ? "forward ratings" : "reverse ratings")
               }
               icon={{ android: "tune", ios: "slider.horizontal.3", web: "tune" }}
               onPress={() => setStudyControlsPresented(true)}
               title="Study island"
             />
-          </PreferenceSection>
-          <PreferenceSection title="Interaction">
             <PreferenceSwitch
               icon={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
               label="Audio"
@@ -85,7 +83,7 @@ export default function YouScreen() {
               value={preferences.hapticsEnabled}
             />
           </PreferenceSection>
-          <PreferenceSection title="Learning Data">
+          <PreferenceSection title="Data">
             <PreferenceRow
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               iconColor={colors.error}
@@ -95,6 +93,15 @@ export default function YouScreen() {
               }}
               title="Reset all learning progress"
             />
+            {storageError !== null && (
+              <View>
+                <Text accessibilityRole="alert" style={styles.rowDetail}>
+                  {getErrorFeedback(storageError).message}
+                </Text>
+                <ErrorDetails error={storageError} />
+              </View>
+            )}
+            <AppResetAction />
           </PreferenceSection>
           <PreferenceSection title="About">
             <View style={styles.aboutRow}>
@@ -110,17 +117,6 @@ export default function YouScreen() {
               onPress={openRepository}
               title="Open repository"
             />
-          </PreferenceSection>
-          <PreferenceSection title="App recovery">
-            {storageError ? (
-              <View>
-                <Text accessibilityRole="alert" style={styles.rowDetail}>
-                  {getErrorFeedback(storageError).message}
-                </Text>
-                <ErrorDetails error={storageError} />
-              </View>
-            ) : null}
-            <AppResetAction />
           </PreferenceSection>
         </View>
       </ScrollView>

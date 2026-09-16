@@ -5,6 +5,13 @@ import { ViewErrorState } from "@/shared/presentation/components/view-error-stat
 import { reportError } from "@/shared/presentation/errors/report-error";
 
 type ViewErrorBoundaryProps = Readonly<Pick<ErrorBoundaryProps, "error" | "retry">>;
+const viewTitles: Readonly<Record<string, string>> = {
+  "/": "Couldn’t load Discover",
+  "/focus": "Couldn’t load Focus",
+  "/library": "Couldn’t load Library",
+  "/progress": "Couldn’t load Progress",
+  "/you": "Couldn’t open Controls",
+};
 
 export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
   const pathname = usePathname();
@@ -24,6 +31,7 @@ export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
       onHomeAction={isHomeRoute ? undefined : () => router.replace("/(tabs)/(discover)")}
       retry={retry}
       scope="screen"
+      title={pathname.startsWith("/decks/") ? "Couldn’t load this deck" : viewTitles[pathname]}
     />
   );
 }

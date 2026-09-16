@@ -60,11 +60,11 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
           />
         )}
       </Pressable>
-      {status.error || playbackError ? (
+      {!!(status.error || playbackError) && (
         <Text accessibilityRole="alert" style={styles.errorText}>
           Audio unavailable
         </Text>
-      ) : null}
+      )}
     </View>
   );
 }

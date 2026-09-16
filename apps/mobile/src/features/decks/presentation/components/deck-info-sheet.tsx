@@ -68,7 +68,7 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
           <Text style={styles.recall}>
             {averageRecall === null ? "No recall data yet" : `${averageRecall}% average recall`}
           </Text>
-          {deck ? <Text style={styles.description}>{deck.description}</Text> : null}
+          {!!deck && <Text style={styles.description}>{deck.description}</Text>}
         </BottomSheetScrollView>
       </View>
     </AppBottomSheet>

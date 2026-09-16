@@ -13,7 +13,6 @@ export type RecoveryErrorParams = Readonly<{
 }>;
 
 export class RecoveryError extends AppError {
-  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
   constructor({ code, message, cause, context }: RecoveryErrorParams) {
     super({
       name: "RecoveryError",

@@ -16,6 +16,8 @@ import {
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { sizes } from "@/shared/presentation/sizes";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
@@ -92,6 +94,30 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
   );
 }
 
+type FocusRecoveryStateProps = Readonly<{
+  onRetry: () => void;
+  onChooseDeck: () => void;
+}>;
+
+function FocusRecoveryState({ onRetry, onChooseDeck }: FocusRecoveryStateProps) {
+  const styles = createStyles(useAppTheme().colors);
+
+  return (
+    <View style={styles.recoveryState}>
+      <Text accessibilityRole="header" style={styles.recoveryTitle}>
+        Couldn’t restore Focus
+      </Text>
+      <Text style={styles.recoveryCopy}>Try again or choose a deck.</Text>
+      <Pressable accessibilityRole="button" onPress={onRetry} style={styles.button}>
+        <Text style={styles.buttonLabel}>Try again</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" onPress={onChooseDeck} style={styles.secondaryButton}>
+        <Text style={styles.secondaryLabel}>Choose a deck</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function FocusedFeedScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
@@ -104,65 +130,43 @@ export default function FocusedFeedScreen() {
     retryFocusedFeedRestoration,
   } = useFeedScope();
 
-  let content: React.ReactNode;
-  if (focusedFeed.status === "empty") {
-    if (restorationError) {
-      content = (
-        <View style={styles.recoveryState}>
-          <Text accessibilityRole="header" style={styles.recoveryTitle}>
-            Focus could not be restored
-          </Text>
-          <Text style={styles.recoveryCopy}>
-            Try again or choose a deck to start a new focused feed.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={retryFocusedFeedRestoration}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>Try again</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.navigate("../library")}
-            style={styles.button}
-          >
-            <Text style={styles.buttonLabel}>Choose a deck</Text>
-          </Pressable>
-        </View>
-      );
-    } else {
-      content = focusRestoring ? (
-        <LoadingState />
-      ) : (
-        <EmptyFocusedFeed onChooseDeck={() => router.navigate("../library")} />
-      );
-    }
-  } else {
-    content = (
-      <View style={styles.content}>
-        {restorationError ? (
-          <View style={styles.notice}>
-            <Text accessibilityRole="alert" style={styles.recoveryCopy}>
-              Focus could not be refreshed. Your current feed is still available.
-            </Text>
-            <Pressable accessibilityRole="button" onPress={retryFocusedFeedRestoration}>
-              <Text style={styles.buttonLabel}>Retry restore</Text>
-            </Pressable>
-          </View>
-        ) : null}
-        <ReadyFocusedFeed
-          focusedFeed={focusedFeed}
-          key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
-          onSessionStarted={confirmFocusedFeedSession}
-        />
-      </View>
-    );
-  }
+  const isReady = focusedFeed.status === "ready";
+  const hasRestorationError = restorationError !== null;
+  const showRecovery = !isReady && hasRestorationError;
+  const showLoading = !isReady && !hasRestorationError && focusRestoring;
+  const showEmpty = !isReady && !hasRestorationError && !focusRestoring;
+  const chooseDeck = () => router.navigate("../library");
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      {content}
+      {showRecovery && (
+        <FocusRecoveryState onRetry={retryFocusedFeedRestoration} onChooseDeck={chooseDeck} />
+      )}
+      {showLoading && <LoadingState />}
+      {showEmpty && <EmptyFocusedFeed onChooseDeck={chooseDeck} />}
+      {isReady && (
+        <View style={styles.content}>
+          {hasRestorationError && (
+            <View style={styles.notice}>
+              <Text accessibilityRole="alert" style={styles.recoveryCopy}>
+                Couldn’t refresh Focus. Your current feed is available.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={retryFocusedFeedRestoration}
+                style={styles.secondaryButton}
+              >
+                <Text style={styles.secondaryLabel}>Try again</Text>
+              </Pressable>
+            </View>
+          )}
+          <ReadyFocusedFeed
+            focusedFeed={focusedFeed}
+            key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
+            onSessionStarted={confirmFocusedFeedSession}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -171,22 +175,33 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     button: {
       backgroundColor: colors.actionPrimary,
-      borderRadius: 999,
-      marginTop: 12,
-      paddingHorizontal: 22,
-      paddingVertical: 13,
+      borderRadius: sizes.radius.medium,
+      marginTop: sizes.spacing.medium,
+      minHeight: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      paddingHorizontal: sizes.spacing.large,
     },
-    buttonLabel: { color: colors.actionPrimaryText, fontWeight: "700" },
+    buttonLabel: { color: colors.actionPrimaryText, fontWeight: fontWeight.bold },
+    secondaryButton: {
+      minHeight: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      paddingHorizontal: sizes.spacing.medium,
+    },
+    secondaryLabel: { color: colors.actionPrimary, fontWeight: fontWeight.bold },
     content: { flex: 1 },
-    notice: { alignItems: "center", padding: 12 },
+    notice: { alignItems: "center", padding: sizes.spacing.medium },
     recoveryCopy: { color: colors.textSecondary, textAlign: "center" },
     recoveryState: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 36,
+      paddingHorizontal: sizes.spacing.spacious,
     },
-    recoveryTitle: { color: colors.textPrimary, fontSize: 20, fontWeight: "800" },
+    recoveryTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title2,
+      fontWeight: fontWeight.heavy,
+    },
     screen: { backgroundColor: colors.canvas, flex: 1 },
   });
 }

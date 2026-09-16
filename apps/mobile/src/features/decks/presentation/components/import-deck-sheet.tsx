@@ -157,12 +157,12 @@ export function ImportDeckSheet({
                 label="Browse device"
                 onPress={() => void handleBrowse()}
               />
-              {importing ? <ImportProgress message="Importing deck…" /> : null}
-              {errorMessage ? (
+              {importing && <ImportProgress message="Importing deck…" />}
+              {!!errorMessage && (
                 <Text accessibilityLiveRegion="polite" style={styles.error}>
                   {errorMessage}
                 </Text>
-              ) : null}
+              )}
             </View>
           )}
         </View>
@@ -258,7 +258,7 @@ function ScannerContent({
       <Text style={styles.hint}>
         Point the camera at the QR code shown by Flashcard Reels on the web.
       </Text>
-      {scanError ? <Text style={styles.error}>{scanError}</Text> : null}
+      {!!scanError && <Text style={styles.error}>{scanError}</Text>}
     </View>
   );
 }

@@ -9,6 +9,7 @@ type ViewErrorStateProps = Readonly<{
   scope: "section" | "screen";
   onHomeAction?: () => void;
   allowAppRecovery?: boolean;
+  title?: string;
 }>;
 
 export function ViewErrorState({
@@ -17,6 +18,7 @@ export function ViewErrorState({
   scope,
   onHomeAction,
   allowAppRecovery = false,
+  title,
 }: ViewErrorStateProps) {
   const feedback = getErrorFeedback(error);
   const actions: ErrorStateAction[] = [{ label: "Try again", onPress: retry }];
@@ -28,10 +30,13 @@ export function ViewErrorState({
     <ErrorState
       actions={actions}
       message={feedback.message}
-      title={scope === "section" ? "Couldn’t load this section" : "Couldn’t load this screen"}
+      title={
+        title ??
+        (scope === "section" ? "Couldn’t open this part of the app" : "Something went wrong")
+      }
     >
       <ErrorDetails error={error} />
-      {allowAppRecovery ? <AppResetAction /> : null}
+      {allowAppRecovery && <AppResetAction />}
     </ErrorState>
   );
 }

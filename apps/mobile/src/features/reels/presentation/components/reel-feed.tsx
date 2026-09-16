@@ -166,7 +166,7 @@ export function ReelFeed({
 
   return (
     <View onLayout={handleLayout} style={styles.feed}>
-      {extensionError ? (
+      {!!extensionError && (
         <View style={styles.extensionNotice}>
           <Text accessibilityRole="alert" style={styles.noticeText}>
             More cards could not be loaded.
@@ -175,14 +175,14 @@ export function ReelFeed({
             <Text style={styles.retryLabel}>Try again</Text>
           </Pressable>
         </View>
-      ) : null}
-      {refreshError ? (
+      )}
+      {!!refreshError && (
         <Text accessibilityRole="alert" style={styles.refreshNotice}>
           The feed could not be refreshed. Your saved rating is still recorded.
         </Text>
-      ) : null}
-      {!metadataReady ? <LoadingState accessibilityLabel="Preparing cards" /> : null}
-      {metadataReady && height > 0 && width > 0 ? (
+      )}
+      {!metadataReady && <LoadingState accessibilityLabel="Preparing cards" />}
+      {metadataReady && height > 0 && width > 0 && (
         <FlashList
           data={feed.occurrences}
           decelerationRate="fast"
@@ -199,7 +199,7 @@ export function ReelFeed({
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
         />
-      ) : null}
+      )}
     </View>
   );
 }

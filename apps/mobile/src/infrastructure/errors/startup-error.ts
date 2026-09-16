@@ -13,7 +13,6 @@ export type StartupErrorParams = Readonly<{
 }>;
 
 export class StartupError extends AppError {
-  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
   constructor({ code, message, cause, context }: StartupErrorParams) {
     super({
       name: "StartupError",

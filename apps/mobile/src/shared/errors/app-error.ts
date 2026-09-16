@@ -16,7 +16,6 @@ export class AppError extends Error {
 
   constructor({ name, code, message, cause, context }: AppErrorParams) {
     super(message, { cause });
-    // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
     this.name = name;
     this.code = code;
     this.context = context;

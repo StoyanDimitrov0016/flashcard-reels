@@ -111,7 +111,7 @@ export default function RootLayout() {
 
   return (
     <View style={styles.navigationRoot}>
-      {!databaseReady ? <StartupLoadingState /> : null}
+      {!databaseReady && <StartupLoadingState />}
       <SQLiteProvider
         databaseName={DATABASE_NAME}
         onError={handleSQLiteProviderError}

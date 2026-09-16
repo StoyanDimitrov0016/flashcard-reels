@@ -178,9 +178,7 @@ export default function DeckDetailsScreen() {
       </ScreenHeader>
       <View style={styles.body}>
         <View style={styles.header}>
-          {deck ? (
-            <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />
-          ) : null}
+          {!!deck && <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />}
           <View style={styles.headingCopy}>
             <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
               {deck?.title ?? "Deck cards"}
@@ -263,7 +261,7 @@ export default function DeckDetailsScreen() {
           onClose={() => setSelectedCard(null)}
         />
       )}
-      {showProgress ? (
+      {showProgress && (
         <ResetProgressSheet
           busy={resetting}
           error={resetError}
@@ -276,8 +274,8 @@ export default function DeckDetailsScreen() {
           onConfirm={confirmReset}
           scope={`${deck?.title ?? "deck"} progress`}
         />
-      ) : null}
-      {!showProgress ? (
+      )}
+      {!showProgress && (
         <DeleteDeckSheet
           busy={deleting}
           deck={deletePresented ? deck : null}
@@ -299,7 +297,7 @@ export default function DeckDetailsScreen() {
             });
           }}
         />
-      ) : null}
+      )}
     </SafeAreaView>
   );
 }

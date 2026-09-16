@@ -33,17 +33,16 @@ export function AppResetAction() {
           {Platform.OS === "android"
             ? "Force stop the app in Android Settings, then reopen it."
             : "Remove the app from recent apps, then reopen it."}{" "}
-          All local decks, audio, learning progress and preferences will be erased. Bundled decks
-          will be restored.
+          Local data will be erased and bundled decks restored.
         </Text>
       ) : (
         <>
-          {confirming ? (
+          {confirming && (
             <Text style={styles.text}>
-              Permanently erase all local decks, audio, progress and preferences on the next launch?
-              Bundled decks will be restored. This cannot be undone.
+              Erase decks, audio, progress and settings on the next launch? Bundled decks will
+              return. This cannot be undone.
             </Text>
-          ) : null}
+          )}
           <Pressable
             accessibilityRole="button"
             onPress={() => {
@@ -67,7 +66,7 @@ export function AppResetAction() {
               {confirming ? "Confirm full reset" : "Reset all app data"}
             </Text>
           </Pressable>
-          {confirming ? (
+          {confirming && (
             <Pressable
               accessibilityRole="button"
               onPress={() => setConfirming(false)}
@@ -75,10 +74,10 @@ export function AppResetAction() {
             >
               <Text style={styles.text}>Cancel</Text>
             </Pressable>
-          ) : null}
+          )}
         </>
       )}
-      {failure ? (
+      {!!failure && (
         <>
           <Text accessibilityRole="alert" style={styles.text}>
             {getErrorFeedback(failure).message} You can clear app storage in device settings
@@ -86,7 +85,7 @@ export function AppResetAction() {
           </Text>
           <ErrorDetails error={failure} />
         </>
-      ) : null}
+      )}
     </View>
   );
 }
@@ -95,9 +94,7 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     container: {
       gap: sizes.spacing.medium,
-      backgroundColor: colors.canvas,
       padding: sizes.spacing.medium,
-      borderRadius: sizes.radius.medium,
     },
     button: {
       minHeight: sizes.touchTarget.minimum,

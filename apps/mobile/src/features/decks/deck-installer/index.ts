@@ -9,7 +9,6 @@ export type DeckInstallResult = Readonly<{
 import { AppError } from "../../../shared/errors/app-error.ts";
 
 export class DeckPackageValidationError extends AppError {
-  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
   constructor(message: string, options?: ErrorOptions) {
     super({
       name: "DeckPackageValidationError",
@@ -21,7 +20,6 @@ export class DeckPackageValidationError extends AppError {
 }
 
 export class DeckPackageVersionError extends AppError {
-  // oxlint-disable-next-line unicorn/custom-error-definition -- Name is supplied as a literal to the shared constructor.
   constructor(message: string, options?: ErrorOptions) {
     super({
       name: "DeckPackageVersionError",

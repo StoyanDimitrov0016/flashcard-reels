@@ -17,7 +17,7 @@ export function LoadingState({ accessibilityLabel, fill = true, label }: Loading
   return (
     <View accessibilityLabel={accessibilityLabel} style={fill ? styles.fill : styles.inline}>
       <ActivityIndicator color={colors.textPrimary} size="large" />
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {!!label && <Text style={styles.label}>{label}</Text>}
     </View>
   );
 }

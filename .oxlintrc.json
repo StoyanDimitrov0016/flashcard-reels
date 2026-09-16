@@ -47,7 +47,7 @@
     "no-debugger": "error",
     "no-duplicate-imports": "error",
     "no-nested-ternary": "error",
-    "unicorn/custom-error-definition": "error",
+    "unicorn/custom-error-definition": "off",
     "unicorn/no-await-expression-member": "error",
     "no-restricted-imports": [
       "error",
@@ -100,7 +100,9 @@
         "flashcards/require-local-const-arrow-functions": "error",
         "flashcards/require-named-react-effect-callback": "error",
         "flashcards/require-named-react-effect-cleanup": "error",
-        "flashcards/no-await-in-conditional-expression": "error"
+        "flashcards/no-await-in-conditional-expression": "error",
+        "flashcards/no-local-jsx-variables": "error",
+        "flashcards/prefer-jsx-and": "error"
       }
     },
     {

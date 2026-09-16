@@ -43,11 +43,11 @@ export function DestructiveConfirmationSheet({
           {title}
         </Text>
         <Text style={styles.message}>{message}</Text>
-        {error ? (
+        {!!error && (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
             {error}
           </Text>
-        ) : null}
+        )}
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"

@@ -280,11 +280,11 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
-        {importStatus ? (
+        {!!importStatus && (
           <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
             {importStatus.message}
           </Text>
-        ) : null}
+        )}
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -301,7 +301,7 @@ export default function LibraryScreen() {
             style={styles.searchInput}
             value={query}
           />
-          {query ? (
+          {!!query && (
             <Pressable
               accessibilityLabel="Clear deck search"
               accessibilityRole="button"
@@ -314,7 +314,7 @@ export default function LibraryScreen() {
                 tintColor={colors.textTertiary}
               />
             </Pressable>
-          ) : null}
+          )}
         </View>
         {loading ? (
           <LibrarySkeleton />

@@ -24,19 +24,22 @@ export function StudyControlCluster({
 }: StudyControlClusterProps) {
   const { audioEnabled, audioPosition, orientation } = useStudyControlLayout();
   const styles = createStyles(orientation);
-  const audio =
-    audioEnabled && audioSource ? (
-      <AnswerAudioPlayer isActive={isActive} source={audioSource} />
-    ) : null;
-  const controls = (
-    <RecallControls onSelect={onRate} ratingEnabled={ratingEnabled} selectedLevel={selectedLevel} />
-  );
+  const showAudio = audioEnabled && audioSource !== null;
+  const audioBeforeControls = audioPosition === "left" || audioPosition === "above";
 
   return (
     <View style={styles.cluster}>
-      {audioPosition === "left" || audioPosition === "above" ? audio : null}
-      {controls}
-      {audioPosition === "right" || audioPosition === "below" ? audio : null}
+      {showAudio && audioBeforeControls && (
+        <AnswerAudioPlayer isActive={isActive} source={audioSource} />
+      )}
+      <RecallControls
+        onSelect={onRate}
+        ratingEnabled={ratingEnabled}
+        selectedLevel={selectedLevel}
+      />
+      {showAudio && !audioBeforeControls && (
+        <AnswerAudioPlayer isActive={isActive} source={audioSource} />
+      )}
     </View>
   );
 }

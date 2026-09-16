@@ -339,6 +339,100 @@ const requireLocalConstArrowFunctions = {
   },
 };
 
+function containsRenderedJsx(node) {
+  if (!node) {
+    return false;
+  }
+  if (node.type === "JSXElement" || node.type === "JSXFragment") {
+    return true;
+  }
+  if (node.type === "ConditionalExpression") {
+    return containsRenderedJsx(node.consequent) || containsRenderedJsx(node.alternate);
+  }
+  if (node.type === "LogicalExpression") {
+    return containsRenderedJsx(node.left) || containsRenderedJsx(node.right);
+  }
+  if (
+    [
+      "TSAsExpression",
+      "TSSatisfiesExpression",
+      "TSNonNullExpression",
+      "ParenthesizedExpression",
+    ].includes(node.type)
+  ) {
+    return containsRenderedJsx(node.expression);
+  }
+  return false;
+}
+
+function isInsideComponent(node) {
+  for (let owner = node.parent; owner; owner = owner.parent) {
+    if (
+      ["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(owner.type)
+    ) {
+      const name = functionName(owner);
+      return name !== null && /^[A-Z]/.test(name);
+    }
+  }
+  return false;
+}
+
+const noLocalJsxVariables = {
+  meta: {
+    type: "suggestion",
+    schema: [],
+    messages: {
+      forbidden:
+        "Keep JSX in the returned tree or a named child component; derive data and conditions above the return.",
+    },
+  },
+  create(context) {
+    return {
+      VariableDeclarator(node) {
+        if (isInsideComponent(node) && containsRenderedJsx(node.init)) {
+          context.report({ messageId: "forbidden", node });
+        }
+      },
+      AssignmentExpression(node) {
+        if (isInsideComponent(node) && containsRenderedJsx(node.right)) {
+          context.report({ messageId: "forbidden", node });
+        }
+      },
+    };
+  },
+};
+
+const preferJsxAnd = {
+  meta: {
+    type: "suggestion",
+    schema: [],
+    messages: {
+      forbidden:
+        "For JSX rendered on only one branch, use && with a boolean condition. Keep ternaries for two meaningful alternatives.",
+    },
+  },
+  create(context) {
+    return {
+      ConditionalExpression(node) {
+        // Render-slot props and non-JSX values retain their distinct null semantics.
+        if (
+          node.parent?.type !== "JSXExpressionContainer" ||
+          node.parent.parent?.type === "JSXAttribute"
+        ) {
+          return;
+        }
+        const isNull = (branch) => branch.type === "Literal" && branch.value === null;
+        if (
+          (isNull(node.alternate) && containsRenderedJsx(node.consequent)) ||
+          (isNull(node.consequent) && containsRenderedJsx(node.alternate))
+        ) {
+          context.report({ messageId: "forbidden", node });
+        }
+      },
+    };
+  },
+};
+
 module.exports = {
   meta: { name: "flashcards" },
   rules: {
@@ -351,5 +445,7 @@ module.exports = {
     "require-named-react-effect-callback": requireNamedReactEffectCallback,
     "require-named-react-effect-cleanup": requireNamedReactEffectCleanup,
     "no-await-in-conditional-expression": noAwaitInConditionalExpression,
+    "no-local-jsx-variables": noLocalJsxVariables,
+    "prefer-jsx-and": preferJsxAnd,
   },
 };
