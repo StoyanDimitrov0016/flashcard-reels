@@ -1,16 +1,29 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from "react-native";
+import { useEffect, useState } from "react";
+import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
+import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
+import { describeError } from "@/shared/application/error-details";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontWeight, textStyles } from "@/shared/presentation/typography";
 
 type ErrorStateProps = Readonly<{
-  onHomeAction: () => void;
+  onHomeAction?: () => void;
   onPrimaryAction: () => void;
   primaryActionLabel: string;
-  homeActionLabel: string;
+  homeActionLabel?: string;
   title: string;
+  error?: Error;
 }>;
 
 export function ErrorState({
@@ -19,37 +32,80 @@ export function ErrorState({
   primaryActionLabel,
   homeActionLabel,
   title,
+  error,
 }: ErrorStateProps) {
-  const { colors } = useAppTheme();
+  const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
   const styles = createStyles(colors);
+  const [detailsVisible, setDetailsVisible] = useState(false);
+
+  useEffect(
+    function reportOriginalError() {
+      if (error) {
+        // oxlint-disable-next-line no-console -- Preserve the original exception in device logs.
+        console.error("[Flashcard Reels] Route failure", describeError(error));
+      }
+    },
+    [error]
+  );
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Text accessibilityRole="header" style={styles.title}>
-        {title}
-      </Text>
-      <View style={styles.actionRow}>
-        <Pressable accessibilityRole="button" onPress={onHomeAction} style={styles.secondaryButton}>
-          <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onPrimaryAction}
-          style={styles.primaryButton}
-        >
-          <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
-        </Pressable>
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text accessibilityRole="header" style={styles.title}>
+          {title}
+        </Text>
+        <View style={styles.actionRow}>
+          {onHomeAction ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onHomeAction}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={onPrimaryAction}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
+          </Pressable>
+        </View>
+        {error ? (
+          <>
+            <Text style={styles.secondaryLabel}>
+              Retrying does not erase your data. Try again or use recovery below.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setDetailsVisible(!detailsVisible)}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryLabel}>
+                {detailsVisible ? "Hide error details" : "Show error details"}
+              </Text>
+            </Pressable>
+            {detailsVisible ? (
+              <Text selectable style={styles.secondaryLabel}>
+                {`App ${Constants.expoConfig?.version ?? "unknown"} · ${Platform.OS} ${Platform.Version}\n${describeError(error)}`}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+        <AppResetAction />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    screen: {
+    screen: { backgroundColor: colors.canvas, flex: 1 },
+    content: {
       alignItems: "center",
       backgroundColor: colors.canvas,
-      flex: 1,
+      flexGrow: 1,
       gap: sizes.spacing.section,
       justifyContent: "center",
       padding: sizes.spacing.spacious,

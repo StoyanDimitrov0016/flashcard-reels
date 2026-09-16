@@ -12,11 +12,12 @@ import { sizes } from "@/shared/presentation/sizes";
 
 type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
-export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const router = useRouter();
 
   return (
     <ErrorState
+      error={error}
       homeActionLabel="Go to Home"
       onHomeAction={() => router.replace("/(tabs)/(discover)")}
       onPrimaryAction={retry}
