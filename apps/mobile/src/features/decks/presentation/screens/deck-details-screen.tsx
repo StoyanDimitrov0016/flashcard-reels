@@ -30,12 +30,16 @@ import { ResetProgressSheet } from "@/features/learner-profile/presentation/comp
 import { useResetDeckProgress } from "@/features/learner-profile/presentation/hooks/use-reset-deck-progress";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { ErrorState } from "@/shared/presentation/components/error-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/use-card-answer-audio-source";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { reportError } from "@/shared/presentation/errors/report-error";
+import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
 
 type CardRowProps = Readonly<{
   card: Flashcard;
@@ -87,8 +91,8 @@ export default function DeckDetailsScreen() {
   }>();
   const mode = resolveDeckDetailsMode(modeParameter);
   const showProgress = showsLearningProgress(mode);
-  const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId);
-  const { deleteDeck, deleting, error: deleteError } = useDeleteDeck();
+  const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
+  const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId, !deleting);
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
   const [query, setQuery] = useState("");
@@ -116,11 +120,22 @@ export default function DeckDetailsScreen() {
         haptics.resetCompleted();
         setResetPresented(false);
       })
-      .catch(() =>
-        setResetError("The reset could not be completed. Your progress was not changed.")
-      )
+      .catch((error: unknown) => {
+        reportError(error, "Deck progress reset failure");
+        setResetError(getErrorFeedback(error).message);
+      })
       .finally(() => setResetting(false));
   };
+
+  if (!loading && !deck) {
+    return (
+      <ErrorState
+        title="This deck is no longer in your library"
+        message="It may have been deleted. You can import it again."
+        actions={[{ label: "Go to Library", onPress: () => router.dismissTo("/(tabs)/library") }]}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -175,9 +190,7 @@ export default function DeckDetailsScreen() {
       </ScreenHeader>
       <View style={styles.body}>
         <View style={styles.header}>
-          {deck ? (
-            <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />
-          ) : null}
+          {!!deck && <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />}
           <View style={styles.headingCopy}>
             <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
               {deck?.title ?? "Deck cards"}
@@ -260,7 +273,7 @@ export default function DeckDetailsScreen() {
           onClose={() => setSelectedCard(null)}
         />
       )}
-      {showProgress ? (
+      {showProgress && (
         <ResetProgressSheet
           busy={resetting}
           error={resetError}
@@ -273,14 +286,15 @@ export default function DeckDetailsScreen() {
           onConfirm={confirmReset}
           scope={`${deck?.title ?? "deck"} progress`}
         />
-      ) : null}
-      {!showProgress ? (
+      )}
+      {!showProgress && (
         <DeleteDeckSheet
           busy={deleting}
           deck={deletePresented ? deck : null}
           error={deleteError}
           onCancel={() => {
             if (!deleting) {
+              clearDeleteError();
               setDeletePresented(false);
             }
           }}
@@ -291,12 +305,13 @@ export default function DeckDetailsScreen() {
             void deleteDeck(deck.id).then((deleted) => {
               if (deleted) {
                 setDeletePresented(false);
-                router.back();
+                router.dismissTo("/(tabs)/library");
+                showSuccessToast("Deck deleted.");
               }
             });
           }}
         />
-      ) : null}
+      )}
     </SafeAreaView>
   );
 }

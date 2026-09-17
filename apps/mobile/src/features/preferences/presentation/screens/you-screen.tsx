@@ -12,11 +12,15 @@ import {
 } from "@/features/preferences/presentation/components/preference-settings-components";
 import { appMetadata } from "@/features/preferences/application/app-metadata";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
-import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
+import { useResetAllProgress } from "@/features/learner-profile/presentation/hooks/use-reset-all-progress";
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
+import { ErrorDetails } from "@/shared/presentation/components/error-details";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { reportError } from "@/shared/presentation/errors/report-error";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
@@ -27,6 +31,7 @@ export default function YouScreen() {
   const styles = createStyles(colors);
   const {
     preferences,
+    storageError,
     setAppearance,
     setAudioEnabled,
     setAudioSide,
@@ -38,7 +43,7 @@ export default function YouScreen() {
   const [resetPresented, setResetPresented] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
-  const { refresh, resetAllProgress } = useLearnerProgress();
+  const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
 
   return (
@@ -53,20 +58,18 @@ export default function YouScreen() {
           <PreferenceSection title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
           </PreferenceSection>
-          <PreferenceSection title="Study island">
+          <PreferenceSection title="Interaction">
             <PreferenceRow
               detail={
                 preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
                 preferences.recollectionIslandPosition.slice(1) +
-                " · " +
-                (preferences.ratingDirection === "forward" ? "Forward" : "Reverse")
+                ", " +
+                (preferences.ratingDirection === "forward" ? "forward ratings" : "reverse ratings")
               }
               icon={{ android: "tune", ios: "slider.horizontal.3", web: "tune" }}
               onPress={() => setStudyControlsPresented(true)}
               title="Study island"
             />
-          </PreferenceSection>
-          <PreferenceSection title="Interaction">
             <PreferenceSwitch
               icon={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
               label="Audio"
@@ -80,7 +83,7 @@ export default function YouScreen() {
               value={preferences.hapticsEnabled}
             />
           </PreferenceSection>
-          <PreferenceSection title="Learning Data">
+          <PreferenceSection title="Data">
             <PreferenceRow
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               iconColor={colors.error}
@@ -90,6 +93,15 @@ export default function YouScreen() {
               }}
               title="Reset all learning progress"
             />
+            {storageError !== null && (
+              <View>
+                <Text accessibilityRole="alert" style={styles.rowDetail}>
+                  {getErrorFeedback(storageError).message}
+                </Text>
+                <ErrorDetails error={storageError} />
+              </View>
+            )}
+            <AppResetAction />
           </PreferenceSection>
           <PreferenceSection title="About">
             <View style={styles.aboutRow}>
@@ -124,13 +136,14 @@ export default function YouScreen() {
           setResetting(true);
           void resetAllProgress()
             .then(() => {
-              refresh();
               haptics.resetCompleted();
               setResetPresented(false);
             })
-            .catch(() =>
-              setResetError("The reset could not be completed. Your progress was not changed.")
-            )
+            .catch((error: unknown) => {
+              reportError(error, "Learning progress reset failure");
+              setResetError(getErrorFeedback(error).message);
+              setResetPresented(true);
+            })
             .finally(() => setResetting(false));
         }}
         scope="all learning progress"

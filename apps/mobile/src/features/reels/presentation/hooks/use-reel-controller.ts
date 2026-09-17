@@ -12,6 +12,9 @@ import {
   shouldCompactSessionRuntimeData,
 } from "@/features/reels/application/reel-position-extension";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
+import { OperationError } from "@/shared/errors/operation-error";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;
@@ -38,6 +41,10 @@ export function useReelController({
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const pendingRatingPromises = useRef(new Set<Promise<void>>());
   const extensionInFlight = useRef<Promise<void> | null>(null);
+  const criticalFailureReference = useRef<Error | null>(null);
+  const [fatalError, setFatalError] = useState<Error | null>(null);
+  const [extensionError, setExtensionError] = useState<Error | null>(null);
+  const [refreshError, setRefreshError] = useState<Error | null>(null);
   const initialRecallState = useMemo(
     () =>
       initialCardState
@@ -51,12 +58,27 @@ export function useReelController({
         : undefined,
     [initialCardState, initialFeed]
   );
+
+  const recordCriticalFailure = useCallback((error: unknown): Error => {
+    const normalized = toOperationError(error, {
+      code: "STUDY_PERSISTENCE_FAILED",
+      context: { operation: "study-persistence" },
+      message: "Study progress could not be saved",
+    });
+    if (!criticalFailureReference.current) {
+      criticalFailureReference.current = normalized;
+      setFatalError(normalized);
+    }
+    return criticalFailureReference.current;
+  }, []);
+
   const recallSession = useRecallSession(
     studyService,
     initialFeed.studySessionId,
     feed.loadedFromReelPosition,
     feed.loadedThroughReelPosition,
-    initialRecallState
+    initialRecallState,
+    recordCriticalFailure
   );
   const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
 
@@ -97,6 +119,10 @@ export function useReelController({
         .then((attemptId) => {
           setAttemptId(occurrence.reelPosition, attemptId);
           return attemptId;
+        })
+        .catch((error: unknown) => {
+          recordCriticalFailure(error);
+          throw error;
         });
       startingAttemptPromises.current.set(occurrence.reelPosition, start);
       void start
@@ -104,7 +130,7 @@ export function useReelController({
         .catch(() => undefined);
       return start;
     },
-    [getAttemptId, initialFeed.studySessionId, setAttemptId, studyService]
+    [getAttemptId, initialFeed.studySessionId, recordCriticalFailure, setAttemptId, studyService]
   );
 
   const requestFeedExtension = useCallback(() => {
@@ -115,22 +141,72 @@ export function useReelController({
       .then(() =>
         reelFeedService.extendFeed(sourceCardsReference.current, initialFeed.studySessionId)
       )
-      .then(replaceFeed);
-    const trackedExtension = extension.finally(() => {
-      if (extensionInFlight.current === trackedExtension) {
-        extensionInFlight.current = null;
-      }
-    });
+      .then((nextFeed) => {
+        replaceFeed(nextFeed);
+        setExtensionError(null);
+      });
+    const trackedExtension = extension
+      .catch((error: unknown) => {
+        const normalized = toOperationError(error, {
+          code: "FEED_EXTENSION_FAILED",
+          context: { operation: "reel-feed.extend" },
+          message: "More cards could not be loaded",
+        });
+        reportError(normalized, "Feed extension failure");
+        setExtensionError(normalized);
+        throw normalized;
+      })
+      .finally(() => {
+        if (extensionInFlight.current === trackedExtension) {
+          extensionInFlight.current = null;
+        }
+      });
     extensionInFlight.current = trackedExtension;
     return trackedExtension;
   }, [initialFeed.studySessionId, reelFeedService, replaceFeed]);
 
   const awaitPendingRatings = useCallback(async () => {
-    await Promise.allSettled(pendingRatingPromises.current);
-  }, []);
+    const outcomes = await Promise.allSettled(pendingRatingPromises.current);
+    const rejected = outcomes.find(
+      (outcome): outcome is PromiseRejectedResult => outcome.status === "rejected"
+    );
+    if (rejected) {
+      throw recordCriticalFailure(rejected.reason);
+    }
+    if (criticalFailureReference.current) {
+      throw criticalFailureReference.current;
+    }
+  }, [recordCriticalFailure]);
+
+  const refreshFeed = useCallback(async () => {
+    try {
+      const nextFeed = await reelFeedService.refreshFeed(
+        sourceCardsReference.current,
+        initialFeed.studySessionId
+      );
+      replaceFeed(nextFeed);
+      setRefreshError(null);
+    } catch (error) {
+      const normalized = toOperationError(error, {
+        code: "VIEW_LOAD_FAILED",
+        context: { operation: "reel-feed.refresh" },
+        message: "The feed could not be refreshed",
+      });
+      setRefreshError(normalized);
+      reportError(normalized, "Feed refresh failure");
+    }
+  }, [initialFeed.studySessionId, reelFeedService, replaceFeed]);
+
+  const retryFeedExtension = useCallback(() => {
+    setExtensionError(null);
+    void requestFeedExtension().catch(() => undefined);
+  }, [requestFeedExtension]);
 
   const onOccurrenceBecameActive = useCallback(
     (reelPosition: number) => {
+      if (criticalFailureReference.current) {
+        return;
+      }
       const occurrence = feedReference.current.occurrences.find(
         (current) => current.reelPosition === reelPosition
       );
@@ -155,7 +231,11 @@ export function useReelController({
               occurrence.reelPosition
             );
             if (!position) {
-              return false;
+              throw new OperationError({
+                code: "STUDY_PERSISTENCE_FAILED",
+                context: { operation: "study-session.update-position" },
+                message: "The current study position could not be saved",
+              });
             }
             const nextFeed = {
               ...feedReference.current,
@@ -188,18 +268,21 @@ export function useReelController({
                   initialFeed.studySessionId,
                   compactionPosition
                 ),
-          () => (shouldExtend ? requestFeedExtension() : Promise.resolve()),
+          () => (shouldExtend ? requestFeedExtension().catch(() => undefined) : Promise.resolve()),
           awaitPendingRatings
         );
       });
-      activationQueue.current = activation.catch(() => undefined);
-      void activation;
+      activationQueue.current = activation.catch((error: unknown) => {
+        recordCriticalFailure(error);
+      });
+      void activationQueue.current;
     },
     [
       awaitPendingRatings,
       initialFeed.studySessionId,
       requestFeedExtension,
       reelFeedService,
+      recordCriticalFailure,
       startAttempt,
       studyService,
     ]
@@ -207,19 +290,28 @@ export function useReelController({
 
   const onRatingSelected = useCallback(
     (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
+      if (criticalFailureReference.current) {
+        return;
+      }
       const previousLevel = getRecallLevel(occurrence.reelPosition);
       const ratingPersistence = startAttempt(occurrence)
         .then((attemptId) => studyService.rateAttempt(attemptId, level))
         .then((updated) => {
-          if (updated) {
-            rateCard(occurrence.reelPosition, level);
-            if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
-              void reelFeedService
-                .refreshFeed(sourceCardsReference.current, initialFeed.studySessionId)
-                .then(replaceFeed)
-                .catch(() => undefined);
-            }
+          if (!updated) {
+            throw new OperationError({
+              code: "STUDY_PERSISTENCE_FAILED",
+              context: { operation: "study-attempt.rate" },
+              message: "The selected rating could not be saved",
+            });
           }
+          rateCard(occurrence.reelPosition, level);
+          if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
+            void refreshFeed();
+          }
+        })
+        .catch((error: unknown) => {
+          recordCriticalFailure(error);
+          throw error;
         });
       pendingRatingPromises.current.add(ratingPersistence);
       void ratingPersistence
@@ -228,15 +320,7 @@ export function useReelController({
         })
         .catch(() => undefined);
     },
-    [
-      initialFeed.studySessionId,
-      getRecallLevel,
-      rateCard,
-      reelFeedService,
-      replaceFeed,
-      startAttempt,
-      studyService,
-    ]
+    [getRecallLevel, rateCard, recordCriticalFailure, refreshFeed, startAttempt, studyService]
   );
 
   return {
@@ -244,6 +328,10 @@ export function useReelController({
     feed,
     onOccurrenceBecameActive,
     onRatingSelected,
+    fatalError: fatalError ?? recallSession.loadError,
+    extensionError,
+    refreshError,
+    retryFeedExtension,
     requestFeedExtension,
     ...recallSession,
   };

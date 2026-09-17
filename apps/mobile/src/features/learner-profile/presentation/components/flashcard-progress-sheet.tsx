@@ -56,12 +56,12 @@ export function FlashcardProgressSheet({
             />
           </Pressable>
         </View>
-        {card ? (
+        {!!card && (
           <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <Text style={styles.question}>{card.question}</Text>
             <View style={styles.answerRow}>
               <Text style={styles.answer}>{card.answer}</Text>
-              {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
+              {!!audioSource && <AnswerAudioPlayer isActive source={audioSource} />}
             </View>
             <View style={styles.progressHeading}>
               <Text
@@ -99,7 +99,7 @@ export function FlashcardProgressSheet({
                 : "No review history"}
             </Text>
           </BottomSheetScrollView>
-        ) : null}
+        )}
       </View>
     </AppBottomSheet>
   );

@@ -1,13 +1,23 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import { SymbolView } from "expo-symbols";
-import { useRef, useState, type ComponentProps } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useIsFocused } from "expo-router";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
+import {
+  ActivityIndicator,
+  AppState,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import * as z from "zod";
 
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 const PrivateDevelopmentHostPattern =
   /^(?:localhost|127(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[::1\])$/;
@@ -23,6 +33,8 @@ const RemoteDeckUrlSchema = z.compile(
 type ImportDeckSheetProps = Readonly<{
   errorMessage: string | null;
   importing: boolean;
+  downloading: boolean;
+  onClearError: () => void;
   onBrowse: () => Promise<boolean>;
   onClose: () => void;
   onScan: (url: string) => Promise<boolean>;
@@ -32,6 +44,8 @@ type ImportDeckSheetProps = Readonly<{
 export function ImportDeckSheet({
   errorMessage,
   importing,
+  downloading,
+  onClearError,
   onBrowse,
   onClose,
   onScan,
@@ -40,44 +54,135 @@ export function ImportDeckSheet({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const [mode, setMode] = useState<"choices" | "scanner">("choices");
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
   const [scanError, setScanError] = useState<string | null>(null);
+  const [cameraAccessError, setCameraAccessError] = useState<string | null>(null);
+  const [appActive, setAppActive] = useState(
+    AppState.currentState !== "background" && AppState.currentState !== "inactive"
+  );
+  const screenFocused = useIsFocused();
+  const cameraActive = visible && screenFocused && appActive;
   const [processingScan, setProcessingScan] = useState(false);
   const [scanPaused, setScanPaused] = useState(false);
   const scanLocked = useRef(false);
+  const scanSession = useRef(0);
 
-  const close = () => {
+  useEffect(function trackCameraForeground() {
+    const subscription = AppState.addEventListener("change", (state) =>
+      setAppActive(state === "active")
+    );
+    return function stopTrackingCameraForeground() {
+      scanSession.current += 1;
+      scanLocked.current = true;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(
+    function refreshCameraAccessOnReturn() {
+      if (!visible || mode !== "scanner") {
+        return undefined;
+      }
+      let active = true;
+      const subscription = AppState.addEventListener("change", (state) => {
+        if (state === "active") {
+          void getPermission()
+            .then(() => {
+              if (active) {
+                setCameraAccessError(null);
+              }
+            })
+            .catch((error: unknown) => {
+              reportError(error, "Camera permission refresh failure");
+              if (active) {
+                setCameraAccessError(
+                  "Couldn’t check camera access. Try again or browse a deck file."
+                );
+              }
+            });
+        }
+      });
+      return function stopRefreshingCameraAccess() {
+        active = false;
+        subscription.remove();
+      };
+    },
+    [getPermission, mode, visible]
+  );
+
+  const askForCamera = async () => {
+    const session = scanSession.current;
+    setCameraAccessError(null);
+    try {
+      await requestPermission();
+    } catch (error) {
+      reportError(error, "Camera permission request failure");
+      if (session === scanSession.current) {
+        setCameraAccessError("Couldn’t request camera access. Try again or browse a deck file.");
+      }
+    }
+  };
+
+  const openCameraSettings = async () => {
+    const session = scanSession.current;
+    try {
+      await Linking.openSettings();
+    } catch (error) {
+      reportError(error, "Camera settings failure");
+      if (session === scanSession.current) {
+        setCameraAccessError("Couldn’t open Settings. Open them manually or browse a deck file.");
+      }
+    }
+  };
+
+  const resetScanner = () => {
+    scanSession.current += 1;
     setMode("choices");
     setScanError(null);
+    setCameraAccessError(null);
     setProcessingScan(false);
     setScanPaused(false);
-    scanLocked.current = false;
+    scanLocked.current = true;
+    onClearError();
+  };
+
+  const close = () => {
+    resetScanner();
     onClose();
   };
 
   const beginScanning = async () => {
+    scanSession.current += 1;
+    onClearError();
+    scanLocked.current = false;
+    setScanPaused(false);
     setScanError(null);
+    setCameraAccessError(null);
     setMode("scanner");
     if (!permission?.granted && permission?.canAskAgain !== false) {
-      await requestPermission();
+      await askForCamera();
     }
   };
 
   const handleBarcode = async ({ data }: BarcodeScanningResult) => {
-    if (scanLocked.current) {
+    if (scanLocked.current || !cameraActive) {
       return;
     }
     scanLocked.current = true;
+    const session = scanSession.current;
     setProcessingScan(true);
     setScanError(null);
     const parsed = RemoteDeckUrlSchema.safeParse(data);
     if (!parsed.success) {
       setScanError("That isn’t a deck import code.");
       setProcessingScan(false);
-      scanLocked.current = false;
+      setScanPaused(true);
       return;
     }
     const imported = await onScan(parsed.data);
+    if (session !== scanSession.current) {
+      return;
+    }
     if (imported) {
       close();
       return;
@@ -87,26 +192,40 @@ export function ImportDeckSheet({
   };
 
   const handleBrowse = async () => {
+    const session = scanSession.current;
     const imported = await onBrowse();
-    if (imported) {
+    if (imported && session === scanSession.current) {
       close();
     }
   };
 
   return (
-    <AppBottomSheet dismissible={!importing} onClose={close} size="large" visible={visible}>
+    <AppBottomSheet
+      dismissible={!importing || downloading}
+      onClose={close}
+      size="large"
+      visible={visible}
+    >
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.header}>
           <Pressable
-            accessibilityLabel={mode === "scanner" ? "Back to import choices" : "Close import"}
+            accessibilityLabel={
+              mode === "scanner" && !downloading ? "Back to import choices" : "Close import"
+            }
             accessibilityRole="button"
-            disabled={importing}
-            onPress={mode === "scanner" ? () => setMode("choices") : close}
+            disabled={importing && !downloading}
+            onPress={
+              mode === "scanner" && !downloading
+                ? () => {
+                    resetScanner();
+                  }
+                : close
+            }
             style={styles.iconButton}
           >
             <SymbolView
               name={
-                mode === "scanner"
+                mode === "scanner" && !downloading
                   ? { android: "arrow_back", ios: "chevron.left", web: "arrow_back" }
                   : { android: "close", ios: "xmark", web: "close" }
               }
@@ -122,12 +241,16 @@ export function ImportDeckSheet({
         <View style={styles.content}>
           {mode === "scanner" ? (
             <ScannerContent
+              cameraActive={cameraActive}
+              cameraAccessError={cameraAccessError}
+              downloading={downloading}
               errorMessage={errorMessage}
               importing={importing}
               onBarcode={
                 processingScan || scanPaused ? undefined : (result) => void handleBarcode(result)
               }
               onRetry={() => {
+                onClearError();
                 scanLocked.current = false;
                 setScanPaused(false);
                 setScanError(null);
@@ -135,7 +258,21 @@ export function ImportDeckSheet({
               permission={permission}
               processing={processingScan}
               paused={scanPaused}
-              requestPermission={() => void requestPermission()}
+              requestPermission={() => void askForCamera()}
+              onSettings={() => void openCameraSettings()}
+              onBrowse={() => {
+                resetScanner();
+                void handleBrowse();
+              }}
+              onCancelDownload={close}
+              onCameraError={() => {
+                if (scanLocked.current || !cameraActive) {
+                  return;
+                }
+                scanLocked.current = true;
+                setScanError("Couldn’t start the camera. Scan again or browse a deck file.");
+                setScanPaused(true);
+              }}
               scanError={scanError}
             />
           ) : (
@@ -157,12 +294,12 @@ export function ImportDeckSheet({
                 label="Browse device"
                 onPress={() => void handleBrowse()}
               />
-              {importing ? <ImportProgress message="Importing deck…" /> : null}
-              {errorMessage ? (
+              {importing && <ImportProgress message="Importing deck…" />}
+              {!!errorMessage && (
                 <Text accessibilityLiveRegion="polite" style={styles.error}>
                   {errorMessage}
                 </Text>
-              ) : null}
+              )}
             </View>
           )}
         </View>
@@ -172,6 +309,13 @@ export function ImportDeckSheet({
 }
 
 type ScannerContentProps = Readonly<{
+  cameraActive: boolean;
+  cameraAccessError: string | null;
+  downloading: boolean;
+  onSettings: () => void;
+  onBrowse: () => void;
+  onCancelDownload: () => void;
+  onCameraError: () => void;
   errorMessage: string | null;
   importing: boolean;
   onBarcode: ((result: BarcodeScanningResult) => void) | undefined;
@@ -184,6 +328,13 @@ type ScannerContentProps = Readonly<{
 }>;
 
 function ScannerContent({
+  cameraActive,
+  cameraAccessError,
+  downloading,
+  onSettings,
+  onBrowse,
+  onCancelDownload,
+  onCameraError,
   errorMessage,
   importing,
   onBarcode,
@@ -202,20 +353,25 @@ function ScannerContent({
   if (!permission.granted) {
     return (
       <View accessibilityLiveRegion="polite" style={styles.centered}>
-        <Text style={styles.message}>Camera access is needed to scan a deck QR code.</Text>
-        {permission.canAskAgain ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={requestPermission}
-            style={styles.primaryButton}
-          >
-            <Text style={styles.primaryButtonText}>Allow camera access</Text>
-          </Pressable>
-        ) : (
-          <Text style={styles.error}>
-            Camera permission is denied. Enable it in device settings, then retry.
+        <SymbolView
+          name={{ android: "camera_alt", ios: "camera", web: "camera_alt" }}
+          size={sizes.icon.large}
+          tintColor={colors.textSecondary}
+        />
+        <Text style={styles.message}>Allow camera access to scan a deck QR code.</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={permission.canAskAgain ? requestPermission : onSettings}
+          style={styles.primaryButton}
+        >
+          <Text style={styles.primaryButtonText}>
+            {permission.canAskAgain ? "Allow camera access" : "Open Settings"}
           </Text>
-        )}
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onBrowse} style={styles.secondaryButton}>
+          <Text style={styles.message}>Browse a deck file instead</Text>
+        </Pressable>
+        {!!cameraAccessError && <Text style={styles.error}>{cameraAccessError}</Text>}
       </View>
     );
   }
@@ -223,8 +379,16 @@ function ScannerContent({
   if (processing || importing) {
     return (
       <View accessibilityLiveRegion="polite" style={styles.centered}>
-        <ImportProgress message="Code scanned. Downloading and importing deck…" />
-        <Text style={styles.hint}>You can move the phone away from the QR code now.</Text>
+        <ImportProgress message={downloading ? "Downloading deck…" : "Installing deck…"} />
+        {downloading && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onCancelDownload}
+            style={styles.secondaryButton}
+          >
+            <Text style={styles.message}>Cancel download</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -239,7 +403,9 @@ function ScannerContent({
             tintColor={colors.error}
           />
         </View>
-        <Text style={styles.error}>{errorMessage ?? "Could not import this deck. Try again."}</Text>
+        <Text style={styles.error}>
+          {scanError ?? errorMessage ?? "Couldn’t import this deck. Scan again."}
+        </Text>
         <Pressable accessibilityRole="button" onPress={onRetry} style={styles.primaryButton}>
           <Text style={styles.primaryButtonText}>Scan again</Text>
         </Pressable>
@@ -249,16 +415,20 @@ function ScannerContent({
 
   return (
     <View style={styles.scannerShell}>
-      <CameraView
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        facing="back"
-        onBarcodeScanned={onBarcode}
-        style={styles.camera}
-      />
+      {cameraActive && (
+        <CameraView
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          facing="back"
+          onBarcodeScanned={onBarcode}
+          onMountError={onCameraError}
+          style={styles.camera}
+        />
+      )}
+      {!!cameraAccessError && <Text style={styles.error}>{cameraAccessError}</Text>}
       <Text style={styles.hint}>
         Point the camera at the QR code shown by Flashcard Reels on the web.
       </Text>
-      {scanError ? <Text style={styles.error}>{scanError}</Text> : null}
+      {!!scanError && <Text style={styles.error}>{scanError}</Text>}
     </View>
   );
 }
@@ -399,11 +569,12 @@ function createStyles(colors: AppColors) {
     scannerShell: { flex: 1, gap: sizes.spacing.section },
     statusIcon: {
       alignItems: "center",
-      backgroundColor: colors.error + "18",
-      borderRadius: sizes.radius.pill,
-      height: 64,
       justifyContent: "center",
-      width: 64,
+    },
+    secondaryButton: {
+      minHeight: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      paddingHorizontal: sizes.spacing.content,
     },
     sheet: { backgroundColor: colors.surfaceRaised, flex: 1 },
     title: {

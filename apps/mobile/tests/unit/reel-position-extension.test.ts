@@ -10,6 +10,10 @@ async function failIfCalled(): Promise<void> {
   throw new Error("must not run");
 }
 
+async function failFinalizationForTest(): Promise<void> {
+  throw new Error("finalization must not run");
+}
+
 describe("absolute reel position mapping", () => {
   it("clamps the persisted position into the loaded window", () => {
     expect(getLocalReelIndex(5_000, 4_950, 151)).toBe(50);
@@ -80,5 +84,21 @@ describe("reel activation ordering", () => {
         failIfCalled
       )
     ).resolves.toBe(false);
+  });
+
+  it("does not finalize after pending rating persistence rejects", async () => {
+    await expect(
+      completeReelActivation(
+        async () => true,
+        async () => undefined,
+        async () => undefined,
+        failFinalizationForTest,
+        async () => undefined,
+        async () => undefined,
+        async () => {
+          throw new Error("rating persistence failed");
+        }
+      )
+    ).rejects.toThrow("rating persistence failed");
   });
 });

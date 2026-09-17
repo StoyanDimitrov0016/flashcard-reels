@@ -28,7 +28,6 @@ import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-im
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
-  type DeckImportFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
@@ -40,6 +39,7 @@ import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
+  showSuccessToast,
 } from "@/shared/presentation/flashcard-toast";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -199,10 +199,17 @@ export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
-  const { error: importError, importFromDevice, importFromUrl, importing } = useImportDeckPackage();
+  const {
+    cancelDownload,
+    clearImportError,
+    downloading,
+    error: importError,
+    importFromDevice,
+    importFromUrl,
+    importing,
+  } = useImportDeckPackage();
   const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
   const [query, setQuery] = useState("");
-  const [importFeedback, setImportFeedback] = useState<DeckImportFeedback | null>(null);
   const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
   const [appearanceOverrides, setAppearanceOverrides] = useState(
@@ -218,16 +225,13 @@ export default function LibraryScreen() {
   const sheetAppearance = selectedEntry
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
     : null;
-  const importStatus =
-    importError && !importSheetPresented ? getDeckImportErrorFeedback(importError) : importFeedback;
 
   const handleImport = async (
     importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
   ) => {
-    setImportFeedback(null);
     const result = await importDeck();
     if (result) {
-      setImportFeedback(getDeckImportResultFeedback(result));
+      showSuccessToast(getDeckImportResultFeedback(result).message);
       refresh();
       return true;
     }
@@ -269,7 +273,10 @@ export default function LibraryScreen() {
           accessibilityRole="button"
           disabled={importing}
           hitSlop={4}
-          onPress={() => setImportSheetPresented(true)}
+          onPress={() => {
+            clearImportError();
+            setImportSheetPresented(true);
+          }}
           style={styles.importButton}
         >
           <SymbolView
@@ -280,11 +287,6 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
-        {importStatus ? (
-          <Text style={importStatus.tone === "error" ? styles.importError : styles.importSuccess}>
-            {importStatus.message}
-          </Text>
-        ) : null}
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -301,7 +303,7 @@ export default function LibraryScreen() {
             style={styles.searchInput}
             value={query}
           />
-          {query ? (
+          {!!query && (
             <Pressable
               accessibilityLabel="Clear deck search"
               accessibilityRole="button"
@@ -314,7 +316,7 @@ export default function LibraryScreen() {
                 tintColor={colors.textTertiary}
               />
             </Pressable>
-          ) : null}
+          )}
         </View>
         {loading ? (
           <LibrarySkeleton />
@@ -343,14 +345,18 @@ export default function LibraryScreen() {
         pendingPreset={pendingPreset}
       />
       <ImportDeckSheet
+        downloading={downloading}
         errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}
         importing={importing}
         onBrowse={() => handleImport(importFromDevice)}
         onClose={() => {
-          if (!importing) {
+          if (!importing || downloading) {
+            cancelDownload();
+            clearImportError();
             setImportSheetPresented(false);
           }
         }}
+        onClearError={clearImportError}
         onScan={(url) => handleImport(() => importFromUrl(url))}
         visible={importSheetPresented}
       />
@@ -432,8 +438,6 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: 36,
     },
-    importError: { color: colors.error, fontSize: fontSize.caption },
-    importSuccess: { color: colors.success, fontSize: fontSize.caption },
     iconButton: {
       alignItems: "center",
       borderColor: colors.borderSubtle,

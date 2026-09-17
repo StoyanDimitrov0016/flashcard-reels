@@ -1,93 +1,105 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
+import type { ReactNode } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
-import { fontWeight, textStyles } from "@/shared/presentation/typography";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-type ErrorStateProps = Readonly<{
-  onHomeAction: () => void;
-  onPrimaryAction: () => void;
-  primaryActionLabel: string;
-  homeActionLabel: string;
-  title: string;
+export type ErrorStateAction = Readonly<{
+  label: string;
+  onPress: () => void;
+  kind?: "primary" | "secondary";
 }>;
 
-export function ErrorState({
-  onHomeAction,
-  onPrimaryAction,
-  primaryActionLabel,
-  homeActionLabel,
-  title,
-}: ErrorStateProps) {
-  const { colors } = useAppTheme();
-  const styles = createStyles(colors);
+type ErrorStateProps = Readonly<{
+  title: string;
+  message: string;
+  actions: readonly ErrorStateAction[];
+  colors?: AppColors;
+  children?: ReactNode;
+}>;
+
+export function ErrorState({ title, message, actions, colors, children }: ErrorStateProps) {
+  const colorScheme = useColorScheme();
+  const palette = colors ?? getAppColors(colorScheme === "dark" ? "dark" : "light");
+  const styles = createStyles(palette);
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Text accessibilityRole="header" style={styles.title}>
-        {title}
-      </Text>
-      <View style={styles.actionRow}>
-        <Pressable accessibilityRole="button" onPress={onHomeAction} style={styles.secondaryButton}>
-          <Text style={styles.secondaryLabel}>{homeActionLabel}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onPrimaryAction}
-          style={styles.primaryButton}
-        >
-          <Text style={styles.primaryLabel}>{primaryActionLabel}</Text>
-        </Pressable>
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text accessibilityRole="header" style={styles.title}>
+          {title}
+        </Text>
+        <Text style={styles.message}>{message}</Text>
+        <View style={styles.actionRow}>
+          {actions.map((action) => (
+            <Pressable
+              accessibilityRole="button"
+              key={action.label}
+              onPress={action.onPress}
+              style={action.kind === "secondary" ? styles.secondaryButton : styles.primaryButton}
+            >
+              <Text
+                style={action.kind === "secondary" ? styles.secondaryLabel : styles.primaryLabel}
+              >
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        {children}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    screen: {
+    actionRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: sizes.spacing.medium,
+    },
+    content: {
       alignItems: "center",
       backgroundColor: colors.canvas,
-      flex: 1,
+      flexGrow: 1,
       gap: sizes.spacing.section,
       justifyContent: "center",
       padding: sizes.spacing.spacious,
     },
-    title: {
-      color: colors.textPrimary,
-      textAlign: "center",
-      ...textStyles.screenTitle,
-    },
-    actionRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      justifyContent: "center",
-      marginTop: sizes.spacing.wide,
-      width: "100%",
-    },
+    message: { color: colors.textSecondary, fontSize: fontSize.body, textAlign: "center" },
     primaryButton: {
       alignItems: "center",
       backgroundColor: colors.actionPrimary,
-      borderRadius: sizes.radius.pill,
-      flex: 1,
-      paddingHorizontal: sizes.spacing.content,
-      paddingVertical: sizes.spacing.xLarge,
+      borderRadius: sizes.radius.medium,
+      justifyContent: "center",
+      minHeight: sizes.touchTarget.minimum,
+      paddingHorizontal: sizes.spacing.large,
     },
     primaryLabel: {
       color: colors.actionPrimaryText,
-      ...textStyles.primaryButtonLabel,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
     },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
     secondaryButton: {
       alignItems: "center",
-      flex: 1,
-      paddingHorizontal: sizes.spacing.section,
-      paddingVertical: sizes.spacing.medium,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.medium,
+      borderWidth: sizes.border,
+      justifyContent: "center",
+      minHeight: sizes.touchTarget.minimum,
+      paddingHorizontal: sizes.spacing.large,
     },
-    secondaryLabel: {
-      color: colors.textSecondary,
-      fontWeight: fontWeight.bold,
+    secondaryLabel: { color: colors.textPrimary, fontSize: fontSize.body },
+    title: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title1,
+      fontWeight: fontWeight.heavy,
+      textAlign: "center",
     },
   });
 }

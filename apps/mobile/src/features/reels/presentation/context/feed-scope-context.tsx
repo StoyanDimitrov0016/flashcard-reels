@@ -8,9 +8,13 @@ import {
   type FocusedFeedState,
   type PersistedFocusedSession,
 } from "@/features/reels/presentation/focused-feed-state";
-import { useFocusedFeedLifecycle } from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
+import {
+  useFocusedFeedLifecycle,
+  type FocusedFeedEvaluation,
+} from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
-import type { StudySession } from "@/features/study/domain/study-session.model";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 export type {
   FocusTransition,
@@ -20,6 +24,8 @@ export type {
 type FeedScopeContextValue = Readonly<{
   focusedFeed: FocusedFeedState;
   focusRestoring: boolean;
+  restorationError: Error | null;
+  retryFocusedFeedRestoration: () => void;
   startFocusedFeed: (
     deckId: DeckId,
     anchorFlashcardId?: string,
@@ -31,10 +37,18 @@ type FeedScopeContextValue = Readonly<{
 type FeedScopeOwnerState = Readonly<{
   focusedFeed: FocusedFeedState;
   lifecycleResolved: boolean;
+  restorationError: Error | null;
+  retryKey: number;
 }>;
 
 type FeedScopeEvent =
-  | Readonly<{ session: PersistedFocusedSession | null; type: "lifecycle" }>
+  | Readonly<{
+      session: PersistedFocusedSession | null;
+      requestedDeckAvailable: boolean;
+      type: "lifecycle";
+    }>
+  | Readonly<{ error: Error; type: "lifecycle-failed" }>
+  | Readonly<{ type: "retry-lifecycle" }>
   | Readonly<{
       anchorFlashcardId?: string;
       deckId: DeckId;
@@ -47,13 +61,30 @@ const FeedScopeContext = createContext<FeedScopeContextValue | null>(null);
 const initialOwnerState: FeedScopeOwnerState = {
   focusedFeed: { revision: 0, status: "empty" },
   lifecycleResolved: false,
+  restorationError: null,
+  retryKey: 0,
 };
 
 function reduceFeedScope(state: FeedScopeOwnerState, event: FeedScopeEvent): FeedScopeOwnerState {
   if (event.type === "lifecycle") {
     return {
-      focusedFeed: reconcileFocusedFeedState(state.focusedFeed, event.session),
+      focusedFeed: event.requestedDeckAvailable
+        ? reconcileFocusedFeedState(state.focusedFeed, event.session)
+        : { status: "empty", revision: state.focusedFeed.revision + 1 },
       lifecycleResolved: true,
+      restorationError: null,
+      retryKey: state.retryKey,
+    };
+  }
+  if (event.type === "lifecycle-failed") {
+    return { ...state, lifecycleResolved: true, restorationError: event.error };
+  }
+  if (event.type === "retry-lifecycle") {
+    return {
+      ...state,
+      lifecycleResolved: false,
+      restorationError: null,
+      retryKey: state.retryKey + 1,
     };
   }
   if (event.type === "start") {
@@ -81,14 +112,38 @@ type FeedScopeProviderProps = Readonly<{ children: ReactNode }>;
 
 export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const [ownerState, dispatch] = useReducer(reduceFeedScope, initialOwnerState);
-  const handleLifecycleEvaluation = useCallback((session: StudySession | null) => {
+  const handleLifecycleEvaluation = useCallback(
+    ({ session, requestedDeckAvailable }: FocusedFeedEvaluation) => {
+      dispatch({
+        session:
+          !session || session.deckId === null ? null : { deckId: session.deckId, id: session.id },
+        type: "lifecycle",
+        requestedDeckAvailable,
+      });
+    },
+    []
+  );
+  const handleLifecycleFailure = useCallback((error: unknown) => {
+    const normalized = toOperationError(error, {
+      code: "FOCUS_RESTORE_FAILED",
+      context: { operation: "focused-feed.restore" },
+      message: "The focused study session could not be restored",
+    });
+    reportError(normalized, "Focused-feed restoration failure");
     dispatch({
-      session:
-        !session || session.deckId === null ? null : { deckId: session.deckId, id: session.id },
-      type: "lifecycle",
+      error: normalized,
+      type: "lifecycle-failed",
     });
   }, []);
-  useFocusedFeedLifecycle(handleLifecycleEvaluation);
+  const retryFocusedFeedRestoration = useCallback(() => {
+    dispatch({ type: "retry-lifecycle" });
+  }, []);
+  const evaluatingFocusedFeed = useFocusedFeedLifecycle(
+    handleLifecycleEvaluation,
+    handleLifecycleFailure,
+    ownerState.retryKey,
+    ownerState.focusedFeed.status === "ready" ? ownerState.focusedFeed.deckId : null
+  );
 
   const startFocusedFeed = useCallback(
     (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
@@ -103,7 +158,9 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const contextValue = {
     confirmFocusedFeedSession: confirmSession,
     focusedFeed: ownerState.focusedFeed,
-    focusRestoring: !ownerState.lifecycleResolved,
+    focusRestoring: !ownerState.lifecycleResolved || evaluatingFocusedFeed,
+    restorationError: ownerState.restorationError,
+    retryFocusedFeedRestoration,
     startFocusedFeed,
   };
 

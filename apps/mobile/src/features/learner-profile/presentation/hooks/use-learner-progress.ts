@@ -9,6 +9,7 @@ import {
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type LearnerProgressRow = Readonly<{
   card: Flashcard;
@@ -27,22 +28,15 @@ const initialState: LearnerProgressState = { error: null, loading: true, rows: [
 
 export function useLearnerProgress(): LearnerProgressState & {
   refresh: () => void;
-  resetAllProgress: () => Promise<void>;
 } {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
-  const { invalidateLearningProgress, revision: resetRevision } = useLearningProgressReset();
+  const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<LearnerProgressState>(initialState);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => {
     setState((current) => ({ ...current, loading: true }));
     setRevision((current) => current + 1);
   }, []);
-  const resetAllProgress = useCallback(async () => {
-    await learnerProfileService.resetAllProgress();
-    invalidateLearningProgress();
-    refresh();
-  }, [invalidateLearningProgress, learnerProfileService, refresh]);
-
   useEffect(
     function loadLearnerProgress() {
       let active = true;
@@ -69,7 +63,11 @@ export function useLearnerProgress(): LearnerProgressState & {
         } catch (error) {
           if (active) {
             setState({
-              error: error instanceof Error ? error : new Error("Could not load progress"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "learner-progress.load" },
+                message: "Could not load progress",
+              }),
               loading: false,
               rows: [],
             });
@@ -88,5 +86,5 @@ export function useLearnerProgress(): LearnerProgressState & {
   if (state.error) {
     throw state.error;
   }
-  return { ...state, refresh, resetAllProgress };
+  return { ...state, refresh };
 }

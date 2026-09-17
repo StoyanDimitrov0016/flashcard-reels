@@ -7,6 +7,7 @@ import type { LearnerProfile } from "@/features/learner-profile/domain/learner-p
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{
   cards: Flashcard[];
@@ -17,7 +18,7 @@ type DeckDetailsState = Readonly<{
   profiles: ReadonlyMap<string, LearnerProfile>;
 }>;
 
-export function useDeckDetails(deckId: DeckId): DeckDetailsState {
+export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
   const { deckService, flashcardService, learnerProfileService } = useAppServices();
   const { revision } = useDeckContentRevision();
   const { revision: resetRevision } = useLearningProgressReset();
@@ -32,6 +33,9 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
 
   useEffect(
     function loadDeckDetails() {
+      if (!enabled) {
+        return undefined;
+      }
       let active = true;
       void Promise.all([
         deckService.findById(deckId),
@@ -40,7 +44,17 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
       ])
         .then(async ([deck, cards, appearance]) => {
           if (!deck) {
-            throw new Error("Deck not found");
+            if (active) {
+              setState({
+                appearance: null,
+                cards: [],
+                deck: null,
+                error: null,
+                loading: false,
+                profiles: new Map(),
+              });
+            }
+            return;
           }
           if (active) {
             const profiles = await learnerProfileService.findByFlashcardIds(
@@ -57,7 +71,11 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
               appearance: null,
               cards: [],
               deck: null,
-              error: error instanceof Error ? error : new Error("Could not load deck cards"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId, operation: "deck-details.load" },
+                message: "Could not load deck cards",
+              }),
               loading: false,
               profiles: new Map(),
             });
@@ -67,7 +85,7 @@ export function useDeckDetails(deckId: DeckId): DeckDetailsState {
         active = false;
       };
     },
-    [deckId, deckService, flashcardService, learnerProfileService, resetRevision, revision]
+    [deckId, deckService, enabled, flashcardService, learnerProfileService, resetRevision, revision]
   );
 
   if (state.error) {

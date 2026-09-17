@@ -59,19 +59,24 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
         <View style={[styles.swatchAccent, { backgroundColor: previewColors.accent }]} />
       </View>
       <Text style={styles.presetName}>{preset.name}</Text>
-      {pending || selected ? (
-        <View pointerEvents="none" style={styles.presetStatus}>
-          {pending ? (
-            <ActivityIndicator color={previewColors.accent} size="small" />
-          ) : (
-            <SymbolView
-              name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
-              size={sizes.icon.medium}
-              tintColor={previewColors.accent}
-            />
-          )}
-        </View>
-      ) : null}
+      {pending ||
+        (selected && (
+          <View pointerEvents="none" style={styles.presetStatus}>
+            {pending ? (
+              <ActivityIndicator color={previewColors.accent} size="small" />
+            ) : (
+              <SymbolView
+                name={{
+                  android: "check_circle",
+                  ios: "checkmark.circle.fill",
+                  web: "check_circle",
+                }}
+                size={sizes.icon.medium}
+                tintColor={previewColors.accent}
+              />
+            )}
+          </View>
+        ))}
     </Pressable>
   );
 }
@@ -128,11 +133,11 @@ export function DeckAppearanceSheet({
           renderItem={renderPreset}
           style={styles.listView}
         />
-        {error ? (
+        {!!error && (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
             {error}
           </Text>
-        ) : null}
+        )}
       </View>
     </AppBottomSheet>
   );

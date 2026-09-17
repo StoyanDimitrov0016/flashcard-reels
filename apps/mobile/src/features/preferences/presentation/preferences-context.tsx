@@ -12,10 +12,13 @@ import {
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/presentation/errors/report-error";
 
 type PreferencesContextValue = Readonly<{
   preferences: AppPreferences;
   ready: boolean;
+  storageError: Error | null;
   resolvedScheme: ResolvedColorScheme;
   setAppearance: (appearance: AppearancePreference) => void;
   setAudioEnabled: (enabled: boolean) => void;
@@ -36,6 +39,7 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
   const deviceScheme = useColorScheme();
   const [preferences, setPreferences] = useState<AppPreferences>(defaultAppPreferences);
   const [ready, setReady] = useState(false);
+  const [storageError, setStorageError] = useState<Error | null>(null);
   const preferencesReference = useRef(defaultAppPreferences);
   const writeQueue = useRef(Promise.resolve());
 
@@ -52,10 +56,17 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
           setPreferences(loadedPreferences);
           setReady(true);
         })
-        .catch(() => {
+        .catch((error: unknown) => {
           if (!active) {
             return;
           }
+          const normalized = toOperationError(error, {
+            code: "PREFERENCES_READ_FAILED",
+            context: { operation: "preferences.load" },
+            message: "Preferences could not be loaded. Using defaults.",
+          });
+          reportError(normalized, "Preferences read failure");
+          setStorageError(normalized);
           setReady(true);
         });
       return function deactivatePreferences() {
@@ -72,12 +83,22 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
     writeQueue.current = writeQueue.current
       .catch(() => undefined)
       .then(() => service.save(nextPreferences))
-      .catch(() => undefined);
+      .then(() => setStorageError(null))
+      .catch((error: unknown) => {
+        const normalized = toOperationError(error, {
+          code: "PREFERENCES_WRITE_FAILED",
+          context: { operation: "preferences.save" },
+          message: "Preferences could not be saved. Changes may be lost when you close the app.",
+        });
+        reportError(normalized, "Preferences write failure");
+        setStorageError(normalized);
+      });
   };
 
   const contextValue: PreferencesContextValue = {
     preferences,
     ready,
+    storageError,
     resolvedScheme: resolveColorScheme(
       preferences.appearance,
       deviceScheme === "light" || deviceScheme === "dark" ? deviceScheme : null

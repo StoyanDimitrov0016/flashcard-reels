@@ -37,12 +37,12 @@ export function GestureFooter({ showHoldHint }: GestureFooterProps) {
         label="Double tap"
         symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
       />
-      {showHoldHint ? (
+      {showHoldHint && (
         <GestureHint
           label="Hold"
           symbol={{ android: "pan_tool", ios: "hand.raised.fill", web: "pan_tool" }}
         />
-      ) : null}
+      )}
     </View>
   );
 }

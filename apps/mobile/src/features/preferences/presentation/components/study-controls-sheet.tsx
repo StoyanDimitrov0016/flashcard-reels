@@ -30,6 +30,21 @@ type StudyControlsSheetProps = Readonly<{
 
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
 
+function AudioPreviewMarker() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
+  return (
+    <View style={styles.audioMarker}>
+      <SymbolView
+        name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
+        size={sizes.icon.small}
+        tintColor={colors.textPrimary}
+      />
+    </View>
+  );
+}
+
 export function StudyControlsSheet({
   onAudioSideChange,
   onClose,
@@ -43,15 +58,6 @@ export function StudyControlsSheet({
   const layout = resolveStudyControlLayout(preferences);
   const { audioPosition, orientation } = layout;
   const audioBeforeIsland = audioPosition === "left" || audioPosition === "above";
-  const audioMarker = (
-    <View style={styles.audioMarker}>
-      <SymbolView
-        name={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
-        size={sizes.icon.small}
-        tintColor={colors.textPrimary}
-      />
-    </View>
-  );
   const handlePositionChange = (position: RecollectionIslandPosition) => {
     if (position !== preferences.recollectionIslandPosition) {
       LayoutAnimation.configureNext({
@@ -94,7 +100,7 @@ export function StudyControlsSheet({
                 layout.position === "right" && styles.previewStageRight,
               ]}
             >
-              {layout.position === "left" ? null : <View style={styles.previewContentRegion} />}
+              {!(layout.position === "left") && <View style={styles.previewContentRegion} />}
               <View
                 style={[
                   styles.previewCluster,
@@ -107,7 +113,7 @@ export function StudyControlsSheet({
                     orientation === "horizontal" && styles.previewControlsGroupHorizontal,
                   ]}
                 >
-                  {audioBeforeIsland ? audioMarker : null}
+                  {audioBeforeIsland && <AudioPreviewMarker />}
                   <View
                     style={[
                       styles.previewIsland,
@@ -155,10 +161,10 @@ export function StudyControlsSheet({
                       })}
                     </View>
                   </View>
-                  {audioBeforeIsland ? null : audioMarker}
+                  {!audioBeforeIsland && <AudioPreviewMarker />}
                 </View>
               </View>
-              {layout.position === "left" ? <View style={styles.previewContentRegion} /> : null}
+              {layout.position === "left" && <View style={styles.previewContentRegion} />}
             </View>
           </View>
           <View style={styles.controls}>

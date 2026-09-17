@@ -5,6 +5,8 @@ import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useAppServices } from "@/infrastructure/app-services";
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
+import { OperationError } from "@/shared/errors/operation-error";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckAppearancesState = Readonly<{
   appearances: ReadonlyMap<DeckId, DeckAppearance>;
@@ -36,7 +38,11 @@ export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
           const appearances = requestedDeckIds.map((deckId) => {
             const appearance = appearancesByDeckId.get(deckId);
             if (!appearance) {
-              throw new Error(`Missing appearance for deck ${deckId}`);
+              throw new OperationError({
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId, operation: "deck-appearances.load" },
+                message: `Missing appearance for deck ${deckId}`,
+              });
             }
             return [deckId, appearance] as const;
           });
@@ -48,7 +54,11 @@ export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
           if (active) {
             setState({
               appearances: new Map(),
-              error: error instanceof Error ? error : new Error("Could not load deck appearances"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "deck-appearances.load" },
+                message: "Could not load deck appearances",
+              }),
               loading: false,
             });
           }

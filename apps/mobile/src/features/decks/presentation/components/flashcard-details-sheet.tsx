@@ -40,15 +40,15 @@ export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardD
             />
           </Pressable>
         </View>
-        {card ? (
+        {!!card && (
           <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <Text style={styles.question}>{card.question}</Text>
             <View style={styles.answerRow}>
               <Text style={styles.answer}>{card.answer}</Text>
-              {audioSource ? <AnswerAudioPlayer isActive source={audioSource} /> : null}
+              {!!audioSource && <AnswerAudioPlayer isActive source={audioSource} />}
             </View>
           </BottomSheetScrollView>
-        ) : null}
+        )}
       </View>
     </AppBottomSheet>
   );

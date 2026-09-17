@@ -4,6 +4,8 @@ import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.mod
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useAppServices } from "@/infrastructure/app-services";
+import { OperationError } from "@/shared/errors/operation-error";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckCatalogEntry = Readonly<{
   appearance: DeckAppearance;
@@ -43,7 +45,11 @@ export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
           const entries = decks.map((deck) => {
             const appearance = appearancesByDeckId.get(deck.id);
             if (!appearance) {
-              throw new Error(`Missing appearance for deck ${deck.id}`);
+              throw new OperationError({
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId: deck.id, operation: "deck-catalog.load" },
+                message: `Missing appearance for deck ${deck.id}`,
+              });
             }
             return { appearance, cardCount: cardCounts.get(deck.id) ?? 0, deck };
           });
@@ -54,7 +60,11 @@ export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
           if (active) {
             setState({
               entries: [],
-              error: error instanceof Error ? error : new Error("Could not load decks"),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "deck-catalog.load" },
+                message: "Could not load decks",
+              }),
               loading: false,
             });
           }

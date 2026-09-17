@@ -100,7 +100,7 @@ export function PreferenceRow({ detail, icon, iconColor, onPress, title }: Prefe
       />
       <View style={styles.rowCopy}>
         <Text style={styles.rowTitle}>{title}</Text>
-        {detail ? <Text style={styles.rowDetail}>{detail}</Text> : null}
+        {!!detail && <Text style={styles.rowDetail}>{detail}</Text>}
       </View>
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
