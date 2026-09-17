@@ -5,7 +5,6 @@
     "src/features/learning-engine/index.ts",
     "scripts/**/*.mjs",
     "*.config.{cjs,ts}",
-    "expo-env.d.ts",
     "tests/**/*.test.ts"
   ],
   "ignoreBinaries": ["oxfmt", "oxlint"],

@@ -1,6 +1,6 @@
 import { AppError, type ErrorContext } from "@/shared/errors/app-error";
 
-export type RecoveryErrorCode =
+type RecoveryErrorCode =
   | "APP_RESET_APPLY_FAILED"
   | "APP_RESET_REQUEST_FAILED"
   | "APP_RESET_UNSUPPORTED";
