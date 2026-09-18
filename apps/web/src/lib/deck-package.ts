@@ -16,7 +16,7 @@ const DeckPackageCardSchema = z.compile(
     .strict()
 );
 
-export const DeckPackageSchema = z.compile(
+const DeckPackageSchema = z.compile(
   z
     .object({
       id: z.uuid(),

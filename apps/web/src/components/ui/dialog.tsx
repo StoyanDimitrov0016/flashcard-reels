@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
-const DialogClose = DialogPrimitive.Close;
 
 function DialogPortal({ children }: DialogPrimitive.DialogPortalProps) {
   return <DialogPrimitive.Portal>{children}</DialogPrimitive.Portal>;
@@ -61,15 +60,6 @@ function DialogHeader({ className, ...props }: ComponentPropsWithoutRef<"div">) 
   );
 }
 
-function DialogFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
-      {...props}
-    />
-  );
-}
-
 function DialogTitle({
   className,
   ...props
@@ -89,13 +79,4 @@ function DialogDescription({
   );
 }
 
-export {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-};
+export { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger };

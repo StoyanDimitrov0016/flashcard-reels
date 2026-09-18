@@ -38,12 +38,16 @@
     "typecheck:tokens": "npm run typecheck -w @flashcard-reels/design-tokens",
     "typecheck:web": "npm run typecheck -w @flashcard-reels/web",
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck && npm run check:architecture",
-    "verify": "npm run check && npm test && npm run build",
+    "verify": "npm run check && npm test && npm run check:dead-code && npm run build",
     "verify:mobile": "npm run verify -w @flashcard-reels/mobile",
     "r2:push-decks": "node --experimental-strip-types --env-file=apps/web/.env.local scripts/push-decks-to-r2.mjs",
-    "lint:fix": "npm run typegen -w @flashcard-reels/web && oxlint --fix ."
+    "lint:fix": "npm run typegen -w @flashcard-reels/web && oxlint --fix .",
+    "check:dead-code": "knip"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1131.0",
+    "fflate": "^0.8.3",
+    "knip": "^6.34.0",
     "oxfmt": "0.66.0",
     "oxlint": "1.81.0",
     "oxlint-tsgolint": "^7.0.2001",

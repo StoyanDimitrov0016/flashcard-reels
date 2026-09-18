@@ -29,4 +29,4 @@ function Button({ asChild, className, variant, size, ...props }: ButtonProps) {
   return <button className={classes} {...props} />;
 }
 
-export { Button, buttonVariants };
+export { Button };
