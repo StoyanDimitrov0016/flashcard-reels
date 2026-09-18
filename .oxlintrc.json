@@ -23,18 +23,7 @@
     "reportUnusedDisableDirectives": "error",
     "typeAware": true
   },
-  "jsPlugins": ["./apps/mobile/tools/oxlint-plugin-flashcards/index.cjs"],
-  "plugins": [
-    "import",
-    "jsx-a11y",
-    "nextjs",
-    "oxc",
-    "react",
-    "react-perf",
-    "typescript",
-    "unicorn",
-    "vitest"
-  ],
+  "plugins": ["import", "oxc", "typescript", "unicorn"],
   "settings": {
     "next": {
       "rootDir": "apps/web/"
@@ -61,37 +50,144 @@
         ]
       }
     ],
-    "react/jsx-no-useless-fragment": "error",
-    "react/exhaustive-deps": "error",
-    "react/exhaustive-effect-dependencies": "off",
-    "react/jsx-no-constructed-context-values": "off",
-    "react/no-unstable-nested-components": [
-      "error",
-      {
-        "allowAsProps": true
-      }
-    ],
-    "react/no-array-index-key": "error",
-    "react/react-in-jsx-scope": "off",
-    "react/style-prop-object": "off",
-    "react-perf/jsx-no-new-array-as-prop": "off",
-    "react-perf/jsx-no-new-function-as-prop": "off",
-    "react-perf/jsx-no-new-object-as-prop": "off",
     "typescript/consistent-type-imports": "error",
     "typescript/no-explicit-any": "error",
     "typescript/no-deprecated": "error",
     "typescript/no-floating-promises": "error",
     "typescript/no-non-null-assertion": "error",
     "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unused-vars": "error",
-    "vitest/require-mock-type-parameters": "off",
-    "vitest/require-to-throw-message": "off",
-    "vitest/valid-expect": "off"
+    "typescript/no-unused-vars": "error"
   },
   "overrides": [
     {
-      "files": ["apps/mobile/src/**/*.ts", "apps/mobile/src/**/*.tsx"],
+      "files": ["apps/web/**/*.ts", "apps/web/**/*.tsx"],
+      "plugins": [
+        "import",
+        "jsx-a11y",
+        "nextjs",
+        "oxc",
+        "react",
+        "react-perf",
+        "typescript",
+        "unicorn"
+      ],
       "rules": {
+        "react/jsx-no-useless-fragment": "error",
+        "react/exhaustive-deps": "error",
+        "react/exhaustive-effect-dependencies": "off",
+        "react/jsx-no-constructed-context-values": "off",
+        "react/no-unstable-nested-components": [
+          "error",
+          {
+            "allowAsProps": true
+          }
+        ],
+        "react/no-array-index-key": "error",
+        "react/react-in-jsx-scope": "off",
+        "react/style-prop-object": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off"
+      }
+    },
+    {
+      "files": ["apps/mobile/tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
+      "env": {
+        "vitest": true
+      },
+      "plugins": ["import", "oxc", "react", "react-perf", "typescript", "unicorn", "vitest"],
+      "rules": {
+        "react/jsx-no-useless-fragment": "error",
+        "react/exhaustive-deps": "error",
+        "react/exhaustive-effect-dependencies": "off",
+        "react/jsx-no-constructed-context-values": "off",
+        "react/no-unstable-nested-components": [
+          "error",
+          {
+            "allowAsProps": true
+          }
+        ],
+        "react/no-array-index-key": "error",
+        "react/react-in-jsx-scope": "off",
+        "react/style-prop-object": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off",
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/require-to-throw-message": "off",
+        "vitest/valid-expect": "off"
+      }
+    },
+    {
+      "files": ["apps/web/tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
+      "env": {
+        "vitest": true
+      },
+      "plugins": [
+        "import",
+        "jsx-a11y",
+        "nextjs",
+        "oxc",
+        "react",
+        "react-perf",
+        "typescript",
+        "unicorn",
+        "vitest"
+      ],
+      "rules": {
+        "react/jsx-no-useless-fragment": "error",
+        "react/exhaustive-deps": "error",
+        "react/exhaustive-effect-dependencies": "off",
+        "react/jsx-no-constructed-context-values": "off",
+        "react/no-unstable-nested-components": [
+          "error",
+          {
+            "allowAsProps": true
+          }
+        ],
+        "react/no-array-index-key": "error",
+        "react/react-in-jsx-scope": "off",
+        "react/style-prop-object": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off",
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/require-to-throw-message": "off",
+        "vitest/valid-expect": "off"
+      }
+    },
+    {
+      "files": [
+        "scripts/**/*.{js,cjs,mjs,ts,cts,mts}",
+        "apps/mobile/scripts/**/*.{js,cjs,mjs,ts,cts,mts}",
+        "apps/mobile/tools/**/*.{js,cjs,mjs,ts,cts,mts}"
+      ],
+      "env": {
+        "node": true
+      },
+      "plugins": ["import", "node", "oxc", "typescript", "unicorn"]
+    },
+    {
+      "files": ["apps/mobile/src/**/*.ts", "apps/mobile/src/**/*.tsx"],
+      "jsPlugins": ["./apps/mobile/tools/oxlint-plugin-flashcards/index.cjs"],
+      "plugins": ["import", "oxc", "react", "react-perf", "typescript", "unicorn"],
+      "rules": {
+        "react/jsx-no-useless-fragment": "error",
+        "react/exhaustive-deps": "error",
+        "react/exhaustive-effect-dependencies": "off",
+        "react/jsx-no-constructed-context-values": "off",
+        "react/no-unstable-nested-components": [
+          "error",
+          {
+            "allowAsProps": true
+          }
+        ],
+        "react/no-array-index-key": "error",
+        "react/react-in-jsx-scope": "off",
+        "react/style-prop-object": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "react-perf/jsx-no-new-object-as-prop": "off",
         "flashcards/no-service-locator-in-presentation": "error",
         "flashcards/no-engine-policy-in-presentation": "error",
         "flashcards/no-persistence-orchestration-in-react-effect": "warn",
