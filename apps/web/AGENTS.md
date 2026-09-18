@@ -1,8 +1,8 @@
 # Web app guide
 
 This workspace owns the Next.js App Router portal and its Vercel deployment.
-Run commands from the repository root through the root aliases or with
-`-w @flashcard-reels/web`.
+Run normal development commands from this directory using its local scripts. Use
+root scripts only when repository-wide orchestration or validation is required.
 
 ## Boundaries
 
@@ -17,7 +17,7 @@ Run commands from the repository root through the root aliases or with
 
 ## Validation
 
-Use `npm run check:web` and `npm run test:web` for ordinary changes. The web lint
-and typecheck commands intentionally run `next typegen` first; preserve that
-ordering. Run `npm run build:web` after routing, server/client boundary,
+Use `npm run check` and `npm test` from this directory for ordinary changes.
+The web lint and typecheck commands intentionally run `next typegen` first; preserve
+that ordering. Run `npm run build` here after routing, server/client boundary,
 environment, or deployment-related changes.

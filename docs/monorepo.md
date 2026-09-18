@@ -8,23 +8,21 @@ The repository is an npm-workspaces Turborepo:
 
 ## Commands
 
-Run commands from the repository root:
+Root commands are repository-wide orchestration and CI entry points:
 
-- `npm run dev:mobile` starts Expo through Turborepo.
-- `npm start` starts Expo directly from the mobile workspace.
-- `npm run android`, `npm run ios`, and `npm run web:mobile` launch the
-  corresponding Expo target from the mobile workspace.
-- `npm run dev:web` starts Next.js.
+- `npm run dev` starts every development task through Turborepo.
+- `npm run dev:mobile` and `npm run dev:web` start one app from the root.
 - `npm run build` builds deployable workspaces.
 - `npm run check` runs repository-wide formatting, conventions, lint, workspace
   type checks, and mobile architecture checks.
-- `npm run check:mobile`, `npm run check:web`, and `npm run check:tokens` run one
-  workspace check without remembering package names.
-- `npm run lint:mobile`, `npm run lint:web`, `npm run typecheck:mobile`, and
-  `npm run typecheck:web` provide the same focused workflow for individual tools.
 - `npm test` runs the mobile and web test suites through Turborepo.
-- `npm run verify` runs root checks, all tests, and deployable builds.
-- `npm run verify:mobile` runs the extended Expo and Android validation path.
+- `npm run verify` runs root checks, all tests, dead-code analysis, and builds.
+
+For routine app-local work, change to `apps/mobile` or `apps/web` and run that
+workspace's own `npm run dev`, `npm run check`, `npm test`, `npm run lint`,
+`npm run typecheck`, or `npm run format` scripts. This avoids validating unrelated
+workspaces. Mobile-only extended commands such as `npm run doctor`,
+`npm run check:android`, and `npm run verify` also run from `apps/mobile`.
 
 For Vercel, import this repository and set the project root directory to `apps/web`.
 The web workspace's `.env.example` lists the server-only Cloudflare R2 settings. Leave
