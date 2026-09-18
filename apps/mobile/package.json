@@ -26,12 +26,11 @@
     "decks:test:generate": "node --experimental-strip-types scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
     "test": "vitest run",
-    "test:run": "vitest run",
     "test:preferences": "vitest run tests/unit/preferences.test.ts tests/unit/theme.test.ts tests/unit/study-control-layout.test.ts tests/unit/haptics.test.ts tests/unit/hold-to-focus.test.ts",
     "check": "npm run format:check && npm run conventions && npm run lint && npm run typecheck",
     "doctor": "expo-doctor",
     "check:android": "npm run decks:check && expo export --platform android",
-    "verify": "npm run check && npm run test:run && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
+    "verify": "npm run check && npm test && npm run db:check && npm run check:dead-code && npm run test:architecture && npm run doctor && npm run check:android"
   },
   "dependencies": {
     "@expo/ui": "~57.0.17",
