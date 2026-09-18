@@ -48,7 +48,9 @@ for (const [entryPath, bytes] of packages) {
       new HeadObjectCommand({ Bucket: environment.R2_BUCKET_NAME, Key: key })
     );
   } catch (error) {
-    if (error?.$metadata?.httpStatusCode !== 404) throw error;
+    if (error?.$metadata?.httpStatusCode !== 404) {
+      throw error;
+    }
   }
 
   if (existing?.Metadata?.sha256 === sha256) {

@@ -11,7 +11,8 @@ const deckPackage = DeckPackageSchema.parse(
   JSON.parse(await readFile(path.join(sourceDirectory, "deck.json"), "utf8"))
 );
 const audioFiles = {};
-for (const fileName of (await readdir(audioDirectory)).sort()) {
+const audioFileNames = await readdir(audioDirectory);
+for (const fileName of audioFileNames.toSorted()) {
   audioFiles[`audio/${fileName}`] = new Uint8Array(
     await readFile(path.join(audioDirectory, fileName))
   );

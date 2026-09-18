@@ -402,6 +402,10 @@ const noLocalJsxVariables = {
   },
 };
 
+function isNull(branch) {
+  return branch.type === "Literal" && branch.value === null;
+}
+
 const preferJsxAnd = {
   meta: {
     type: "suggestion",
@@ -421,7 +425,6 @@ const preferJsxAnd = {
         ) {
           return;
         }
-        const isNull = (branch) => branch.type === "Literal" && branch.value === null;
         if (
           (isNull(node.alternate) && containsRenderedJsx(node.consequent)) ||
           (isNull(node.consequent) && containsRenderedJsx(node.alternate))
