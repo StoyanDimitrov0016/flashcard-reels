@@ -25,7 +25,7 @@ You need Node.js 22+, npm 11+, and the Expo Go app or a supported simulator.
 
 ```bash
 npm install
-npm start
+npm run dev:mobile
 ```
 
 Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or the mobile web target.
@@ -38,9 +38,10 @@ npm run dev:web
 
 See [Web portal](docs/web-portal.md) for deployment, authentication, R2, and phone-transfer details.
 
-For focused workspace work, use `npm run check:mobile`, `npm run check:web`, or
-`npm run doctor` from the repository root. See the [monorepo guide](docs/monorepo.md)
-for command and configuration ownership.
+For focused work, change to the relevant workspace and use its local scripts, such
+as `npm run check`, `npm test`, or `npm run doctor`. Root scripts are reserved
+for repository-wide orchestration and validation. See the
+[monorepo guide](docs/monorepo.md) for command and configuration ownership.
 
 ## Test
 

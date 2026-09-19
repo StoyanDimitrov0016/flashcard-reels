@@ -10,7 +10,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "check": "npm run format:check && npm run lint && npm run typecheck",
-    "lint": "oxlint --type-aware --quiet .",
+    "lint": "next typegen && oxlint .",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
     "typegen": "next typegen"
@@ -33,6 +33,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.88.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.4"
   },

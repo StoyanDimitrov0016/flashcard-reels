@@ -132,11 +132,18 @@ tester.run(
     valid: [
       { code: "useEffect(function subscribe() { return function unsubscribe() {}; });" },
       { code: "useEffect(function subscribe() { const cleanup = () => {}; return cleanup; });" },
+      {
+        code: "useEffect(function subscribe() { function helper() { return () => {}; } helper(); });",
+      },
       { code: "useLayoutEffect(function position() { return () => {}; });" },
     ],
     invalid: [
       { code: "useEffect(function subscribe() { return () => {}; });", errors: 1 },
       { code: "useEffect(function subscribe() { return function() {}; });", errors: 1 },
+      {
+        code: "useEffect(function subscribe() { if (active) { return () => {}; } });",
+        errors: 1,
+      },
     ],
   }
 );

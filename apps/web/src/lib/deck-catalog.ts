@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const DeckCatalogEntrySchema = z.compile(
+const DeckCatalogEntrySchema = z.compile(
   z.object({
     id: z.uuid(),
     fileName: z.string().min(1),

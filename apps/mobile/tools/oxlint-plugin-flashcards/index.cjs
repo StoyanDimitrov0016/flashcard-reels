@@ -261,23 +261,25 @@ const requireNamedReactEffectCleanup = {
   },
   create(context) {
     return {
-      CallExpression(node) {
-        if (!isIdentifier(node.callee, "useEffect")) {
-          return;
-        }
-        const callback = node.arguments[0];
-        if (!callback || callback.type !== "FunctionExpression" || !callback.body) {
-          return;
-        }
-        for (const statement of callback.body.body) {
+      ReturnStatement(node) {
+        let owner = node.parent;
+        while (owner && !isEffectCallback(owner)) {
           if (
-            statement.type === "ReturnStatement" &&
-            statement.argument &&
-            (statement.argument.type === "ArrowFunctionExpression" ||
-              (statement.argument.type === "FunctionExpression" && statement.argument.id === null))
+            owner.type === "ArrowFunctionExpression" ||
+            owner.type === "FunctionExpression" ||
+            owner.type === "FunctionDeclaration"
           ) {
-            context.report({ messageId: "forbidden", node: statement.argument });
+            return;
           }
+          owner = owner.parent;
+        }
+        if (
+          owner &&
+          node.argument &&
+          (node.argument.type === "ArrowFunctionExpression" ||
+            (node.argument.type === "FunctionExpression" && node.argument.id === null))
+        ) {
+          context.report({ messageId: "forbidden", node: node.argument });
         }
       },
     };
@@ -402,6 +404,10 @@ const noLocalJsxVariables = {
   },
 };
 
+function isNull(branch) {
+  return branch.type === "Literal" && branch.value === null;
+}
+
 const preferJsxAnd = {
   meta: {
     type: "suggestion",
@@ -421,7 +427,6 @@ const preferJsxAnd = {
         ) {
           return;
         }
-        const isNull = (branch) => branch.type === "Literal" && branch.value === null;
         if (
           (isNull(node.alternate) && containsRenderedJsx(node.consequent)) ||
           (isNull(node.consequent) && containsRenderedJsx(node.alternate))

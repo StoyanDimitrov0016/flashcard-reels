@@ -7,7 +7,7 @@ import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 
-export const DeckSearchSchema = z.compile(
+const DeckSearchSchema = z.compile(
   z.object({ query: z.string().trim().max(80, "Search is limited to 80 characters.") })
 );
 export type DeckSearchValues = z.infer<typeof DeckSearchSchema>;

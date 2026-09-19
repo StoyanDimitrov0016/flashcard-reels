@@ -2,7 +2,7 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import * as z from "zod";
 import { DeckCatalogSchema } from "@/lib/deck-catalog";
 
-export const DownloadResponseSchema = z.compile(z.object({ url: z.url() }));
+const DownloadResponseSchema = z.compile(z.object({ url: z.url() }));
 
 const fetchDeckCatalog = async () => {
   const response = await fetch("/api/decks", { credentials: "same-origin" });

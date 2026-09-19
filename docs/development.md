@@ -18,15 +18,14 @@ Install dependencies and start Expo:
 
 ```bash
 npm install
-npm start
+npm run dev:mobile
 ```
 
-The root `npm start` command delegates to `apps/mobile`. If invoking Expo
-directly, run it from that directory instead:
+For app-local development, change to the mobile workspace and use its local script:
 
 ```bash
 cd apps/mobile
-npx expo start
+npm run dev
 ```
 
 From the Expo terminal, scan the QR code or press `a`, `i`, or `w` for Android, iOS, or web.
@@ -65,12 +64,21 @@ in-app developer menu.
 
 ## Quality checks
 
+From the repository root, use repository-wide orchestration:
+
 ```bash
 npm run check          # formatting, conventions, lint, types, and architecture rules
 npm test               # all workspace test suites once
-npm run check:android  # validate deck assets and export the Android bundle
-npm run verify         # root checks, tests, and production builds
-npm run verify:mobile  # extended mobile validation, including Expo Doctor
+npm run verify         # root checks, tests, dead-code analysis, and production builds
+```
+
+For focused mobile validation, run local scripts from `apps/mobile`:
+
+```bash
+npm run check
+npm test
+npm run check:android
+npm run verify         # includes Drizzle, architecture, Doctor, and Android export
 ```
 
 Run a workspace's `vitest` command directly with `--watch` when an interactive test loop is useful.

@@ -95,7 +95,6 @@ export default function RootLayout() {
   useEffect(function prepareLocalStorage() {
     try {
       prepareAppStorage();
-      // oxlint-disable-next-line react/set-state-in-effect -- Gate database mounting on external storage recovery after commit.
       setPrepared(true);
     } catch (error) {
       setPreparationError(toError(error, "Could not prepare app storage"));

@@ -176,7 +176,7 @@ function addPropsConvention({ component, name, problems, sourceFile, edits, type
 
 function applyEdits(source, edits) {
   return edits
-    .sort((left, right) => right.position - left.position)
+    .toSorted((left, right) => right.position - left.position)
     .reduce(
       (text, edit) =>
         text.slice(0, edit.position) + edit.text + text.slice(edit.end ?? edit.position),

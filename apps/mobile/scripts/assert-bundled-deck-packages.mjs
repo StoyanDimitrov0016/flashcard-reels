@@ -12,10 +12,9 @@ if (!Array.isArray(registry) || registry.length === 0) {
 }
 
 const packageDirectory = path.join(root, "assets", "decks");
-const runtimePackages = (await readdir(packageDirectory))
-  .filter((file) => file.endsWith(".fcrdeck"))
-  .sort();
-const registeredPackages = registry.map((entry) => entry.packageAsset).sort();
+const packageFileNames = await readdir(packageDirectory);
+const runtimePackages = packageFileNames.filter((file) => file.endsWith(".fcrdeck")).toSorted();
+const registeredPackages = registry.map((entry) => entry.packageAsset).toSorted();
 if (runtimePackages.join("\n") !== registeredPackages.join("\n")) {
   throw new Error("Runtime .fcrdeck files do not match bundled-deck-registry.json");
 }

@@ -8,7 +8,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import type { DeckPackage } from "@/lib/deck-package";
 
-export const FlashcardSearchSchema = z.compile(
+const FlashcardSearchSchema = z.compile(
   z.object({ query: z.string().trim().max(80, "Search is limited to 80 characters.") })
 );
 type FlashcardSearchValues = z.infer<typeof FlashcardSearchSchema>;
