@@ -37,7 +37,9 @@ function DeckGridSkeleton() {
   );
 }
 
-function CatalogError({ message, onRetry }: Readonly<{ message: string; onRetry: () => void }>) {
+type CatalogErrorProps = Readonly<{ message: string; onRetry: () => void }>;
+
+function CatalogError({ message, onRetry }: CatalogErrorProps) {
   return (
     <>
       <AppHeader />
@@ -158,11 +160,11 @@ export function DeckCatalog() {
             ))
           )}
         </div>
-        {downloadMutation.isError ? (
+        {downloadMutation.isError && (
           <p className="mt-4 text-sm text-[var(--error)]" role="alert">
             {downloadMutation.error.message}
           </p>
-        ) : null}
+        )}
       </main>
     </>
   );

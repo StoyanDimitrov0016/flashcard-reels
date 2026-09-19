@@ -70,25 +70,6 @@ function returnsJsx(statement) {
   return containsJsx(statement.expression);
 }
 
-function readonlyInlineProps(typeNode) {
-  return (
-    ts.isTypeReferenceNode(typeNode) &&
-    ts.isIdentifier(typeNode.typeName) &&
-    typeNode.typeName.text === "Readonly" &&
-    typeNode.typeArguments?.length === 1 &&
-    ts.isTypeLiteralNode(typeNode.typeArguments[0])
-  );
-}
-
-function isReadonlyType(typeNode) {
-  return (
-    ts.isTypeReferenceNode(typeNode) &&
-    ts.isIdentifier(typeNode.typeName) &&
-    typeNode.typeName.text === "Readonly" &&
-    typeNode.typeArguments?.length === 1
-  );
-}
-
 function lineNumber(sourceFile, position) {
   return sourceFile.getLineAndCharacterOfPosition(position).line;
 }
@@ -123,57 +104,6 @@ function addReturnSpacing({ component, finalReturn, lineEnding, problems, source
   problems.push("add one blank line before the final JSX return (auto-fixable)");
 }
 
-function addPropsConvention({ component, name, problems, sourceFile, edits, typeAliases }) {
-  const parameter = component.parameters[0];
-  if (!parameter) {
-    return;
-  }
-
-  const expectedTypeName = `${name}Props`;
-  if (!parameter.type) {
-    problems.push(
-      `add an explicit ${expectedTypeName} annotation; the prop shape cannot be inferred safely`
-    );
-    return;
-  }
-
-  if (ts.isTypeLiteralNode(parameter.type) || readonlyInlineProps(parameter.type)) {
-    const typeText = parameter.type.getText(sourceFile);
-    const aliasType = readonlyInlineProps(parameter.type) ? typeText : `Readonly<${typeText}>`;
-    edits.push({
-      position: component.getStart(sourceFile),
-      text: `type ${expectedTypeName} = ${aliasType};\n\n`,
-    });
-    edits.push({
-      end: parameter.type.end,
-      position: parameter.type.getStart(sourceFile),
-      text: expectedTypeName,
-    });
-    problems.push(
-      `extract inline props to type ${expectedTypeName} = Readonly<...> (auto-fixable)`
-    );
-    return;
-  }
-
-  if (!ts.isTypeReferenceNode(parameter.type) || !ts.isIdentifier(parameter.type.typeName)) {
-    problems.push(`use a named props alias: type ${expectedTypeName} = Readonly<...>`);
-    return;
-  }
-
-  const actualTypeName = parameter.type.typeName.text;
-  if (actualTypeName !== expectedTypeName) {
-    problems.push(`rename props type ${actualTypeName} to ${expectedTypeName}`);
-    return;
-  }
-
-  const localAlias = typeAliases.get(expectedTypeName);
-  if (localAlias && !isReadonlyType(localAlias.type)) {
-    edits.push({ position: localAlias.type.getStart(sourceFile), text: "Readonly<" });
-    edits.push({ position: localAlias.type.end, text: ">" });
-    problems.push(`wrap ${expectedTypeName} in Readonly<...> (auto-fixable)`);
-  }
-}
-
 function applyEdits(source, edits) {
   return edits
     .toSorted((left, right) => right.position - left.position)
@@ -195,11 +125,6 @@ function formatFile(filename) {
   );
   const edits = [];
   const problems = [];
-  const typeAliases = new Map(
-    sourceFile.statements
-      .filter(ts.isTypeAliasDeclaration)
-      .map((declaration) => [declaration.name.text, declaration])
-  );
 
   function visit(node) {
     const name = componentName(node);
@@ -214,10 +139,8 @@ function formatFile(filename) {
         name,
         problems: componentProblems,
         sourceFile,
-        typeAliases,
       };
       addReturnSpacing(context);
-      addPropsConvention(context);
       problems.push(...componentProblems.map((problem) => `${name}: ${problem}`));
     }
     ts.forEachChild(node, visit);
@@ -239,9 +162,7 @@ if (problems.length > 0 && !writeChanges) {
   for (const problem of problems) {
     console.error(`- ${problem}`);
   }
-  console.error(
-    "Run `npm run format` to apply safe fixes; remaining items require an explicit prop type."
-  );
+  console.error("Run `npm run format` to apply safe fixes.");
   process.exitCode = 1;
 } else if (writeChanges) {
   console.log(

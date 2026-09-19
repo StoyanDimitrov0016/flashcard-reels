@@ -40,6 +40,20 @@ import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptic
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 
+const DOUBLE_TAP_WINDOW_MS = 450;
+type CardPageProps = Readonly<{
+  backgroundColor: string;
+  children: React.ReactNode;
+  height: number;
+  width: number;
+}>;
+
+function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
+  const styles = createStyles();
+
+  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
+}
+
 type ReelCardProps = Readonly<{
   audioSource: AudioReference;
   card: Flashcard;
@@ -58,19 +72,6 @@ type ReelCardProps = Readonly<{
   showMainFeedLink: boolean;
   width: number;
 }>;
-type CardPageProps = Readonly<{
-  backgroundColor: string;
-  children: React.ReactNode;
-  height: number;
-  width: number;
-}>;
-
-const DOUBLE_TAP_WINDOW_MS = 450;
-function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
-  const styles = createStyles();
-
-  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
-}
 
 export function ReelCard({
   audioSource,

@@ -7,7 +7,9 @@ import { FlashcardBrowser } from "@/components/flashcard-browser";
 import { Button } from "@/components/ui/button";
 import { readDeckPackage } from "@/lib/deck-package";
 
-export default async function DeckPage({ params }: { params: Promise<{ deckId: string }> }) {
+type DeckPageProps = Readonly<{ params: Promise<{ deckId: string }> }>;
+
+export default async function DeckPage({ params }: DeckPageProps) {
   const routeParams = await params;
   let deck;
   try {

@@ -18,8 +18,9 @@ const buttonVariants = cva(
   }
 );
 
-type ButtonProps = ComponentPropsWithoutRef<"button"> &
-  VariantProps<typeof buttonVariants> & { asChild?: boolean };
+type ButtonProps = Readonly<
+  ComponentPropsWithoutRef<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean }
+>;
 
 function Button({ asChild, className, variant, size, ...props }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, className }));

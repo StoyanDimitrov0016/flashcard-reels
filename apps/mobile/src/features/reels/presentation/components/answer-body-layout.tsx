@@ -10,20 +10,6 @@ type AnswerBodyLayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
-type AnswerCopyProps = Readonly<{
-  answer: string;
-  answerColor: string;
-  promptColor: string;
-  question: string;
-  onLongPress: () => void;
-  onPress: () => void;
-  onPressIn: () => void;
-  onPressOut: () => void;
-  longPressDuration: number;
-}>;
-
-type AnswerControlRegionProps = Readonly<{ children: ReactNode }>;
-
 export function AnswerBodyLayout({ children }: AnswerBodyLayoutProps) {
   const { position } = useStudyControlLayout();
   const styles = createStyles(useAppTheme().colors);
@@ -36,6 +22,8 @@ export function AnswerBodyLayout({ children }: AnswerBodyLayoutProps) {
 
   return <View style={[styles.body, bodyStyle]}>{children}</View>;
 }
+
+type AnswerControlRegionProps = Readonly<{ children: ReactNode }>;
 
 export function AnswerControlRegion({ children }: AnswerControlRegionProps) {
   const { position } = useStudyControlLayout();
@@ -54,6 +42,18 @@ export function AnswerControlRegion({ children }: AnswerControlRegionProps) {
     </View>
   );
 }
+
+type AnswerCopyProps = Readonly<{
+  answer: string;
+  answerColor: string;
+  promptColor: string;
+  question: string;
+  onLongPress: () => void;
+  onPress: () => void;
+  onPressIn: () => void;
+  onPressOut: () => void;
+  longPressDuration: number;
+}>;
 
 export function AnswerCopy({
   answer,

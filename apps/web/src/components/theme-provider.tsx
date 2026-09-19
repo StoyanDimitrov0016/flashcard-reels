@@ -3,7 +3,9 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ReactNode } from "react";
 
-export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
+type ThemeProviderProps = Readonly<{ children: ReactNode }>;
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <NextThemesProvider
       attribute="class"

@@ -1,5 +1,9 @@
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
-import { Stack, ThemeProvider, type ErrorBoundaryProps } from "expo-router";
+import {
+  Stack,
+  ThemeProvider,
+  type ErrorBoundaryProps as ExpoErrorBoundaryProps,
+} from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
@@ -27,6 +31,8 @@ import { toError } from "@/shared/errors/normalize-error";
 import { getAppColors } from "@/shared/presentation/theme-colors";
 // oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
 import "../../global.css";
+
+type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return <GlobalErrorState error={error} retry={retry} />;

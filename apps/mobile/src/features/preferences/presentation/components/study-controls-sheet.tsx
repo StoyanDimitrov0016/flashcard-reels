@@ -19,15 +19,6 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
-type StudyControlsSheetProps = Readonly<{
-  onAudioSideChange: (value: AudioSide) => void;
-  onClose: () => void;
-  onPositionChange: (value: RecollectionIslandPosition) => void;
-  onRatingDirectionChange: (value: RatingDirection) => void;
-  preferences: AppPreferences;
-  visible: boolean;
-}>;
-
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
 
 function AudioPreviewMarker() {
@@ -44,6 +35,15 @@ function AudioPreviewMarker() {
     </View>
   );
 }
+
+type StudyControlsSheetProps = Readonly<{
+  onAudioSideChange: (value: AudioSide) => void;
+  onClose: () => void;
+  onPositionChange: (value: RecollectionIslandPosition) => void;
+  onRatingDirectionChange: (value: RatingDirection) => void;
+  preferences: AppPreferences;
+  visible: boolean;
+}>;
 
 export function StudyControlsSheet({
   onAudioSideChange,

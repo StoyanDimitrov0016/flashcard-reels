@@ -1,6 +1,6 @@
-type LoginPageProps = {
+type LoginPageProps = Readonly<{
   searchParams: Promise<{ error?: string }>;
-};
+}>;
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error } = await searchParams;
@@ -24,7 +24,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             required
             type="password"
           />
-          {error ? <p className="text-sm text-[var(--error)]">Incorrect password.</p> : null}
+          {error !== undefined && (
+            <p className="text-sm text-[var(--error)]">Incorrect password.</p>
+          )}
           <button
             className="h-11 w-full rounded-md bg-[var(--action-primary)] px-4 font-medium text-[var(--action-primary-text)]"
             type="submit"

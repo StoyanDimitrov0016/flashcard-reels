@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { downloadDeckMutationOptions } from "@/lib/deck-queries";
 
-export function DeckTransferCard({ deckId }: Readonly<{ deckId: string }>) {
+type DeckTransferCardProps = Readonly<{ deckId: string }>;
+
+export function DeckTransferCard({ deckId }: DeckTransferCardProps) {
   const download = useMutation(downloadDeckMutationOptions);
 
   const handleOpenChange = (open: boolean) => {

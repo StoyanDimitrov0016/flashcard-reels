@@ -10,7 +10,9 @@ export const metadata: Metadata = {
   description: "Create and distribute downloadable flashcard decks.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+type RootLayoutProps = Readonly<{ children: ReactNode }>;
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>

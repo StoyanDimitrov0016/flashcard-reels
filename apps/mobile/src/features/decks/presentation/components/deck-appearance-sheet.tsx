@@ -22,15 +22,6 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
-type DeckAppearanceSheetProps = Readonly<{
-  appearance: DeckAppearance | null;
-  error: string | null;
-  isPresented: boolean;
-  onDismiss: () => void;
-  onSelect: (preset: DeckAppearancePreset) => void;
-  pendingPreset: DeckAppearancePreset | null;
-}>;
-
 type PresetItemProps = Readonly<{
   appearance: DeckAppearance | null;
   onSelect: (preset: DeckAppearancePreset) => void;
@@ -80,6 +71,15 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
     </Pressable>
   );
 }
+
+type DeckAppearanceSheetProps = Readonly<{
+  appearance: DeckAppearance | null;
+  error: string | null;
+  isPresented: boolean;
+  onDismiss: () => void;
+  onSelect: (preset: DeckAppearancePreset) => void;
+  pendingPreset: DeckAppearancePreset | null;
+}>;
 
 export function DeckAppearanceSheet({
   appearance,

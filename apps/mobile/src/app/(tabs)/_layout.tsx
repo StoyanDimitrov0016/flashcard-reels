@@ -1,5 +1,5 @@
 import { TopTabs } from "expo-router/js-top-tabs";
-import { type ErrorBoundaryProps } from "expo-router";
+import { type ErrorBoundaryProps as ExpoErrorBoundaryProps } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect } from "react";
 import type { ColorValue } from "react-native";
@@ -16,6 +16,8 @@ import { sizes } from "@/shared/presentation/sizes";
 type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
 export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
+
+type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   useEffect(

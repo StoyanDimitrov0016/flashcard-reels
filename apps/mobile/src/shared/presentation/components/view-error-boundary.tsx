@@ -4,7 +4,6 @@ import { usePathname, useRouter, type ErrorBoundaryProps } from "expo-router";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
 import { reportError } from "@/shared/presentation/errors/report-error";
 
-type ViewErrorBoundaryProps = Readonly<Pick<ErrorBoundaryProps, "error" | "retry">>;
 const viewTitles: Readonly<Record<string, string>> = {
   "/": "Couldn’t load Discover",
   "/focus": "Couldn’t load Focus",
@@ -12,6 +11,8 @@ const viewTitles: Readonly<Record<string, string>> = {
   "/progress": "Couldn’t load Progress",
   "/you": "Couldn’t open Controls",
 };
+
+type ViewErrorBoundaryProps = Readonly<Pick<ErrorBoundaryProps, "error" | "retry">>;
 
 export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
   const pathname = usePathname();
