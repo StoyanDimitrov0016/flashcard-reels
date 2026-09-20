@@ -10,7 +10,7 @@ import {
   PreferenceSection,
   PreferenceSwitch,
 } from "@/features/preferences/presentation/components/preference-settings-components";
-import { appMetadata } from "@/features/preferences/application/app-metadata";
+import { appMetadata } from "@/features/preferences/presentation/app-metadata";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { useResetAllProgress } from "@/features/learner-profile/presentation/controllers/use-reset-all-progress";
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
