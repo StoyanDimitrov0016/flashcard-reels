@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 
-import type { LearningScheduler } from "@/features/learning-engine";
+import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { flashcardMemoryStates, flashcardReviewAttempts } from "@/infrastructure/sqlite/schema";

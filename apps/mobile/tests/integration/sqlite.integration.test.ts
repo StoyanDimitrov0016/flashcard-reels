@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { createLearningScheduler } from "@/features/learning-engine";
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  createLearningScheduler,
-  type FlashcardMemoryStateRepository,
-  type LearnerMemoryState,
-  type SchedulerMemoryState,
-} from "@/features/learning-engine";
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
+import type {
+  LearnerMemoryState,
+  SchedulerMemoryState,
+} from "@/features/learning-engine/domain/memory-state";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { decks, flashcards } from "@/infrastructure/sqlite/schema";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";

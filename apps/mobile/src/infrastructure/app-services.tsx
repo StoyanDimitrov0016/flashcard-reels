@@ -27,7 +27,7 @@ import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sq
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
-import { createLearningScheduler } from "@/features/learning-engine";
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import type { StudyService } from "@/features/study/domain/study.service";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";

@@ -1,12 +1,12 @@
+import { createFeedComposer } from "@/features/learning-engine/application/learning-engine-factories";
 import {
-  createFeedComposer,
   rememberCard,
   type FeedCandidate,
   type FeedState,
-  type FlashcardMemoryStateRepository,
-  type LearnerMemoryState,
-  type LearningScheduler,
-} from "@/features/learning-engine";
+} from "@/features/learning-engine/domain/feed-composer";
+import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
+import type { LearnerMemoryState } from "@/features/learning-engine/domain/memory-state";
+import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";

@@ -1,6 +1,6 @@
 import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
 import { decks, flashcards } from "@/infrastructure/sqlite/schema";
-import { createLearningScheduler } from "@/features/learning-engine";
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";

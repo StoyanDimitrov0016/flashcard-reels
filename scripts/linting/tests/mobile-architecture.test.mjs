@@ -161,11 +161,11 @@ javascriptTester.run("no-feature-root-imports", plugin.rules["no-feature-root-im
   ],
   invalid: [
     {
-      code: 'import { LearningScheduler } from "@/features/learning-engine";',
+      code: 'import { ReelFeedService } from "@/features/reels";',
       errors: 1,
     },
     {
-      code: 'export * from "@/features/learning-engine";',
+      code: 'export * from "@/features/reels";',
       errors: 1,
     },
   ],

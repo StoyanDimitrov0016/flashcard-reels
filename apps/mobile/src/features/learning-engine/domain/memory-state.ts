@@ -1,4 +1,4 @@
-export type MemoryState = "new" | "learning" | "review" | "relearning";
+type MemoryState = "new" | "learning" | "review" | "relearning";
 
 export type LearnerMemoryState = Readonly<{
   flashcardId: string;
