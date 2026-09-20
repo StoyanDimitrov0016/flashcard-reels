@@ -11,7 +11,7 @@ const harness = vi.hoisted(() => ({
 }));
 vi.mock("@/infrastructure/app-services", () => ({ useAppServices: () => harness.services }));
 vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove: vi.fn() }) } }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
 import {
   DeckContentProvider,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { describeError } from "@/shared/application/error-details";
+import { describeError } from "@/shared/errors/describe-error";
 import { AppError } from "@/shared/errors/app-error";
 
 describe("error diagnostics", () => {

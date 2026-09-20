@@ -20,7 +20,7 @@ import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";

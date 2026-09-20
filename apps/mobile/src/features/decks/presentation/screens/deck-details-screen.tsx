@@ -38,7 +38,7 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
 
 type CardRowProps = Readonly<{

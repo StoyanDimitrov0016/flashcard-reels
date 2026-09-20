@@ -1,4 +1,4 @@
-import { describeError } from "@/shared/application/error-details";
+import { describeError } from "@/shared/errors/describe-error";
 
 export function reportError(error: unknown, scope: string): void {
   let details = "Unable to format error details.";

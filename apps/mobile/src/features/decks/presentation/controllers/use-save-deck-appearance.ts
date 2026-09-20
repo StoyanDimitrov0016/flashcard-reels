@@ -6,7 +6,7 @@ import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-ap
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 export function useSaveDeckAppearance() {
   const { deckService } = useDecks();

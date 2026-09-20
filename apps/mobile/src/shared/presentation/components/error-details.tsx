@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
 import Constants from "expo-constants";
 
-import { describeError } from "@/shared/application/error-details";
+import { describeError } from "@/shared/errors/describe-error";
 import { getAppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize } from "@/shared/presentation/typography";

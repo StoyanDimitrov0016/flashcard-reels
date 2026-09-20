@@ -4,7 +4,7 @@ import { AppResetAction } from "@/shared/presentation/components/app-reset-actio
 import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 type GlobalErrorStateProps = Readonly<{
   error: unknown;

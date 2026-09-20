@@ -6,6 +6,7 @@ const FEATURE_IMPORT = /^@\/features\/([^/]+)\/([^/]+)(?:\/|$)/;
 const FEATURE_FILE = /(?:^|\/)src\/features\/([^/]+)\/([^/]+)(?:\/|$)/;
 const SHARED_IMPORT = /^@\/shared\/(domain|application|infrastructure|presentation)(?:\/|$)/;
 const SHARED_FILE = /(?:^|\/)src\/shared\/(domain|application|infrastructure|presentation)(?:\/|$)/;
+const SHARED_SOURCE = /(?:^|\/)src\/shared(?:\/|$)/;
 const ROOT_COMPOSITION_FILE = /(?:^|\/)src\/app\/_layout\.tsx$/;
 const APP_ROUTE_FILE = /(?:^|\/)src\/app\/.+\.(?:ts|tsx)$/;
 const ROOT_INFRASTRUCTURE_FILE = /(?:^|\/)src\/infrastructure(?:\/|$)/;
@@ -24,7 +25,7 @@ function classifyFile(filename) {
   const rootComposition = ROOT_COMPOSITION_FILE.test(normalized);
   const featureMatch = normalized.match(FEATURE_FILE);
   const sharedMatch = normalized.match(SHARED_FILE);
-  const shared = sharedMatch !== null;
+  const shared = SHARED_SOURCE.test(normalized);
   const layer =
     featureMatch?.[2] ??
     sharedMatch?.[1] ??
@@ -168,7 +169,7 @@ export default {
   create(context) {
     const sourceFilename = contextFilename(context);
     const source = classifyFile(sourceFilename);
-    if (!source.layer && !source.rootComposition) {
+    if (!source.layer && !source.shared && !source.rootComposition) {
       return {};
     }
 

@@ -36,7 +36,7 @@ vi.mock("@/infrastructure/app-services", () => ({
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useInvalidateDeckContent: () => harness.invalidate,
 }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 

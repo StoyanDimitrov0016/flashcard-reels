@@ -13,7 +13,7 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 type PreferencesContextValue = Readonly<{
   preferences: AppPreferences;

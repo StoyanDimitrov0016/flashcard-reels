@@ -9,7 +9,7 @@ import { DeckAppearanceProvider } from "@/features/decks/presentation/context/de
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 

@@ -14,7 +14,7 @@ import {
 } from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 export type {
   FocusTransition,

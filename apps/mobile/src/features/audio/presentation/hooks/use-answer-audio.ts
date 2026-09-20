@@ -3,7 +3,7 @@ import { useAudioPlayer, useAudioPlayerStatus, type AudioSource } from "expo-aud
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 type PlaybackFailure = Readonly<{ error: Error; uri: string | null }>;
 

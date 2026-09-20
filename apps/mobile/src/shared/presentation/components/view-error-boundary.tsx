@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter, type ErrorBoundaryProps } from "expo-router";
 
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 const viewTitles: Readonly<Record<string, string>> = {
   "/": "Couldn’t load Discover",

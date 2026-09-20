@@ -6,7 +6,7 @@ import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 type ImportState = Readonly<{ error: Error | null; importing: boolean; downloading: boolean }>;
 

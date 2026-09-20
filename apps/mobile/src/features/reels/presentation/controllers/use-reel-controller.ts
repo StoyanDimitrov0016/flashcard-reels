@@ -14,7 +14,7 @@ import {
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 import { OperationError } from "@/shared/errors/operation-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
+import { reportError } from "@/shared/errors/report-error";
 
 type UseReelControllerParameters = Readonly<{
   initialFeed: PreparedReelFeed;

@@ -84,7 +84,7 @@ javascriptTester.run("enforce-layer-boundaries", plugin.rules["enforce-layer-bou
       errors: 1,
     },
     {
-      code: 'import { reportError } from "@/shared/presentation/errors/report-error";',
+      code: 'import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";',
       filename: "src/infrastructure/app-recovery.ts",
       errors: 1,
     },
@@ -115,6 +115,16 @@ javascriptTester.run("enforce-layer-boundaries", plugin.rules["enforce-layer-bou
       ],
     },
 
+    {
+      code: 'import { HapticEvent } from "@/features/preferences/domain/haptic-event";',
+      filename: "src/shared/errors/report-error.ts",
+      errors: [
+        {
+          message:
+            "Shared code cannot depend on a feature; move feature-specific behavior into its owning feature.",
+        },
+      ],
+    },
     {
       code: 'import { Audio } from "expo-audio";',
       filename: "src/features/audio/domain/audio-reference.ts",
