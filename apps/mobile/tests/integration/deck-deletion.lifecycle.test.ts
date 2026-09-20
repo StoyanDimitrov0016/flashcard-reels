@@ -26,7 +26,7 @@ import {
   useFeedScope,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
-import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
+import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";

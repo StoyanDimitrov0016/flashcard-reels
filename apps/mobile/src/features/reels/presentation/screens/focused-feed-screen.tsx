@@ -13,7 +13,7 @@ import {
   type FocusTransition,
   type FocusedFeedState,
 } from "@/features/reels/presentation/context/feed-scope-context";
-import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
+import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";

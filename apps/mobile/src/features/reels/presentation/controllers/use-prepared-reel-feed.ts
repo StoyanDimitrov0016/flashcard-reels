@@ -6,7 +6,7 @@ import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type PreparationState = Readonly<{
@@ -51,7 +51,7 @@ export function usePreparedReelFeed(
   replaceExistingSession: boolean,
   anchorFlashcardId: string | null = null
 ): PreparedReelFeed | null {
-  const { reelFeedService } = useAppServices();
+  const { reelFeedService } = useReels();
   const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
