@@ -17,6 +17,7 @@ import { DeckContentProvider } from "@/features/decks/presentation/context/deck-
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
+import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
 import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
@@ -27,16 +28,22 @@ import {
   handleSQLiteProviderError,
   initializeDatabase,
 } from "@/infrastructure/sqlite/database";
-import { prepareAppStorage } from "@/infrastructure/app-recovery";
+import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { toError } from "@/shared/errors/normalize-error";
 import { getAppColors } from "@/shared/presentation/theme-colors";
 // oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
 import "../../global.css";
 
+const appRecoveryCapability = { requestAppDataReset };
+
 type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  return <GlobalErrorState error={error} retry={retry} />;
+  return (
+    <AppRecoveryProvider capability={appRecoveryCapability}>
+      <GlobalErrorState error={error} retry={retry} />
+    </AppRecoveryProvider>
+  );
 }
 
 export function SuspenseFallback() {
@@ -112,30 +119,36 @@ export default function RootLayout() {
     throw preparationError;
   }
   if (!prepared) {
-    return <StartupLoadingState />;
+    return (
+      <AppRecoveryProvider capability={appRecoveryCapability}>
+        <StartupLoadingState />
+      </AppRecoveryProvider>
+    );
   }
 
   return (
-    <View style={styles.navigationRoot}>
-      {!databaseReady && <StartupLoadingState />}
-      <SQLiteProvider
-        databaseName={DATABASE_NAME}
-        onError={handleSQLiteProviderError}
-        onInit={initializeAppDatabase}
-      >
-        <DeckContentProvider>
-          <LearningProgressResetProvider>
-            <PreferencesProvider service={preferencesService}>
-              <PreferencesThemeProvider>
-                <AppServicesProvider>
-                  <AppNavigation />
-                </AppServicesProvider>
-              </PreferencesThemeProvider>
-            </PreferencesProvider>
-          </LearningProgressResetProvider>
-        </DeckContentProvider>
-      </SQLiteProvider>
-    </View>
+    <AppRecoveryProvider capability={appRecoveryCapability}>
+      <View style={styles.navigationRoot}>
+        {!databaseReady && <StartupLoadingState />}
+        <SQLiteProvider
+          databaseName={DATABASE_NAME}
+          onError={handleSQLiteProviderError}
+          onInit={initializeAppDatabase}
+        >
+          <DeckContentProvider>
+            <LearningProgressResetProvider>
+              <PreferencesProvider service={preferencesService}>
+                <PreferencesThemeProvider>
+                  <AppServicesProvider>
+                    <AppNavigation />
+                  </AppServicesProvider>
+                </PreferencesThemeProvider>
+              </PreferencesProvider>
+            </LearningProgressResetProvider>
+          </DeckContentProvider>
+        </SQLiteProvider>
+      </View>
+    </AppRecoveryProvider>
   );
 }
 
