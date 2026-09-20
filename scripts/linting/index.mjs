@@ -1,7 +1,8 @@
 import noAwaitInConditionalExpression from "./rules/general/no-await-in-conditional-expression.mjs";
+import enforceLayerBoundaries from "./rules/mobile/enforce-layer-boundaries.mjs";
 import noEnginePolicyInPresentation from "./rules/mobile/no-engine-policy-in-presentation.mjs";
+import noFeatureRootImports from "./rules/mobile/no-feature-root-imports.mjs";
 import noPersistenceOrchestrationInReactEffect from "./rules/mobile/no-persistence-orchestration-in-react-effect.mjs";
-import noServiceLocatorInPresentation from "./rules/mobile/no-service-locator-in-presentation.mjs";
 import noUiIndexAsDomainPosition from "./rules/mobile/no-ui-index-as-domain-position.mjs";
 import noZodInDomain from "./rules/mobile/no-zod-in-domain.mjs";
 import noLocalJsxVariables from "./rules/react/no-local-jsx-variables.mjs";
@@ -14,7 +15,8 @@ import requireReactComponentPropsType from "./rules/react/require-react-componen
 export default {
   meta: { name: "flashcards" },
   rules: {
-    "no-service-locator-in-presentation": noServiceLocatorInPresentation,
+    "enforce-layer-boundaries": enforceLayerBoundaries,
+    "no-feature-root-imports": noFeatureRootImports,
     "no-engine-policy-in-presentation": noEnginePolicyInPresentation,
     "no-persistence-orchestration-in-react-effect": noPersistenceOrchestrationInReactEffect,
     "no-ui-index-as-domain-position": noUiIndexAsDomainPosition,

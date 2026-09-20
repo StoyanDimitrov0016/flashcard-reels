@@ -204,114 +204,13 @@
         "react-perf/jsx-no-new-array-as-prop": "off",
         "react-perf/jsx-no-new-function-as-prop": "off",
         "react-perf/jsx-no-new-object-as-prop": "off",
-        "flashcards/no-service-locator-in-presentation": "error",
+        "flashcards/enforce-layer-boundaries": "error",
+        "flashcards/no-feature-root-imports": "error",
         "flashcards/no-engine-policy-in-presentation": "error",
         "flashcards/no-persistence-orchestration-in-react-effect": "warn",
         "flashcards/no-ui-index-as-domain-position": "warn",
         "flashcards/no-zod-in-domain": "error",
         "flashcards/no-await-in-conditional-expression": "error"
-      }
-    },
-    {
-      "files": [
-        "apps/mobile/src/features/**/presentation/**",
-        "apps/mobile/src/app/**/*.ts",
-        "apps/mobile/src/app/**/*.tsx"
-      ],
-      "excludeFiles": ["apps/mobile/src/app/_layout.tsx"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/infrastructure/sqlite/**"]
-              },
-              {
-                "group": ["@/features/**/infrastructure/**"]
-              },
-              {
-                "group": ["drizzle-orm/**"]
-              },
-              {
-                "group": ["expo-sqlite"]
-              },
-              {
-                "group": ["better-sqlite3"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["apps/mobile/src/features/**/domain/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "react",
-                  "react-native",
-                  "expo-router",
-                  "expo-status-bar",
-                  "expo-sqlite",
-                  "drizzle-orm/**",
-                  "zod",
-                  "@/features/**/presentation/**",
-                  "@/features/**/infrastructure/**",
-                  "@/infrastructure/**",
-                  "@/shared/presentation/**"
-                ]
-              },
-              {
-                "allowImportNamePattern": "^AudioSource$",
-                "group": ["expo-audio"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["apps/mobile/src/features/**/application/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/features/**/presentation/**"]
-              },
-              {
-                "group": ["@/features/**/infrastructure/**"]
-              },
-              {
-                "group": ["@/infrastructure/sqlite/**"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": [
-        "apps/mobile/src/features/**/infrastructure/**",
-        "apps/mobile/src/infrastructure/**"
-      ],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/features/**/presentation/**"]
-              }
-            ]
-          }
-        ]
       }
     }
   ]
