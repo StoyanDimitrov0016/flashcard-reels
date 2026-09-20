@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
+import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
 import {

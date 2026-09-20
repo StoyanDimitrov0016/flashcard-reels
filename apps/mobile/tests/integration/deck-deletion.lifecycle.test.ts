@@ -25,7 +25,7 @@ import {
   FeedScopeProvider,
   useFeedScope,
 } from "@/features/reels/presentation/context/feed-scope-context";
-import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
+import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";

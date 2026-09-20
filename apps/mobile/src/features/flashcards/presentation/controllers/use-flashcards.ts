@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useFlashcardsCapability } from "@/features/flashcards/presentation/dependencies/use-flashcards";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type FlashcardsState = Readonly<{
@@ -17,7 +17,7 @@ type LoadedFlashcardsState = FlashcardsState &
   Readonly<{ deckId: DeckId | null; revision: number | null }>;
 
 export function useFlashcards(deckId: DeckId | null): FlashcardsState {
-  const { flashcardService } = useAppServices();
+  const { flashcardService } = useFlashcardsCapability();
   const { revision } = useDeckContentRevision();
   const [state, setState] = useState<LoadedFlashcardsState>({
     ...initialState,
