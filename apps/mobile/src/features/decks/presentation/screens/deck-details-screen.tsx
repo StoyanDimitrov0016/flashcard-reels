@@ -33,7 +33,7 @@ import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
-import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/use-card-answer-audio-source";
+import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
