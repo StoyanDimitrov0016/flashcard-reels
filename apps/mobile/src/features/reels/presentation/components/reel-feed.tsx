@@ -6,7 +6,7 @@ import { useDeckAppearances } from "@/features/decks/presentation/controllers/us
 import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
-import { getFirstEditableReelPosition } from "@/features/reels/application/reel-extension-policy";
+import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
