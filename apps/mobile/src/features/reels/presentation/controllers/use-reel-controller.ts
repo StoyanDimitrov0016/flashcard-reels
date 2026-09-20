@@ -6,7 +6,7 @@ import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/
 import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
 import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import {
   completeReelActivation,
   shouldCompactSessionRuntimeData,
@@ -27,7 +27,7 @@ export function useReelController({
   initialFeed,
   sourceCards,
 }: UseReelControllerParameters) {
-  const { answerAudioService, reelFeedService, studyService } = useAppServices();
+  const { answerAudioService, reelFeedService, studyService } = useReels();
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
   const sourceCardsReference = useRef(sourceCards);
