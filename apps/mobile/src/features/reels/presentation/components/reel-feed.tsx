@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 
@@ -67,19 +67,14 @@ export function ReelFeed({
   )
     ? activeReelPosition
     : undefined;
-  const deckIds = useMemo(
-    () => [...new Set(sourceCards.map((card) => card.deckId))],
-    [sourceCards]
-  );
+  const deckIds = [...new Set(sourceCards.map((card) => card.deckId))];
   const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
   const { decks, loading: decksLoading } = useDeckCollection(deckIds);
-  const cardCountsByDeckId = useMemo(() => {
-    const counts = new Map<Flashcard["deckId"], number>();
-    for (const card of sourceCards) {
-      counts.set(card.deckId, (counts.get(card.deckId) ?? 0) + 1);
-    }
-    return counts;
-  }, [sourceCards]);
+  const cardCountsByDeckId = new Map<Flashcard["deckId"], number>();
+  for (const card of sourceCards) {
+    cardCountsByDeckId.set(card.deckId, (cardCountsByDeckId.get(card.deckId) ?? 0) + 1);
+  }
+
   const metadataReady =
     !appearancesLoading &&
     !decksLoading &&
@@ -94,68 +89,46 @@ export function ReelFeed({
     [activeOccurrenceReelPosition, onOccurrenceBecameActive]
   );
 
-  const renderItem = useCallback<ListRenderItem<PreparedReelOccurrence>>(
-    ({ item }) => {
-      const appearance = appearances.get(item.card.deckId);
-      const deck = decks.get(item.card.deckId);
-      if (!appearance || !deck) {
-        return null;
-      }
+  const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item }) => {
+    const appearance = appearances.get(item.card.deckId);
+    const deck = decks.get(item.card.deckId);
+    if (!appearance || !deck) {
+      return null;
+    }
 
-      return (
-        <ReelCard
-          appearance={appearance}
-          audioSource={answerAudioService.findSourceForFlashcard(
-            item.card.deckId,
-            deck.version,
-            item.card.id,
-            "answer"
-          )}
-          card={item.card}
-          deck={deck}
-          deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}
-          height={height}
-          ratingEnabled={
-            item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)
-          }
-          isActive={item.reelPosition === activeReelPosition}
-          onFlip={() => toggleCard(item.reelPosition)}
-          onRate={(level) => onRatingSelected(item, level)}
-          recallLevel={recallLevels.get(item.reelPosition) ?? null}
-          revealed={revealedPositions.has(item.reelPosition)}
-          occurrenceKey={item.key}
-          reelPosition={item.reelPosition}
-          showMainFeedLink={showMainFeedLink}
-          width={width}
-        />
-      );
-    },
-    [
-      answerAudioService,
-      appearances,
-      activeReelPosition,
-      cardCountsByDeckId,
-      decks,
-      height,
-      onRatingSelected,
-      recallLevels,
-      revealedPositions,
-      showMainFeedLink,
-      toggleCard,
-      feed.furthestReelPosition,
-      width,
-    ]
-  );
-  const extraData = useMemo(
-    () => ({
-      activeIndex,
-      activeReelPosition,
-      furthestReelPosition: feed.furthestReelPosition,
-      recallLevels,
-      revealedPositions,
-    }),
-    [activeIndex, activeReelPosition, feed.furthestReelPosition, recallLevels, revealedPositions]
-  );
+    return (
+      <ReelCard
+        appearance={appearance}
+        audioSource={answerAudioService.findSourceForFlashcard(
+          item.card.deckId,
+          deck.version,
+          item.card.id,
+          "answer"
+        )}
+        card={item.card}
+        deck={deck}
+        deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}
+        height={height}
+        ratingEnabled={item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)}
+        isActive={item.reelPosition === activeReelPosition}
+        onFlip={() => toggleCard(item.reelPosition)}
+        onRate={(level) => onRatingSelected(item, level)}
+        recallLevel={recallLevels.get(item.reelPosition) ?? null}
+        revealed={revealedPositions.has(item.reelPosition)}
+        occurrenceKey={item.key}
+        reelPosition={item.reelPosition}
+        showMainFeedLink={showMainFeedLink}
+        width={width}
+      />
+    );
+  };
+  const extraData = {
+    activeIndex,
+    activeReelPosition,
+    furthestReelPosition: feed.furthestReelPosition,
+    recallLevels,
+    revealedPositions,
+  };
   const handleEndReached = useCallback(() => {
     void requestFeedExtension().catch(() => undefined);
   }, [requestFeedExtension]);

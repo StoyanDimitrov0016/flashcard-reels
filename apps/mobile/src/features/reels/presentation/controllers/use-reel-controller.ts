@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
@@ -45,20 +45,15 @@ export function useReelController({
   const [fatalError, setFatalError] = useState<Error | null>(null);
   const [extensionError, setExtensionError] = useState<Error | null>(null);
   const [refreshError, setRefreshError] = useState<Error | null>(null);
-  const initialRecallState = useMemo(
-    () =>
-      initialCardState
-        ? {
-            position:
-              initialFeed.occurrences.find(({ card }) => card.id === initialCardState.cardId)
-                ?.reelPosition ?? initialFeed.currentReelPosition,
-            recallLevel: initialCardState.recallLevel,
-            revealed: initialCardState.revealed,
-          }
-        : undefined,
-    [initialCardState, initialFeed]
-  );
-
+  const initialRecallState = initialCardState
+    ? {
+        position:
+          initialFeed.occurrences.find(({ card }) => card.id === initialCardState.cardId)
+            ?.reelPosition ?? initialFeed.currentReelPosition,
+        recallLevel: initialCardState.recallLevel,
+        revealed: initialCardState.revealed,
+      }
+    : undefined;
   const recordCriticalFailure = useCallback((error: unknown): Error => {
     const normalized = toOperationError(error, {
       code: "STUDY_PERSISTENCE_FAILED",
