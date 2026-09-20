@@ -189,7 +189,10 @@ for (const file of sourceFiles(sourceDirectory)) {
       relativePath + ": imports the removed static palette instead of the app theme abstraction"
     );
   }
-  if (imports.includes("expo-haptics") && relativePath !== "shared/presentation/haptics.ts") {
+  if (
+    imports.includes("expo-haptics") &&
+    relativePath !== "features/preferences/presentation/haptics.ts"
+  ) {
     architectureViolations.push(
       relativePath + ": imports expo-haptics outside the haptics platform adapter"
     );
