@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
-import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
+import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";

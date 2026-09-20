@@ -22,9 +22,9 @@ import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-m
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
-import { useDeckCatalog } from "@/features/decks/presentation/hooks/use-deck-catalog";
-import { useSaveDeckAppearance } from "@/features/decks/presentation/hooks/use-save-deck-appearance";
-import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
+import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
+import { useSaveDeckAppearance } from "@/features/decks/presentation/controllers/use-save-deck-appearance";
+import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,

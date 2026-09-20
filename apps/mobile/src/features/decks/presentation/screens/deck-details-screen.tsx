@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
+import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
@@ -23,7 +23,7 @@ import {
 } from "@/features/decks/presentation/deck-details-mode";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
-import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
+import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";

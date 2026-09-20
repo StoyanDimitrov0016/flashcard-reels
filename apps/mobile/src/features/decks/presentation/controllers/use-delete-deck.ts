@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/presentation/errors/report-error";
 
@@ -13,7 +13,7 @@ export function useDeleteDeck(): DeleteDeckState & {
   deleteDeck: (deckId: DeckId) => Promise<boolean>;
   clearDeleteError: () => void;
 } {
-  const { deckService } = useAppServices();
+  const { deckService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
   const { invalidateLearningProgress } = useLearningProgressReset();
   const [state, setState] = useState<DeleteDeckState>({ deleting: false, error: null });

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { OperationError } from "@/shared/errors/operation-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
@@ -22,7 +22,7 @@ type DeckCatalogState = Readonly<{
 const initialState: DeckCatalogState = { entries: [], error: null, loading: true };
 
 export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
-  const { deckService, flashcardService } = useAppServices();
+  const { deckService, flashcardService } = useDecks();
   const { revision: contentRevision } = useDeckContentRevision();
   const [state, setState] = useState<DeckCatalogState>(initialState);
   const [revision, setRevision] = useState(0);

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 
-import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
-import { useDecks } from "@/features/decks/presentation/hooks/use-decks";
+import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
+import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { getFirstEditableReelPosition } from "@/features/reels/application/reel-extension-policy";
@@ -72,7 +72,7 @@ export function ReelFeed({
     [sourceCards]
   );
   const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
-  const { decks, loading: decksLoading } = useDecks(deckIds);
+  const { decks, loading: decksLoading } = useDeckCollection(deckIds);
   const cardCountsByDeckId = useMemo(() => {
     const counts = new Map<Flashcard["deckId"], number>();
     for (const card of sourceCards) {

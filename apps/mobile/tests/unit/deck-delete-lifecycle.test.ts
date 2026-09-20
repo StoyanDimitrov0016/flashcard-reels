@@ -34,7 +34,7 @@ vi.mock("@/features/learner-profile/presentation/context/learning-progress-reset
 }));
 vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
 
-import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
+import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 
 describe("deck deletion feedback lifetime", () => {
   beforeEach(() => {

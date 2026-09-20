@@ -4,12 +4,12 @@ import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/presentation/errors/report-error";
 
 export function useSaveDeckAppearance() {
-  const { deckService } = useAppServices();
+  const { deckService } = useDecks();
   const { invalidateAppearances } = useDeckAppearanceRevision();
   const [pendingPreset, setPendingPreset] = useState<DeckAppearancePreset | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);

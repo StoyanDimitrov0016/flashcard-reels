@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { OperationError } from "@/shared/errors/operation-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
@@ -14,8 +14,8 @@ type DecksState = Readonly<{
 
 const initialState: DecksState = { decks: new Map(), error: null, loading: true };
 
-export function useDecks(deckIds: DeckId[]): DecksState {
-  const { deckService } = useAppServices();
+export function useDeckCollection(deckIds: DeckId[]): DecksState {
+  const { deckService } = useDecks();
   const [state, setState] = useState<DecksState>(initialState);
   const deckIdsKey = deckIds.join(",");
 

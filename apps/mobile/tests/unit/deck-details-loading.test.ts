@@ -34,7 +34,7 @@ vi.mock("@/features/learner-profile/presentation/context/learning-progress-reset
   useLearningProgressReset: () => ({ revision: 1 }),
 }));
 
-import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
+import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 
 describe("deck detail loading after content changes", () => {
   beforeEach(() => {

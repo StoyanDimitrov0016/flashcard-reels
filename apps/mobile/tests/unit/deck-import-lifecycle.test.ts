@@ -38,7 +38,7 @@ vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
 }));
 vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
 
-import { useImportDeckPackage } from "@/features/decks/presentation/hooks/use-import-deck-package";
+import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 
 describe("deck import cancellation and feedback lifetime", () => {
   beforeEach(() => {

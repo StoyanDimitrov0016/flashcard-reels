@@ -4,7 +4,7 @@ import type { DeckInstallResult } from "@/features/decks/deck-installer";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/presentation/errors/report-error";
 
@@ -16,7 +16,7 @@ export function useImportDeckPackage(): ImportState & {
   cancelDownload: () => void;
   clearImportError: () => void;
 } {
-  const { deckInstaller, deckPackageDownloader, deckPackagePicker } = useAppServices();
+  const { deckInstaller, deckPackageDownloader, deckPackagePicker } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
   const [state, setState] = useState<ImportState>({
     error: null,
