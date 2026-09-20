@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 
 import type { StudySession } from "@/features/study/domain/study-session.model";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 
@@ -22,7 +22,7 @@ export function useFocusedFeedLifecycle(
   retryKey: number,
   requestedDeckId: DeckId | null
 ): boolean {
-  const { deckService, studyService } = useAppServices();
+  const { deckService, studyService } = useReels();
   const { revision } = useDeckContentRevision();
   const [completedRequest, setCompletedRequest] = useState<EvaluationRequest | null>(null);
 

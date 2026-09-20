@@ -11,7 +11,7 @@ import {
 import {
   useFocusedFeedLifecycle,
   type FocusedFeedEvaluation,
-} from "@/features/reels/presentation/hooks/use-focused-feed-lifecycle";
+} from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/presentation/errors/report-error";
