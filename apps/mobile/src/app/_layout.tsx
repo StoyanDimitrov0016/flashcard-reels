@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
+import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
