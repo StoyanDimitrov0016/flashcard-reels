@@ -17,13 +17,14 @@ const APP_SERVICES_IMPORT = "@/infrastructure/app-services";
  * through a best-effort guess.
  *
  * @param {string} filename
- * @returns {{ feature: string | null, layer: string | null, presentationPart: string | null, rootComposition: boolean }}
+ * @returns {{ feature: string | null, layer: string | null, presentationPart: string | null, rootComposition: boolean, shared: boolean }}
  */
 function classifyFile(filename) {
   const normalized = filename.replaceAll("\\", "/");
   const rootComposition = ROOT_COMPOSITION_FILE.test(normalized);
   const featureMatch = normalized.match(FEATURE_FILE);
   const sharedMatch = normalized.match(SHARED_FILE);
+  const shared = sharedMatch !== null;
   const layer =
     featureMatch?.[2] ??
     sharedMatch?.[1] ??
@@ -39,6 +40,7 @@ function classifyFile(filename) {
     layer,
     presentationPart,
     rootComposition,
+    shared,
   };
 }
 
@@ -96,8 +98,8 @@ function isPersistencePackage(specifier) {
  * Returns a diagnostic for a forbidden dependency edge. The decision uses
  * only preclassified paths and the current module edge.
  *
- * @param {{ layer: string | null, presentationPart: string | null, rootComposition: boolean }} source
- * @param {{ layer: string | null }} target
+ * @param {{ layer: string | null, presentationPart: string | null, rootComposition: boolean, shared: boolean }} source
+ * @param {{ feature: string | null, layer: string | null }} target
  * @param {string} specifier
  * @returns {string | null}
  */
@@ -107,6 +109,10 @@ function forbiddenMessage(source, target, specifier) {
       return null;
     }
     return "The global application container may only be accessed from the composition root or presentation/dependencies; consume a feature controller instead.";
+  }
+
+  if (source.shared && target.feature !== null) {
+    return "Shared code cannot depend on a feature; move feature-specific behavior into its owning feature.";
   }
 
   if (source.layer === "domain") {

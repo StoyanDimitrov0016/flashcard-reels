@@ -36,7 +36,7 @@ import {
   showFocusedToast,
   showHoldToast,
 } from "@/shared/presentation/flashcard-toast";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 

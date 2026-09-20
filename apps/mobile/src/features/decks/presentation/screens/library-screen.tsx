@@ -30,7 +30,7 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
   HOLD_FEEDBACK_DELAY_MS,

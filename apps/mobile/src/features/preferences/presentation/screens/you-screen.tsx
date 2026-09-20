@@ -14,7 +14,7 @@ import { appMetadata } from "@/features/preferences/application/app-metadata";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
 import { useResetAllProgress } from "@/features/learner-profile/presentation/controllers/use-reset-all-progress";
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";

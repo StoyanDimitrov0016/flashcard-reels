@@ -21,6 +21,10 @@ Feature-root imports such as `@/features/learning-engine` are forbidden because
 a root barrel can mix several responsibility layers. Imports must name an
 explicit layer.
 
+Shared code is feature-agnostic. It may depend only on shared modules plus
+packages allowed by its responsibility layer; feature-specific types and
+behavior belong in the owning feature.
+
 ## Module-edge coverage
 
 The rules inspect:

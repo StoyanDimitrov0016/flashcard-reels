@@ -1,9 +1,9 @@
 import { Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 
-import type { HapticEvent } from "@/features/preferences/application/haptics-policy";
+import type { HapticEvent } from "@/features/preferences/domain/haptic-event";
 
-export type { HapticEvent } from "@/features/preferences/application/haptics-policy";
+export type { HapticEvent } from "@/features/preferences/domain/haptic-event";
 
 export function triggerHaptic(event: HapticEvent): void {
   void playHaptic(event).catch(() => undefined);

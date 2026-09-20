@@ -1,4 +1,5 @@
-export type HapticEvent = "rating-selection" | "focus-completion" | "reset-success";
+import type { HapticEvent } from "@/features/preferences/domain/haptic-event";
+
 export type HapticTrigger = (event: HapticEvent) => void;
 
 export function createHapticPolicy(

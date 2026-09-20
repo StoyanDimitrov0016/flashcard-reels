@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { recallOptions } from "@/features/reels/presentation/recall-options";
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";

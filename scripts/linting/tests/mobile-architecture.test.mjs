@@ -27,9 +27,14 @@ javascriptTester.run("enforce-layer-boundaries", plugin.rules["enforce-layer-bou
       code: 'import { DeckService } from "@/features/decks/application/deck.service";',
       filename: "src/infrastructure/app-services.tsx",
     },
+
     {
       code: 'import { helper } from "../helper";',
       filename: "src/features/reels/domain/nested/value.ts",
+    },
+    {
+      code: 'import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";',
+      filename: "src/shared/presentation/haptics.ts",
     },
   ],
   invalid: [
@@ -83,11 +88,33 @@ javascriptTester.run("enforce-layer-boundaries", plugin.rules["enforce-layer-bou
       filename: "src/infrastructure/app-recovery.ts",
       errors: 1,
     },
+
     {
       code: 'import { File } from "expo-file-system";',
       filename: "src/features/decks/application/import-deck.ts",
       errors: 1,
     },
+    {
+      code: 'import { HapticEvent } from "@/features/preferences/domain/haptic-event";',
+      filename: "src/shared/presentation/haptics.ts",
+      errors: [
+        {
+          message:
+            "Shared code cannot depend on a feature; move feature-specific behavior into its owning feature.",
+        },
+      ],
+    },
+    {
+      code: 'import { HapticEvent } from "../../features/preferences/domain/haptic-event";',
+      filename: "src/shared/presentation/haptics.ts",
+      errors: [
+        {
+          message:
+            "Shared code cannot depend on a feature; move feature-specific behavior into its owning feature.",
+        },
+      ],
+    },
+
     {
       code: 'import { Audio } from "expo-audio";',
       filename: "src/features/audio/domain/audio-reference.ts",
