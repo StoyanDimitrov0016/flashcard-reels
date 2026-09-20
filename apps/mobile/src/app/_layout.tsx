@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
@@ -125,9 +126,11 @@ export default function RootLayout() {
         <DeckContentProvider>
           <LearningProgressResetProvider>
             <PreferencesProvider service={preferencesService}>
-              <AppServicesProvider>
-                <AppNavigation />
-              </AppServicesProvider>
+              <PreferencesThemeProvider>
+                <AppServicesProvider>
+                  <AppNavigation />
+                </AppServicesProvider>
+              </PreferencesThemeProvider>
             </PreferencesProvider>
           </LearningProgressResetProvider>
         </DeckContentProvider>
