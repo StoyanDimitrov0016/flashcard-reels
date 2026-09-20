@@ -27,7 +27,7 @@ import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-del
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
-import { useResetDeckProgress } from "@/features/learner-profile/presentation/hooks/use-reset-deck-progress";
+import { useResetDeckProgress } from "@/features/learner-profile/presentation/controllers/use-reset-deck-progress";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ErrorState } from "@/shared/presentation/components/error-state";

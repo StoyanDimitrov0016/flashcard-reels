@@ -8,7 +8,7 @@ import {
 } from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useLearnerProfile } from "@/features/learner-profile/presentation/dependencies/use-learner-profile";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type LearnerProgressRow = Readonly<{
@@ -29,7 +29,7 @@ const initialState: LearnerProgressState = { error: null, loading: true, rows: [
 export function useLearnerProgress(): LearnerProgressState & {
   refresh: () => void;
 } {
-  const { deckService, flashcardService, learnerProfileService } = useAppServices();
+  const { deckService, flashcardService, learnerProfileService } = useLearnerProfile();
   const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<LearnerProgressState>(initialState);
   const [revision, setRevision] = useState(0);

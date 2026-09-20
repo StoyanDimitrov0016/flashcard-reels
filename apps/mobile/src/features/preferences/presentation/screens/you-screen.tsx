@@ -12,7 +12,7 @@ import {
 } from "@/features/preferences/presentation/components/preference-settings-components";
 import { appMetadata } from "@/features/preferences/application/app-metadata";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
-import { useResetAllProgress } from "@/features/learner-profile/presentation/hooks/use-reset-all-progress";
+import { useResetAllProgress } from "@/features/learner-profile/presentation/controllers/use-reset-all-progress";
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
 import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";

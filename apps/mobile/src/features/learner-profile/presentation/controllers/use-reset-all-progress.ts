@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { useAppServices } from "@/infrastructure/app-services";
+import { useLearnerProfile } from "@/features/learner-profile/presentation/dependencies/use-learner-profile";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type ResetAllProgressState = Readonly<{
@@ -9,7 +9,7 @@ type ResetAllProgressState = Readonly<{
 }>;
 
 export function useResetAllProgress(): ResetAllProgressState {
-  const { learnerProfileService } = useAppServices();
+  const { learnerProfileService } = useLearnerProfile();
   const { invalidateLearningProgress } = useLearningProgressReset();
 
   const resetAllProgress = useCallback(async () => {
