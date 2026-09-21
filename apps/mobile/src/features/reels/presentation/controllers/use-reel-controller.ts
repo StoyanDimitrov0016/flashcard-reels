@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
-import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
-import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
+import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
-import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
+
+import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
 import {
   completeReelActivation,
   shouldCompactSessionRuntimeData,
 } from "@/features/reels/application/reel-position-extension";
-import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
-import { OperationError } from "@/shared/errors/operation-error";
+import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
+import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
+import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
-type UseReelControllerParameters = Readonly<{
+type ReelControllerOptions = Readonly<{
   initialFeed: PreparedReelFeed;
   sourceCards: readonly Flashcard[];
   initialCardState?: FocusedCardState;
@@ -26,7 +27,7 @@ export function useReelController({
   initialCardState,
   initialFeed,
   sourceCards,
-}: UseReelControllerParameters) {
+}: ReelControllerOptions) {
   const { answerAudioService, reelFeedService, studyService } = useReels();
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);

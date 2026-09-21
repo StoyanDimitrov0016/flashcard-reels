@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 
-type UseReelFeedParameters = Readonly<{
+import { useCallback, useEffect, useRef, useState } from "react";
+
+type ReelFeedOptions = Readonly<{
   initialReelPosition: number;
   itemHeight: number;
   itemCount: number;
@@ -13,7 +14,7 @@ export function useReelFeed({
   itemCount,
   itemHeight,
   loadedFromReelPosition,
-}: UseReelFeedParameters) {
+}: ReelFeedOptions) {
   const normalizedInitialIndex = getLocalReelIndex(
     initialReelPosition,
     loadedFromReelPosition,
