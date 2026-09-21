@@ -1,28 +1,45 @@
 # Mobile app guide
 
-This workspace owns the Expo Router application and all native configuration.
-Run normal development commands from this directory using its local scripts; do
-not invoke a separately installed Expo CLI. Use root scripts only when repository-wide
-orchestration or validation is required.
+This workspace is the local-first learning client. Core studying must remain usable
+without an account, network connection, web portal, or cloud service.
+
+## Product invariants
+
+- Discovery and Focus are two scopes over the same learner state and learning
+  engine. They must not become separate schedulers.
+- FSRS is the memory model; the reel feed is the user experience. Do not reshape
+  the product into a traditional daily-review queue just because the scheduler
+  exposes due dates.
+- Horizontal swipes move between primary app destinations; vertical swipes move
+  through reels. Holding a Discover reel enters Focus while preserving the current
+  study moment.
+- Recent review state is provisional; finalized review attempts are durable
+  learning history. Keep long-running presentation/feed state bounded without
+  compacting durable review history.
+- Stable deck and card IDs preserve learning identity across deck updates.
+  Deck appearance is app/user state, not package content.
+- Treat imported `.fcrdeck` files as untrusted input. All install/update paths
+  must converge on the validated package-installer boundary.
 
 ## Architecture
 
 - Keep routes and application composition in `src/app`.
 - Keep feature code in `src/features`; infrastructure adapters belong in the
   feature's infrastructure layer or shared `src/infrastructure`.
-- Preserve the deck-installer and app-asset boundaries enforced by architecture
-  tests. Do not import Expo, SQLite, filesystem, or archive details into public
+- Do not leak Expo, SQLite, filesystem, or archive details into public
   domain/application APIs.
-- Treat `drizzle/` as generated migration output. Change
-  `src/infrastructure/sqlite/schema.ts`, run the workspace `db:generate` script,
-  and review the generated SQL and metadata.
+- Preserve the distinction between current reel position and monotonic furthest
+  reel position; commit/finalization semantics depend on it.
+- Treat `drizzle/` as generated output from
+  `src/infrastructure/sqlite/schema.ts`. Phase 0 uses one canonical database
+  baseline rather than compatibility migrations for discarded development
+  schemas.
 
-## Validation
+## Testing and native behavior
 
-Use `npm run check` and `npm test` from this directory for ordinary changes.
-Run `npm run verify` here when changing native dependencies, Expo/Metro/Babel/app
-configuration, migrations, bundled decks, or Android bundling. Keep Expo Doctor
-failures visible and fix their cause.
-
-The React component convention formatter is part of the mobile format workflow;
-do not replace it with generic formatter settings.
+- Pure deterministic policies belong in unit tests. Persistence, session
+  lifecycle, FSRS, recurrence, finalization, reset, and compaction behavior should
+  use the real SQLite-backed integration graph.
+- Do not recreate the study system as a large in-memory behavioral fake.
+- Actual gestures, native presentation, background/resume behavior, and release
+  builds remain part of the device smoke-test boundary.
