@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import type { FeedCandidate } from "@/features/learning-engine/domain/feed-composer";
+import type { LearnerMemoryState } from "@/features/learning-engine/domain/memory-state";
+
+import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import {
   createFeedComposer,
   createLearningScheduler,
-  type FeedCandidate,
-  type LearnerMemoryState,
-} from "@/features/learning-engine";
-import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+} from "@/features/learning-engine/application/learning-engine-factories";
 
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
 

@@ -1,10 +1,11 @@
 import { StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
-import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
-import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+
+import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
+import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import { sizes } from "@/shared/presentation/sizes";
 
 type StudyControlClusterProps = Readonly<{

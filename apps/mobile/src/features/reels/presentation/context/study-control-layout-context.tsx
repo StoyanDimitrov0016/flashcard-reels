@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import {
@@ -12,21 +12,12 @@ type StudyControlLayoutProviderProps = Readonly<{ children: ReactNode }>;
 
 export function StudyControlLayoutProvider({ children }: StudyControlLayoutProviderProps) {
   const { preferences } = usePreferences();
-  const layout = useMemo(
-    () =>
-      resolveStudyControlLayout({
-        audioEnabled: preferences.audioEnabled,
-        audioSide: preferences.audioSide,
-        ratingDirection: preferences.ratingDirection,
-        recollectionIslandPosition: preferences.recollectionIslandPosition,
-      }),
-    [
-      preferences.audioEnabled,
-      preferences.audioSide,
-      preferences.ratingDirection,
-      preferences.recollectionIslandPosition,
-    ]
-  );
+  const layout = resolveStudyControlLayout({
+    audioEnabled: preferences.audioEnabled,
+    audioSide: preferences.audioSide,
+    ratingDirection: preferences.ratingDirection,
+    recollectionIslandPosition: preferences.recollectionIslandPosition,
+  });
 
   return (
     <StudyControlLayoutContext.Provider value={layout}>

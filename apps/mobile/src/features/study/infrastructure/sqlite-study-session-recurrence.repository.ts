@@ -1,8 +1,9 @@
 import { and, asc, eq, gt, gte, isNull, lte } from "drizzle-orm";
 
-import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { studySessionRecurrences } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRecurrenceRepository<

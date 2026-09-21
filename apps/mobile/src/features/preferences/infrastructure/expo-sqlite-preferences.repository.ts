@@ -1,11 +1,12 @@
 import Storage from "expo-sqlite/kv-store";
 
+import type { PreferencesRepository } from "@/features/preferences/domain/preferences.repository";
+
 import {
   AppPreferencesSchema,
   normalizePersistedPreferences,
 } from "@/features/preferences/application/normalize-preferences";
 import { type AppPreferences } from "@/features/preferences/domain/app-preferences";
-import type { PreferencesRepository } from "@/features/preferences/domain/preferences.repository";
 
 const PREFERENCES_STORAGE_KEY = "flashcard-reels.preferences.v1";
 

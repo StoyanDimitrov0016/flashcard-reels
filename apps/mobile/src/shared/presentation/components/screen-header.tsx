@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import { StyleSheet, View } from "react-native";
 
 import { screenLayout } from "@/shared/presentation/screen-layout";

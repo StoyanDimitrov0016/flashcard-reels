@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { sessionCookie } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {

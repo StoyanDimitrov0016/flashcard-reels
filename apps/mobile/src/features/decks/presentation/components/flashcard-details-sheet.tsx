@@ -1,14 +1,15 @@
-import { SymbolView } from "expo-symbols";
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
+import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { sizes } from "@/shared/presentation/sizes";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+
+import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 type FlashcardDetailsSheetProps = Readonly<{
   audioSource: AudioReference;

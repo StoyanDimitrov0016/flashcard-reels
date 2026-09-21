@@ -1,10 +1,11 @@
 import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+
+import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type AnswerAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
 

@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { learnerProfiles } from "@/infrastructure/sqlite/schema";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
+import { learnerProfiles } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
   createScenarioGraph,

@@ -2,15 +2,17 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
-import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import type {
   DeckAudioStorage,
   DeckPackage,
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
+
+import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { TestClock } from "../support/study-fixtures";
 

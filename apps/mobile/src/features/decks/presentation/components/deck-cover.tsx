@@ -2,13 +2,8 @@ import { SymbolView } from "expo-symbols";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
-import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-type DeckCoverProps = Readonly<{
-  accentColor: string;
-  asset: DeckCoverAsset;
-  size?: "medium" | "large";
-}>;
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 const symbolNames = {
   cards: { android: "book_2", ios: "rectangle.stack.fill", web: "book_2" },
@@ -18,6 +13,12 @@ const symbolNames = {
   react: { android: "data_object", ios: "atom", web: "data_object" },
   "system-design": { android: "account_tree", ios: "square.3.layers.3d", web: "account_tree" },
 } as const;
+
+type DeckCoverProps = Readonly<{
+  accentColor: string;
+  asset: DeckCoverAsset;
+  size?: "medium" | "large";
+}>;
 
 export function DeckCover({ accentColor, asset, size = "medium" }: DeckCoverProps) {
   const dimension = size === "large" ? 58 : 44;

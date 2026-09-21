@@ -1,21 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { createLearningScheduler } from "@/features/learning-engine";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
-import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
+import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { decks, flashcards as flashcardRows } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
   OTHER_DECK_ID,

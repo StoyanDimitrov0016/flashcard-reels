@@ -1,10 +1,12 @@
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import type { ReactNode } from "react";
+
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 const appearanceLabels: Record<AppearancePreference, string> = {

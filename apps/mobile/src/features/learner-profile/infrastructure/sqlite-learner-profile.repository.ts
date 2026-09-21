@@ -1,10 +1,11 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
-import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import {
   flashcardReviewAttempts,
   flashcards,

@@ -1,12 +1,15 @@
+import { useRecyclingState } from "@shopify/flash-list";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
-import { useRecyclingState } from "@shopify/flash-list";
-
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
+
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   AnswerBodyLayout,
   AnswerControlRegion,
@@ -14,16 +17,9 @@ import {
 } from "@/features/reels/presentation/components/answer-body-layout";
 import { GestureFooter } from "@/features/reels/presentation/components/gesture-footer";
 import { QuestionFaceContent } from "@/features/reels/presentation/components/question-face-content";
+import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
 import { StudyControlCluster } from "@/features/reels/presentation/components/study-control-cluster";
 import { StudyControlLayoutProvider } from "@/features/reels/presentation/context/study-control-layout-context";
-import {
-  getReelRotationValue,
-  shouldSynchronizeReelRotation,
-} from "@/features/reels/presentation/reel-rotation";
-import { ReelHeader } from "@/features/reels/presentation/components/reel-header";
-import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 import {
   canStartFocusHold,
   FOCUS_HOLD_DURATION_MS,
@@ -31,14 +27,32 @@ import {
   transitionHoldToFocus,
   type HoldToFocusState,
 } from "@/features/reels/presentation/hold-to-focus";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import {
+  getReelRotationValue,
+  shouldSynchronizeReelRotation,
+} from "@/features/reels/presentation/reel-rotation";
 import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
 } from "@/shared/presentation/flashcard-toast";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
-import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme } from "@/shared/presentation/theme";
+
+const DOUBLE_TAP_WINDOW_MS = 450;
+type CardPageProps = Readonly<{
+  backgroundColor: string;
+  children: React.ReactNode;
+  height: number;
+  width: number;
+}>;
+
+function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
+  const styles = createStyles();
+
+  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
+}
 
 type ReelCardProps = Readonly<{
   audioSource: AudioReference;
@@ -58,19 +72,6 @@ type ReelCardProps = Readonly<{
   showMainFeedLink: boolean;
   width: number;
 }>;
-type CardPageProps = Readonly<{
-  backgroundColor: string;
-  children: React.ReactNode;
-  height: number;
-  width: number;
-}>;
-
-const DOUBLE_TAP_WINDOW_MS = 450;
-function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
-  const styles = createStyles();
-
-  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
-}
 
 export function ReelCard({
   audioSource,

@@ -5,8 +5,10 @@ import { ArrowLeft, ArrowRight, Eye, EyeOff, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
+
 import type { DeckPackage } from "@/lib/deck-package";
+
+import { Button } from "@/components/ui/button";
 
 const FlashcardSearchSchema = z.compile(
   z.object({ query: z.string().trim().max(80, "Search is limited to 80 characters.") })
@@ -29,7 +31,9 @@ function useDebouncedValue(value: string, delay: number) {
   return debouncedValue;
 }
 
-export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
+type FlashcardBrowserProps = Readonly<{ deck: DeckPackage }>;
+
+export function FlashcardBrowser({ deck }: FlashcardBrowserProps) {
   const [cardIndex, setCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const {
@@ -74,7 +78,7 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
               placeholder="Search cards"
               {...register("query")}
             />
-            {query ? (
+            {query.length > 0 && (
               <Button
                 aria-label="Clear flashcard search"
                 className="size-7 shrink-0 p-0"
@@ -86,11 +90,11 @@ export function FlashcardBrowser({ deck }: Readonly<{ deck: DeckPackage }>) {
               >
                 <X className="size-3.5" />
               </Button>
-            ) : null}
+            )}
           </div>
-          {errors.query ? (
+          {errors.query !== undefined && (
             <p className="mt-2 text-xs text-[var(--error)]">{errors.query.message}</p>
-          ) : null}
+          )}
         </form>
         <div className="mt-4 space-y-1">
           {filteredCards.map((item, index) => (

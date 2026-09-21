@@ -1,8 +1,11 @@
+import type { ResolvedColorScheme } from "@/shared/domain/color-scheme";
+
+export type { ResolvedColorScheme } from "@/shared/domain/color-scheme";
+
 export type AppearancePreference = "light" | "dark" | "device";
 export type RecollectionIslandPosition = "left" | "bottom" | "right";
 export type RatingDirection = "forward" | "reverse";
 export type AudioSide = "primary" | "opposite";
-export type ResolvedColorScheme = "light" | "dark";
 
 export type AppPreferences = Readonly<{
   appearance: AppearancePreference;

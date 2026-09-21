@@ -1,27 +1,28 @@
-import {
-  createFeedComposer,
-  rememberCard,
-  type FeedCandidate,
-  type FeedState,
-  type FlashcardMemoryStateRepository,
-  type LearnerMemoryState,
-  type LearningScheduler,
-} from "@/features/learning-engine";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
-import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
+import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
+import type { LearnerMemoryState } from "@/features/learning-engine/domain/memory-state";
 import type {
   PreparedReelFeed,
   PreparedReelOccurrence,
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
+import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
+
+import { createFeedComposer } from "@/features/learning-engine/application/learning-engine-factories";
+import {
+  rememberCard,
+  type FeedCandidate,
+  type FeedState,
+} from "@/features/learning-engine/domain/feed-composer";
+import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
+import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
 
 type RandomSource = () => number;
 

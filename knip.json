@@ -6,8 +6,7 @@
       "project": ["scripts/**/*.mjs"]
     },
     "apps/mobile": {
-      "entry": ["src/features/learning-engine/index.ts"],
-      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs", "tools/**/*.cjs", "tests/**/*.ts"],
+      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs", "tests/**/*.ts"],
       "ignoreDependencies": ["expo-updates"]
     },
     "apps/web": {

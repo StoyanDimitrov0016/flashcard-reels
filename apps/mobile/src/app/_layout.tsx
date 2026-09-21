@@ -1,20 +1,21 @@
+import {
+  Stack,
+  ThemeProvider,
+  type ErrorBoundaryProps as ExpoErrorBoundaryProps,
+} from "expo-router";
 import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
-import { Stack, ThemeProvider, type ErrorBoundaryProps } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { PreferencesProvider } from "@/features/preferences/presentation/preferences-context";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
-import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
-import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
-import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
-import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
+import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
+import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
+import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { preferencesService } from "@/infrastructure/preferences-services";
 import {
@@ -22,14 +23,27 @@ import {
   handleSQLiteProviderError,
   initializeDatabase,
 } from "@/infrastructure/sqlite/database";
-import { prepareAppStorage } from "@/infrastructure/app-recovery";
 import { toError } from "@/shared/errors/normalize-error";
+import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
+import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
+import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
+import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
+import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
+import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { getAppColors } from "@/shared/presentation/theme-colors";
-// oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
+
 import "../../global.css";
 
+const appRecoveryCapability = { requestAppDataReset };
+
+type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
+
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  return <GlobalErrorState error={error} retry={retry} />;
+  return (
+    <AppRecoveryProvider capability={appRecoveryCapability}>
+      <GlobalErrorState error={error} retry={retry} />
+    </AppRecoveryProvider>
+  );
 }
 
 export function SuspenseFallback() {
@@ -105,28 +119,36 @@ export default function RootLayout() {
     throw preparationError;
   }
   if (!prepared) {
-    return <StartupLoadingState />;
+    return (
+      <AppRecoveryProvider capability={appRecoveryCapability}>
+        <StartupLoadingState />
+      </AppRecoveryProvider>
+    );
   }
 
   return (
-    <View style={styles.navigationRoot}>
-      {!databaseReady && <StartupLoadingState />}
-      <SQLiteProvider
-        databaseName={DATABASE_NAME}
-        onError={handleSQLiteProviderError}
-        onInit={initializeAppDatabase}
-      >
-        <DeckContentProvider>
-          <LearningProgressResetProvider>
-            <PreferencesProvider service={preferencesService}>
-              <AppServicesProvider>
-                <AppNavigation />
-              </AppServicesProvider>
-            </PreferencesProvider>
-          </LearningProgressResetProvider>
-        </DeckContentProvider>
-      </SQLiteProvider>
-    </View>
+    <AppRecoveryProvider capability={appRecoveryCapability}>
+      <View style={styles.navigationRoot}>
+        {!databaseReady && <StartupLoadingState />}
+        <SQLiteProvider
+          databaseName={DATABASE_NAME}
+          onError={handleSQLiteProviderError}
+          onInit={initializeAppDatabase}
+        >
+          <DeckContentProvider>
+            <LearningProgressResetProvider>
+              <PreferencesProvider service={preferencesService}>
+                <PreferencesThemeProvider>
+                  <AppServicesProvider>
+                    <AppNavigation />
+                  </AppServicesProvider>
+                </PreferencesThemeProvider>
+              </PreferencesProvider>
+            </LearningProgressResetProvider>
+          </DeckContentProvider>
+        </SQLiteProvider>
+      </View>
+    </AppRecoveryProvider>
   );
 }
 

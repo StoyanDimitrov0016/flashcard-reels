@@ -1,10 +1,10 @@
 import { SymbolView } from "expo-symbols";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast, { type ToastConfig, type ToastConfigParams } from "react-native-toast-message";
-import { StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { getTopToastOffset } from "@/shared/presentation/toast-layout";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 

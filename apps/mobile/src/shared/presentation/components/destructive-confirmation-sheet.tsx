@@ -1,6 +1,7 @@
+import type { ComponentProps } from "react";
+
 import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import type { ComponentProps } from "react";
 
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";

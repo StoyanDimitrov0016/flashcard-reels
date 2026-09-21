@@ -1,11 +1,3 @@
-import type { Clock } from "@/shared/domain/clock";
-import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
-import {
-  DeckPackageVersionError,
-  type DeckInstallResult,
-  type DeckInstaller,
-  type DeckPackageFile,
-} from "@/features/decks/deck-installer";
 import type {
   DeckAudioStorage,
   DeckPackage,
@@ -14,6 +6,15 @@ import type {
   DeckPackageReader,
   InstalledDeckVersionRepository,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+import type { Clock } from "@/shared/domain/clock";
+
+import {
+  DeckPackageVersionError,
+  type DeckInstallResult,
+  type DeckInstaller,
+  type DeckPackageFile,
+} from "@/features/decks/deck-installer";
 
 /** Internal orchestration. Consumers use only the DeckInstaller interface exported by this module. */
 export class DeckInstallerImpl implements DeckInstaller {

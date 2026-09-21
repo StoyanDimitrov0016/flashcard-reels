@@ -22,7 +22,6 @@ vi.mock("react-native-safe-area-context", async () => {
   };
 });
 vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.1.0" } } }));
-vi.mock("@/infrastructure/app-recovery", () => ({ requestAppDataReset: vi.fn() }));
 
 import { ErrorState } from "@/shared/presentation/components/error-state";
 

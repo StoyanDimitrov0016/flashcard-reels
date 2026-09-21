@@ -1,9 +1,10 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
-import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
+import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
 import {
   decks,
   deckAppearances,

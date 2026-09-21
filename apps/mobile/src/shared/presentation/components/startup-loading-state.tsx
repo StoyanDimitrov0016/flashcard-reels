@@ -2,8 +2,8 @@ import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
-import { getAppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
+import { getAppColors } from "@/shared/presentation/theme-colors";
 import { fontSize } from "@/shared/presentation/typography";
 
 type StartupLoadingStateProps = Readonly<{ label?: string }>;

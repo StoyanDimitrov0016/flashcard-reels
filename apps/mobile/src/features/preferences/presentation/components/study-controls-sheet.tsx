@@ -7,6 +7,7 @@ import type {
   RatingDirection,
   RecollectionIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
+
 import { recallOptions } from "@/features/reels/presentation/recall-options";
 import {
   deriveAudioPosition,
@@ -14,19 +15,10 @@ import {
   getRatingDirectionLabel,
   resolveStudyControlLayout,
 } from "@/features/reels/presentation/study-control-layout";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { sizes } from "@/shared/presentation/sizes";
-import { fontSize, fontWeight } from "@/shared/presentation/typography";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
-
-type StudyControlsSheetProps = Readonly<{
-  onAudioSideChange: (value: AudioSide) => void;
-  onClose: () => void;
-  onPositionChange: (value: RecollectionIslandPosition) => void;
-  onRatingDirectionChange: (value: RatingDirection) => void;
-  preferences: AppPreferences;
-  visible: boolean;
-}>;
+import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
 
@@ -44,6 +36,15 @@ function AudioPreviewMarker() {
     </View>
   );
 }
+
+type StudyControlsSheetProps = Readonly<{
+  onAudioSideChange: (value: AudioSide) => void;
+  onClose: () => void;
+  onPositionChange: (value: RecollectionIslandPosition) => void;
+  onRatingDirectionChange: (value: RatingDirection) => void;
+  preferences: AppPreferences;
+  visible: boolean;
+}>;
 
 export function StudyControlsSheet({
   onAudioSideChange,

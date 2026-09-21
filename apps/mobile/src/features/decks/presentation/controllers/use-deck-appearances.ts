@@ -1,0 +1,82 @@
+import { useEffect, useState } from "react";
+
+import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+
+import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
+import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
+import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
+
+type DeckAppearancesState = Readonly<{
+  appearances: ReadonlyMap<DeckId, DeckAppearance>;
+  error: Error | null;
+  loading: boolean;
+}>;
+
+const initialState: DeckAppearancesState = { appearances: new Map(), error: null, loading: true };
+
+export function useDeckAppearances(deckIds: DeckId[]): DeckAppearancesState {
+  const { deckService } = useDecks();
+  const { appearanceRevision } = useDeckAppearanceRevision();
+  const [state, setState] = useState<DeckAppearancesState>(initialState);
+  const deckIdsKey = deckIds.join(",");
+
+  useEffect(
+    function loadDeckAppearances() {
+      let active = true;
+
+      const loadAppearances = async () => {
+        try {
+          const requestedDeckIds = deckIdsKey
+            ? deckIdsKey.split(",").map((deckId) => DeckIdSchema.parse(deckId))
+            : [];
+          const loadedAppearances = await deckService.getAppearances(requestedDeckIds);
+          const appearancesByDeckId = new Map(
+            loadedAppearances.map((appearance) => [appearance.deckId, appearance] as const)
+          );
+          const appearances = requestedDeckIds.map((deckId) => {
+            const appearance = appearancesByDeckId.get(deckId);
+            if (!appearance) {
+              throw new OperationError({
+                code: "VIEW_LOAD_FAILED",
+                context: { deckId, operation: "deck-appearances.load" },
+                message: `Missing appearance for deck ${deckId}`,
+              });
+            }
+            return [deckId, appearance] as const;
+          });
+
+          if (active) {
+            setState({ appearances: new Map(appearances), error: null, loading: false });
+          }
+        } catch (error) {
+          if (active) {
+            setState({
+              appearances: new Map(),
+              error: toOperationError(error, {
+                code: "VIEW_LOAD_FAILED",
+                context: { operation: "deck-appearances.load" },
+                message: "Could not load deck appearances",
+              }),
+              loading: false,
+            });
+          }
+        }
+      };
+
+      void loadAppearances();
+      return function cancelDeckAppearanceLoad() {
+        active = false;
+      };
+    },
+    [appearanceRevision, deckIdsKey, deckService]
+  );
+
+  if (state.error) {
+    throw state.error;
+  }
+
+  return state;
+}

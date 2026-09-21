@@ -11,25 +11,17 @@ import {
 } from "react-native";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+
 import {
   deckAppearancePresets,
   isCurrentPreset,
   resolveDeckAppearance,
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { sizes } from "@/shared/presentation/sizes";
-import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
-
-type DeckAppearanceSheetProps = Readonly<{
-  appearance: DeckAppearance | null;
-  error: string | null;
-  isPresented: boolean;
-  onDismiss: () => void;
-  onSelect: (preset: DeckAppearancePreset) => void;
-  pendingPreset: DeckAppearancePreset | null;
-}>;
+import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 
 type PresetItemProps = Readonly<{
   appearance: DeckAppearance | null;
@@ -80,6 +72,15 @@ function PresetItem({ appearance, onSelect, pendingPreset, preset }: PresetItemP
     </Pressable>
   );
 }
+
+type DeckAppearanceSheetProps = Readonly<{
+  appearance: DeckAppearance | null;
+  error: string | null;
+  isPresented: boolean;
+  onDismiss: () => void;
+  onSelect: (preset: DeckAppearancePreset) => void;
+  pendingPreset: DeckAppearancePreset | null;
+}>;
 
 export function DeckAppearanceSheet({
   appearance,

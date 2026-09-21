@@ -32,9 +32,9 @@ vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
 vi.mock("@/features/learner-profile/presentation/context/learning-progress-reset-context", () => ({
   useLearningProgressReset: () => ({ invalidateLearningProgress: harness.progress }),
 }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
-import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
+import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 
 describe("deck deletion feedback lifetime", () => {
   beforeEach(() => {

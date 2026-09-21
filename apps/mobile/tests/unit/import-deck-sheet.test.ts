@@ -68,7 +68,7 @@ vi.mock("expo-camera", async () => {
 vi.mock("expo-router", () => ({ useIsFocused: () => harness.focused }));
 vi.mock("expo-symbols", () => ({ SymbolView: () => null }));
 vi.mock("@/shared/presentation/theme", () => ({ useAppTheme: () => ({ colors: {} }) }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: vi.fn() }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: vi.fn() }));
 vi.mock("@/shared/presentation/components/app-bottom-sheet", () => ({
   AppBottomSheet: ({ children }: { children: ReactNode }) => children,
 }));

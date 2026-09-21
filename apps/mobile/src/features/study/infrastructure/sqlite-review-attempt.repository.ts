@@ -1,8 +1,9 @@
 import { and, asc, eq, gte, isNull, lt, lte, max } from "drizzle-orm";
 
-import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteReviewAttemptRepository<

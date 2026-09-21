@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 export default function NotFoundScreen() {

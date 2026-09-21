@@ -1,7 +1,7 @@
 import { strFromU8, unzipSync } from "fflate";
 
-import { DeckPackageSchema, isSafeDeckPackagePath } from "./deck-package.schema.ts";
 import type { DeckPackage, DeckPackageReader } from "./deck-package.model.ts";
+
 import {
   DeckPackageValidationError,
   validateAudioResources,
@@ -9,6 +9,7 @@ import {
   validateCompressedPackageSize,
   validateUncompressedPackageSize,
 } from "./deck-package-limits.ts";
+import { DeckPackageSchema, isSafeDeckPackagePath } from "./deck-package.schema.ts";
 
 const audioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
 const endOfCentralDirectorySignature = 0x06054b50;

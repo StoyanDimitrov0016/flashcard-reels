@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, Download, Eye, LoaderCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
+
 import { AppHeader } from "@/components/app-header";
 import { DeckSearchForm } from "@/components/deck-search-form";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,9 @@ function DeckGridSkeleton() {
   );
 }
 
-function CatalogError({ message, onRetry }: Readonly<{ message: string; onRetry: () => void }>) {
+type CatalogErrorProps = Readonly<{ message: string; onRetry: () => void }>;
+
+function CatalogError({ message, onRetry }: CatalogErrorProps) {
   return (
     <>
       <AppHeader />
@@ -158,11 +161,11 @@ export function DeckCatalog() {
             ))
           )}
         </div>
-        {downloadMutation.isError ? (
+        {downloadMutation.isError && (
           <p className="mt-4 text-sm text-[var(--error)]" role="alert">
             {downloadMutation.error.message}
           </p>
-        ) : null}
+        )}
       </main>
     </>
   );

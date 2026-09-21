@@ -1,13 +1,16 @@
 import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { AppHeader } from "@/components/app-header";
 import { DeckTransferCard } from "@/components/deck-transfer-card";
 import { FlashcardBrowser } from "@/components/flashcard-browser";
 import { Button } from "@/components/ui/button";
 import { readDeckPackage } from "@/lib/deck-package";
 
-export default async function DeckPage({ params }: { params: Promise<{ deckId: string }> }) {
+type DeckPageProps = Readonly<{ params: Promise<{ deckId: string }> }>;
+
+export default async function DeckPage({ params }: DeckPageProps) {
   const routeParams = await params;
   let deck;
   try {

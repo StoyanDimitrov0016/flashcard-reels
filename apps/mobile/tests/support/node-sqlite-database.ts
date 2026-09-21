@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
+import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 

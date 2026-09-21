@@ -31,7 +31,7 @@ vi.mock("expo-file-system", () => ({
     }
   },
 }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: native.log }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: native.log }));
 
 import {
   DECK_DOWNLOAD_TIMEOUT_MS,

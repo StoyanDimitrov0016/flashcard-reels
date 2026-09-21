@@ -1,18 +1,18 @@
-import { useCallback } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
-import { useDeckAppearances } from "@/features/decks/presentation/hooks/use-deck-appearances";
-import { useLearnerProgress } from "@/features/learner-profile/presentation/hooks/use-learner-progress";
+import { useLearnerProgress } from "@/features/learner-profile/presentation/controllers/use-learner-progress";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export default function ProgressScreen() {

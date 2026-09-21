@@ -12,34 +12,35 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useDeckDetails } from "@/features/decks/presentation/hooks/use-deck-details";
-import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+
+import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
-import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
+import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
+import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
+import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import {
   resolveDeckDetailsMode,
   showsLearningProgress,
 } from "@/features/decks/presentation/deck-details-mode";
-import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
-import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
-import { useResetDeckProgress } from "@/features/learner-profile/presentation/hooks/use-reset-deck-progress";
-import { useHaptics } from "@/features/preferences/presentation/hooks/use-haptics";
-import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { useResetDeckProgress } from "@/features/learner-profile/presentation/controllers/use-reset-deck-progress";
+import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
+import { reportError } from "@/shared/errors/report-error";
 import { ErrorState } from "@/shared/presentation/components/error-state";
+import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
-import { screenLayout } from "@/shared/presentation/screen-layout";
-import { useCardAnswerAudioSource } from "@/features/audio/presentation/hooks/use-card-answer-audio-source";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { sizes } from "@/shared/presentation/sizes";
-import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
-import { reportError } from "@/shared/presentation/errors/report-error";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { screenLayout } from "@/shared/presentation/screen-layout";
+import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
 type CardRowProps = Readonly<{
   card: Flashcard;

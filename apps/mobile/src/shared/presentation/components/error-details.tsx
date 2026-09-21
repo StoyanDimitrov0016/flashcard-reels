@@ -1,10 +1,10 @@
+import Constants from "expo-constants";
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
-import Constants from "expo-constants";
 
-import { describeError } from "@/shared/application/error-details";
-import { getAppColors } from "@/shared/presentation/theme-colors";
+import { describeError } from "@/shared/errors/describe-error";
 import { sizes } from "@/shared/presentation/sizes";
+import { getAppColors } from "@/shared/presentation/theme-colors";
 import { fontSize } from "@/shared/presentation/typography";
 
 type ErrorDetailsProps = Readonly<{ error: unknown }>;

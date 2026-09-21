@@ -1,12 +1,13 @@
-import { BottomSheet, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import type { ReactNode } from "react";
+
+import { BottomSheet, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import { StyleSheet, useWindowDimensions } from "react-native";
 
-import { useAppTheme } from "@/shared/presentation/theme";
 import {
   resolveAppBottomSheetConfig,
   type AppBottomSheetSize,
 } from "@/shared/presentation/components/app-bottom-sheet-config";
+import { useAppTheme } from "@/shared/presentation/theme";
 
 type AppBottomSheetProps = Readonly<{
   children: ReactNode;

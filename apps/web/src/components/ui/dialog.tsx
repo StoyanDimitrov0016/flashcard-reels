@@ -1,21 +1,24 @@
 "use client";
 
+import type { ComponentPropsWithoutRef } from "react";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import type { ComponentPropsWithoutRef } from "react";
+
 import { cn } from "@/lib/utils";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 
-function DialogPortal({ children }: DialogPrimitive.DialogPortalProps) {
+type DialogPortalProps = Readonly<DialogPrimitive.DialogPortalProps>;
+
+function DialogPortal({ children }: DialogPortalProps) {
   return <DialogPrimitive.Portal>{children}</DialogPrimitive.Portal>;
 }
 
-function DialogOverlay({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>) {
+type DialogOverlayProps = Readonly<ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>>;
+
+function DialogOverlay({ className, ...props }: DialogOverlayProps) {
   return (
     <DialogPrimitive.Overlay
       className={cn(
@@ -27,11 +30,9 @@ function DialogOverlay({
   );
 }
 
-function DialogContent({
-  className,
-  children,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Content>) {
+type DialogContentProps = Readonly<ComponentPropsWithoutRef<typeof DialogPrimitive.Content>>;
+
+function DialogContent({ className, children, ...props }: DialogContentProps) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -54,23 +55,25 @@ function DialogContent({
   );
 }
 
-function DialogHeader({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+type DialogHeaderProps = Readonly<ComponentPropsWithoutRef<"div">>;
+
+function DialogHeader({ className, ...props }: DialogHeaderProps) {
   return (
     <div className={cn("flex flex-col gap-1.5 text-center sm:text-left", className)} {...props} />
   );
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+type DialogTitleProps = Readonly<ComponentPropsWithoutRef<typeof DialogPrimitive.Title>>;
+
+function DialogTitle({ className, ...props }: DialogTitleProps) {
   return <DialogPrimitive.Title className={cn("text-lg font-semibold", className)} {...props} />;
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+type DialogDescriptionProps = Readonly<
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>;
+
+function DialogDescription({ className, ...props }: DialogDescriptionProps) {
   return (
     <DialogPrimitive.Description
       className={cn("text-sm text-[var(--text-secondary)]", className)}

@@ -1,9 +1,10 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
-import { type DeckId } from "@/features/decks/domain/deck.model";
-import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { FlashcardRepository } from "@/features/flashcards/domain/flashcard.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { type DeckId } from "@/features/decks/domain/deck.model";
+import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { flashcards } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteFlashcardRepository<TRunResult = unknown> implements FlashcardRepository {

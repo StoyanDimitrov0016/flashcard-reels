@@ -1,9 +1,10 @@
 import { DownloadTask, File, Paths } from "expo-file-system";
-import { OperationError } from "@/shared/errors/operation-error";
-import { reportError } from "@/shared/presentation/errors/report-error";
 
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
+
+import { OperationError } from "@/shared/errors/operation-error";
+import { reportError } from "@/shared/errors/report-error";
 
 export const DECK_DOWNLOAD_TIMEOUT_MS = 60_000;
 

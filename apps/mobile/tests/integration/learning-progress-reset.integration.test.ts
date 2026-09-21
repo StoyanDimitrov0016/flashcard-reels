@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
-import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
+import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
 import {
   decks,
   flashcardMemoryStates,
@@ -16,6 +16,7 @@ import {
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph } from "../support/sqlite-study-scenario";
 import {

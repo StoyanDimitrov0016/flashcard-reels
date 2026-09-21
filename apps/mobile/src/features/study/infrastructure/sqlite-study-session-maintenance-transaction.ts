@@ -2,6 +2,7 @@ import { and, eq, isNotNull, lt } from "drizzle-orm";
 
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
 import { studySessionItems, studySessionRecurrences } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionMaintenanceTransaction<

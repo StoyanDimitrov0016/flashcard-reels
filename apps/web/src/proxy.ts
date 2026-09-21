@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { isValidSessionToken, sessionCookie } from "@/lib/auth/session";
 
 const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);

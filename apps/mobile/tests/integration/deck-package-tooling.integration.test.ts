@@ -1,7 +1,7 @@
+import { spawnSync } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
@@ -17,7 +17,7 @@ async function temporaryProject(): Promise<string> {
 function runTool(scriptName: string, ...arguments_: string[]) {
   return spawnSync(
     process.execPath,
-    ["--experimental-strip-types", path.join(process.cwd(), "scripts", scriptName), ...arguments_],
+    [path.join(process.cwd(), "scripts", scriptName), ...arguments_],
     { cwd: process.cwd(), encoding: "utf8" }
   );
 }
@@ -43,10 +43,7 @@ describe("deck package tooling independence", () => {
       const output = `generated/demo-${timezone.replace("/", "-")}.fcrdeck`;
       const result = spawnSync(
         process.execPath,
-        [
-          "--experimental-strip-types",
-          path.join(process.cwd(), "scripts", "generate-demo-deck-package.mjs"),
-        ],
+        [path.join(process.cwd(), "scripts", "generate-demo-deck-package.mjs")],
         {
           cwd: project,
           encoding: "utf8",

@@ -1,21 +1,24 @@
+import type { ColorValue } from "react-native";
+
+import { type ErrorBoundaryProps as ExpoErrorBoundaryProps } from "expo-router";
 import { TopTabs } from "expo-router/js-top-tabs";
-import { type ErrorBoundaryProps } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect } from "react";
-import type { ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
+import { reportError } from "@/shared/errors/report-error";
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
-import { reportError } from "@/shared/presentation/errors/report-error";
-import { useAppTheme } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme } from "@/shared/presentation/theme";
 
 type TabIconProps = Readonly<{ color: ColorValue; focused: boolean }>;
 
 export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
+
+type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   useEffect(

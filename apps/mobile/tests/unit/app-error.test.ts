@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { AppError } from "@/shared/errors/app-error";
-import { toError, toOperationError } from "@/shared/errors/normalize-error";
-import { OperationError } from "@/shared/errors/operation-error";
-import { RecoveryError } from "@/infrastructure/errors/recovery-error";
-import { StartupError } from "@/infrastructure/errors/startup-error";
 import {
   DeckPackageValidationError,
   DeckPackageVersionError,
 } from "@/features/decks/deck-installer";
+import { RecoveryError } from "@/infrastructure/errors/recovery-error";
+import { StartupError } from "@/infrastructure/errors/startup-error";
+import { AppError } from "@/shared/errors/app-error";
+import { toError, toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 
 describe("application errors", () => {
   it("stores stable identity, context, and an Error cause", () => {

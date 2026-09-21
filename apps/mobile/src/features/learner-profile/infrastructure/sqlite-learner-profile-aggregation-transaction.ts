@@ -1,12 +1,13 @@
 import { and, asc, eq, gt, inArray, isNotNull, lte } from "drizzle-orm";
 
-import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type {
   LearnerProfileAggregationResult,
   LearnerProfileAggregationTransaction,
 } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts";
 import {
   flashcardReviewAttempts,
   flashcards,

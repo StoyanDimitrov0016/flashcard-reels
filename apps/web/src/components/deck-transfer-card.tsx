@@ -1,8 +1,9 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, LoaderCircle, QrCode, RefreshCw, Smartphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { useMutation } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { downloadDeckMutationOptions } from "@/lib/deck-queries";
 
-export function DeckTransferCard({ deckId }: Readonly<{ deckId: string }>) {
+type DeckTransferCardProps = Readonly<{ deckId: string }>;
+
+export function DeckTransferCard({ deckId }: DeckTransferCardProps) {
   const download = useMutation(downloadDeckMutationOptions);
 
   const handleOpenChange = (open: boolean) => {

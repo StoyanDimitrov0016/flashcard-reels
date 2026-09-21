@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import * as z from "zod";
+
 import { Button } from "@/components/ui/button";
 
 const DeckSearchSchema = z.compile(
@@ -26,7 +27,9 @@ function useDebouncedValue(value: string, delay: number) {
   return debouncedValue;
 }
 
-export function DeckSearchForm({ onSearch }: Readonly<{ onSearch: (query: string) => void }>) {
+type DeckSearchFormProps = Readonly<{ onSearch: (query: string) => void }>;
+
+export function DeckSearchForm({ onSearch }: DeckSearchFormProps) {
   const {
     control,
     formState: { errors },
@@ -62,7 +65,7 @@ export function DeckSearchForm({ onSearch }: Readonly<{ onSearch: (query: string
           placeholder="Search decks by title"
           {...register("query")}
         />
-        {query ? (
+        {query.length > 0 && (
           <Button
             aria-label="Clear deck search"
             className="size-7 px-0"
@@ -73,11 +76,11 @@ export function DeckSearchForm({ onSearch }: Readonly<{ onSearch: (query: string
           >
             <X className="size-3.5" />
           </Button>
-        ) : null}
+        )}
       </div>
-      {errors.query ? (
+      {errors.query !== undefined && (
         <p className="mt-2 text-xs text-[var(--error)]">{errors.query.message}</p>
-      ) : null}
+      )}
     </form>
   );
 }

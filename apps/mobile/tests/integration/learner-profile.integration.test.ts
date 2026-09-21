@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
@@ -8,7 +9,7 @@ import {
   learnerProfiles,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
-import { eq } from "drizzle-orm";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/study-fixtures";
 

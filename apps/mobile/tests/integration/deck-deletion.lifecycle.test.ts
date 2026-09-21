@@ -1,6 +1,6 @@
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 /** @vitest-environment jsdom */
 import { Component, createElement, useEffect, type ReactNode } from "react";
-import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const harness = vi.hoisted(() => ({
@@ -11,12 +11,22 @@ const harness = vi.hoisted(() => ({
 }));
 vi.mock("@/infrastructure/app-services", () => ({ useAppServices: () => harness.services }));
 vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove: vi.fn() }) } }));
-vi.mock("@/shared/presentation/errors/report-error", () => ({ reportError: harness.report }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
+
+import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
+import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
   DeckContentProvider,
   useDeckContentRevision,
 } from "@/features/decks/presentation/context/deck-content-context";
+import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import {
   LearningProgressResetProvider,
   useLearningProgressReset,
@@ -25,16 +35,9 @@ import {
   FeedScopeProvider,
   useFeedScope,
 } from "@/features/reels/presentation/context/feed-scope-context";
-import { useFlashcards } from "@/features/flashcards/presentation/hooks/use-flashcards";
-import { usePreparedReelFeed } from "@/features/reels/presentation/hooks/use-prepared-reel-feed";
-import { useDeleteDeck } from "@/features/decks/presentation/hooks/use-delete-deck";
-import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
-import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
-import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
+
+import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
   createScenarioGraph,
@@ -48,7 +51,6 @@ import {
   SequenceIdGenerator,
   TestClock,
 } from "../support/study-fixtures";
-import { deferred } from "../support/deferred";
 
 let observedFeed: PreparedReelFeed | null = null;
 let observedLoading = true;
