@@ -1,5 +1,6 @@
-import { useAppServices } from "@/infrastructure/app-services";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
+
+import { useAppServices } from "@/infrastructure/app-services";
 
 export type AudioCapability = Readonly<{
   answerAudioService: AnswerAudioService;

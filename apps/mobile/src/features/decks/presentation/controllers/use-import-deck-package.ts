@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { DeckInstallResult } from "@/features/decks/deck-installer";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
-import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
+import type { DeckInstallResult } from "@/features/decks/deck-installer";
+
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
+import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";

@@ -1,13 +1,13 @@
 import { Directory, File, Paths } from "expo-file-system";
 
 import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
-import type { DeckAudioRemover } from "@/features/decks/domain/deck.service";
 import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
 import type {
   DeckAudioStorage,
   DeckPackage,
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
+import type { DeckAudioRemover } from "@/features/decks/domain/deck.service";
 
 const AUDIO_ROOT_NAME = "deck-audio";
 

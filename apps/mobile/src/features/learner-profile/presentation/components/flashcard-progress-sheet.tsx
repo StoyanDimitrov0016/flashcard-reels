@@ -1,16 +1,17 @@
-import { SymbolView } from "expo-symbols";
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
+import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+
+import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
+import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
-import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 
 type FlashcardProgressSheetProps = Readonly<{
   accentColor: string;

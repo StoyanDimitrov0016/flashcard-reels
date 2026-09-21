@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { darkColors, getAppColors, lightColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
+import { darkColors, getAppColors, lightColors } from "@/shared/presentation/theme-colors";
 import { fontSize, lineHeight } from "@/shared/presentation/typography";
 
 describe("semantic application themes", () => {

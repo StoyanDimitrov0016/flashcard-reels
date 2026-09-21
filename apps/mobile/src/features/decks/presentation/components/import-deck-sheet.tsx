@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
-import { SymbolView } from "expo-symbols";
 import { useIsFocused } from "expo-router";
+import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import {
   ActivityIndicator,
@@ -13,11 +13,11 @@ import {
 } from "react-native";
 import * as z from "zod";
 
+import { reportError } from "@/shared/errors/report-error";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
-import { reportError } from "@/shared/errors/report-error";
 
 const PrivateDevelopmentHostPattern =
   /^(?:localhost|127(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[::1\])$/;

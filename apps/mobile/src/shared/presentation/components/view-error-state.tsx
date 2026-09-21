@@ -1,6 +1,6 @@
+import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { ErrorState, type ErrorStateAction } from "@/shared/presentation/components/error-state";
-import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 type ViewErrorStateProps = Readonly<{

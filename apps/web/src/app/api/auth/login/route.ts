@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { isValidInternalPassword } from "@/lib/auth/password";
 import { createSessionToken, sessionCookie } from "@/lib/auth/session";
 

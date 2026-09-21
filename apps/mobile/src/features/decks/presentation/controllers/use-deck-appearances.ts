@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
+
+import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
-import { OperationError } from "@/shared/errors/operation-error";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 
 type DeckAppearancesState = Readonly<{
   appearances: ReadonlyMap<DeckId, DeckAppearance>;

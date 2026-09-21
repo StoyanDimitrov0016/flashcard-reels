@@ -1,13 +1,14 @@
 import { and, asc, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 
-import { type DeckId } from "@/features/decks/domain/deck.model";
-import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
-import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import type {
   StudySessionPosition,
   StudySessionRepository,
 } from "@/features/study/domain/study-session.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { type DeckId } from "@/features/decks/domain/deck.model";
+import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
+import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRepository<TRunResult = unknown> implements StudySessionRepository {

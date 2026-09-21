@@ -1,4 +1,5 @@
 import type { Deck } from "@/features/decks/domain/deck.model";
+
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
 
 type DeleteDeckSheetProps = Readonly<{

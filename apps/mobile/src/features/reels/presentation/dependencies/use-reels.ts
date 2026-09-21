@@ -1,8 +1,9 @@
-import { useAppServices } from "@/infrastructure/app-services";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import type { DeckService } from "@/features/decks/domain/deck.service";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudyService } from "@/features/study/domain/study.service";
+
+import { useAppServices } from "@/infrastructure/app-services";
 
 export type ReelsCapability = Readonly<{
   answerAudioService: AnswerAudioService;

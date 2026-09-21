@@ -5,8 +5,10 @@ import { ArrowLeft, ArrowRight, Eye, EyeOff, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
+
 import type { DeckPackage } from "@/lib/deck-package";
+
+import { Button } from "@/components/ui/button";
 
 const FlashcardSearchSchema = z.compile(
   z.object({ query: z.string().trim().max(80, "Search is limited to 80 characters.") })

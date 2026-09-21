@@ -1,7 +1,8 @@
 import { strFromU8, unzipSync } from "fflate";
 import * as z from "zod";
-import { readDeckObject } from "@/lib/r2";
+
 import { getDeckObjectKey } from "@/lib/deck-catalog";
+import { readDeckObject } from "@/lib/r2";
 
 const DeckPackageCardSchema = z.compile(
   z

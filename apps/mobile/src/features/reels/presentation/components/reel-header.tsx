@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { DeckAppearanceVariant } from "@/features/decks/presentation/deck-appearance-presets";
 import type { Deck } from "@/features/decks/domain/deck.model";
+import type { DeckAppearanceVariant } from "@/features/decks/presentation/deck-appearance-presets";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";

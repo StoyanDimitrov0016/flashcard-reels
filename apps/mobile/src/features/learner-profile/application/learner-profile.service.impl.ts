@@ -1,9 +1,9 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
+import type { LearningProgressResetTransaction } from "@/features/learner-profile/application/learning-progress-reset-transaction";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
 import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
-import type { LearningProgressResetTransaction } from "@/features/learner-profile/application/learning-progress-reset-transaction";
-import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 

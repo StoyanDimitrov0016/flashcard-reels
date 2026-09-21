@@ -5,11 +5,11 @@ import {
   DeckPackageVersionError,
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
+import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
-import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { OperationError } from "@/shared/errors/operation-error";
 
 const resultMessages: Record<DeckInstallResult["status"], string> = {

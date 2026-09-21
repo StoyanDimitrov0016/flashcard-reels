@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
+
+import { useCallback, useState } from "react";
 
 type ReelViewport = Readonly<{ height: number; width: number }>;
 const initialViewport: ReelViewport = { height: 0, width: 0 };

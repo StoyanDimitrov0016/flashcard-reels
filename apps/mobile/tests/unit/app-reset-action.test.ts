@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("react-native", async () => {
   const { createElement: element } = await import("react");

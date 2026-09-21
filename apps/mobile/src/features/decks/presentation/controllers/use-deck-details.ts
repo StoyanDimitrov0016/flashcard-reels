@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
-import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
-import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
+
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
+import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{

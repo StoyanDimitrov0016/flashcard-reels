@@ -1,5 +1,6 @@
-import { useAppServices } from "@/infrastructure/app-services";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
+
+import { useAppServices } from "@/infrastructure/app-services";
 
 export type FlashcardsCapability = Readonly<{
   flashcardService: FlashcardService;

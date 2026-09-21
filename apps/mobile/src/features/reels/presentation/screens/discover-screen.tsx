@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
 import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";

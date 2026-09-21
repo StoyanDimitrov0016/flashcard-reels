@@ -1,11 +1,12 @@
 import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 
-import { DeckPackageVersionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import type {
   DeckPackage,
   DeckPackageInstallationTransaction,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { DeckPackageVersionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import {
   decks,
   deckAppearances,

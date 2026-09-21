@@ -1,9 +1,11 @@
 import { inArray, eq } from "drizzle-orm";
 
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
+import { flashcardMemoryStates } from "@/infrastructure/sqlite/schema";
+
 import type { FlashcardMemoryStateRepository } from "../domain/flashcard-memory-state.repository";
 import type { LearnerMemoryState } from "../domain/memory-state";
-import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
-import { flashcardMemoryStates } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteFlashcardMemoryStateRepository<
   TRunResult = unknown,

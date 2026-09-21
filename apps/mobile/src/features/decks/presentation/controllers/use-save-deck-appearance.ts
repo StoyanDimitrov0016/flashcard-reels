@@ -1,8 +1,9 @@
 import { useState } from "react";
 
-import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckAppearancePreset } from "@/features/decks/presentation/deck-appearance-presets";
+
+import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { useDeckAppearanceRevision } from "@/features/decks/presentation/context/deck-appearance-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";

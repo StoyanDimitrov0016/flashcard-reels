@@ -1,4 +1,5 @@
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
+
 import { type DeckAppearancePresetId } from "@/features/decks/domain/deck-appearance.model";
 
 export type DeckAppearanceVariant = Readonly<{

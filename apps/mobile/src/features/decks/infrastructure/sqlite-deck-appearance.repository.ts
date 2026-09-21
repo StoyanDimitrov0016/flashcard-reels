@@ -1,12 +1,13 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
+import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
 import {
   DeckAppearance,
   isDeckAppearancePresetId,
 } from "@/features/decks/domain/deck-appearance.model";
-import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
-import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { deckAppearances } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckAppearanceRepository<

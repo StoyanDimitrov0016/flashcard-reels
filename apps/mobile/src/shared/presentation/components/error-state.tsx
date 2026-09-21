@@ -1,9 +1,10 @@
-import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
 import type { ReactNode } from "react";
+
+import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
+import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 export type ErrorStateAction = Readonly<{

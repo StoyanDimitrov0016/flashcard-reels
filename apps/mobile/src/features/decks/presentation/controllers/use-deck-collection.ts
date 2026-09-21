@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
+
+import { DeckIdSchema } from "@/features/decks/contracts/deck.schema";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { OperationError } from "@/shared/errors/operation-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 
 type DecksState = Readonly<{
   decks: ReadonlyMap<DeckId, Deck>;

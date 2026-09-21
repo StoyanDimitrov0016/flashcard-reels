@@ -1,4 +1,5 @@
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+
 import type { LearnerMemoryState } from "./memory-state";
 
 export const FEED_RECENT_CARD_LIMIT = 3;

@@ -1,8 +1,8 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { DeckPackageSchema } from "../src/features/decks/deck-installer/internal/deck-package.schema.ts";
 import { createDeckPackageArchive } from "../src/features/decks/deck-installer/internal/deck-package-writer.ts";
+import { DeckPackageSchema } from "../src/features/decks/deck-installer/internal/deck-package.schema.ts";
 
 const [inputPath, outputPath, ...extraArguments] = process.argv.slice(2);
 if (!inputPath || !outputPath || extraArguments.length > 0) {

@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+
 import {
   explainLearnerProfile,
   type LearnerProfileExplanation,
 } from "@/features/learner-profile/domain/learner-profile-explanation";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useLearnerProfile } from "@/features/learner-profile/presentation/dependencies/use-learner-profile";
 import { toOperationError } from "@/shared/errors/normalize-error";

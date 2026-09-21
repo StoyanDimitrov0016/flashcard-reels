@@ -1,3 +1,5 @@
+import type { Clock } from "@/shared/domain/clock";
+
 // oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
 import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { Deck } from "@/features/decks/domain/deck.model";
@@ -8,14 +10,13 @@ import {
   readBundledDeckPackage,
 } from "@/infrastructure/bundled-deck-packages";
 import {
-  createDeckPackageServices,
-  type AppDatabase,
-} from "@/infrastructure/deck-package-services";
-import {
   shouldApplyBundledAppearance,
   shouldInstallBundledDeck,
 } from "@/infrastructure/bundled-deck-version";
-import type { Clock } from "@/shared/domain/clock";
+import {
+  createDeckPackageServices,
+  type AppDatabase,
+} from "@/infrastructure/deck-package-services";
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);

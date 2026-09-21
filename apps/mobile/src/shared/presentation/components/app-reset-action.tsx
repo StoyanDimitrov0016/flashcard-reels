@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { toError } from "@/shared/errors/normalize-error";
+import { reportError } from "@/shared/errors/report-error";
 import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { useAppRecovery } from "@/shared/presentation/context/app-recovery-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
-import { reportError } from "@/shared/errors/report-error";
-import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { sizes } from "@/shared/presentation/sizes";
+import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { fontSize } from "@/shared/presentation/typography";
 
 export function AppResetAction() {

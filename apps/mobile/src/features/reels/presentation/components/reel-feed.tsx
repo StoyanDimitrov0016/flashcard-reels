@@ -1,17 +1,18 @@
+import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 import { useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
+
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
+import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 
 import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
+import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
-import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
-import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 

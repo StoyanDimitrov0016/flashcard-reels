@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -13,38 +13,39 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+
+import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
+import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
+import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
+import { useSaveDeckAppearance } from "@/features/decks/presentation/controllers/use-save-deck-appearance";
 import {
   resolveDeckAppearance,
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
-import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
-import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
-import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
-import { useSaveDeckAppearance } from "@/features/decks/presentation/controllers/use-save-deck-appearance";
-import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
-import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
   HOLD_FEEDBACK_DELAY_MS,
 } from "@/features/reels/presentation/hold-to-focus";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
   showSuccessToast,
 } from "@/shared/presentation/flashcard-toast";
-import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];

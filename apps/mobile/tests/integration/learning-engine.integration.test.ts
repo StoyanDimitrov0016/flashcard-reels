@@ -1,21 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type {
   LearnerMemoryState,
   SchedulerMemoryState,
 } from "@/features/learning-engine/domain/memory-state";
+import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+
+import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
-import { decks, flashcards } from "@/infrastructure/sqlite/schema";
+import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
-import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
-import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { decks, flashcards } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph } from "../support/sqlite-study-scenario";
 import {

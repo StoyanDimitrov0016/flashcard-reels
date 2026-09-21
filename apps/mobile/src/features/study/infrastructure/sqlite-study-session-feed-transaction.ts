@@ -1,8 +1,9 @@
 import { and, eq, isNull } from "drizzle-orm";
 
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+
 import { studySessionItems, studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionFeedTransaction<

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
+
 import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useLearnerProfile } from "@/features/learner-profile/presentation/dependencies/use-learner-profile";
 

@@ -2,6 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
+
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 const symbolNames = {

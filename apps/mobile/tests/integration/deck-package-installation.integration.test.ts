@@ -1,27 +1,29 @@
-import { strToU8, zipSync } from "fflate";
 import { eq } from "drizzle-orm";
+import { strToU8, zipSync } from "fflate";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
-import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
-import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/deck-package-limits";
 import type {
   DeckAudioStorage,
   DeckPackage,
   DeckPackageInstallationTransaction,
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+
+import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
+import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/deck-package-limits";
 import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import {
   deckAppearances,
   flashcardMemoryStates,
   flashcardReviewAttempts,
 } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, type ScenarioGraph } from "../support/sqlite-study-scenario";
 import {

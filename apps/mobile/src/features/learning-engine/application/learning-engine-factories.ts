@@ -1,5 +1,6 @@
 import type { FeedComposer } from "../domain/feed-composer";
 import type { LearningScheduler } from "../domain/learning-scheduler";
+
 import { SimpleFeedComposer } from "../internal/simple-feed-composer";
 import { TsFsrsLearningScheduler } from "../internal/ts-fsrs-scheduler";
 

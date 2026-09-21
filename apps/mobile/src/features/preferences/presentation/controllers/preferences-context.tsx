@@ -1,6 +1,8 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useColorScheme } from "react-native";
 
+import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
+
 import {
   defaultAppPreferences,
   resolveColorScheme,
@@ -11,7 +13,6 @@ import {
   type RecollectionIslandPosition,
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
-import type { PreferencesService as PreferencesServiceType } from "@/features/preferences/application/preferences.service";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 

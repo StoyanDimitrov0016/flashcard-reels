@@ -1,16 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  openFocusedFeed,
-  type FocusedFeedOptions,
-} from "@/features/reels/presentation/open-focused-feed";
+import type { RecallLevel } from "@/features/study/domain/recall-level";
+
 import {
   confirmFocusedFeedSession,
   createFocusedFeedState,
   reconcileFocusedFeedState,
   type FocusedFeedState,
 } from "@/features/reels/presentation/focused-feed-state";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import {
+  openFocusedFeed,
+  type FocusedFeedOptions,
+} from "@/features/reels/presentation/open-focused-feed";
 
 const focusHandoffCases: readonly (readonly [boolean, RecallLevel | null])[] = [
   [true, "hard"],

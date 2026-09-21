@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
+
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { OperationError } from "@/shared/errors/operation-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 
 type DeckCatalogEntry = Readonly<{
   appearance: DeckAppearance;

@@ -1,13 +1,16 @@
 import type { SQLiteDatabase } from "expo-sqlite";
+
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 
-import migrations from "../../../drizzle/migrations";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
+
 import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import { StartupError, type StartupErrorCode } from "@/infrastructure/errors/startup-error";
-import { AppError } from "@/shared/errors/app-error";
 import { SystemClock } from "@/infrastructure/system-clock";
+import { AppError } from "@/shared/errors/app-error";
+
+import migrations from "../../../drizzle/migrations";
 
 export const DATABASE_NAME = "flashcard-reels.db";
 

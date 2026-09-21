@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { sizes } from "@/shared/presentation/sizes";
+import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 type AnswerBodyLayoutProps = Readonly<{

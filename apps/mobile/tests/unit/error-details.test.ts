@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { describeError } from "@/shared/errors/describe-error";
 import { AppError } from "@/shared/errors/app-error";
+import { describeError } from "@/shared/errors/describe-error";
 
 describe("error diagnostics", () => {
   it("preserves the startup stage and the underlying native exception", () => {

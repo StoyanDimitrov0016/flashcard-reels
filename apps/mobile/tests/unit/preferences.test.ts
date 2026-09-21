@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { normalizePersistedPreferences } from "@/features/preferences/application/normalize-preferences";
 import {
   defaultAppPreferences,
   resolveColorScheme,
 } from "@/features/preferences/domain/app-preferences";
-import { normalizePersistedPreferences } from "@/features/preferences/application/normalize-preferences";
 
 describe("application preferences", () => {
   it("provides the complete default model", () => {

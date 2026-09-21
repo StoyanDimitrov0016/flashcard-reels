@@ -27,6 +27,7 @@ vi.mock("@/infrastructure/deck-package-services", () => ({
 
 import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import { decks } from "@/infrastructure/sqlite/schema";
+
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { TestClock } from "../support/study-fixtures";
 

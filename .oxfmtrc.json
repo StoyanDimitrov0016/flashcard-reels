@@ -2,14 +2,31 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "ignorePatterns": [
     ".expo/**",
+    ".next/**",
+    ".turbo/**",
     "dist/**",
     "node_modules/**",
-    "package-lock.json",
-    "flashcard-reels-learning-engine-foundation-detailed.md"
+    "apps/*/.expo/**",
+    "apps/*/.next/**",
+    "apps/*/dist/**",
+    "apps/mobile/drizzle/**",
+    "apps/web/next-env.d.ts",
+    "package-lock.json"
   ],
   "printWidth": 100,
   "semi": true,
   "singleQuote": false,
+  "sortImports": {
+    "groups": [
+      "type-import",
+      ["value-builtin", "value-external"],
+      "type-internal",
+      "value-internal",
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
+      "unknown"
+    ]
+  },
   "tabWidth": 2,
   "trailingComma": "es5"
 }

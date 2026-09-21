@@ -1,7 +1,8 @@
-import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { StudySession } from "@/features/study/domain/study-session.model";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
+
+import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import { StudySession } from "@/features/study/domain/study-session.model";
 
 export const TEST_DECK_ID = "00000000-0000-4000-8000-000000000100";
 export const OTHER_DECK_ID = "00000000-0000-4000-8000-000000000101";

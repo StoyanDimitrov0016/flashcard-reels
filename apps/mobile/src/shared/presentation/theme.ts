@@ -2,6 +2,7 @@ import { DefaultTheme, DarkTheme } from "expo-router";
 import { createContext, createElement, type ReactNode, useContext } from "react";
 
 import type { ResolvedColorScheme } from "@/shared/domain/color-scheme";
+
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 
 export type { AppColors } from "@/shared/presentation/theme-colors";

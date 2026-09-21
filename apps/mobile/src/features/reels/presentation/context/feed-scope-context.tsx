@@ -1,6 +1,12 @@
 import { createContext, type ReactNode, useCallback, useContext, useReducer } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
+
+import {
+  useFocusedFeedLifecycle,
+  type FocusedFeedEvaluation,
+} from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
 import {
   confirmFocusedFeedSession,
   createFocusedFeedState,
@@ -8,11 +14,6 @@ import {
   type FocusedFeedState,
   type PersistedFocusedSession,
 } from "@/features/reels/presentation/focused-feed-state";
-import {
-  useFocusedFeedLifecycle,
-  type FocusedFeedEvaluation,
-} from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
-import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 
