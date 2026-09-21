@@ -21,7 +21,7 @@ The Vercel site is currently for internal use and requires the shared team passw
 
 ## Run locally
 
-You need Node.js 22+, npm 11+, and the Expo Go app or a supported simulator.
+You need Node.js 24, npm 11+, and the Expo Go app or a supported simulator.
 
 ```bash
 npm install

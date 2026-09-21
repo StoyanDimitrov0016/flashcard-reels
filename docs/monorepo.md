@@ -8,21 +8,19 @@ The repository is an npm-workspaces Turborepo:
 
 ## Commands
 
-Root commands are repository-wide orchestration and CI entry points:
+Use root scripts for repository-wide orchestration:
 
-- `npm run dev` starts every development task through Turborepo.
-- `npm run dev:mobile` and `npm run dev:web` start one app from the root.
-- `npm run build` builds deployable workspaces.
-- `npm run check` runs repository-wide formatting, conventions, lint, workspace
-  type checks, and mobile architecture checks.
-- `npm test` runs the mobile and web test suites through Turborepo.
-- `npm run verify` runs root checks, all tests, dead-code analysis, and builds.
+```bash
+npm run dev:mobile
+npm run dev:web
+npm run check
+npm test
+npm run verify
+```
 
-For routine app-local work, change to `apps/mobile` or `apps/web` and run that
-workspace's own `npm run dev`, `npm run check`, `npm test`, `npm run lint`,
-`npm run typecheck`, or `npm run format` scripts. This avoids validating unrelated
-workspaces. Mobile-only extended commands such as `npm run doctor`,
-`npm run check:android`, and `npm run verify` also run from `apps/mobile`.
+For routine app work, run the workspace's local scripts so unrelated workspaces
+are not validated. Expo and Next.js commands must run through their owning
+workspace.
 
 For Vercel, import this repository and set the project root directory to `apps/web`.
 The web workspace's `.env.example` lists the server-only Cloudflare R2 settings. Leave
@@ -65,7 +63,7 @@ installer.
 
 ## Automation
 
-`.github/workflows/ci.yml` runs strict formatting, conventions, lint, type checks,
-architecture rules, all tests, a production-dependency audit, the web build, database
-validation, dead-code checks, Expo Doctor, and an Android export. EAS production builds
-are intentionally separate and run manually or from `mobile-v*` tags.
+`.github/workflows/ci.yml` runs strict formatting, lint, type checks, all tests, a
+production-dependency audit, the web build, database validation, dead-code checks,
+Expo Doctor, and an Android export. EAS production builds are intentionally separate
+and run manually or from `mobile-v*` tags.

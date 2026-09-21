@@ -2,9 +2,7 @@
 
 ## JSX and error conventions
 
-React permits JSX variables; avoiding local JSX staging is a project readability convention, not a claim that it is invalid React. Derive conditions/data above the return, keep markup in the returned tree, and extract substantial reused branches into named, module-scope components. Keep hooks unconditional. See [React conditional rendering](https://react.dev/learn/conditional-rendering).
-
-The mobile Oxlint plugin enforces `flashcards/no-local-jsx-variables` for directly staged JSX inside named components, and `flashcards/prefer-jsx-and` for JSX-child ternaries with one JSX branch and one `null` branch. These deliberately narrow rules do not prohibit render callbacks, module-level constants, two meaningful alternatives, or nullable props/data. They have no automatic fixes: `count && <View />` renders `0`; use `count > 0`, another explicit boolean predicate, or deliberate boolean coercion instead.
+React permits JSX variables; avoiding local JSX staging is a project readability preference, not a claim that it is invalid React. Derive conditions/data above the return, keep markup in the returned tree, and extract substantial reused branches into named, module-scope components. Keep hooks unconditional. See [React conditional rendering](https://react.dev/learn/conditional-rendering) and [Codebase Preferences](codebase-preferences.md).
 
 `unicorn/custom-error-definition` is disabled because our errors delegate their name to the shared object constructor; the syntactic rule cannot validate that contract. Runtime error-contract tests, rather than repeated suppression comments, check names, inheritance, codes and causes. Other lint rules remain enabled.
 
@@ -64,26 +62,27 @@ in-app developer menu.
 
 ## Quality checks
 
-From the repository root, use repository-wide orchestration:
+Use the root scripts for repository-wide validation:
 
 ```bash
-npm run check          # formatting, conventions, lint, types, and architecture rules
+npm run check          # formatting/import order, custom-rule tests, lint, and types
 npm test               # all workspace test suites once
 npm run verify         # root checks, tests, dead-code analysis, and production builds
 ```
 
-For focused mobile validation, run local scripts from `apps/mobile`:
+For focused mobile work, run local scripts from `apps/mobile`. Use the extended
+verification after native, Expo, database, bundled-deck, or Android changes:
 
 ```bash
 npm run check
 npm test
-npm run check:android
 npm run verify         # includes Drizzle, architecture, Doctor, and Android export
 ```
 
-Run a workspace's `vitest` command directly with `--watch` when an interactive test loop is useful.
+See [Monorepo](monorepo.md) for command ownership. Run Vitest with `--watch` when
+an interactive test loop is useful.
 
-CI uses `.github/actions/setup-workspace` in every job to install Node 22, the exact npm version declared in root `package.json`, and dependencies with root `npm ci`. The npm cache stores downloaded packages, not installed `node_modules`; the committed lockfile determines dependency versions. Mobile validation prints the checked-out commit and installed Expo version before running Doctor. Keep Doctor's compatibility check enabled and update the mobile manifest and root lockfile together when Expo recommends a patch. Re-running an old workflow run does not pick up newer commits. Feature branches are validated by pull requests targeting `main`; simply pushing a feature branch does not trigger this workflow.
+CI uses `.github/actions/setup-workspace` in every job to install the Node version from `.node-version`, the exact npm version declared in root `package.json`, and dependencies with root `npm ci`. The npm cache stores downloaded packages, not installed `node_modules`; the committed lockfile determines dependency versions. Mobile validation prints the checked-out commit and installed Expo version before running Doctor. Keep Doctor's compatibility check enabled and update the mobile manifest and root lockfile together when Expo recommends a patch. Re-running an old workflow run does not pick up newer commits. Feature branches are validated by pull requests targeting `main`; simply pushing a feature branch does not trigger this workflow.
 
 Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
 `tests/integration` exercises real SQLite, filesystem, and application boundaries, and
