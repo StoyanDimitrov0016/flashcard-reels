@@ -1,8 +1,9 @@
 # Mobile responsibility boundaries
 
-This document is the specification for the mobile architecture lint rules. The
-rules provide fast feedback; this document defines the intended dependency
-direction independently of their implementation.
+This document describes the intended dependency direction for the mobile app.
+The deterministic import restrictions cover the stable alias-based boundaries;
+the remaining conventions belong in [Codebase Preferences](codebase-preferences.md)
+and review.
 
 ## Dependency matrix
 
@@ -17,36 +18,20 @@ direction independently of their implementation.
 | `app/_layout.tsx`           | All layers required to compose the application                              | Nothing; this is the composition root                                                     |
 | Other `app` routes          | Presentation APIs and domain types                                          | Application APIs, infrastructure, the global container, and persistence packages          |
 
-Feature-root imports such as `@/features/learning-engine` are forbidden because
-a root barrel can mix several responsibility layers. Imports must name an
-explicit layer.
+Feature-root imports such as `@/features/learning-engine` should name an
+explicit layer because a root barrel can mix several responsibility layers.
 
 Shared code is feature-agnostic. It may depend only on shared modules plus
 packages allowed by its responsibility layer; feature-specific types and
 behavior belong in the owning feature.
 
-## Module-edge coverage
+Presentation dependencies may access the global container only through
+`@/infrastructure/app-services`. The Oxlint restriction enumerates the other
+current root-infrastructure paths because its regex engine does not support a
+portable negative lookaround exception. Add a new root infrastructure path to
+that restriction if one is introduced.
 
-The rules inspect:
-
-- static imports;
-- named and wildcard re-exports;
-- dynamic imports with literal specifiers;
-- CommonJS `require` calls with literal specifiers;
-- both `@/` aliases and relative paths.
-
-Non-literal dynamic imports and `require` calls are rejected in classified
-mobile source because their dependency direction cannot be proven statically.
-
-## Complexity
-
-The boundary rule classifies the current file once and performs constant work
-for every module edge. Relative paths are normalized syntactically; the rule
-does not traverse the filesystem or resolve modules. Its runtime is therefore
-linear in the number of module edges in the file.
-
-## Adding a new area
-
-New top-level feature areas must be assigned a responsibility before use. Do
-not create a new directory name to avoid an existing boundary. Extend this
-specification, add valid and invalid rule fixtures, and then update the rule.
+The Oxlint restrictions match literal import specifiers. The current source
+uses `@/` aliases for cross-layer imports, so those edges are covered. Relative
+cross-layer imports and non-literal dynamic imports require review or a focused
+architecture test; do not assume the import rule resolves them.

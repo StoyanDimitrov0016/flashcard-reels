@@ -6,8 +6,10 @@
     "suspicious": "error"
   },
   "ignorePatterns": [
+    ".expo/**",
     ".next/**",
     ".turbo/**",
+    "dist/**",
     "node_modules/**",
     "apps/*/.next/**",
     "apps/*/.expo/**",
@@ -34,6 +36,12 @@
     "no-debugger": "error",
     "no-duplicate-imports": "error",
     "no-nested-ternary": "error",
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css", "server-only"]
+      }
+    ],
     "unicorn/custom-error-definition": "off",
     "unicorn/no-await-expression-member": "error",
     "no-restricted-imports": [
@@ -65,12 +73,8 @@
         "apps/web/src/**/*.tsx"
       ],
       "rules": {
-        "flashcards/require-local-const-arrow-functions": "error",
-        "flashcards/require-named-react-effect-callback": "error",
-        "flashcards/require-named-react-effect-cleanup": "error",
-        "flashcards/no-local-jsx-variables": "error",
-        "flashcards/prefer-jsx-and": "error",
-        "flashcards/require-react-component-props-type": "error"
+        "flashcards/require-react-component-props-type": "error",
+        "flashcards/require-react-hook-options-type": "error"
       }
     },
 
@@ -203,14 +207,274 @@
         "react/style-prop-object": "off",
         "react-perf/jsx-no-new-array-as-prop": "off",
         "react-perf/jsx-no-new-function-as-prop": "off",
-        "react-perf/jsx-no-new-object-as-prop": "off",
-        "flashcards/enforce-layer-boundaries": "error",
-        "flashcards/no-feature-root-imports": "error",
-        "flashcards/no-engine-policy-in-presentation": "error",
-        "flashcards/no-persistence-orchestration-in-react-effect": "warn",
-        "flashcards/no-ui-index-as-domain-position": "warn",
-        "flashcards/no-zod-in-domain": "error",
-        "flashcards/no-await-in-conditional-expression": "error"
+        "react-perf/jsx-no-new-object-as-prop": "off"
+      }
+    },
+    {
+      "files": ["apps/mobile/src/features/*/domain/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              },
+              {
+                "name": "zod",
+                "message": "Validate serialized data at the boundary, not in the domain."
+              },
+              {
+                "name": "better-sqlite3",
+                "message": "Domain code must remain persistence independent."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/(application|infrastructure|presentation)(/|$)",
+                "message": "Domain code cannot depend on application, infrastructure, or presentation."
+              },
+              {
+                "regex": "^@/shared/(application|infrastructure|presentation)(/|$)",
+                "message": "Domain code may only use framework-neutral shared domain code."
+              },
+              {
+                "regex": "^@/infrastructure(/|$)",
+                "message": "Domain code cannot import infrastructure."
+              },
+              {
+                "group": [
+                  "react",
+                  "react/**",
+                  "react-native",
+                  "react-native/**",
+                  "expo-*",
+                  "@expo/**",
+                  "drizzle-orm",
+                  "drizzle-orm/**"
+                ],
+                "message": "Domain code must remain framework independent."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/mobile/src/features/*/application/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              },
+              {
+                "name": "better-sqlite3",
+                "message": "Application code must remain persistence independent."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/(infrastructure|presentation)(/|$)",
+                "message": "Application code cannot depend on infrastructure or presentation."
+              },
+              {
+                "regex": "^@/shared/(infrastructure|presentation)(/|$)",
+                "message": "Application code cannot depend on infrastructure or presentation."
+              },
+              {
+                "regex": "^@/infrastructure(/|$)",
+                "message": "Application code cannot import infrastructure."
+              },
+              {
+                "group": [
+                  "react",
+                  "react/**",
+                  "react-native",
+                  "react-native/**",
+                  "expo-*",
+                  "@expo/**",
+                  "drizzle-orm",
+                  "drizzle-orm/**"
+                ],
+                "message": "Application code must remain framework independent."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "apps/mobile/src/features/*/infrastructure/**/*.{ts,tsx}",
+        "apps/mobile/src/infrastructure/**/*.{ts,tsx}"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/presentation(/|$)",
+                "message": "Infrastructure cannot depend on presentation."
+              },
+              {
+                "regex": "^@/shared/presentation(/|$)",
+                "message": "Infrastructure cannot depend on presentation."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "apps/mobile/src/features/*/presentation/**/*.{ts,tsx}",
+        "apps/mobile/src/app/**/*.{ts,tsx}"
+      ],
+      "excludeFiles": [
+        "apps/mobile/src/features/*/presentation/controllers/**/*",
+        "apps/mobile/src/features/*/presentation/dependencies/**/*",
+        "apps/mobile/src/app/_layout.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              },
+              {
+                "name": "expo-sqlite",
+                "message": "Presentation code must use an application capability instead of persistence."
+              },
+              {
+                "name": "better-sqlite3",
+                "message": "Presentation code must use an application capability instead of persistence."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/(application|infrastructure)(/|$)",
+                "message": "Presentation code must consume controllers, not application or infrastructure implementations."
+              },
+              {
+                "regex": "^@/shared/(application|infrastructure)(/|$)",
+                "message": "Presentation code must not import application or infrastructure."
+              },
+              {
+                "regex": "^@/infrastructure(/|$)",
+                "message": "Presentation code must use an application capability instead of infrastructure."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/**"],
+                "message": "Presentation code must use an application capability instead of persistence."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/mobile/src/features/*/presentation/controllers/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              },
+              {
+                "name": "expo-sqlite",
+                "message": "Presentation controllers must use application capabilities instead of persistence."
+              },
+              {
+                "name": "better-sqlite3",
+                "message": "Presentation controllers must use application capabilities instead of persistence."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/infrastructure(/|$)",
+                "message": "Presentation controllers cannot import infrastructure implementations."
+              },
+              {
+                "regex": "^@/shared/infrastructure(/|$)",
+                "message": "Presentation controllers cannot import infrastructure implementations."
+              },
+              {
+                "regex": "^@/infrastructure(/|$)",
+                "message": "Presentation controllers cannot import infrastructure implementations."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/**"],
+                "message": "Presentation controllers must use application capabilities instead of persistence."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/mobile/src/features/*/presentation/dependencies/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "importNames": ["useMemo"],
+                "message": "React Compiler handles memoization; do not add manual memoization.",
+                "name": "react"
+              },
+              {
+                "name": "expo-sqlite",
+                "message": "Presentation dependencies must use application capabilities instead of persistence."
+              },
+              {
+                "name": "better-sqlite3",
+                "message": "Presentation dependencies must use application capabilities instead of persistence."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^@/features/[^/]+/infrastructure(/|$)",
+                "message": "Presentation dependencies cannot import infrastructure implementations."
+              },
+              {
+                "regex": "^@/shared/infrastructure(/|$)",
+                "message": "Presentation dependencies cannot import infrastructure implementations."
+              },
+              {
+                "regex": "^@/infrastructure/(app-recovery|bundled-deck-installer|bundled-deck-packages|bundled-deck-version|deck-package-services|preferences-services|system-clock|uuid-generator|errors/|sqlite/)",
+                "message": "Presentation dependencies may only access the application container from infrastructure."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/**"],
+                "message": "Presentation dependencies must use application capabilities instead of persistence."
+              }
+            ]
+          }
+        ]
       }
     }
   ]
