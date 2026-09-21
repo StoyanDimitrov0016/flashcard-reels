@@ -1,7 +1,32 @@
-import { type RecallLevel } from "@/features/study/domain/recall-level";
-import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
+import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type {
+  OpenStudySessionResult,
+  StudySessionLifecycleTransaction,
+} from "@/features/study/application/study-session-lifecycle-transaction";
+import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
+import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
+import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { StudyService } from "@/features/study/domain/study.service";
+import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
+
+import {
+  compareRatedAttempts,
+  isRatedReviewAttempt,
+  orderReviewAttemptsForFinalization,
+} from "@/features/study/application/review-attempt-finalization-order";
+import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
+import { type RecallLevel } from "@/features/study/domain/recall-level";
+import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
@@ -10,32 +35,8 @@ import {
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
-import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
-import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
-import {
-  compareRatedAttempts,
-  isRatedReviewAttempt,
-  orderReviewAttemptsForFinalization,
-} from "@/features/study/application/review-attempt-finalization-order";
-import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
-import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
-import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
-import type {
-  OpenStudySessionResult,
-  StudySessionLifecycleTransaction,
-} from "@/features/study/application/study-session-lifecycle-transaction";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
-import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
-import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
-import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
-import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { Clock } from "@/shared/domain/clock";
-import type { IdGenerator } from "@/shared/domain/id-generator";
 
 export type OpenStudySession = OpenStudySessionResult;
 
@@ -471,8 +472,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
         continue;
       }
 
-      // Each transition must observe the memory state committed by the previous review.
-      // eslint-disable-next-line no-await-in-loop
+      // oxlint-disable-next-line no-await-in-loop -- Each transition must observe the state committed by the previous review.
       const finalized = await this.finalizeAttemptNow(attempt.id);
       if (finalized) {
         remainingIds.delete(attempt.id);

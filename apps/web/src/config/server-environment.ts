@@ -1,4 +1,3 @@
-// oxlint-disable-next-line import/no-unassigned-import -- Environment secrets must stay server-only.
 import "server-only";
 import * as z from "zod";
 

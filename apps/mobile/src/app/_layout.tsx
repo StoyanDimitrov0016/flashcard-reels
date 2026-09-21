@@ -1,26 +1,21 @@
-import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import {
   Stack,
   ThemeProvider,
   type ErrorBoundaryProps as ExpoErrorBoundaryProps,
 } from "expo-router";
+import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
+import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
-import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
-import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
-import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
-import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
-import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
-import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
+import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { AppServicesProvider } from "@/infrastructure/app-services";
 import { preferencesService } from "@/infrastructure/preferences-services";
 import {
@@ -28,10 +23,15 @@ import {
   handleSQLiteProviderError,
   initializeDatabase,
 } from "@/infrastructure/sqlite/database";
-import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { toError } from "@/shared/errors/normalize-error";
+import { GlobalErrorState } from "@/shared/presentation/components/global-error-state";
+import { StartupLoadingState } from "@/shared/presentation/components/startup-loading-state";
+import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
+import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
+import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
+import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { getAppColors } from "@/shared/presentation/theme-colors";
-// oxlint-disable-next-line import/no-unassigned-import -- Expo Router loads this only on web.
+
 import "../../global.css";
 
 const appRecoveryCapability = { requestAppDataReset };
