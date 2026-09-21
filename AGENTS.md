@@ -21,6 +21,9 @@ patterns.
 Prefer established repository patterns over introducing a new pattern when an
 existing one already fits.
 
+Follow `docs/codebase-preferences.md` for repository-wide implementation
+conventions and examples.
+
 ## Commands
 
 Run repository-wide validation from the repository root:
