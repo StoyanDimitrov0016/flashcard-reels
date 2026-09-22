@@ -12,7 +12,7 @@ import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/inf
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import {
@@ -121,14 +121,14 @@ describe("archived deck progress", () => {
     const installer = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
     await installer.install(packageForReinstall(), reviewedAt);
     expect(await new SQLiteDeckProgressRepository(database.drizzle).listPending()).toHaveLength(1);
-    const cards = new SQLiteFlashcardRepository(database.drizzle);
-    expect(await cards.list()).toEqual([]);
-    expect(await cards.listByDeckId(TEST_DECK_ID)).toEqual([]);
+    const availableFlashcards = new SQLiteFlashcardAvailabilityQuery(database.drizzle);
+    expect(await availableFlashcards.listAvailableFlashcards()).toEqual([]);
+    expect(await availableFlashcards.listAvailableFlashcardsByDeckId(TEST_DECK_ID)).toEqual([]);
 
     await new SQLiteSavedProgressContinuationTransaction(database.drizzle).continueProgress(
       TEST_DECK_ID
     );
-    expect(await cards.listByDeckId(TEST_DECK_ID)).toHaveLength(1);
+    expect(await availableFlashcards.listAvailableFlashcardsByDeckId(TEST_DECK_ID)).toHaveLength(1);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
@@ -224,7 +224,9 @@ describe("archived deck progress", () => {
         .where(eq(studySessions.id, unrelatedSessionId))
     ).toHaveLength(1);
     expect(
-      await new SQLiteFlashcardRepository(database.drizzle).listByDeckId(TEST_DECK_ID)
+      await new SQLiteFlashcardAvailabilityQuery(database.drizzle).listAvailableFlashcardsByDeckId(
+        TEST_DECK_ID
+      )
     ).toHaveLength(1);
   });
 

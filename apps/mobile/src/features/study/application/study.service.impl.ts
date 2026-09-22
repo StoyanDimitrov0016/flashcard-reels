@@ -11,6 +11,7 @@ import type {
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
@@ -44,6 +45,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
   private readonly studySessionRepository: StudySessionRepository;
+  private readonly studySessionAggregationQuery: StudySessionAggregationQuery;
   private readonly studySessionItemRepository: StudySessionItemRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
@@ -60,6 +62,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
     studySessionRepository: StudySessionRepository,
+    studySessionAggregationQuery: StudySessionAggregationQuery,
     studySessionItemRepository: StudySessionItemRepository,
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
@@ -75,6 +78,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
     this.studySessionRepository = studySessionRepository;
+    this.studySessionAggregationQuery = studySessionAggregationQuery;
     this.studySessionItemRepository = studySessionItemRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
@@ -172,7 +176,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     // oxlint-disable no-await-in-loop -- The next batch depends on the committed aggregation checkpoints.
     while (true) {
       const pending =
-        await this.studySessionRepository.findCompletedSessionsPendingAggregationForDeck(
+        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
           deckId,
           PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
         );
@@ -219,7 +223,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       return;
     }
     const pending =
-      await this.studySessionRepository.findCompletedSessionsPendingAggregation(limit);
+      await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(limit);
     const recoverNext = async (index: number): Promise<void> => {
       const session = pending[index];
       if (!session) {

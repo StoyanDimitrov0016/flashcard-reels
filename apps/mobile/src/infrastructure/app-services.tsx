@@ -32,6 +32,7 @@ import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infr
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
@@ -40,6 +41,7 @@ import { StudyServiceImpl } from "@/features/study/application/study.service.imp
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -83,7 +85,10 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase
     );
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
-    const flashcardService = new FlashcardServiceImpl(flashcardRepository);
+    const flashcardService = new FlashcardServiceImpl(
+      flashcardRepository,
+      new SQLiteFlashcardAvailabilityQuery(drizzleDatabase)
+    );
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
     const learningScheduler = createLearningScheduler();
@@ -110,6 +115,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase
     );
     const studySessionRepository = new SQLiteStudySessionRepository(drizzleDatabase);
+    const studySessionAggregationQuery = new SQLiteStudySessionAggregationQuery(drizzleDatabase);
     const studySessionLifecycleTransaction = new SQLiteStudySessionLifecycleTransaction(
       drizzleDatabase
     );
@@ -121,6 +127,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
       studySessionRepository,
+      studySessionAggregationQuery,
       studySessionItemRepository,
       studySessionRecurrenceRepository,
       clock,

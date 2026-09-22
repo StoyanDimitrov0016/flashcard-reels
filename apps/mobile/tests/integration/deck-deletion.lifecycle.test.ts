@@ -30,6 +30,7 @@ import {
   useLearningProgressReset,
 } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import {
@@ -131,7 +132,10 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     await seedDeck(database, TEST_DECK_ID, [makeFlashcard(1).id, makeFlashcard(2).id]);
     await seedDeck(database, OTHER_DECK_ID, [makeFlashcard(3, OTHER_DECK_ID).id]);
     graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
-    flashcardService = new FlashcardServiceImpl(new SQLiteFlashcardRepository(database.drizzle));
+    flashcardService = new FlashcardServiceImpl(
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+    );
     harness.services = {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),

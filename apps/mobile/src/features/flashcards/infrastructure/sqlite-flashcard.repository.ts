@@ -1,11 +1,11 @@
-import { and, asc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { FlashcardRepository } from "@/features/flashcards/domain/flashcard.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import { deckProgress, flashcards } from "@/infrastructure/sqlite/schema";
+import { flashcards } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteFlashcardRepository<TRunResult = unknown> implements FlashcardRepository {
   private readonly database: DrizzleDatabase<TRunResult>;
@@ -41,37 +41,6 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       .limit(1);
     const row = rows[0];
     return row ? this.toModel(row) : null;
-  }
-
-  async list(): Promise<Flashcard[]> {
-    const rows = await this.database
-      .select({ card: flashcards })
-      .from(flashcards)
-      .leftJoin(deckProgress, eq(deckProgress.deckId, flashcards.deckId))
-      .where(
-        and(
-          eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
-        )
-      )
-      .orderBy(asc(flashcards.createdAt), asc(flashcards.id));
-    return rows.map((row) => this.toModel(row.card));
-  }
-
-  async listByDeckId(deckId: DeckId): Promise<Flashcard[]> {
-    const rows = await this.database
-      .select({ card: flashcards })
-      .from(flashcards)
-      .leftJoin(deckProgress, eq(deckProgress.deckId, flashcards.deckId))
-      .where(
-        and(
-          eq(flashcards.deckId, deckId),
-          eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
-        )
-      )
-      .orderBy(asc(flashcards.order), asc(flashcards.id));
-    return rows.map((row) => this.toModel(row.card));
   }
 
   async save(flashcard: Flashcard): Promise<void> {
