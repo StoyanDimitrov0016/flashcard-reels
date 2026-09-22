@@ -164,6 +164,35 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     }
   }
 
+  async settleBeforeDeckRemoval(deckId: DeckId): Promise<void> {
+    await this.settleActiveSessionsAffectedByDeck(deckId, true);
+
+    // Removing cards also removes their session attempts. Finish completed
+    // sessions with pending reviews for this deck before removing its content.
+    // oxlint-disable no-await-in-loop -- The next batch depends on the committed aggregation checkpoints.
+    while (true) {
+      const pending =
+        await this.studySessionRepository.findCompletedSessionsPendingAggregationForDeck(
+          deckId,
+          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+        );
+      if (pending.length === 0) {
+        return;
+      }
+      for (const session of pending) {
+        await this.finalizeAndAggregateCompletedSession(session.id);
+        const updated = await this.studySessionRepository.findById(session.id);
+        if (
+          !updated ||
+          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
+        ) {
+          throw new Error(`Could not finish learner progress aggregation for ${session.id}`);
+        }
+      }
+    }
+    // oxlint-enable no-await-in-loop
+  }
+
   async compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void> {
     const maintenance = this.studySessionMaintenanceTransaction;
     if (!maintenance) {

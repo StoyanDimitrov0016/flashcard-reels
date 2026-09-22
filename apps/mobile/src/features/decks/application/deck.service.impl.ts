@@ -52,7 +52,10 @@ export class DeckServiceImpl implements DeckService {
   }
 
   async remove(id: DeckId): Promise<void> {
-    await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(id, true);
+    if (!this.sessionSettlement) {
+      throw new Error("Study session settlement is required before removing a deck");
+    }
+    await this.sessionSettlement.settleBeforeDeckRemoval(id);
     await this.deckRepository.remove(id);
     try {
       await this.deckAudioRemover?.removeDeck(id);

@@ -1,7 +1,9 @@
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
+import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
@@ -18,8 +20,14 @@ import {
 } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { seedDeck } from "../support/sqlite-study-scenario";
-import { makeFlashcard, TEST_DECK_ID, testId } from "../support/study-fixtures";
+import { createScenarioGraph, seedDeck } from "../support/sqlite-study-scenario";
+import {
+  makeFlashcard,
+  SequenceIdGenerator,
+  TEST_DECK_ID,
+  TestClock,
+  testId,
+} from "../support/study-fixtures";
 
 const reviewedAt = "2026-01-02T00:00:00.000Z";
 const cardId = makeFlashcard(1).id;
@@ -115,6 +123,59 @@ describe("archived deck progress", () => {
     expect(await cards.listByDeckId(TEST_DECK_ID)).toHaveLength(1);
     expect(await repository.listArchivedProgress()).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toHaveLength(1);
+  });
+
+  it("finishes interrupted progress aggregation before removing deck content", async () => {
+    database = new NodeSqliteDatabase();
+    await seedDeck(database, TEST_DECK_ID, [cardId]);
+    const sessionId = testId(710);
+    const reviewCount = 51;
+    await database.drizzle.insert(studySessions).values({
+      id: sessionId,
+      scope: "mixed",
+      deckId: null,
+      currentReelPosition: reviewCount - 1,
+      furthestReelPosition: reviewCount - 1,
+      createdAt: reviewedAt,
+      completedAt: reviewedAt,
+      lastActiveAt: reviewedAt,
+      feedState: "{}",
+    });
+    const finalization = new SQLiteReviewAttemptFinalizationTransaction(
+      database.drizzle,
+      createLearningScheduler()
+    );
+    for (let position = 0; position < reviewCount; position += 1) {
+      const attemptId = testId(720 + position);
+      const ratedAt = new Date(Date.parse(reviewedAt) + position * 1000).toISOString();
+      // oxlint-disable-next-line no-await-in-loop -- Each review updates the card's FSRS state.
+      await database.drizzle.insert(flashcardReviewAttempts).values({
+        id: attemptId,
+        studySessionId: sessionId,
+        flashcardId: cardId,
+        reelPosition: position,
+        rating: "good",
+        ratedAt,
+        createdAt: ratedAt,
+        updatedAt: ratedAt,
+      });
+      // oxlint-disable-next-line no-await-in-loop -- FSRS transitions must be finalized in order.
+      expect(await finalization.finalizeAttempt(attemptId, ratedAt, ratedAt)).toBe(true);
+    }
+
+    const repository = new SQLiteDeckRepository(database.drizzle);
+    const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
+    const service = new DeckServiceImpl(
+      repository,
+      new SQLiteDeckAppearanceRepository(database.drizzle),
+      null,
+      graph.study
+    );
+    await service.remove(TEST_DECK_ID);
+
+    expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(reviewCount);
+    expect(await database.drizzle.select().from(learnerProfiles)).toMatchObject([{ reviewCount }]);
+    expect(await repository.listArchivedProgress()).toMatchObject([{ reviewCount }]);
   });
 
   it("permanently deletes saved progress when starting a reinstalled deck fresh", async () => {

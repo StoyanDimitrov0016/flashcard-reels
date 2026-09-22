@@ -13,6 +13,10 @@ export interface StudySessionRepository {
   findActive(scope: StudySessionScope, deckId: DeckId | null): Promise<StudySession | null>;
   findActiveByScope(scope: StudySessionScope): Promise<StudySession | null>;
   findCompletedSessionsPendingAggregation(limit: number): Promise<StudySession[]>;
+  findCompletedSessionsPendingAggregationForDeck(
+    deckId: DeckId,
+    limit: number
+  ): Promise<StudySession[]>;
   updateCurrentReelPosition(
     sessionId: string,
     currentReelPosition: number,
