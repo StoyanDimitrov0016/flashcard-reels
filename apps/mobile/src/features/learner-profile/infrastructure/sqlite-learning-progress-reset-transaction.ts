@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LearningProgressResetTransaction } from "@/features/learner-profile/application/learning-progress-reset-transaction";
@@ -39,6 +39,21 @@ export class SQLiteLearningProgressResetTransaction<
         .delete(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.flashcardId, flashcardId))
         .run();
+      transaction.delete(reviewEvents).where(eq(reviewEvents.flashcardId, flashcardId)).run();
+      const remainingReviews = transaction
+        .select({ lastReviewedAt: sql<string | null>`max(${reviewEvents.reviewedAt})` })
+        .from(reviewEvents)
+        .where(eq(reviewEvents.deckId, card.deckId))
+        .get();
+      if (remainingReviews?.lastReviewedAt) {
+        transaction
+          .update(deckProgress)
+          .set({ lastReviewedAt: remainingReviews.lastReviewedAt })
+          .where(eq(deckProgress.deckId, card.deckId))
+          .run();
+      } else {
+        transaction.delete(deckProgress).where(eq(deckProgress.deckId, card.deckId)).run();
+      }
       this.deleteActiveSessionsForDeck(transaction, card.deckId);
     });
   }
@@ -50,18 +65,14 @@ export class SQLiteLearningProgressResetTransaction<
         .from(flashcards)
         .where(eq(flashcards.deckId, deckId))
         .all();
+      transaction.delete(learnerProfiles).where(eq(learnerProfiles.deckId, deckId)).run();
       this.resetProfiles(transaction, cards, resetAt);
-      if (cards.length > 0) {
-        transaction
-          .delete(flashcardMemoryStates)
-          .where(
-            inArray(
-              flashcardMemoryStates.flashcardId,
-              cards.map((card) => card.id)
-            )
-          )
-          .run();
-      }
+      transaction
+        .delete(flashcardMemoryStates)
+        .where(eq(flashcardMemoryStates.deckId, deckId))
+        .run();
+      transaction.delete(reviewEvents).where(eq(reviewEvents.deckId, deckId)).run();
+      transaction.delete(deckProgress).where(eq(deckProgress.deckId, deckId)).run();
       this.deleteActiveSessionsForDeck(transaction, deckId);
     });
   }

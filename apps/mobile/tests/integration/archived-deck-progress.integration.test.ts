@@ -174,6 +174,71 @@ describe("archived deck progress", () => {
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
   });
 
+  it("clears durable review history when resetting one card", async () => {
+    const repository = await reviewedDeck();
+    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetCard(
+      cardId,
+      reviewedAt
+    );
+
+    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
+    await repository.remove(TEST_DECK_ID);
+    expect(await repository.listArchivedProgress()).toEqual([]);
+  });
+
+  it("clears durable review history when resetting one deck", async () => {
+    const repository = await reviewedDeck();
+    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetDeck(
+      TEST_DECK_ID,
+      reviewedAt
+    );
+
+    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
+    await repository.remove(TEST_DECK_ID);
+    expect(await repository.listArchivedProgress()).toEqual([]);
+  });
+
+  it("clears saved progress for cards absent from the reinstalled deck on deck reset", async () => {
+    const repository = await reviewedDeck();
+    await repository.remove(TEST_DECK_ID);
+    const replacement = packageForReinstall();
+    await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
+      {
+        ...replacement,
+        cards: [
+          {
+            id: testId(705),
+            order: 0,
+            question: "Replacement question",
+            answer: "Replacement answer",
+            createdAt: reviewedAt,
+            updatedAt: reviewedAt,
+          },
+        ],
+      },
+      reviewedAt
+    );
+    await repository.continueProgress(TEST_DECK_ID);
+
+    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetDeck(
+      TEST_DECK_ID,
+      reviewedAt
+    );
+
+    expect(
+      await database.drizzle
+        .select()
+        .from(learnerProfiles)
+        .where(eq(learnerProfiles.flashcardId, cardId))
+    ).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
+    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    await repository.remove(TEST_DECK_ID);
+    expect(await repository.listArchivedProgress()).toEqual([]);
+  });
+
   it("does not archive an unstudied deck", async () => {
     database = new NodeSqliteDatabase();
     await seedDeck(database, TEST_DECK_ID, [cardId]);

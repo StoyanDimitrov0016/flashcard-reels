@@ -57,12 +57,21 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];
 type DeckRowProps = Readonly<{
   entry: CatalogEntry;
+  paused: boolean;
   onAppearance: () => void;
+  onChooseProgress: () => void;
   onFocus: () => void;
   onViewCards: () => void;
 }>;
 
-function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
+function DeckRow({
+  entry,
+  paused,
+  onAppearance,
+  onChooseProgress,
+  onFocus,
+  onViewCards,
+}: DeckRowProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const { appearance, cardCount, deck } = entry;
@@ -95,18 +104,29 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
     <View style={styles.deck}>
       <View style={[styles.accent, { backgroundColor: deckColors.accent }]} />
       <Pressable
-        accessibilityHint="Tap to view deck cards. Hold to study this deck in Focus."
+        accessibilityHint={
+          paused
+            ? "Choose how to use saved learning progress."
+            : "Tap to view deck cards. Hold to study this deck in Focus."
+        }
         accessibilityLabel={deck.title}
         accessibilityRole="button"
         delayLongPress={FOCUS_HOLD_DURATION_MS}
         onLongPress={() => {
           clearHoldFeedback();
           longPressHandled.current = true;
+          if (paused) {
+            onChooseProgress();
+            return;
+          }
           haptics.focusCompleted();
           showFocusedToast();
           onFocus();
         }}
         onPressIn={() => {
+          if (paused) {
+            return;
+          }
           clearHoldFeedback();
           holdFeedbackTimer.current = setTimeout(() => {
             holdFeedbackTimer.current = null;
@@ -121,6 +141,10 @@ function DeckRow({ entry, onAppearance, onFocus, onViewCards }: DeckRowProps) {
         onPress={() => {
           if (longPressHandled.current) {
             longPressHandled.current = false;
+            return;
+          }
+          if (paused) {
+            onChooseProgress();
             return;
           }
           onViewCards();
@@ -224,6 +248,7 @@ export default function LibraryScreen() {
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
   const [pendingProgress, setPendingProgress] = useState<PendingDeckProgress[]>([]);
   const promptedProgress = useRef(new Set<string>());
+  const pendingLoadSequence = useRef(0);
   const [selectedPending, setSelectedPending] = useState<PendingDeckProgress | null>(null);
   const [confirmStartFresh, setConfirmStartFresh] = useState(false);
   const [progressBusy, setProgressBusy] = useState(false);
@@ -243,17 +268,27 @@ export default function LibraryScreen() {
     : null;
 
   const refreshPendingProgress = useCallback(() => {
+    const sequence = ++pendingLoadSequence.current;
     void deckService
       .listPendingProgress()
-      .then(setPendingProgress)
+      .then((progress) => {
+        if (sequence === pendingLoadSequence.current) {
+          setPendingProgress(progress);
+        }
+      })
       .catch(() => {
-        setProgressError("Could not load saved progress. Try again.");
+        if (sequence === pendingLoadSequence.current) {
+          setProgressError("Could not load saved progress. Try again.");
+        }
       });
   }, [deckService]);
 
   useFocusEffect(
     useCallback(() => {
       refreshPendingProgress();
+      return function cancelPendingProgressLoad() {
+        pendingLoadSequence.current += 1;
+      };
     }, [refreshPendingProgress])
   );
 
@@ -326,9 +361,17 @@ export default function LibraryScreen() {
   const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (
     <DeckRow
       entry={item}
+      paused={pendingProgress.some((progress) => progress.deckId === item.deck.id)}
       onAppearance={() => {
         clearSaveError();
         setSelectedEntry(item);
+      }}
+      onChooseProgress={() => {
+        const progress = pendingProgress.find((candidate) => candidate.deckId === item.deck.id);
+        if (progress) {
+          setProgressError(null);
+          setSelectedPending(progress);
+        }
       }}
       onFocus={() => openFocusedFeed(item.deck.id)}
       onViewCards={() => router.push(getDeckDetailsHref(item.deck.id, "library"))}
