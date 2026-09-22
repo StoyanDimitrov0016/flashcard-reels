@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "rea
 
 import { toError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
+import { AppResetScheduledSheet } from "@/shared/presentation/components/app-reset-scheduled-sheet";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
 import { useAppRecovery } from "@/shared/presentation/context/app-recovery-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
@@ -15,6 +16,7 @@ export function AppResetAction() {
   const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
   const styles = createStyles(colors);
   const [confirmationPresented, setConfirmationPresented] = useState(false);
+  const [scheduledPresented, setScheduledPresented] = useState(false);
   const [requested, setRequested] = useState(false);
   const [failure, setFailure] = useState<Error | null>(null);
 
@@ -27,26 +29,20 @@ export function AppResetAction() {
   }
 
   return (
-    <View style={styles.container}>
-      {requested ? (
-        <Text accessibilityRole="alert" selectable style={styles.text}>
-          Reset scheduled.{" "}
-          {Platform.OS === "android"
-            ? "Force stop the app in Android Settings, then reopen it."
-            : "Remove the app from recent apps, then reopen it."}{" "}
-          Local data will be erased and bundled decks restored.
-        </Text>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            setFailure(null);
-            setConfirmationPresented(true);
-          }}
-          style={styles.button}
-        >
-          <Text style={styles.label}>Reset all app data</Text>
-        </Pressable>
+    <>
+      {!requested && (
+        <View style={styles.container}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setFailure(null);
+              setConfirmationPresented(true);
+            }}
+            style={styles.button}
+          >
+            <Text style={styles.label}>Reset all app data</Text>
+          </Pressable>
+        </View>
       )}
       <DestructiveConfirmationSheet
         actionLabel="Reset app data"
@@ -68,6 +64,7 @@ export function AppResetAction() {
             setRequested(true);
             setFailure(null);
             setConfirmationPresented(false);
+            setScheduledPresented(true);
           } catch (error) {
             const normalized = toError(error, "The app-data reset could not be scheduled");
             reportError(normalized, "App reset request failure");
@@ -77,7 +74,11 @@ export function AppResetAction() {
         title="Reset all app data?"
         visible={confirmationPresented}
       />
-    </View>
+      <AppResetScheduledSheet
+        onClose={() => setScheduledPresented(false)}
+        visible={scheduledPresented}
+      />
+    </>
   );
 }
 
