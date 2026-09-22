@@ -1,0 +1,16 @@
+appId: com.flashcardreels.app
+---
+- launchApp:
+    clearState: true
+- tapOn: You tab
+- assertVisible: Controls
+- scrollUntilVisible:
+    element: Reset all app data
+    direction: DOWN
+- tapOn: Reset all app data
+- assertVisible: "Reset all app data?"
+- assertVisible: "Erase decks, audio, progress and settings on the next launch? Bundled decks will return. This cannot be undone."
+- assertVisible: Reset app data
+- assertVisible: Cancel
+- tapOn: Cancel
+- assertNotVisible: "Reset all app data?"

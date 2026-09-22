@@ -51,7 +51,8 @@ try {
   foreach ($flow in @(
     "archived-progress-continue.yaml",
     "archived-progress-start-fresh.yaml",
-    "archived-progress-delete.yaml"
+    "archived-progress-delete.yaml",
+    "app-data-reset-confirmation.yaml"
   )) {
     & maestro test (Join-Path ".maestro" $flow)
     if ($LASTEXITCODE -ne 0) {
