@@ -144,6 +144,11 @@ export const deckProgress = sqliteTable("deck_progress", {
   resolution: text("resolution", { enum: ["active", "archived", "pending"] }).notNull(),
 });
 
+export const progressBackupState = sqliteTable("progress_backup_state", {
+  id: integer("id").primaryKey(),
+  safetyCopyFileName: text("safety_copy_file_name").notNull(),
+});
+
 export const studySessions = sqliteTable(
   "study_sessions",
   {
