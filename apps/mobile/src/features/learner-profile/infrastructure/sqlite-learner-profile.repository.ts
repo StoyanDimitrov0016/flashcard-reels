@@ -93,7 +93,7 @@ export class SQLiteLearnerProfileRepository<
   async resetCard(flashcardId: string, resetAt: string): Promise<void> {
     this.database.transaction((transaction) => {
       const card = transaction
-        .select({ createdAt: flashcards.createdAt })
+        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId })
         .from(flashcards)
         .where(eq(flashcards.id, flashcardId))
         .limit(1)
@@ -103,7 +103,7 @@ export class SQLiteLearnerProfileRepository<
       }
       transaction
         .insert(learnerProfiles)
-        .values(this.zeroState(flashcardId, card.createdAt, resetAt))
+        .values(this.zeroState(flashcardId, card.deckId, card.createdAt, resetAt))
         .onConflictDoUpdate({
           target: learnerProfiles.flashcardId,
           set: this.resetValues(resetAt),
@@ -115,14 +115,14 @@ export class SQLiteLearnerProfileRepository<
   async resetDeck(deckId: DeckId, resetAt: string): Promise<void> {
     this.database.transaction((transaction) => {
       const cards = transaction
-        .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .where(eq(flashcards.deckId, deckId))
         .all();
       for (const card of cards) {
         transaction
           .insert(learnerProfiles)
-          .values(this.zeroState(card.id, card.createdAt, resetAt))
+          .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
           .onConflictDoUpdate({
             target: learnerProfiles.flashcardId,
             set: this.resetValues(resetAt),
@@ -135,14 +135,14 @@ export class SQLiteLearnerProfileRepository<
   async resetAll(resetAt: string): Promise<void> {
     this.database.transaction((transaction) => {
       const cards = transaction
-        .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .orderBy(asc(flashcards.id))
         .all();
       for (const card of cards) {
         transaction
           .insert(learnerProfiles)
-          .values(this.zeroState(card.id, card.createdAt, resetAt))
+          .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
           .onConflictDoUpdate({
             target: learnerProfiles.flashcardId,
             set: this.resetValues(resetAt),
@@ -182,10 +182,11 @@ export class SQLiteLearnerProfileRepository<
     });
   }
 
-  private zeroState(flashcardId: string, createdAt: string, resetAt: string) {
+  private zeroState(flashcardId: string, deckId: string, createdAt: string, resetAt: string) {
     return {
       againCount: 0,
       createdAt,
+      deckId,
       easyCount: 0,
       firstReviewedAt: null,
       flashcardId,

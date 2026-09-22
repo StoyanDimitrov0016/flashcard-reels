@@ -120,18 +120,26 @@ export class SQLiteLearnerProfileAggregationTransaction<
         missingFlashcardIds.length === 0
           ? []
           : transaction
-              .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+              .select({
+                createdAt: flashcards.createdAt,
+                deckId: flashcards.deckId,
+                id: flashcards.id,
+              })
               .from(flashcards)
               .where(inArray(flashcards.id, missingFlashcardIds))
               .all();
       const createdAtByFlashcardId = new Map(
         missingFlashcards.map((flashcard) => [flashcard.id, flashcard.createdAt])
       );
+      const deckIdByFlashcardId = new Map(
+        missingFlashcards.map((flashcard) => [flashcard.id, flashcard.deckId])
+      );
 
       for (const [flashcardId, contribution] of contributions) {
         const profile = profilesById.get(flashcardId);
         const createdAt = profile?.createdAt ?? createdAtByFlashcardId.get(flashcardId);
-        if (!createdAt) {
+        const deckId = profile?.deckId ?? deckIdByFlashcardId.get(flashcardId);
+        if (!createdAt || !deckId) {
           throw new Error(`Missing flashcard ${flashcardId} for learner profile aggregation`);
         }
         const firstReviewedAt = profile?.firstReviewedAt
@@ -149,6 +157,7 @@ export class SQLiteLearnerProfileAggregationTransaction<
           .values({
             againCount,
             createdAt,
+            deckId,
             easyCount,
             firstReviewedAt,
             flashcardId,

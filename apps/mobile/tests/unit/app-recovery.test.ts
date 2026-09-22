@@ -94,6 +94,8 @@ describe("full app recovery", () => {
       marker,
       "documents/SQLite/flashcard-reels.db",
       "documents/SQLite/flashcard-reels.db-wal",
+      "documents/SQLite/flashcard-reels-v2.db",
+      "documents/SQLite/flashcard-reels-v2.db-wal",
       "documents/SQLite/ExpoSQLiteStorage",
       "documents/deck-audio",
       "cache",
@@ -107,6 +109,8 @@ describe("full app recovery", () => {
     expect(state.deleted).toEqual([
       "documents/SQLite/flashcard-reels.db",
       "documents/SQLite/flashcard-reels.db-wal",
+      "documents/SQLite/flashcard-reels-v2.db",
+      "documents/SQLite/flashcard-reels-v2.db-wal",
       "documents/SQLite/ExpoSQLiteStorage",
       "documents/deck-audio",
       "cache/deck-import-123.fcrdeck",

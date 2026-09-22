@@ -303,13 +303,13 @@ describe("deck package installation", () => {
     expect(await repository.findById(cardB.id)).toMatchObject({ active: false });
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT review_count FROM card_progress WHERE flashcard_id = ?",
         cardA.id
       )
     ).toEqual({ review_count: 1 });
     expect(
       await database.getFirstAsync(
-        "SELECT COUNT(*) AS count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT COUNT(*) AS count FROM card_progress WHERE flashcard_id = ?",
         cardC.id
       )
     ).toEqual({ count: 0 });
@@ -346,7 +346,7 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(3, [replacementCard]));
     expect(
       await database.getFirstAsync(
-        "SELECT COUNT(*) AS count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT COUNT(*) AS count FROM card_progress WHERE flashcard_id = ?",
         replacementCard.id
       )
     ).toEqual({ count: 0 });
@@ -356,7 +356,7 @@ describe("deck package installation", () => {
     ).toMatchObject({ active: true });
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT review_count FROM card_progress WHERE flashcard_id = ?",
         removedCard.id
       )
     ).toEqual({ review_count: 1 });
@@ -491,7 +491,7 @@ describe("deck package installation", () => {
     ).toMatchObject({ active: true, answer: "Concurrent winner" });
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT review_count FROM card_progress WHERE flashcard_id = ?",
         existingCard.id
       )
     ).toEqual({ review_count: 1 });

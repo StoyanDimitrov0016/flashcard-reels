@@ -5,9 +5,11 @@ import type { LearningProgressResetTransaction } from "@/features/learner-profil
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
+  deckProgress,
   flashcardMemoryStates,
   flashcards,
   learnerProfiles,
+  reviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -32,7 +34,7 @@ export class SQLiteLearningProgressResetTransaction<
         throw new Error(`Missing flashcard ${flashcardId}`);
       }
 
-      this.resetProfile(transaction, flashcardId, card.createdAt, resetAt);
+      this.resetProfile(transaction, flashcardId, card.deckId, card.createdAt, resetAt);
       transaction
         .delete(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.flashcardId, flashcardId))
@@ -44,7 +46,7 @@ export class SQLiteLearningProgressResetTransaction<
   async resetDeck(deckId: DeckId, resetAt: string): Promise<void> {
     this.database.transaction((transaction) => {
       const cards = transaction
-        .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .where(eq(flashcards.deckId, deckId))
         .all();
@@ -67,28 +69,32 @@ export class SQLiteLearningProgressResetTransaction<
   async resetAll(resetAt: string): Promise<void> {
     this.database.transaction((transaction) => {
       const cards = transaction
-        .select({ createdAt: flashcards.createdAt, id: flashcards.id })
+        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .all();
+      transaction.delete(learnerProfiles).run();
       this.resetProfiles(transaction, cards, resetAt);
       transaction.delete(flashcardMemoryStates).run();
+      transaction.delete(reviewEvents).run();
+      transaction.delete(deckProgress).run();
       transaction.delete(studySessions).where(isNull(studySessions.completedAt)).run();
     });
   }
 
   private resetProfiles(
     transaction: Parameters<Parameters<DrizzleDatabase<TRunResult>["transaction"]>[0]>[0],
-    cards: readonly { createdAt: string; id: string }[],
+    cards: readonly { createdAt: string; deckId: string; id: string }[],
     resetAt: string
   ): void {
     for (const card of cards) {
-      this.resetProfile(transaction, card.id, card.createdAt, resetAt);
+      this.resetProfile(transaction, card.id, card.deckId, card.createdAt, resetAt);
     }
   }
 
   private resetProfile(
     transaction: Parameters<Parameters<DrizzleDatabase<TRunResult>["transaction"]>[0]>[0],
     flashcardId: string,
+    deckId: string,
     createdAt: string,
     resetAt: string
   ): void {
@@ -97,6 +103,7 @@ export class SQLiteLearningProgressResetTransaction<
       .values({
         againCount: 0,
         createdAt,
+        deckId,
         easyCount: 0,
         firstReviewedAt: null,
         flashcardId,

@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,6 +30,7 @@ import appIcon from "../../../../../assets/images/app-icon.png";
 export default function YouScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const router = useRouter();
   const {
     preferences,
     storageError,
@@ -84,6 +86,11 @@ export default function YouScreen() {
             />
           </PreferenceSection>
           <PreferenceSection title="Data">
+            <PreferenceRow
+              icon={{ android: "archive", ios: "archivebox", web: "archive" }}
+              onPress={() => router.push("../archived-progress")}
+              title="Archived deck progress"
+            />
             <PreferenceRow
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               iconColor={colors.error}

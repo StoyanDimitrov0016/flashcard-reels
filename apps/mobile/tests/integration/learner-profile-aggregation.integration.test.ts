@@ -147,7 +147,7 @@ describe("SQLite learner-profile aggregation", () => {
     await profiles.resetCard(makeFlashcard(1).id, "2025-12-01T00:00:00.000Z");
     await createAttempt(session.id, 0, "good", "2026-01-01T00:01:00.000Z");
     await database.runAsync(
-      "CREATE TRIGGER fail_learner_profile_update BEFORE UPDATE ON learner_profiles BEGIN SELECT RAISE(ABORT, 'profile update failed'); END"
+      "CREATE TRIGGER fail_learner_profile_update BEFORE UPDATE ON card_progress BEGIN SELECT RAISE(ABORT, 'profile update failed'); END"
     );
 
     await expect(aggregation.aggregate(session.id, 0, "2026-01-01T00:02:00.000Z")).rejects.toThrow(

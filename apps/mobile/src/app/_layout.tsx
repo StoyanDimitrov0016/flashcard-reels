@@ -86,6 +86,7 @@ function AppNavigation() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="archived-progress" />
           <Stack.Screen
             name="decks/[deckId]"
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}

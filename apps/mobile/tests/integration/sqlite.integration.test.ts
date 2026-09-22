@@ -417,8 +417,9 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
     await expect(
       database.runAsync(
-        "INSERT INTO learner_profiles (flashcard_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO card_progress (flashcard_id, deck_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         makeFlashcard(1).id,
+        TEST_DECK_ID,
         0,
         0,
         0,
@@ -737,13 +738,15 @@ describe("SQLite study persistence", () => {
     );
 
     expect(tables).toEqual([
+      { name: "card_progress" },
       { name: "deck_appearances" },
+      { name: "deck_progress" },
       { name: "decks" },
       { name: "flashcard_memory_states" },
       { name: "flashcard_review_attempts" },
       { name: "flashcards" },
-      { name: "learner_profiles" },
       { name: "removed_decks" },
+      { name: "review_events" },
       { name: "study_session_items" },
       { name: "study_session_recurrences" },
       { name: "study_sessions" },

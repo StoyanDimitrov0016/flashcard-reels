@@ -17,7 +17,7 @@ export function DeleteDeckSheet({ busy, deck, error, onCancel, onConfirm }: Dele
       busy={busy}
       error={error ? "Could not delete this deck. Try again." : null}
       icon={{ android: "delete", ios: "trash.fill", web: "delete" }}
-      message="Its cards and learning progress will be permanently deleted."
+      message="Its downloaded cards and audio will be removed. Your learning progress will be saved in Archived progress."
       onCancel={onCancel}
       onConfirm={onConfirm}
       title={`Delete ${deck?.title ?? "deck"}?`}

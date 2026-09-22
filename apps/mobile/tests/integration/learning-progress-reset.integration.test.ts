@@ -229,6 +229,7 @@ describe("SQLite learning progress reset transaction", () => {
     await database.drizzle.insert(learnerProfiles).values({
       againCount: 0,
       createdAt: card.createdAt,
+      deckId: card.deckId,
       easyCount: 0,
       firstReviewedAt: REVIEWED_AT,
       flashcardId: card.id,
@@ -245,6 +246,7 @@ describe("SQLite learning progress reset transaction", () => {
     const card = makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID);
     await database.drizzle.insert(flashcardMemoryStates).values({
       createdAt: REVIEWED_AT,
+      deckId: card.deckId,
       difficulty: 5,
       dueAt: REVIEWED_AT,
       elapsedDays: 1,
@@ -322,14 +324,14 @@ describe("SQLite learning progress reset transaction", () => {
 
   async function profileRow(index: number): Promise<unknown> {
     return database.getFirstAsync(
-      "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM learner_profiles WHERE flashcard_id = ?",
+      "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM card_progress WHERE flashcard_id = ?",
       makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID).id
     );
   }
 
   async function profileRows(): Promise<unknown> {
     return database.getAllAsync(
-      "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM learner_profiles ORDER BY flashcard_id"
+      "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM card_progress ORDER BY flashcard_id"
     );
   }
 
