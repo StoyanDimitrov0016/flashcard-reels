@@ -8,6 +8,7 @@ import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
@@ -124,7 +125,9 @@ describe("archived deck progress", () => {
     expect(await cards.list()).toEqual([]);
     expect(await cards.listByDeckId(TEST_DECK_ID)).toEqual([]);
 
-    await new SQLiteDeckProgressRepository(database.drizzle).continueProgress(TEST_DECK_ID);
+    await new SQLiteSavedProgressContinuationTransaction(database.drizzle).continueProgress(
+      TEST_DECK_ID
+    );
     expect(await cards.listByDeckId(TEST_DECK_ID)).toHaveLength(1);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
@@ -301,7 +304,9 @@ describe("archived deck progress", () => {
       },
       reviewedAt
     );
-    await new SQLiteDeckProgressRepository(database.drizzle).continueProgress(TEST_DECK_ID);
+    await new SQLiteSavedProgressContinuationTransaction(database.drizzle).continueProgress(
+      TEST_DECK_ID
+    );
 
     await new SQLiteLearningProgressResetTransaction(database.drizzle).resetDeck(
       TEST_DECK_ID,

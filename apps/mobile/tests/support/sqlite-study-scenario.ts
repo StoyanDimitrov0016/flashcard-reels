@@ -2,6 +2,7 @@ import type { ReviewAttemptFinalizationTransaction } from "@/features/study/appl
 
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
@@ -62,7 +63,7 @@ export function createScenarioGraph(
     memoryStates,
     items,
     flashcardProgress: new FlashcardProgressServiceImpl(
-      progress,
+      new SQLiteFlashcardProgressQuery(database.drizzle, progress),
       clock,
       new SQLiteLearningProgressResetTransaction(database.drizzle),
       study,

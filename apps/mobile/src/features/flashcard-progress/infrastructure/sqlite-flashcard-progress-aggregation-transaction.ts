@@ -140,7 +140,7 @@ export class SQLiteFlashcardProgressAggregationTransaction<
         const createdAt = progress?.createdAt ?? createdAtByFlashcardId.get(flashcardId);
         const deckId = progress?.deckId ?? deckIdByFlashcardId.get(flashcardId);
         if (!createdAt || !deckId) {
-          throw new Error(`Missing flashcard ${flashcardId} for card progress aggregation`);
+          throw new Error(`Missing flashcard ${flashcardId} for flashcard progress aggregation`);
         }
         const firstReviewedAt = progress?.firstReviewedAt
           ? minTimestamp(progress.firstReviewedAt, contribution.firstReviewedAt)

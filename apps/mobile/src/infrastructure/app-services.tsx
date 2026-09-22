@@ -24,9 +24,11 @@ import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
@@ -77,6 +79,9 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const savedProgressDeletionTransaction = new SQLiteSavedProgressDeletionTransaction(
       drizzleDatabase
     );
+    const savedProgressContinuationTransaction = new SQLiteSavedProgressContinuationTransaction(
+      drizzleDatabase
+    );
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
     const flashcardService = new FlashcardServiceImpl(flashcardRepository);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
@@ -90,6 +95,10 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       learningScheduler
     );
     const flashcardProgressRepository = new SQLiteFlashcardProgressRepository(drizzleDatabase);
+    const flashcardProgressQuery = new SQLiteFlashcardProgressQuery(
+      drizzleDatabase,
+      flashcardProgressRepository
+    );
     const learningProgressResetTransaction = new SQLiteLearningProgressResetTransaction(
       drizzleDatabase
     );
@@ -146,11 +155,12 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       savedProgressService: new SavedProgressServiceImpl(
         archivedProgressQuery,
         deckProgressRepository,
-        savedProgressDeletionTransaction
+        savedProgressDeletionTransaction,
+        savedProgressContinuationTransaction
       ),
       flashcardService,
       flashcardProgressService: new FlashcardProgressServiceImpl(
-        flashcardProgressRepository,
+        flashcardProgressQuery,
         clock,
         learningProgressResetTransaction,
         studyService,

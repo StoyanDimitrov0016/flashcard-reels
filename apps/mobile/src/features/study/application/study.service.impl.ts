@@ -186,7 +186,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
           !updated ||
           updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
         ) {
-          throw new Error(`Could not finish card progress aggregation for ${session.id}`);
+          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
         }
       }
     }
