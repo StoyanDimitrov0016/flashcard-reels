@@ -52,6 +52,14 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 - [ ] Try to import a deliberately invalid `.fcrdeck` file.
 - [ ] Confirm concise invalid-package feedback, app stability, and no partial deck in Library.
 
+## Progress backup and transfer
+
+- [ ] Rate cards in Discover and Focus, then open Controls → Progress backup → Export progress. Save the shared JSON file to device storage. Confirm study resumes with a fresh session and the exported file includes the latest ratings.
+- [ ] Reset learning progress, then import that file. Confirm the preview shows the backup and device counts, the confirmation replaces progress, and matching installed decks resume with their imported progress immediately.
+- [ ] Confirm the previous local progress backup can be shared after import. Import an invalid or damaged JSON file and confirm existing progress remains unchanged.
+- [ ] Import a backup containing a removed deck on a device without that deck. Confirm the progress appears in Archived progress. Install the deck and confirm the existing Continue / Start fresh choice appears.
+- [ ] After restoring a backup, return to Discover and Focus and confirm neither uses a stale study session. Check that downloaded decks, audio, appearance, and preferences remain unchanged.
+
 ## Phase 0 runtime stabilization smoke sequence
 
 - [ ] Launch in both dark and light/device theme.

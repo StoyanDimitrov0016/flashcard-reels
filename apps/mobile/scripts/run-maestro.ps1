@@ -47,12 +47,17 @@ try {
   if ($LASTEXITCODE -ne 0) {
     throw "Could not copy the deck fixture to Android Downloads."
   }
+  & $adbPath push (Join-Path $mobileRoot ".maestro\fixtures\progress-backup.json") /sdcard/Download/progress-backup.json
+  if ($LASTEXITCODE -ne 0) {
+    throw "Could not copy the progress backup fixture to Android Downloads."
+  }
 
   foreach ($flow in @(
     "archived-progress-continue.yaml",
     "archived-progress-start-fresh.yaml",
     "archived-progress-delete.yaml",
     "app-data-reset-confirmation.yaml"
+    "progress-backup-transfer.yaml"
   )) {
     & maestro test (Join-Path ".maestro" $flow)
     if ($LASTEXITCODE -ne 0) {

@@ -1,0 +1,28 @@
+appId: com.flashcardreels.app
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/import-versioned-deck.yaml
+- tapOn: You tab
+- tapOn: Progress backup
+- assertVisible: Progress backup
+- tapOn: Import progress
+- tapOn: Show roots
+- waitForAnimationToEnd
+- tapOn:
+    point: "30%, 27%"
+- assertVisible: Files in Downloads
+- tapOn: progress-backup.json
+- assertVisible: Replace learning progress?
+- assertVisible: "Backup: 1 studied decks and 1 reviews.*"
+- tapOn: Replace progress
+- assertVisible: "Learning progress restored.*"
+- tapOn: Back
+- tapOn: Progress tab
+- assertVisible: "1 / 3 reviewed"
+- tapOn: You tab
+- tapOn: Progress backup
+- tapOn: Export progress
+- waitForAnimationToEnd
+- pressKey: Back
+- assertVisible: Progress backup

@@ -18,4 +18,6 @@ Library also supports deck search, focused study, card browsing, and a curated a
 
 **You** groups appearance, study controls, audio, haptics, learning-data reset, and app information. Decks, audio, preferences, sessions, and learning history stay on the device; the mobile app does not require an account or sync study data.
 
+Controls also offers a [progress backup](progress-backup.md) for saving learning data to a file or moving it to another device. Import previews the backup before replacing local learning progress; downloaded decks and preferences stay on the device.
+
 The web portal is a separate internal tool for browsing and transferring curated decks. It does not store mobile learning progress.

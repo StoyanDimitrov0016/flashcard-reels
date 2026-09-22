@@ -13,4 +13,4 @@ appId: com.flashcardreels.app
 - assertVisible: Reset app data
 - assertVisible: Cancel
 - tapOn: Cancel
-- assertNotVisible: "Reset all app data?"
+- assertNotVisible: 'Reset all app data\?'
