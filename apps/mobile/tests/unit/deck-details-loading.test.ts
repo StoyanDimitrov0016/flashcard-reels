@@ -7,7 +7,7 @@ const harness = vi.hoisted(() => ({
   findDeck: vi.fn(),
   cards: vi.fn(),
   appearance: vi.fn(),
-  profiles: vi.fn(),
+  progress: vi.fn(),
 }));
 vi.mock("react", () => ({
   useEffect: (effect: () => void | (() => void)) => {
@@ -24,13 +24,13 @@ vi.mock("@/infrastructure/app-services", () => ({
   useAppServices: () => ({
     deckService: { findById: harness.findDeck, getAppearance: harness.appearance },
     flashcardService: { listByDeckId: harness.cards },
-    learnerProfileService: { findByFlashcardIds: harness.profiles },
+    cardProgressService: { findByFlashcardIds: harness.progress },
   }),
 }));
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useDeckContentRevision: () => ({ revision: 1 }),
 }));
-vi.mock("@/features/learner-profile/presentation/context/learning-progress-reset-context", () => ({
+vi.mock("@/features/card-progress/presentation/context/learning-progress-reset-context", () => ({
   useLearningProgressReset: () => ({ revision: 1 }),
 }));
 
@@ -44,7 +44,7 @@ describe("deck detail loading after content changes", () => {
     harness.findDeck.mockResolvedValue(null);
     harness.cards.mockResolvedValue([]);
     harness.appearance.mockResolvedValue(null);
-    harness.profiles.mockResolvedValue(new Map());
+    harness.progress.mockResolvedValue(new Map());
   });
 
   it("returns an expected missing-deck state instead of throwing into a route boundary", async () => {
@@ -54,7 +54,7 @@ describe("deck detail loading after content changes", () => {
       expect(harness.state).toMatchObject({ loading: false, deck: null, error: null })
     );
     expect(() => useDeckDetails("deleted-deck")).not.toThrow();
-    expect(harness.profiles).not.toHaveBeenCalled();
+    expect(harness.progress).not.toHaveBeenCalled();
   });
 
   it("pauses detail reloads while deletion is running", () => {

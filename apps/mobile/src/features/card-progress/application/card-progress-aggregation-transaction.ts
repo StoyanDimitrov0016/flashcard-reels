@@ -1,12 +1,12 @@
-export type LearnerProfileAggregationResult = Readonly<{
+export type CardProgressAggregationResult = Readonly<{
   aggregatedAttemptCount: number;
   throughReelPosition: number;
 }>;
 
-export interface LearnerProfileAggregationTransaction {
+export interface CardProgressAggregationTransaction {
   aggregate(
     studySessionId: string,
     throughReelPosition: number,
     now: string
-  ): Promise<LearnerProfileAggregationResult>;
+  ): Promise<CardProgressAggregationResult>;
 }

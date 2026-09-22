@@ -1,21 +1,21 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
 import {
   decks,
   flashcards,
   flashcardReviewAttempts,
-  learnerProfiles,
+  cardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/study-fixtures";
 
-describe("SQLite learner profiles", () => {
+describe("SQLite card progress", () => {
   let database: NodeSqliteDatabase;
-  let profiles: SQLiteLearnerProfileRepository;
+  let progress: SQLiteCardProgressRepository;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -24,18 +24,18 @@ describe("SQLite learner profiles", () => {
     await insertFlashcard(makeFlashcard(1, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(2, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(3, OTHER_DECK_ID));
-    profiles = new SQLiteLearnerProfileRepository(database.drizzle);
+    progress = new SQLiteCardProgressRepository(database.drizzle);
   });
 
   afterEach(() => {
     database.close();
   });
 
-  it("reads existing profiles for a candidate set in one batched repository operation", async () => {
-    await profiles.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
-    await profiles.resetCard(makeFlashcard(3, OTHER_DECK_ID).id, "2026-01-03T00:00:00.000Z");
+  it("reads existing progress for a candidate set in one batched repository operation", async () => {
+    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+    await progress.resetCard(makeFlashcard(3, OTHER_DECK_ID).id, "2026-01-03T00:00:00.000Z");
 
-    const result = await profiles.findByFlashcardIds([
+    const result = await progress.findByFlashcardIds([
       makeFlashcard(1).id,
       makeFlashcard(2).id,
       makeFlashcard(3, OTHER_DECK_ID).id,
@@ -48,7 +48,7 @@ describe("SQLite learner profiles", () => {
       resetAt: "2026-01-02T00:00:00.000Z",
       reviewCount: 0,
     });
-    expect(await profiles.findByFlashcardId(makeFlashcard(2).id)).toBeNull();
+    expect(await progress.findByFlashcardId(makeFlashcard(2).id)).toBeNull();
   });
 
   it("includes saved ratings that have not reached the aggregation window", async () => {
@@ -73,17 +73,17 @@ describe("SQLite learner profiles", () => {
       updatedAt: "2026-01-02T00:01:00.000Z",
     });
 
-    const currentProfiles = await profiles.findCurrentByFlashcardIds([makeFlashcard(1).id]);
-    expect(currentProfiles.get(makeFlashcard(1).id)).toMatchObject({
+    const currentProgress = await progress.findCurrentByFlashcardIds([makeFlashcard(1).id]);
+    expect(currentProgress.get(makeFlashcard(1).id)).toMatchObject({
       goodCount: 1,
       reviewCount: 1,
     });
   });
 
   it("resets one card, one deck, and all cards without deleting content", async () => {
-    await profiles.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle
-      .update(learnerProfiles)
+      .update(cardProgress)
       .set({
         againCount: 1,
         firstReviewedAt: "2026-01-01T00:00:00.000Z",
@@ -91,26 +91,26 @@ describe("SQLite learner profiles", () => {
         reviewCount: 1,
         updatedAt: "2026-01-01T00:00:00.000Z",
       })
-      .where(eq(learnerProfiles.flashcardId, makeFlashcard(1).id));
+      .where(eq(cardProgress.flashcardId, makeFlashcard(1).id));
 
-    await profiles.resetDeck(TEST_DECK_ID, "2026-01-03T00:00:00.000Z");
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    await progress.resetDeck(TEST_DECK_ID, "2026-01-03T00:00:00.000Z");
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       resetAt: "2026-01-03T00:00:00.000Z",
       reviewCount: 0,
     });
-    expect(await profiles.findByFlashcardId(makeFlashcard(2).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(2).id)).toMatchObject({
       resetAt: "2026-01-03T00:00:00.000Z",
       reviewCount: 0,
     });
-    expect(await profiles.findByFlashcardId(makeFlashcard(3, OTHER_DECK_ID).id)).toBeNull();
+    expect(await progress.findByFlashcardId(makeFlashcard(3, OTHER_DECK_ID).id)).toBeNull();
 
-    await profiles.resetAll("2026-01-04T00:00:00.000Z");
-    const resetProfiles = await profiles.findByFlashcardIds([
+    await progress.resetAll("2026-01-04T00:00:00.000Z");
+    const resetProgress = await progress.findByFlashcardIds([
       makeFlashcard(1).id,
       makeFlashcard(2).id,
       makeFlashcard(3, OTHER_DECK_ID).id,
     ]);
-    expect([...resetProfiles.values()].map((profile) => profile.resetAt)).toEqual([
+    expect([...resetProgress.values()].map((entry) => entry.resetAt)).toEqual([
       "2026-01-04T00:00:00.000Z",
       "2026-01-04T00:00:00.000Z",
       "2026-01-04T00:00:00.000Z",
@@ -122,11 +122,11 @@ describe("SQLite learner profiles", () => {
     });
   });
 
-  it("retains a profile when its downloaded flashcard is deleted", async () => {
-    await profiles.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+  it("retains a progress when its downloaded flashcard is deleted", async () => {
+    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle.delete(flashcards).where(eq(flashcards.id, makeFlashcard(1).id));
 
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       flashcardId: makeFlashcard(1).id,
     });
   });

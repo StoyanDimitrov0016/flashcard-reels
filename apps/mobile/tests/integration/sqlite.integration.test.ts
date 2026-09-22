@@ -399,7 +399,7 @@ describe("SQLite study persistence", () => {
     expect(finalizedAttempt?.rating).toBeNull();
   });
 
-  it("rejects incoherent rating and learner-profile timestamp states", async () => {
+  it("rejects incoherent rating and card-progress timestamp states", async () => {
     const session = makeSession(testId(274), "mixed");
     await sessions.create(session);
     await expect(

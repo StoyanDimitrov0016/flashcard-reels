@@ -1,6 +1,6 @@
+import type { CardProgressAggregationTransaction } from "@/features/card-progress/application/card-progress-aggregation-transaction";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
@@ -52,7 +52,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
-  private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
+  private readonly cardProgressAggregationTransaction: CardProgressAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
   private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
@@ -69,7 +69,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
     random: RandomSource = Math.random,
-    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null,
+    cardProgressAggregationTransaction: CardProgressAggregationTransaction | null = null,
     studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
@@ -83,7 +83,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
-    this.learnerProfileAggregationTransaction = learnerProfileAggregationTransaction;
+    this.cardProgressAggregationTransaction = cardProgressAggregationTransaction;
     this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
   }
 
@@ -186,7 +186,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
           !updated ||
           updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
         ) {
-          throw new Error(`Could not finish learner progress aggregation for ${session.id}`);
+          throw new Error(`Could not finish card progress aggregation for ${session.id}`);
         }
       }
     }
@@ -215,7 +215,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   async recoverPendingCompletedSessionAggregation(
     limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
   ): Promise<void> {
-    if (!this.learnerProfileAggregationTransaction) {
+    if (!this.cardProgressAggregationTransaction) {
       return;
     }
     const pending =
@@ -557,14 +557,14 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
-    if (!this.learnerProfileAggregationTransaction) {
+    if (!this.cardProgressAggregationTransaction) {
       return;
     }
     const eligibility = await this.getAggregationEligibility(studySessionId);
     if (!eligibility?.shouldCheck) {
       return;
     }
-    await this.learnerProfileAggregationTransaction.aggregate(
+    await this.cardProgressAggregationTransaction.aggregate(
       studySessionId,
       eligibility.safeThroughReelPosition,
       this.clock.now()
@@ -572,7 +572,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateCompletedSession(studySessionId: string): Promise<void> {
-    const aggregation = this.learnerProfileAggregationTransaction;
+    const aggregation = this.cardProgressAggregationTransaction;
     if (!aggregation) {
       return;
     }

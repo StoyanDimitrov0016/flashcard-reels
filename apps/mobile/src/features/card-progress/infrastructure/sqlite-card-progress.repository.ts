@@ -1,49 +1,47 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
+import type { CardProgressRepository } from "@/features/card-progress/domain/card-progress.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
+import { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import {
   flashcardReviewAttempts,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
-export class SQLiteLearnerProfileRepository<
-  TRunResult = unknown,
-> implements LearnerProfileRepository {
+export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardProgressRepository {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
-  async findByFlashcardId(flashcardId: string): Promise<LearnerProfile | null> {
-    const profiles = await this.findByFlashcardIds([flashcardId]);
-    return profiles.get(flashcardId) ?? null;
+  async findByFlashcardId(flashcardId: string): Promise<CardProgress | null> {
+    const progress = await this.findByFlashcardIds([flashcardId]);
+    return progress.get(flashcardId) ?? null;
   }
 
   async findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerProfile>> {
+  ): Promise<ReadonlyMap<string, CardProgress>> {
     if (flashcardIds.length === 0) {
       return new Map();
     }
     const rows = await this.database
       .select()
-      .from(learnerProfiles)
-      .where(inArray(learnerProfiles.flashcardId, flashcardIds))
-      .orderBy(asc(learnerProfiles.flashcardId));
+      .from(cardProgress)
+      .where(inArray(cardProgress.flashcardId, flashcardIds))
+      .orderBy(asc(cardProgress.flashcardId));
     return new Map(rows.map((row) => [row.flashcardId, this.toModel(row)] as const));
   }
 
   async findCurrentByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerProfile>> {
+  ): Promise<ReadonlyMap<string, CardProgress>> {
     if (flashcardIds.length === 0) {
       return new Map();
     }
@@ -74,17 +72,17 @@ export class SQLiteLearnerProfileRepository<
       if (!attempt.rating || !attempt.ratedAt) {
         continue;
       }
-      const profile = current.get(attempt.flashcardId);
-      if (profile?.resetAt && attempt.ratedAt <= profile.resetAt) {
+      const progress = current.get(attempt.flashcardId);
+      if (progress?.resetAt && attempt.ratedAt <= progress.resetAt) {
         continue;
       }
-      const createdAt = profile?.createdAt ?? createdAtById.get(attempt.flashcardId);
+      const createdAt = progress?.createdAt ?? createdAtById.get(attempt.flashcardId);
       if (!createdAt) {
         continue;
       }
       current.set(
         attempt.flashcardId,
-        addPendingRating(profile, attempt.flashcardId, attempt.rating, attempt.ratedAt, createdAt)
+        addPendingRating(progress, attempt.flashcardId, attempt.rating, attempt.ratedAt, createdAt)
       );
     }
     return current;
@@ -104,10 +102,10 @@ export class SQLiteLearnerProfileRepository<
         throw new Error(`Missing flashcard ${flashcardId}`);
       }
       transaction
-        .insert(learnerProfiles)
+        .insert(cardProgress)
         .values(this.zeroState(flashcardId, card.deckId, card.createdAt, resetAt))
         .onConflictDoUpdate({
-          target: learnerProfiles.flashcardId,
+          target: cardProgress.flashcardId,
           set: this.resetValues(resetAt),
         })
         .run();
@@ -123,10 +121,10 @@ export class SQLiteLearnerProfileRepository<
         .all();
       for (const card of cards) {
         transaction
-          .insert(learnerProfiles)
+          .insert(cardProgress)
           .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
           .onConflictDoUpdate({
-            target: learnerProfiles.flashcardId,
+            target: cardProgress.flashcardId,
             set: this.resetValues(resetAt),
           })
           .run();
@@ -143,10 +141,10 @@ export class SQLiteLearnerProfileRepository<
         .all();
       for (const card of cards) {
         transaction
-          .insert(learnerProfiles)
+          .insert(cardProgress)
           .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
           .onConflictDoUpdate({
-            target: learnerProfiles.flashcardId,
+            target: cardProgress.flashcardId,
             set: this.resetValues(resetAt),
           })
           .run();
@@ -168,8 +166,8 @@ export class SQLiteLearnerProfileRepository<
     };
   }
 
-  private toModel(row: typeof learnerProfiles.$inferSelect): LearnerProfile {
-    return new LearnerProfile({
+  private toModel(row: typeof cardProgress.$inferSelect): CardProgress {
+    return new CardProgress({
       againCount: row.againCount,
       createdAt: row.createdAt,
       easyCount: row.easyCount,
@@ -203,32 +201,32 @@ export class SQLiteLearnerProfileRepository<
 }
 
 function addPendingRating(
-  profile: LearnerProfile | undefined,
+  progress: CardProgress | undefined,
   flashcardId: string,
   rating: RecallLevel,
   ratedAt: string,
   createdAt: string
-): LearnerProfile {
-  const againCount = (profile?.againCount ?? 0) + (rating === "again" ? 1 : 0);
-  const hardCount = (profile?.hardCount ?? 0) + (rating === "hard" ? 1 : 0);
-  const goodCount = (profile?.goodCount ?? 0) + (rating === "good" ? 1 : 0);
-  const easyCount = (profile?.easyCount ?? 0) + (rating === "easy" ? 1 : 0);
-  return new LearnerProfile({
+): CardProgress {
+  const againCount = (progress?.againCount ?? 0) + (rating === "again" ? 1 : 0);
+  const hardCount = (progress?.hardCount ?? 0) + (rating === "hard" ? 1 : 0);
+  const goodCount = (progress?.goodCount ?? 0) + (rating === "good" ? 1 : 0);
+  const easyCount = (progress?.easyCount ?? 0) + (rating === "easy" ? 1 : 0);
+  return new CardProgress({
     againCount,
     createdAt,
     easyCount,
     firstReviewedAt:
-      profile?.firstReviewedAt && profile.firstReviewedAt < ratedAt
-        ? profile.firstReviewedAt
+      progress?.firstReviewedAt && progress.firstReviewedAt < ratedAt
+        ? progress.firstReviewedAt
         : ratedAt,
     flashcardId,
     goodCount,
     hardCount,
     lastReviewedAt:
-      profile?.lastReviewedAt && profile.lastReviewedAt > ratedAt
-        ? profile.lastReviewedAt
+      progress?.lastReviewedAt && progress.lastReviewedAt > ratedAt
+        ? progress.lastReviewedAt
         : ratedAt,
-    resetAt: profile?.resetAt ?? null,
+    resetAt: progress?.resetAt ?? null,
     reviewCount: againCount + hardCount + goodCount + easyCount,
     updatedAt: ratedAt,
   });

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 
+import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 
+import { useLearningProgressReset } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{
@@ -16,11 +16,11 @@ type DeckDetailsState = Readonly<{
   deck: Deck | null;
   error: Error | null;
   loading: boolean;
-  profiles: ReadonlyMap<string, LearnerProfile>;
+  progress: ReadonlyMap<string, CardProgress>;
 }>;
 
 export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
-  const { deckService, flashcardService, learnerProfileService } = useDecks();
+  const { deckService, flashcardService, cardProgressService } = useDecks();
   const { revision } = useDeckContentRevision();
   const { revision: resetRevision } = useLearningProgressReset();
   const [state, setState] = useState<DeckDetailsState>({
@@ -29,7 +29,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
     deck: null,
     error: null,
     loading: true,
-    profiles: new Map(),
+    progress: new Map(),
   });
 
   useEffect(
@@ -52,17 +52,17 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
                 deck: null,
                 error: null,
                 loading: false,
-                profiles: new Map(),
+                progress: new Map(),
               });
             }
             return;
           }
           if (active) {
-            const profiles = await learnerProfileService.findByFlashcardIds(
+            const progress = await cardProgressService.findByFlashcardIds(
               cards.map((card) => card.id)
             );
             if (active) {
-              setState({ appearance, cards, deck, error: null, loading: false, profiles });
+              setState({ appearance, cards, deck, error: null, loading: false, progress });
             }
           }
         })
@@ -78,7 +78,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
                 message: "Could not load deck cards",
               }),
               loading: false,
-              profiles: new Map(),
+              progress: new Map(),
             });
           }
         });
@@ -86,7 +86,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
         active = false;
       };
     },
-    [deckId, deckService, enabled, flashcardService, learnerProfileService, resetRevision, revision]
+    [deckId, deckService, enabled, flashcardService, cardProgressService, resetRevision, revision]
   );
 
   if (state.error) {

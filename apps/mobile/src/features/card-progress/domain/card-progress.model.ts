@@ -1,4 +1,4 @@
-export type LearnerProfileFields = Readonly<{
+export type CardProgressFields = Readonly<{
   againCount: number;
   createdAt: string;
   easyCount: number;
@@ -12,7 +12,7 @@ export type LearnerProfileFields = Readonly<{
   updatedAt: string;
 }>;
 
-export class LearnerProfile {
+export class CardProgress {
   public readonly againCount: number;
   public readonly createdAt: string;
   public readonly easyCount: number;
@@ -25,21 +25,19 @@ export class LearnerProfile {
   public readonly reviewCount: number;
   public readonly updatedAt: string;
 
-  constructor(fields: LearnerProfileFields) {
+  constructor(fields: CardProgressFields) {
     if (
       fields.reviewCount !==
       fields.againCount + fields.hardCount + fields.goodCount + fields.easyCount
     ) {
-      throw new Error(`Learner profile counter invariant failed for ${fields.flashcardId}`);
+      throw new Error(`Card progress counter invariant failed for ${fields.flashcardId}`);
     }
     if (
       fields.firstReviewedAt !== null &&
       fields.lastReviewedAt !== null &&
       fields.firstReviewedAt > fields.lastReviewedAt
     ) {
-      throw new Error(
-        `Learner profile review timestamp invariant failed for ${fields.flashcardId}`
-      );
+      throw new Error(`Card progress review timestamp invariant failed for ${fields.flashcardId}`);
     }
 
     this.againCount = fields.againCount;

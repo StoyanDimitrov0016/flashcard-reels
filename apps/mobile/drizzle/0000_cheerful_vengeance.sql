@@ -93,14 +93,14 @@ CREATE TABLE `card_progress` (
 	`reset_at` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
-	CONSTRAINT "learner_profiles_review_count_check" CHECK("card_progress"."review_count" >= 0),
-	CONSTRAINT "learner_profiles_again_count_check" CHECK("card_progress"."again_count" >= 0),
-	CONSTRAINT "learner_profiles_hard_count_check" CHECK("card_progress"."hard_count" >= 0),
-	CONSTRAINT "learner_profiles_good_count_check" CHECK("card_progress"."good_count" >= 0),
-	CONSTRAINT "learner_profiles_easy_count_check" CHECK("card_progress"."easy_count" >= 0),
-	CONSTRAINT "learner_profiles_counter_sum_check" CHECK("card_progress"."review_count" = "card_progress"."again_count" + "card_progress"."hard_count" + "card_progress"."good_count" + "card_progress"."easy_count"),
-	CONSTRAINT "learner_profiles_reviewed_at_presence_check" CHECK(("card_progress"."review_count" = 0 AND "card_progress"."first_reviewed_at" IS NULL AND "card_progress"."last_reviewed_at" IS NULL) OR ("card_progress"."review_count" > 0 AND "card_progress"."first_reviewed_at" IS NOT NULL AND "card_progress"."last_reviewed_at" IS NOT NULL)),
-	CONSTRAINT "learner_profiles_reviewed_at_order_check" CHECK("card_progress"."first_reviewed_at" IS NULL OR "card_progress"."last_reviewed_at" IS NULL OR "card_progress"."first_reviewed_at" <= "card_progress"."last_reviewed_at")
+	CONSTRAINT "card_progress_review_count_check" CHECK("card_progress"."review_count" >= 0),
+	CONSTRAINT "card_progress_again_count_check" CHECK("card_progress"."again_count" >= 0),
+	CONSTRAINT "card_progress_hard_count_check" CHECK("card_progress"."hard_count" >= 0),
+	CONSTRAINT "card_progress_good_count_check" CHECK("card_progress"."good_count" >= 0),
+	CONSTRAINT "card_progress_easy_count_check" CHECK("card_progress"."easy_count" >= 0),
+	CONSTRAINT "card_progress_counter_sum_check" CHECK("card_progress"."review_count" = "card_progress"."again_count" + "card_progress"."hard_count" + "card_progress"."good_count" + "card_progress"."easy_count"),
+	CONSTRAINT "card_progress_reviewed_at_presence_check" CHECK(("card_progress"."review_count" = 0 AND "card_progress"."first_reviewed_at" IS NULL AND "card_progress"."last_reviewed_at" IS NULL) OR ("card_progress"."review_count" > 0 AND "card_progress"."first_reviewed_at" IS NOT NULL AND "card_progress"."last_reviewed_at" IS NOT NULL)),
+	CONSTRAINT "card_progress_reviewed_at_order_check" CHECK("card_progress"."first_reviewed_at" IS NULL OR "card_progress"."last_reviewed_at" IS NULL OR "card_progress"."first_reviewed_at" <= "card_progress"."last_reviewed_at")
 );
 --> statement-breakpoint
 CREATE INDEX `card_progress_deck_id_idx` ON `card_progress` (`deck_id`);--> statement-breakpoint

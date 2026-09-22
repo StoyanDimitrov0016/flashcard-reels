@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
+import type { CardProgressAggregationTransaction } from "@/features/card-progress/application/card-progress-aggregation-transaction";
 
-import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progress/infrastructure/sqlite-card-progress-aggregation-transaction";
+import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
@@ -27,11 +27,11 @@ import {
   testId,
 } from "../support/study-fixtures";
 
-describe("SQLite learner-profile aggregation", () => {
+describe("SQLite card-progress aggregation", () => {
   let database: NodeSqliteDatabase;
   let attempts: SQLiteReviewAttemptRepository;
-  let aggregation: SQLiteLearnerProfileAggregationTransaction;
-  let profiles: SQLiteLearnerProfileRepository;
+  let aggregation: SQLiteCardProgressAggregationTransaction;
+  let progress: SQLiteCardProgressRepository;
   let sessions: SQLiteStudySessionRepository;
   let finalization: SQLiteReviewAttemptFinalizationTransaction;
 
@@ -57,8 +57,8 @@ describe("SQLite learner-profile aggregation", () => {
       }))
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
-    aggregation = new SQLiteLearnerProfileAggregationTransaction(database.drizzle);
-    profiles = new SQLiteLearnerProfileRepository(database.drizzle);
+    aggregation = new SQLiteCardProgressAggregationTransaction(database.drizzle);
+    progress = new SQLiteCardProgressRepository(database.drizzle);
     sessions = new SQLiteStudySessionRepository(database.drizzle);
     finalization = new SQLiteReviewAttemptFinalizationTransaction(
       database.drizzle,
@@ -103,8 +103,8 @@ describe("SQLite learner-profile aggregation", () => {
     await expect(aggregation.aggregate(session.id, 5, "2026-01-01T00:09:00.000Z")).resolves.toEqual(
       { aggregatedAttemptCount: 5, throughReelPosition: 5 }
     );
-    const aggregatedProfile = await profiles.findByFlashcardId(makeFlashcard(1).id);
-    expect(aggregatedProfile).toMatchObject({
+    const aggregatedProgress = await progress.findByFlashcardId(makeFlashcard(1).id);
+    expect(aggregatedProgress).toMatchObject({
       againCount: 1,
       easyCount: 1,
       goodCount: 2,
@@ -121,8 +121,8 @@ describe("SQLite learner-profile aggregation", () => {
     await expect(aggregation.aggregate(session.id, 5, "2026-01-01T00:10:00.000Z")).resolves.toEqual(
       { aggregatedAttemptCount: 0, throughReelPosition: 5 }
     );
-    const retriedProfile = await profiles.findByFlashcardId(makeFlashcard(1).id);
-    expect(retriedProfile).toMatchObject({ reviewCount: 5 });
+    const retriedProgress = await progress.findByFlashcardId(makeFlashcard(1).id);
+    expect(retriedProgress).toMatchObject({ reviewCount: 5 });
   });
 
   it("advances in bounded ranges instead of scanning the entire history", async () => {
@@ -133,27 +133,27 @@ describe("SQLite learner-profile aggregation", () => {
     await expect(
       aggregation.aggregate(session.id, 100, "2026-01-01T00:02:00.000Z")
     ).resolves.toEqual({ aggregatedAttemptCount: 0, throughReelPosition: 24 });
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toBeNull();
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toBeNull();
 
     await expect(
       aggregation.aggregate(session.id, 100, "2026-01-01T00:03:00.000Z")
     ).resolves.toEqual({ aggregatedAttemptCount: 1, throughReelPosition: 49 });
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ hardCount: 1 });
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ hardCount: 1 });
   });
 
-  it("rolls back profile updates and checkpoint advancement together", async () => {
+  it("rolls back progress updates and checkpoint advancement together", async () => {
     const session = makeSession(testId(520), "mixed");
     await sessions.create(session);
-    await profiles.resetCard(makeFlashcard(1).id, "2025-12-01T00:00:00.000Z");
+    await progress.resetCard(makeFlashcard(1).id, "2025-12-01T00:00:00.000Z");
     await createAttempt(session.id, 0, "good", "2026-01-01T00:01:00.000Z");
     await database.runAsync(
-      "CREATE TRIGGER fail_learner_profile_update BEFORE UPDATE ON card_progress BEGIN SELECT RAISE(ABORT, 'profile update failed'); END"
+      "CREATE TRIGGER fail_card_progress_update BEFORE UPDATE ON card_progress BEGIN SELECT RAISE(ABORT, 'progress update failed'); END"
     );
 
     await expect(aggregation.aggregate(session.id, 0, "2026-01-01T00:02:00.000Z")).rejects.toThrow(
-      "profile update failed"
+      "progress update failed"
     );
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ reviewCount: 0 });
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ reviewCount: 0 });
     expect(
       await database.getFirstAsync(
         "SELECT aggregated_through_reel_position AS position FROM study_sessions WHERE id = ?",
@@ -166,14 +166,14 @@ describe("SQLite learner-profile aggregation", () => {
     const session = makeSession(testId(530), "mixed");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
-    await profiles.resetCard(makeFlashcard(1).id, "2026-01-01T00:02:00.000Z");
+    await progress.resetCard(makeFlashcard(1).id, "2026-01-01T00:02:00.000Z");
 
     await aggregation.aggregate(session.id, 0, "2026-01-01T00:03:00.000Z");
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ reviewCount: 0 });
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ reviewCount: 0 });
 
     await createAttempt(session.id, 1, "good", "2026-01-01T00:04:00.000Z");
     await aggregation.aggregate(session.id, 1, "2026-01-01T00:05:00.000Z");
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 1,
       reviewCount: 1,
       resetAt: "2026-01-01T00:02:00.000Z",
@@ -204,22 +204,20 @@ describe("SQLite learner-profile aggregation", () => {
       rating: "good",
     });
 
-    await profiles.resetCard(makeFlashcard(1).id, "2026-01-01T00:03:00.000Z");
+    await progress.resetCard(makeFlashcard(1).id, "2026-01-01T00:03:00.000Z");
     await finalization.finalizeAttempt(
       editable.id,
       "2026-01-01T00:04:00.000Z",
       "2026-01-01T00:04:00.000Z"
     );
     await aggregation.aggregate(session.id, 0, "2026-01-01T00:05:00.000Z");
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       reviewCount: 0,
       resetAt: "2026-01-01T00:03:00.000Z",
     });
 
-    const reconstructedAggregation = new SQLiteLearnerProfileAggregationTransaction(
-      database.drizzle
-    );
-    const reconstructedProfiles = new SQLiteLearnerProfileRepository(database.drizzle);
+    const reconstructedAggregation = new SQLiteCardProgressAggregationTransaction(database.drizzle);
+    const reconstructedProgress = new SQLiteCardProgressRepository(database.drizzle);
     const later = await createAttempt(session.id, 1, null, null);
     await new SQLiteReviewAttemptTransaction(database.drizzle).rateAttempt(
       later.id,
@@ -233,7 +231,7 @@ describe("SQLite learner-profile aggregation", () => {
       createLearningScheduler()
     ).finalizeAttempt(later.id, "2026-01-01T00:07:00.000Z", "2026-01-01T00:07:00.000Z");
     await reconstructedAggregation.aggregate(session.id, 1, "2026-01-01T00:08:00.000Z");
-    expect(await reconstructedProfiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await reconstructedProgress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
     });
@@ -246,7 +244,7 @@ describe("SQLite learner-profile aggregation", () => {
 
     await service.completeSession(opened.session.id);
 
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       hardCount: 1,
       reviewCount: 1,
     });
@@ -261,7 +259,7 @@ describe("SQLite learner-profile aggregation", () => {
     await service.updateSessionReelPosition(opened.session.id, 130);
     await service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
 
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       againCount: 1,
       reviewCount: 1,
     });
@@ -277,7 +275,7 @@ describe("SQLite learner-profile aggregation", () => {
     const replacement = await service.openSession("focused", TEST_DECK_ID, true);
 
     expect(replacement.replacedSessionId).toBe(first.session.id);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
     });
@@ -308,13 +306,13 @@ describe("SQLite learner-profile aggregation", () => {
 
     const reconstructedSessions = new SQLiteStudySessionRepository(database.drizzle);
     const recovered = createService(
-      new SQLiteLearnerProfileAggregationTransaction(database.drizzle),
+      new SQLiteCardProgressAggregationTransaction(database.drizzle),
       reconstructedSessions
     );
     await recovered.openSession("focused", TEST_DECK_ID, false);
 
     expect(await reconstructedSessions.findCompletedSessionsPendingAggregation(10)).toEqual([]);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
     });
@@ -351,7 +349,7 @@ describe("SQLite learner-profile aggregation", () => {
 
     const firstAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(firstAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(49);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 50,
       reviewCount: 50,
     });
@@ -360,7 +358,7 @@ describe("SQLite learner-profile aggregation", () => {
     await service.recoverPendingCompletedSessionAggregation(1);
     const secondAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(secondAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(99);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 100,
       reviewCount: 100,
     });
@@ -369,20 +367,20 @@ describe("SQLite learner-profile aggregation", () => {
     const finalAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(finalAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(149);
     expect(await sessions.findCompletedSessionsPendingAggregation(1)).toEqual([]);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,
     });
 
     await service.recoverPendingCompletedSessionAggregation(1);
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+    expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,
     });
   });
 
   function createService(
-    aggregationTransaction: LearnerProfileAggregationTransaction | null = aggregation,
+    aggregationTransaction: CardProgressAggregationTransaction | null = aggregation,
     sessionRepository: SQLiteStudySessionRepository = sessions,
     idGenerator: SequenceIdGenerator = new SequenceIdGenerator()
   ): StudyServiceImpl {

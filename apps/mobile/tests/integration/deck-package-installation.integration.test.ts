@@ -602,7 +602,7 @@ describe("deck package installation", () => {
         .from(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.flashcardId, installedCard.id))
     ).toEqual([{ flashcardId: installedCard.id }]);
-    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+    expect(await graph.progress.findByFlashcardId(installedCard.id)).toMatchObject({
       reviewCount: 1,
     });
   });
@@ -643,7 +643,7 @@ describe("deck package installation", () => {
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, attemptId));
     expect(recoveredRows[0]?.finalizedAt).not.toBeNull();
-    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+    expect(await graph.progress.findByFlashcardId(installedCard.id)).toMatchObject({
       reviewCount: 1,
     });
     expect(
@@ -686,7 +686,7 @@ describe("deck package installation", () => {
 
     const completedSession = await graph.sessions.findById(feed.studySessionId);
     expect(completedSession?.completedAt).not.toBeNull();
-    expect(await graph.profiles.findByFlashcardId(installedCard.id)).toMatchObject({
+    expect(await graph.progress.findByFlashcardId(installedCard.id)).toMatchObject({
       reviewCount: 1,
     });
     expect(

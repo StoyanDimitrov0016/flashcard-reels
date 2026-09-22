@@ -13,7 +13,7 @@ import {
   deckProgress,
   flashcardMemoryStates,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   reviewEvents,
   removedDecks,
   studySessions,
@@ -69,10 +69,10 @@ export class SQLiteDeckPackageInstallationTransaction<
         }
       }
       if (incomingIds.length > 0) {
-        const profileOwners = transaction
-          .select({ deckId: learnerProfiles.deckId, id: learnerProfiles.flashcardId })
-          .from(learnerProfiles)
-          .where(inArray(learnerProfiles.flashcardId, incomingIds))
+        const progressOwners = transaction
+          .select({ deckId: cardProgress.deckId, id: cardProgress.flashcardId })
+          .from(cardProgress)
+          .where(inArray(cardProgress.flashcardId, incomingIds))
           .all();
         const memoryOwners = transaction
           .select({ deckId: flashcardMemoryStates.deckId, id: flashcardMemoryStates.flashcardId })
@@ -84,7 +84,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .from(reviewEvents)
           .where(inArray(reviewEvents.flashcardId, incomingIds))
           .all();
-        for (const card of [...profileOwners, ...memoryOwners, ...eventOwners]) {
+        for (const card of [...progressOwners, ...memoryOwners, ...eventOwners]) {
           if (card.deckId !== deckPackage.id) {
             throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
           }

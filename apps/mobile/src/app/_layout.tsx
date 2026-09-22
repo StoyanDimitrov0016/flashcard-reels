@@ -10,8 +10,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { LearningProgressResetProvider } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";

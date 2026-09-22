@@ -4,7 +4,7 @@ Flashcard Reels is an npm-workspaces Turborepo with an Expo mobile app, a Next.j
 
 ## Mobile app
 
-The mobile app is organized by feature slices—study, reels, decks, audio, learner profile, and flashcards—with domain, application, infrastructure, and presentation layers. The composition root connects those layers to SQLite, application-owned files, and the React Native UI.
+The mobile app is organized by feature slices—study, reels, decks, audio, card progress, and flashcards—with domain, application, infrastructure, and presentation layers. The composition root connects those layers to SQLite, application-owned files, and the React Native UI.
 
 SQLite and Drizzle persist decks, sessions, review history, preferences, and learner summaries. The deck installer validates `.fcrdeck` archives, manages versioned audio, and updates deck content without discarding existing learning history.
 

@@ -53,7 +53,7 @@ export const flashcards = sqliteTable(
   ]
 );
 
-export const learnerProfiles = sqliteTable(
+export const cardProgress = sqliteTable(
   "card_progress",
   {
     flashcardId: text("flashcard_id").primaryKey().notNull(),
@@ -70,21 +70,21 @@ export const learnerProfiles = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    check("learner_profiles_review_count_check", sql`${table.reviewCount} >= 0`),
-    check("learner_profiles_again_count_check", sql`${table.againCount} >= 0`),
-    check("learner_profiles_hard_count_check", sql`${table.hardCount} >= 0`),
-    check("learner_profiles_good_count_check", sql`${table.goodCount} >= 0`),
-    check("learner_profiles_easy_count_check", sql`${table.easyCount} >= 0`),
+    check("card_progress_review_count_check", sql`${table.reviewCount} >= 0`),
+    check("card_progress_again_count_check", sql`${table.againCount} >= 0`),
+    check("card_progress_hard_count_check", sql`${table.hardCount} >= 0`),
+    check("card_progress_good_count_check", sql`${table.goodCount} >= 0`),
+    check("card_progress_easy_count_check", sql`${table.easyCount} >= 0`),
     check(
-      "learner_profiles_counter_sum_check",
+      "card_progress_counter_sum_check",
       sql`${table.reviewCount} = ${table.againCount} + ${table.hardCount} + ${table.goodCount} + ${table.easyCount}`
     ),
     check(
-      "learner_profiles_reviewed_at_presence_check",
+      "card_progress_reviewed_at_presence_check",
       sql`(${table.reviewCount} = 0 AND ${table.firstReviewedAt} IS NULL AND ${table.lastReviewedAt} IS NULL) OR (${table.reviewCount} > 0 AND ${table.firstReviewedAt} IS NOT NULL AND ${table.lastReviewedAt} IS NOT NULL)`
     ),
     check(
-      "learner_profiles_reviewed_at_order_check",
+      "card_progress_reviewed_at_order_check",
       sql`${table.firstReviewedAt} IS NULL OR ${table.lastReviewedAt} IS NULL OR ${table.firstReviewedAt} <= ${table.lastReviewedAt}`
     ),
     index("card_progress_deck_id_idx").on(table.deckId),
@@ -300,7 +300,7 @@ export const databaseSchema = {
   removedDecks,
   deckAppearances,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   flashcardMemoryStates,
   reviewEvents,
   deckProgress,

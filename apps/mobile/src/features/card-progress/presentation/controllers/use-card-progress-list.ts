@@ -1,51 +1,51 @@
 import { useCallback, useEffect, useState } from "react";
 
+import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 
 import {
-  explainLearnerProfile,
-  type LearnerProfileExplanation,
-} from "@/features/learner-profile/domain/learner-profile-explanation";
-import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
-import { useLearnerProfile } from "@/features/learner-profile/presentation/dependencies/use-learner-profile";
+  explainCardProgress,
+  type CardProgressExplanation,
+} from "@/features/card-progress/domain/card-progress-explanation";
+import { useLearningProgressReset } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
+import { useCardProgress } from "@/features/card-progress/presentation/dependencies/use-card-progress";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
-type LearnerProgressRow = Readonly<{
+type CardProgressListRow = Readonly<{
   card: Flashcard;
   deck: Deck;
-  explanation: LearnerProfileExplanation;
-  profile: LearnerProfile | null;
+  explanation: CardProgressExplanation;
+  progress: CardProgress | null;
 }>;
 
-type LearnerProgressState = Readonly<{
+type CardProgressListState = Readonly<{
   error: Error | null;
   loading: boolean;
-  rows: LearnerProgressRow[];
+  rows: CardProgressListRow[];
 }>;
 
-const initialState: LearnerProgressState = { error: null, loading: true, rows: [] };
+const initialState: CardProgressListState = { error: null, loading: true, rows: [] };
 
-export function useLearnerProgress(): LearnerProgressState & {
+export function useCardProgressList(): CardProgressListState & {
   refresh: () => void;
 } {
-  const { deckService, flashcardService, learnerProfileService } = useLearnerProfile();
+  const { deckService, flashcardService, cardProgressService } = useCardProgress();
   const { revision: resetRevision } = useLearningProgressReset();
-  const [state, setState] = useState<LearnerProgressState>(initialState);
+  const [state, setState] = useState<CardProgressListState>(initialState);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => {
     setState((current) => ({ ...current, loading: true }));
     setRevision((current) => current + 1);
   }, []);
   useEffect(
-    function loadLearnerProgress() {
+    function loadCardProgressList() {
       let active = true;
 
       const loadProgress = async (_revision: number) => {
         try {
           const cards = await flashcardService.list();
-          const profiles = await learnerProfileService.findByFlashcardIds(
+          const progressByCardId = await cardProgressService.findByFlashcardIds(
             cards.map((card) => card.id)
           );
           const decks = await deckService.findByIds([...new Set(cards.map((card) => card.deckId))]);
@@ -55,8 +55,8 @@ export function useLearnerProgress(): LearnerProgressState & {
             if (!deck) {
               return [];
             }
-            const profile = profiles.get(card.id) ?? null;
-            return [{ card, deck, explanation: explainLearnerProfile(profile), profile }];
+            const progress = progressByCardId.get(card.id) ?? null;
+            return [{ card, deck, explanation: explainCardProgress(progress), progress }];
           });
           if (active) {
             setState({ error: null, loading: false, rows });
@@ -66,7 +66,7 @@ export function useLearnerProgress(): LearnerProgressState & {
             setState({
               error: toOperationError(error, {
                 code: "VIEW_LOAD_FAILED",
-                context: { operation: "learner-progress.load" },
+                context: { operation: "card-progress-list.load" },
                 message: "Could not load progress",
               }),
               loading: false,
@@ -77,11 +77,11 @@ export function useLearnerProgress(): LearnerProgressState & {
       };
 
       void loadProgress(revision);
-      return function cancelLearnerProgressLoad() {
+      return function cancelCardProgressListLoad() {
         active = false;
       };
     },
-    [deckService, flashcardService, learnerProfileService, resetRevision, revision]
+    [deckService, flashcardService, cardProgressService, resetRevision, revision]
   );
 
   if (state.error) {

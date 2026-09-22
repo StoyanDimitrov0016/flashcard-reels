@@ -29,7 +29,7 @@ vi.mock("@/infrastructure/app-services", () => ({
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useInvalidateDeckContent: () => harness.content,
 }));
-vi.mock("@/features/learner-profile/presentation/context/learning-progress-reset-context", () => ({
+vi.mock("@/features/card-progress/presentation/context/learning-progress-reset-context", () => ({
   useLearningProgressReset: () => ({ invalidateLearningProgress: harness.progress }),
 }));
 vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));

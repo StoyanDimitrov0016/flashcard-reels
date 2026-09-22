@@ -1,9 +1,9 @@
 import { and, asc, eq, gt, inArray, isNotNull, lte } from "drizzle-orm";
 
 import type {
-  LearnerProfileAggregationResult,
-  LearnerProfileAggregationTransaction,
-} from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
+  CardProgressAggregationResult,
+  CardProgressAggregationTransaction,
+} from "@/features/card-progress/application/card-progress-aggregation-transaction";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
@@ -11,7 +11,7 @@ import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts"
 import {
   flashcardReviewAttempts,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -24,9 +24,9 @@ type Contribution = Readonly<{
   lastReviewedAt: string;
 }>;
 
-export class SQLiteLearnerProfileAggregationTransaction<
+export class SQLiteCardProgressAggregationTransaction<
   TRunResult = unknown,
-> implements LearnerProfileAggregationTransaction {
+> implements CardProgressAggregationTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {
@@ -37,7 +37,7 @@ export class SQLiteLearnerProfileAggregationTransaction<
     studySessionId: string,
     throughReelPosition: number,
     now: string
-  ): Promise<LearnerProfileAggregationResult> {
+  ): Promise<CardProgressAggregationResult> {
     return this.database.transaction((transaction) => {
       const session = transaction
         .select({
@@ -78,16 +78,16 @@ export class SQLiteLearnerProfileAggregationTransaction<
         .orderBy(asc(flashcardReviewAttempts.reelPosition), asc(flashcardReviewAttempts.id))
         .all();
       const flashcardIds = [...new Set(attempts.map((attempt) => attempt.flashcardId))];
-      const existingProfiles =
+      const existingProgress =
         flashcardIds.length === 0
           ? []
           : transaction
               .select()
-              .from(learnerProfiles)
-              .where(inArray(learnerProfiles.flashcardId, flashcardIds))
+              .from(cardProgress)
+              .where(inArray(cardProgress.flashcardId, flashcardIds))
               .all();
-      const profilesById = new Map(
-        existingProfiles.map((profile) => [profile.flashcardId, profile])
+      const progressById = new Map(
+        existingProgress.map((progress) => [progress.flashcardId, progress])
       );
       const contributions = new Map<string, Contribution>();
       let aggregatedAttemptCount = 0;
@@ -95,13 +95,13 @@ export class SQLiteLearnerProfileAggregationTransaction<
       for (const attempt of attempts) {
         const ratedAt = attempt.ratedAt;
         const rating = attempt.rating;
-        const profile = profilesById.get(attempt.flashcardId);
+        const progress = progressById.get(attempt.flashcardId);
         if (
           ratedAt === null ||
           rating === null ||
-          (profile?.resetAt !== null &&
-            profile?.resetAt !== undefined &&
-            ratedAt <= profile.resetAt)
+          (progress?.resetAt !== null &&
+            progress?.resetAt !== undefined &&
+            ratedAt <= progress.resetAt)
         ) {
           continue;
         }
@@ -114,7 +114,7 @@ export class SQLiteLearnerProfileAggregationTransaction<
       }
 
       const missingFlashcardIds = flashcardIds.filter(
-        (flashcardId) => !profilesById.has(flashcardId)
+        (flashcardId) => !progressById.has(flashcardId)
       );
       const missingFlashcards =
         missingFlashcardIds.length === 0
@@ -136,24 +136,24 @@ export class SQLiteLearnerProfileAggregationTransaction<
       );
 
       for (const [flashcardId, contribution] of contributions) {
-        const profile = profilesById.get(flashcardId);
-        const createdAt = profile?.createdAt ?? createdAtByFlashcardId.get(flashcardId);
-        const deckId = profile?.deckId ?? deckIdByFlashcardId.get(flashcardId);
+        const progress = progressById.get(flashcardId);
+        const createdAt = progress?.createdAt ?? createdAtByFlashcardId.get(flashcardId);
+        const deckId = progress?.deckId ?? deckIdByFlashcardId.get(flashcardId);
         if (!createdAt || !deckId) {
-          throw new Error(`Missing flashcard ${flashcardId} for learner profile aggregation`);
+          throw new Error(`Missing flashcard ${flashcardId} for card progress aggregation`);
         }
-        const firstReviewedAt = profile?.firstReviewedAt
-          ? minTimestamp(profile.firstReviewedAt, contribution.firstReviewedAt)
+        const firstReviewedAt = progress?.firstReviewedAt
+          ? minTimestamp(progress.firstReviewedAt, contribution.firstReviewedAt)
           : contribution.firstReviewedAt;
-        const lastReviewedAt = profile?.lastReviewedAt
-          ? maxTimestamp(profile.lastReviewedAt, contribution.lastReviewedAt)
+        const lastReviewedAt = progress?.lastReviewedAt
+          ? maxTimestamp(progress.lastReviewedAt, contribution.lastReviewedAt)
           : contribution.lastReviewedAt;
-        const againCount = (profile?.againCount ?? 0) + contribution.againCount;
-        const hardCount = (profile?.hardCount ?? 0) + contribution.hardCount;
-        const goodCount = (profile?.goodCount ?? 0) + contribution.goodCount;
-        const easyCount = (profile?.easyCount ?? 0) + contribution.easyCount;
+        const againCount = (progress?.againCount ?? 0) + contribution.againCount;
+        const hardCount = (progress?.hardCount ?? 0) + contribution.hardCount;
+        const goodCount = (progress?.goodCount ?? 0) + contribution.goodCount;
+        const easyCount = (progress?.easyCount ?? 0) + contribution.easyCount;
         transaction
-          .insert(learnerProfiles)
+          .insert(cardProgress)
           .values({
             againCount,
             createdAt,
@@ -164,12 +164,12 @@ export class SQLiteLearnerProfileAggregationTransaction<
             goodCount,
             hardCount,
             lastReviewedAt,
-            resetAt: profile?.resetAt ?? null,
+            resetAt: progress?.resetAt ?? null,
             reviewCount: againCount + hardCount + goodCount + easyCount,
             updatedAt: now,
           })
           .onConflictDoUpdate({
-            target: learnerProfiles.flashcardId,
+            target: cardProgress.flashcardId,
             set: {
               againCount,
               easyCount,
