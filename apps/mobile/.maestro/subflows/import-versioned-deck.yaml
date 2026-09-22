@@ -1,6 +1,12 @@
-- tapOn: Library
+appId: com.flashcardreels.app
+---
+- tapOn: Library tab
 - assertVisible: Library
 - tapOn: Import deck package
 - tapOn: Browse device
-- tapOn: Downloads
+- tapOn: Show roots
+- waitForAnimationToEnd
+- tapOn:
+    point: "30%, 27%"
+- assertVisible: Files in Downloads
 - tapOn: versioned-test-deck.fcrdeck

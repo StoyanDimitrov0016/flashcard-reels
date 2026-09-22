@@ -116,7 +116,7 @@ The current preview is available from the [latest APK build page](https://expo.d
 
 The first Maestro flows in `apps/mobile/.maestro` cover archived learning progress: continue after reinstall, start fresh after reinstall, and delete archived progress. They use the versioned test deck, including its checked-in audio fixture, so no audio generation is needed.
 
-Install the [Maestro CLI](https://github.com/mobile-dev-inc/maestro-docs/blob/main/maestro-cli/how-to-install-maestro-cli/README.md) and make `maestro` available on PATH. Build a current preview APK, then run from the repository root:
+Install the [Maestro CLI](https://github.com/mobile-dev-inc/maestro-docs/blob/main/maestro-cli/how-to-install-maestro-cli/README.md) and make `maestro` available on PATH. Build a current APK with embedded JavaScript (such as a local release APK or an EAS preview APK), then run from the repository root:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File apps/mobile/scripts/run-maestro.ps1 -ApkPath C:\path\to\flashcard-reels.apk

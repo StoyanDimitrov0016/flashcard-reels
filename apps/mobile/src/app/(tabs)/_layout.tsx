@@ -76,6 +76,7 @@ export default function TabLayout() {
                 />
               ),
               title: "Discover",
+              tabBarAccessibilityLabel: "Discover tab",
             }}
           />
           <TopTabs.Screen
@@ -93,6 +94,7 @@ export default function TabLayout() {
                 />
               ),
               title: "Focus",
+              tabBarAccessibilityLabel: "Focus tab",
             }}
           />
           <TopTabs.Screen
@@ -110,6 +112,7 @@ export default function TabLayout() {
                 />
               ),
               title: "Library",
+              tabBarAccessibilityLabel: "Library tab",
             }}
           />
           <TopTabs.Screen
@@ -123,6 +126,7 @@ export default function TabLayout() {
                 />
               ),
               title: "Progress",
+              tabBarAccessibilityLabel: "Progress tab",
             }}
           />
           <TopTabs.Screen
@@ -136,6 +140,7 @@ export default function TabLayout() {
                 />
               ),
               title: "You",
+              tabBarAccessibilityLabel: "You tab",
             }}
           />
         </TopTabs>

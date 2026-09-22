@@ -1,35 +1,39 @@
-# Maestro Android device run: current state
+# Maestro Android device testing on this machine
 
-The Maestro archive scenarios are committed in `apps/mobile/.maestro` (commit `11b507b`). **They have not passed on a device yet.** This document records the September 22, 2026 attempt so the next run can start at the current build blocker.
+The archived progress scenarios live in `apps/mobile/.maestro`. They cover continuing saved progress after reinstalling a deck, deleting saved progress to start fresh, and deleting progress from the archive. The versioned test deck includes an audio fixture, so these flows need no audio generation.
 
-## What works
+## Working local setup (September 23, 2026)
 
-- `apps/mobile/scripts/android-machine.ps1 -Action Ready` started the machine's known-working archived Emulator 36.6.11. `adb devices` showed `emulator-5554` online.
-- Maestro CLI 2.10.0 was downloaded from the official release into the user's temporary directory as `flashcard-maestro-cli/maestro/bin/maestro.bat`. It runs after its normal `%LOCALAPPDATA%/mobile_dev/maestro/Logs` directory is created. The CLI is not on `PATH`.
-- The versioned `.fcrdeck` fixture generates successfully. The YAML parses, and the mobile `check` command passes.
-- Local Android prebuild generated an ignored `apps/mobile/android` directory. Expo temporarily changed the `android` and `ios` package scripts; those changes were reverted. `git status` was clean before this document.
+- `apps/mobile/scripts/android-machine.ps1 -Action Ready` boots the known-working archived Android Emulator 36.6.11. ADB shows `emulator-5554`.
+- Maestro CLI 2.10.0 is in `%TEMP%\flashcard-maestro-cli\maestro\bin`. Add that directory to `PATH` for the current PowerShell session.
+- `apps/mobile/android` is a generated, ignored native project. The local release APK embeds JavaScript and works without Metro or a tunnel. `app:assembleDebug` also built, but its APK needs a development server and is unsuitable for this offline test run.
+- Set `GRADLE_USER_HOME=D:\g`. The default Cyrillic user path breaks Prefab commands. A longer ASCII path inside the repository breaks Ninja's 260-character path limit. `D:\g\gradle.properties` sets `kotlin.compiler.execution.strategy=in-process`, avoiding a Kotlin daemon write failure.
+- Gradle's Java process could not fetch missing Maven binaries (`Permission denied: getsockopt`). Exact artifacts were fetched from official Google Maven and Maven Central into the ignored `apps/mobile/android/.local-maven`. `D:\g\local-artifacts.gradle` maps their exact versions for offline builds. These local files are machine setup, not committed project dependencies.
 
-## Why the device flows did not run
-
-1. No current Flashcard Reels APK was installed. The emulator only had Expo Go.
-2. Expo Go opened through local Metro (`adb reverse tcp:8081 tcp:8081`, `npx expo start --localhost --android`) but showed `Failed to download remote update`, so it was not a usable test target.
-3. An escalated `npx expo start --tunnel --android` was rejected by automatic approval review because the tunnel would expose the local development bundle through ngrok. Do not retry that path without explicit approval. The local build path does not need a tunnel.
-4. Local `app:assembleDebug` initially failed in Prefab because a generated Windows command included the Cyrillic `C:\Users\АДМИН\.gradle` path. Moving `GRADLE_USER_HOME` to an ASCII path got past that failure.
-5. Gradle's Java process could not fetch uncached Maven binaries in this environment (`Permission denied: getsockopt`), although PowerShell requests to the official Google Maven and Maven Central artifact URLs succeeded. The exact missing binaries were copied into an ignored local Maven repository under `apps/mobile/android/.local-maven`, and an ignored Gradle init script at `apps/mobile/android/.gradle-user-home/local-artifacts.gradle` uses them for offline builds.
-6. Kotlin's daemon could not write to `%LOCALAPPDATA%/kotlin/daemon` in the restricted run. `kotlin.compiler.execution.strategy=in-process` in the ignored `.gradle-user-home/gradle.properties` got past that failure.
-7. **Current blocker:** Ninja failed compiling `react-native-screens` because the absolute path to a header under `apps/mobile/android/.gradle-user-home/caches/.../ComponentDescriptorFactory.h` exceeds Windows' 260-character path limit. No APK was produced.
-
-## Suggested next attempt
-
-Use a **short ASCII Gradle cache root** such as `D:\g` (rather than the current long repository path). Copy the existing ignored `.gradle-user-home` cache and `gradle.properties` there, and run Gradle with `GRADLE_USER_HOME=D:\g`. Keep the local Maven artifact repository and init script if Gradle's own network access remains unavailable. The init script's Maven URL points to the ignored `.local-maven` directory and can be passed with `--init-script`. This should shorten the Ninja header path substantially; verify with an actual build. Gradle documents `GRADLE_USER_HOME` as the supported cache location setting.
-
-The last command was run from `apps/mobile/android`:
+From `apps/mobile/android`, build the local release APK:
 
 ```powershell
-$env:GRADLE_USER_HOME = 'D:\repositories\flashcard-reels\apps\mobile\android\.gradle-user-home'
-.\gradlew.bat app:assembleDebug -x lint -x test --offline --init-script .gradle-user-home/local-artifacts.gradle --configure-on-demand --build-cache -PreactNativeDevServerPort=8081 -PreactNativeArchitectures=x86_64
+$env:GRADLE_USER_HOME = 'D:\g'
+$env:NODE_ENV = 'production'
+.\gradlew.bat app:assembleRelease -x lint -x test -x extractReleaseAnnotations -x generateReleaseLintModel -x generateReleaseLintVitalModel -x lintVitalAnalyzeRelease -x lintVitalReportRelease -x lintVitalRelease --offline --init-script D:\g\local-artifacts.gradle --configure-on-demand --build-cache -PreactNativeArchitectures=x86_64
 ```
 
-The current ignored build and cache folders may be reused. Once `app-debug.apk` exists, install it on the already prepared emulator, put Maestro CLI on `PATH`, and run `apps/mobile/scripts/run-maestro.ps1 -ApkPath <absolute APK path>`. Expect to adjust the YAML selectors based on real Android picker and UI behavior; syntax checks alone do not validate those interactions.
+From the repository root, run all scenarios:
 
-Do not claim the Maestro scenarios pass until the CLI reports each flow passing. The existing archive integration tests and static checks passed before this device attempt.
+```powershell
+$env:PATH = (Join-Path $env:TEMP 'flashcard-maestro-cli\maestro\bin') + ';' + $env:PATH
+$env:MAESTRO_CLI_NO_ANALYTICS = '1'
+./apps/mobile/scripts/run-maestro.ps1 -ApkPath ./apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+```
+
+The runner boots the emulator, installs the APK, generates the deck package, copies it to Android Downloads, and runs all three flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
+
+## Findings from the first device runs
+
+- The app crashed on launch because `react-native-pager-view` was used by the feed but missing as a direct mobile dependency. Adding it made the native view available in the rebuilt APK.
+- Maestro's icon-only tab selectors needed accessibility labels. The flows now use those labels.
+- A long press on a Library deck left a press flag set and swallowed the next tap. Resetting it on each press fixed navigation after Focus.
+- The Start fresh confirmation cleared the selected archived progress when its previous sheet closed. The Library screen now preserves the selection through confirmation.
+- A default upward swipe did not reliably advance the feed. The study subflow now swipes from `78%` to `22%` over 650 ms and checks that the next question face appears.
+
+All three flows passed on September 23 with the longer swipe and confirmation fix. The Continue and Delete flows passed together in 2 minutes 12 seconds; Start fresh passed separately.
