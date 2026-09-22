@@ -424,7 +424,7 @@ describe("SQLite flashcard-progress aggregation", () => {
       studySessionId,
       updatedAt: finalizedAt ?? "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await new SQLiteReviewAttemptTransaction(database.drizzle).createAttempt(attempt);
     return attempt;
   }
 

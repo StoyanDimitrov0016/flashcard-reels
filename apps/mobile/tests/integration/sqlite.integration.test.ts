@@ -34,6 +34,7 @@ describe("SQLite study persistence", () => {
   let sessions: SQLiteStudySessionRepository;
   let items: SQLiteStudySessionItemRepository;
   let attempts: SQLiteReviewAttemptRepository;
+  let attemptTransaction: SQLiteReviewAttemptTransaction;
   let recurrences: SQLiteStudySessionRecurrenceRepository;
 
   beforeEach(async () => {
@@ -73,6 +74,7 @@ describe("SQLite study persistence", () => {
     sessions = new SQLiteStudySessionRepository(database.drizzle);
     items = new SQLiteStudySessionItemRepository(database.drizzle);
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
+    attemptTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
     recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
   });
 
@@ -277,7 +279,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     await Promise.all(
       [10, 11, 12].map((reelPosition) =>
-        attempts.create(
+        attemptTransaction.createAttempt(
           new FlashcardReviewAttempt({
             createdAt: "2026-01-01T00:00:00.000Z",
             finalizedAt: null,
@@ -362,9 +364,9 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     await expect(
-      attempts.create(
+      attemptTransaction.createAttempt(
         new FlashcardReviewAttempt({
           createdAt: attempt.createdAt,
           finalizedAt: null,
@@ -377,7 +379,7 @@ describe("SQLite study persistence", () => {
         })
       )
     ).rejects.toThrow();
-    await attempts.create(
+    await attemptTransaction.createAttempt(
       new FlashcardReviewAttempt({
         createdAt: attempt.createdAt,
         finalizedAt: null,
@@ -400,6 +402,27 @@ describe("SQLite study persistence", () => {
     ).toBe(false);
     const finalizedAttempt = await attempts.findById(attempt.id);
     expect(finalizedAttempt?.rating).toBeNull();
+  });
+
+  it("does not create review attempts for completed sessions", async () => {
+    const session = makeSession(testId(232), "mixed");
+    await sessions.create(session);
+    await sessions.complete(session.id, "2026-01-01T00:01:00.000Z");
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(233),
+      rating: null,
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+
+    await expect(attemptTransaction.createAttempt(attempt)).rejects.toThrow(
+      `Cannot create a review attempt for inactive session ${session.id}`
+    );
+    await expect(attempts.findById(attempt.id)).resolves.toBeNull();
   });
 
   it("rejects incoherent rating and flashcard-progress timestamp states", async () => {
@@ -449,7 +472,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
 
     await expect(
@@ -500,7 +523,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const recurrence = new StudySessionRecurrence({
       consumedAt: null,
       createdAt: "2026-01-01T00:01:00.000Z",
@@ -535,7 +558,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const secondAttempt = new FlashcardReviewAttempt({
       createdAt: attempt.createdAt,
       finalizedAt: attempt.finalizedAt,
@@ -547,7 +570,7 @@ describe("SQLite study persistence", () => {
       studySessionId: attempt.studySessionId,
       updatedAt: attempt.updatedAt,
     });
-    await attempts.create(secondAttempt);
+    await attemptTransaction.createAttempt(secondAttempt);
     const recurrence = new StudySessionRecurrence({
       consumedAt: null,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -631,8 +654,8 @@ describe("SQLite study persistence", () => {
       studySessionId: firstAttempt.studySessionId,
       updatedAt: firstAttempt.updatedAt,
     });
-    await attempts.create(firstAttempt);
-    await attempts.create(secondAttempt);
+    await attemptTransaction.createAttempt(firstAttempt);
+    await attemptTransaction.createAttempt(secondAttempt);
 
     const firstRecurrence = new StudySessionRecurrence({
       consumedAt: null,
@@ -706,7 +729,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     await items.createMany([
       new StudySessionItem({
         flashcardId: attempt.flashcardId,

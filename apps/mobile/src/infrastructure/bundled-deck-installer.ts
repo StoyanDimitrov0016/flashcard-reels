@@ -5,6 +5,7 @@ import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { Deck } from "@/features/decks/domain/deck.model";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
 import {
   bundledDeckRegistry,
   readBundledDeckPackage,
@@ -20,10 +21,11 @@ import {
 
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);
+  const removedDeckRepository = new SQLiteRemovedDeckRepository(database);
   const { installBundledPackage } = createDeckPackageServices(database, clock, deckRepository);
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
-    if (await deckRepository.wasRemoved(definition.id)) {
+    if (await removedDeckRepository.wasRemoved(definition.id)) {
       continue;
     }
     const installedVersion = await deckRepository.findVersion(definition.id);

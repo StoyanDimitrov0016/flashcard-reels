@@ -385,7 +385,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       studySessionId,
       updatedAt: createdAt,
     });
-    await this.reviewAttemptRepository.create(attempt);
+    await this.reviewAttemptTransaction.createAttempt(attempt);
     return attempt.id;
   }
 
