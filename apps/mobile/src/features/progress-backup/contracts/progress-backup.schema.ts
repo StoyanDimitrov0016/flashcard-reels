@@ -142,7 +142,18 @@ export const ProgressBackupDocumentSchema = z
       }
     }
     const eventIds = new Set<string>();
-    const eventCounts = new Map<string, number>();
+    const eventStats = new Map<
+      string,
+      {
+        again: number;
+        hard: number;
+        good: number;
+        easy: number;
+        first: string;
+        last: string;
+      }
+    >();
+    const latestDeckReview = new Map<string, string>();
     for (const [index, row] of document.reviewEvents.entries()) {
       if (eventIds.has(row.id)) {
         context.addIssue({
@@ -153,7 +164,26 @@ export const ProgressBackupDocumentSchema = z
       }
       eventIds.add(row.id);
       checkOwnership(row.flashcardId, row.deckId, ["reviewEvents", index, "deckId"]);
-      eventCounts.set(row.flashcardId, (eventCounts.get(row.flashcardId) ?? 0) + 1);
+      const stats = eventStats.get(row.flashcardId) ?? {
+        again: 0,
+        hard: 0,
+        good: 0,
+        easy: 0,
+        first: row.reviewedAt,
+        last: row.reviewedAt,
+      };
+      stats[row.rating] += 1;
+      if (row.reviewedAt < stats.first) {
+        stats.first = row.reviewedAt;
+      }
+      if (row.reviewedAt > stats.last) {
+        stats.last = row.reviewedAt;
+      }
+      eventStats.set(row.flashcardId, stats);
+      const deckLatest = latestDeckReview.get(row.deckId);
+      if (!deckLatest || row.reviewedAt > deckLatest) {
+        latestDeckReview.set(row.deckId, row.reviewedAt);
+      }
       if (!studiedDeckIds.has(row.deckId)) {
         context.addIssue({
           code: "custom",
@@ -163,20 +193,53 @@ export const ProgressBackupDocumentSchema = z
       }
     }
     for (const [index, row] of document.flashcardProgress.entries()) {
-      if (row.reviewCount !== (eventCounts.get(row.flashcardId) ?? 0)) {
+      const stats = eventStats.get(row.flashcardId);
+      const eventCount = stats ? stats.again + stats.hard + stats.good + stats.easy : 0;
+      if (row.reviewCount !== eventCount) {
         context.addIssue({
           code: "custom",
           path: ["flashcardProgress", index, "reviewCount"],
           message: "Summary and review events disagree",
         });
       }
+      if (
+        row.againCount !== (stats?.again ?? 0) ||
+        row.hardCount !== (stats?.hard ?? 0) ||
+        row.goodCount !== (stats?.good ?? 0) ||
+        row.easyCount !== (stats?.easy ?? 0)
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["flashcardProgress", index],
+          message: "Rating totals and review events disagree",
+        });
+      }
+      if (
+        row.firstReviewedAt !== (stats?.first ?? null) ||
+        row.lastReviewedAt !== (stats?.last ?? null)
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["flashcardProgress", index],
+          message: "Review dates and review events disagree",
+        });
+      }
     }
-    for (const [flashcardId] of eventCounts) {
+    for (const [flashcardId] of eventStats) {
       if (!progressIds.has(flashcardId)) {
         context.addIssue({
           code: "custom",
           path: ["reviewEvents"],
           message: `Missing progress summary for ${flashcardId}`,
+        });
+      }
+    }
+    for (const [index, row] of document.deckProgress.entries()) {
+      if (row.lastReviewedAt !== latestDeckReview.get(row.deckId)) {
+        context.addIssue({
+          code: "custom",
+          path: ["deckProgress", index, "lastReviewedAt"],
+          message: "Deck review date and review events disagree",
         });
       }
     }

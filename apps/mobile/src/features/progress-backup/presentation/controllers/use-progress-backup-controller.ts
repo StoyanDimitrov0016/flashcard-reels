@@ -4,6 +4,7 @@ import type { PreparedProgressRestore } from "@/features/progress-backup/applica
 
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useProgressBackup } from "@/features/progress-backup/presentation/dependencies/use-progress-backup";
+import { getProgressBackupErrorFeedback } from "@/features/progress-backup/presentation/progress-backup-error-feedback";
 import { reportError } from "@/shared/errors/report-error";
 
 export type { PreparedProgressRestore };
@@ -45,7 +46,7 @@ export function useProgressBackupController() {
       await progressBackupService.exportProgress();
     } catch (cause) {
       reportError(cause, "Progress export failure");
-      setError("Could not export progress. Your learning data is still on this device.");
+      setError(getProgressBackupErrorFeedback(cause, "export"));
     } finally {
       invalidateLearningProgress();
       inFlight.current = false;
@@ -65,7 +66,7 @@ export function useProgressBackupController() {
       setPrepared(await progressBackupService.prepareRestore());
     } catch (cause) {
       reportError(cause, "Progress backup validation failure");
-      setError("Could not read that progress backup. Select a valid Flashcard Reels backup file.");
+      setError(getProgressBackupErrorFeedback(cause, "read"));
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -86,7 +87,7 @@ export function useProgressBackupController() {
       setNotice("Learning progress restored. Your previous progress backup is available below.");
     } catch (cause) {
       reportError(cause, "Progress restore failure");
-      setError("Could not restore progress. Check the backup and try again.");
+      setError(getProgressBackupErrorFeedback(cause, "restore"));
     } finally {
       invalidateLearningProgress();
       inFlight.current = false;
@@ -105,7 +106,7 @@ export function useProgressBackupController() {
       await progressBackupService.shareSafetyCopy();
     } catch (cause) {
       reportError(cause, "Previous progress backup sharing failure");
-      setError("Could not share the previous progress backup.");
+      setError(getProgressBackupErrorFeedback(cause, "share"));
     } finally {
       inFlight.current = false;
       setBusy(false);

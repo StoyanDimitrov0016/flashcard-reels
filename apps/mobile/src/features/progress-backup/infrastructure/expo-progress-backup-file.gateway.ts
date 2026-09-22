@@ -6,6 +6,11 @@ import { strToU8 } from "fflate";
 import type { ProgressBackupFileGateway } from "@/features/progress-backup/application/progress-backup-file.gateway";
 import type { ProgressBackupDocument } from "@/features/progress-backup/contracts/progress-backup.schema";
 
+import {
+  ProgressBackupTooLargeError,
+  ProgressBackupValidationError,
+} from "@/features/progress-backup/domain/progress-backup.errors";
+
 const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
 const SAFETY_COPY_NAME = "before-last-progress-restore.json";
 
@@ -21,11 +26,11 @@ export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway 
     }
     const asset = selection.assets[0];
     if (!asset) {
-      throw new Error("No progress backup was selected");
+      throw new ProgressBackupValidationError();
     }
     const file = new File(asset.uri);
     if (file.size === null || file.size > MAX_BACKUP_BYTES) {
-      throw new Error("The progress backup is too large to import");
+      throw new ProgressBackupTooLargeError();
     }
     return file.text();
   }
@@ -77,7 +82,7 @@ export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway 
 function encodeBackup(document: ProgressBackupDocument): Uint8Array {
   const bytes = strToU8(JSON.stringify(document));
   if (bytes.byteLength > MAX_BACKUP_BYTES) {
-    throw new Error("The progress backup exceeds the supported file size");
+    throw new ProgressBackupTooLargeError();
   }
   return bytes;
 }

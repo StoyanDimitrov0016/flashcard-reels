@@ -12,6 +12,11 @@ import {
   ProgressBackupDocumentSchema,
   summarizeProgressBackup,
 } from "@/features/progress-backup/contracts/progress-backup.schema";
+import {
+  ProgressBackupValidationError,
+  ProgressBackupVersionError,
+} from "@/features/progress-backup/domain/progress-backup.errors";
+import { toOperationError } from "@/shared/errors/normalize-error";
 
 export class ProgressBackupServiceImpl implements ProgressBackupService {
   private readonly studyService: StudyService;
@@ -35,24 +40,50 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   }
 
   async exportProgress(): Promise<void> {
-    await this.studyService.settleForProgressBackup();
-    const document = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
-    await this.files.share(document);
+    try {
+      await this.studyService.settleForProgressBackup();
+      const document = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
+      await this.files.share(document);
+    } catch (cause) {
+      throw toOperationError(cause, {
+        code: "PROGRESS_BACKUP_EXPORT_FAILED",
+        message: "Could not export learning progress",
+        context: { operation: "progress-backup.export" },
+      });
+    }
   }
 
   async prepareRestore(): Promise<PreparedProgressRestore | null> {
-    const contents = await this.files.pick();
+    let contents: string | null;
+    try {
+      contents = await this.files.pick();
+    } catch (cause) {
+      throw toOperationError(cause, {
+        code: "PROGRESS_BACKUP_READ_FAILED",
+        message: "Could not read the selected progress backup",
+        context: { operation: "progress-backup.pick" },
+      });
+    }
     if (contents === null) {
       return null;
     }
     let parsed: unknown;
     try {
       parsed = JSON.parse(contents);
-    } catch {
-      throw new Error("The selected file is not a valid progress backup");
+    } catch (cause) {
+      throw new ProgressBackupValidationError(cause);
     }
-    const document = ProgressBackupDocumentSchema.parse(parsed);
-    const local = await this.query.read(this.clock.now());
+    const document = parseIncomingBackup(parsed);
+    let local;
+    try {
+      local = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
+    } catch (cause) {
+      throw toOperationError(cause, {
+        code: "PROGRESS_BACKUP_READ_FAILED",
+        message: "Could not prepare the progress backup preview",
+        context: { operation: "progress-backup.preview" },
+      });
+    }
     return {
       document,
       incoming: summarizeProgressBackup(document),
@@ -61,11 +92,19 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   }
 
   async restore(prepared: PreparedProgressRestore): Promise<void> {
-    const document = ProgressBackupDocumentSchema.parse(prepared.document);
-    await this.studyService.settleForProgressBackup();
-    const local = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
-    await this.files.saveSafetyCopy(local);
-    await this.restoreTransaction.restore(document);
+    const document = parseIncomingBackup(prepared.document);
+    try {
+      await this.studyService.settleForProgressBackup();
+      const local = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
+      await this.files.saveSafetyCopy(local);
+      await this.restoreTransaction.restore(document);
+    } catch (cause) {
+      throw toOperationError(cause, {
+        code: "PROGRESS_BACKUP_RESTORE_FAILED",
+        message: "Could not restore learning progress",
+        context: { operation: "progress-backup.restore" },
+      });
+    }
   }
 
   hasSafetyCopy(): Promise<boolean> {
@@ -75,4 +114,23 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   shareSafetyCopy(): Promise<void> {
     return this.files.shareSafetyCopy();
   }
+}
+
+function parseIncomingBackup(value: unknown) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "format" in value &&
+    value.format === "flashcard-reels-progress" &&
+    "version" in value &&
+    typeof value.version === "number" &&
+    value.version !== 1
+  ) {
+    throw new ProgressBackupVersionError(value.version);
+  }
+  const result = ProgressBackupDocumentSchema.safeParse(value);
+  if (!result.success) {
+    throw new ProgressBackupValidationError(result.error);
+  }
+  return result.data;
 }

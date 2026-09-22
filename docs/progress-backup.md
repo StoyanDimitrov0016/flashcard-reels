@@ -30,6 +30,13 @@ progress as `progress-backups/before-last-progress-restore.json` in app document
 the progress tables in one SQLite transaction. The previous copy can be shared from the same
 screen. Full app-data reset deletes it.
 
+Validation rejects unsupported versions, duplicate IDs, cross-deck card ownership, missing deck
+progress for review history, and disagreements between review events and their per-card rating
+counts, review dates, or deck review date. Zero-count flashcard progress after a reset remains
+valid without review events or deck progress. Invalid input has a distinct error from file-read
+and restore failures. The backup error classes own their stable codes and messages; causes and
+the unsupported version are attached only as diagnostic context.
+
 Downloaded decks stay installed. Imported progress for installed deck IDs becomes active
 immediately, using the installed deck's current title and package version. Imported progress for
 deck IDs absent from the device is archived, regardless of its former resolution. Stable
