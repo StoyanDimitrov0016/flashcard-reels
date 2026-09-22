@@ -1,0 +1,17 @@
+- longPressOn: Versioned Test Deck
+- assertVisible: "Flashcard question: .*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: "Recall level: Good"
+- swipe:
+    direction: UP
+- tapOn: Library
+- tapOn: Versioned Test Deck
+- tapOn: Delete Versioned Test Deck
+- assertVisible: "Delete Versioned Test Deck?"
+- tapOn: Delete deck
+- assertNotVisible: Versioned Test Deck
+- tapOn: You
+- tapOn: Archived deck progress
+- assertVisible: Archived progress
+- assertVisible: Versioned Test Deck
+- assertVisible: "1 reviews.*"

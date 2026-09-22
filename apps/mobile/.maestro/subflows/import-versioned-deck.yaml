@@ -1,0 +1,6 @@
+- tapOn: Library
+- assertVisible: Library
+- tapOn: Import deck package
+- tapOn: Browse device
+- tapOn: Downloads
+- tapOn: versioned-test-deck.fcrdeck
