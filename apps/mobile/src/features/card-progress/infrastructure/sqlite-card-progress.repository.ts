@@ -1,7 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
 import type { CardProgressRepository } from "@/features/card-progress/domain/card-progress.repository";
-import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
@@ -39,7 +38,7 @@ export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardP
     return new Map(rows.map((row) => [row.flashcardId, this.toModel(row)] as const));
   }
 
-  async findCurrentByFlashcardIds(
+  async findIncludingPendingRatingsByFlashcardIds(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, CardProgress>> {
     if (flashcardIds.length === 0) {
@@ -88,84 +87,6 @@ export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardP
     return current;
   }
 
-  async resetCard(flashcardId: string, resetAt: string): Promise<void> {
-    // Summary-only boundary for aggregation. User-facing reset uses
-    // SQLiteLearningProgressResetTransaction to clear events and FSRS state too.
-    this.database.transaction((transaction) => {
-      const card = transaction
-        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId })
-        .from(flashcards)
-        .where(eq(flashcards.id, flashcardId))
-        .limit(1)
-        .all()[0];
-      if (!card) {
-        throw new Error(`Missing flashcard ${flashcardId}`);
-      }
-      transaction
-        .insert(cardProgress)
-        .values(this.zeroState(flashcardId, card.deckId, card.createdAt, resetAt))
-        .onConflictDoUpdate({
-          target: cardProgress.flashcardId,
-          set: this.resetValues(resetAt),
-        })
-        .run();
-    });
-  }
-
-  async resetDeck(deckId: DeckId, resetAt: string): Promise<void> {
-    this.database.transaction((transaction) => {
-      const cards = transaction
-        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
-        .from(flashcards)
-        .where(eq(flashcards.deckId, deckId))
-        .all();
-      for (const card of cards) {
-        transaction
-          .insert(cardProgress)
-          .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
-          .onConflictDoUpdate({
-            target: cardProgress.flashcardId,
-            set: this.resetValues(resetAt),
-          })
-          .run();
-      }
-    });
-  }
-
-  async resetAll(resetAt: string): Promise<void> {
-    this.database.transaction((transaction) => {
-      const cards = transaction
-        .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
-        .from(flashcards)
-        .orderBy(asc(flashcards.id))
-        .all();
-      for (const card of cards) {
-        transaction
-          .insert(cardProgress)
-          .values(this.zeroState(card.id, card.deckId, card.createdAt, resetAt))
-          .onConflictDoUpdate({
-            target: cardProgress.flashcardId,
-            set: this.resetValues(resetAt),
-          })
-          .run();
-      }
-    });
-  }
-
-  private resetValues(resetAt: string) {
-    return {
-      againCount: 0,
-      easyCount: 0,
-      firstReviewedAt: null,
-      goodCount: 0,
-      hardCount: 0,
-      lastReviewedAt: null,
-      resetAt,
-      reviewCount: 0,
-      updatedAt: resetAt,
-    };
-  }
-
   private toModel(row: typeof cardProgress.$inferSelect): CardProgress {
     return new CardProgress({
       againCount: row.againCount,
@@ -180,23 +101,6 @@ export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardP
       reviewCount: row.reviewCount,
       updatedAt: row.updatedAt,
     });
-  }
-
-  private zeroState(flashcardId: string, deckId: string, createdAt: string, resetAt: string) {
-    return {
-      againCount: 0,
-      createdAt,
-      deckId,
-      easyCount: 0,
-      firstReviewedAt: null,
-      flashcardId,
-      goodCount: 0,
-      hardCount: 0,
-      lastReviewedAt: null,
-      resetAt,
-      reviewCount: 0,
-      updatedAt: resetAt,
-    };
   }
 }
 

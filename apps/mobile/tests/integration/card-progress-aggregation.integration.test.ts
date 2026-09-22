@@ -15,7 +15,7 @@ import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructur
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
-import { decks, flashcards } from "@/infrastructure/sqlite/schema";
+import { cardProgress, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
@@ -144,7 +144,7 @@ describe("SQLite card-progress aggregation", () => {
   it("rolls back progress updates and checkpoint advancement together", async () => {
     const session = makeSession(testId(520), "mixed");
     await sessions.create(session);
-    await progress.resetCard(makeFlashcard(1).id, "2025-12-01T00:00:00.000Z");
+    await insertResetProgress("2025-12-01T00:00:00.000Z");
     await createAttempt(session.id, 0, "good", "2026-01-01T00:01:00.000Z");
     await database.runAsync(
       "CREATE TRIGGER fail_card_progress_update BEFORE UPDATE ON card_progress BEGIN SELECT RAISE(ABORT, 'progress update failed'); END"
@@ -166,7 +166,7 @@ describe("SQLite card-progress aggregation", () => {
     const session = makeSession(testId(530), "mixed");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
-    await progress.resetCard(makeFlashcard(1).id, "2026-01-01T00:02:00.000Z");
+    await insertResetProgress("2026-01-01T00:02:00.000Z");
 
     await aggregation.aggregate(session.id, 0, "2026-01-01T00:03:00.000Z");
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({ reviewCount: 0 });
@@ -204,7 +204,7 @@ describe("SQLite card-progress aggregation", () => {
       rating: "good",
     });
 
-    await progress.resetCard(makeFlashcard(1).id, "2026-01-01T00:03:00.000Z");
+    await insertResetProgress("2026-01-01T00:03:00.000Z");
     await finalization.finalizeAttempt(
       editable.id,
       "2026-01-01T00:04:00.000Z",
@@ -420,5 +420,23 @@ describe("SQLite card-progress aggregation", () => {
     });
     await attempts.create(attempt);
     return attempt;
+  }
+
+  async function insertResetProgress(resetAt: string): Promise<void> {
+    const card = makeFlashcard(1);
+    await database.drizzle.insert(cardProgress).values({
+      againCount: 0,
+      createdAt: card.createdAt,
+      deckId: card.deckId,
+      easyCount: 0,
+      firstReviewedAt: null,
+      flashcardId: card.id,
+      goodCount: 0,
+      hardCount: 0,
+      lastReviewedAt: null,
+      resetAt,
+      reviewCount: 0,
+      updatedAt: resetAt,
+    });
   }
 });

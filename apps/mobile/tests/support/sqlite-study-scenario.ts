@@ -3,6 +3,9 @@ import type { ReviewAttemptFinalizationTransaction } from "@/features/study/appl
 import { CardProgressServiceImpl } from "@/features/card-progress/application/card-progress.service.impl";
 import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progress/infrastructure/sqlite-card-progress-aggregation-transaction";
 import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
@@ -58,7 +61,13 @@ export function createScenarioGraph(
     feed: new ReelFeedServiceImpl(study, memoryStates, scheduler, clock, random),
     memoryStates,
     items,
-    cardProgress: new CardProgressServiceImpl(progress, clock),
+    cardProgress: new CardProgressServiceImpl(
+      progress,
+      clock,
+      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      study,
+      new FlashcardServiceImpl(new SQLiteFlashcardRepository(database.drizzle))
+    ),
     progress,
     recurrences,
     sessions,

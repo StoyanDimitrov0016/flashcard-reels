@@ -6,6 +6,7 @@ import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.se
 import type { CardProgressService } from "@/features/card-progress/domain/card-progress.service";
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
+import type { SavedProgressService } from "@/features/decks/application/saved-progress.service";
 import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { DeckService } from "@/features/decks/domain/deck.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
@@ -19,10 +20,15 @@ import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progre
 import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
+import { SavedProgressServiceImpl } from "@/features/decks/application/saved-progress.service.impl";
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
+import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
@@ -48,6 +54,7 @@ type AppServices = Readonly<{
   deckPackageDownloader: DeckPackageDownloader;
   deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
+  savedProgressService: SavedProgressService;
   flashcardService: FlashcardService;
   cardProgressService: CardProgressService;
   reelFeedService: ReelFeedService;
@@ -64,6 +71,12 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const drizzleDatabase = drizzle<DatabaseSchema>(database);
     const deckRepository = new SQLiteDeckRepository(drizzleDatabase);
     const deckAppearanceRepository = new SQLiteDeckAppearanceRepository(drizzleDatabase);
+    const deckProgressRepository = new SQLiteDeckProgressRepository(drizzleDatabase);
+    const deckRemovalTransaction = new SQLiteDeckRemovalTransaction(drizzleDatabase);
+    const archivedProgressQuery = new SQLiteArchivedProgressQuery(drizzleDatabase);
+    const savedProgressDeletionTransaction = new SQLiteSavedProgressDeletionTransaction(
+      drizzleDatabase
+    );
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
     const flashcardService = new FlashcardServiceImpl(flashcardRepository);
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
@@ -127,8 +140,14 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       deckService: new DeckServiceImpl(
         deckRepository,
         deckAppearanceRepository,
+        deckRemovalTransaction,
         deckAudioRemover,
         studyService
+      ),
+      savedProgressService: new SavedProgressServiceImpl(
+        archivedProgressQuery,
+        deckProgressRepository,
+        savedProgressDeletionTransaction
       ),
       flashcardService,
       cardProgressService: new CardProgressServiceImpl(

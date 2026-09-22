@@ -42,17 +42,13 @@ describe("SQLite learning progress reset transaction", () => {
     await insertCard(1, TEST_DECK_ID);
     await insertCard(2, TEST_DECK_ID);
     await insertCard(3, OTHER_DECK_ID);
+    const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     service = new CardProgressServiceImpl(
-      {
-        findByFlashcardId: async () => null,
-        findByFlashcardIds: async () => new Map(),
-        findCurrentByFlashcardIds: async () => new Map(),
-        resetAll: async () => undefined,
-        resetCard: async () => undefined,
-        resetDeck: async () => undefined,
-      },
+      new SQLiteCardProgressRepository(database.drizzle),
       { now: () => RESET_AT },
-      new SQLiteLearningProgressResetTransaction(database.drizzle)
+      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      graph.study,
+      new FlashcardServiceImpl(new SQLiteFlashcardRepository(database.drizzle))
     );
   });
 

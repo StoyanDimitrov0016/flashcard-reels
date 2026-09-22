@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import {
   decks,
   flashcards,
@@ -16,6 +17,7 @@ import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/s
 describe("SQLite card progress", () => {
   let database: NodeSqliteDatabase;
   let progress: SQLiteCardProgressRepository;
+  let reset: SQLiteLearningProgressResetTransaction;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -25,6 +27,7 @@ describe("SQLite card progress", () => {
     await insertFlashcard(makeFlashcard(2, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(3, OTHER_DECK_ID));
     progress = new SQLiteCardProgressRepository(database.drizzle);
+    reset = new SQLiteLearningProgressResetTransaction(database.drizzle);
   });
 
   afterEach(() => {
@@ -32,8 +35,8 @@ describe("SQLite card progress", () => {
   });
 
   it("reads existing progress for a candidate set in one batched repository operation", async () => {
-    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
-    await progress.resetCard(makeFlashcard(3, OTHER_DECK_ID).id, "2026-01-03T00:00:00.000Z");
+    await reset.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+    await reset.resetCard(makeFlashcard(3, OTHER_DECK_ID).id, "2026-01-03T00:00:00.000Z");
 
     const result = await progress.findByFlashcardIds([
       makeFlashcard(1).id,
@@ -73,7 +76,9 @@ describe("SQLite card progress", () => {
       updatedAt: "2026-01-02T00:01:00.000Z",
     });
 
-    const currentProgress = await progress.findCurrentByFlashcardIds([makeFlashcard(1).id]);
+    const currentProgress = await progress.findIncludingPendingRatingsByFlashcardIds([
+      makeFlashcard(1).id,
+    ]);
     expect(currentProgress.get(makeFlashcard(1).id)).toMatchObject({
       goodCount: 1,
       reviewCount: 1,
@@ -81,7 +86,7 @@ describe("SQLite card progress", () => {
   });
 
   it("resets one card, one deck, and all cards without deleting content", async () => {
-    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+    await reset.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle
       .update(cardProgress)
       .set({
@@ -93,7 +98,7 @@ describe("SQLite card progress", () => {
       })
       .where(eq(cardProgress.flashcardId, makeFlashcard(1).id));
 
-    await progress.resetDeck(TEST_DECK_ID, "2026-01-03T00:00:00.000Z");
+    await reset.resetDeck(TEST_DECK_ID, "2026-01-03T00:00:00.000Z");
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       resetAt: "2026-01-03T00:00:00.000Z",
       reviewCount: 0,
@@ -104,7 +109,7 @@ describe("SQLite card progress", () => {
     });
     expect(await progress.findByFlashcardId(makeFlashcard(3, OTHER_DECK_ID).id)).toBeNull();
 
-    await progress.resetAll("2026-01-04T00:00:00.000Z");
+    await reset.resetAll("2026-01-04T00:00:00.000Z");
     const resetProgress = await progress.findByFlashcardIds([
       makeFlashcard(1).id,
       makeFlashcard(2).id,
@@ -123,7 +128,7 @@ describe("SQLite card progress", () => {
   });
 
   it("retains a progress when its downloaded flashcard is deleted", async () => {
-    await progress.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
+    await reset.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle.delete(flashcards).where(eq(flashcards.id, makeFlashcard(1).id));
 
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({

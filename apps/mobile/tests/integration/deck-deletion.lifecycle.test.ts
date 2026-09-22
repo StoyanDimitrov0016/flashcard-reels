@@ -22,6 +22,7 @@ import {
 } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
   DeckContentProvider,
@@ -135,6 +136,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),
         new SQLiteDeckAppearanceRepository(database.drizzle),
+        new SQLiteDeckRemovalTransaction(database.drizzle),
         null,
         graph.study
       ),

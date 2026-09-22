@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
@@ -101,7 +101,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(makeSession(testId(201), "focused", TEST_DECK_ID));
 
     await expect(
-      new SQLiteDeckRepository(database.drizzle).remove(TEST_DECK_ID)
+      new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID)
     ).resolves.toBeUndefined();
     await expect(database.getAllAsync("PRAGMA foreign_key_check")).resolves.toEqual([]);
     await expect(
