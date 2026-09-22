@@ -26,9 +26,9 @@ import {
 } from "@/features/decks/presentation/context/deck-content-context";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
 import {
-  LearningProgressResetProvider,
-  useLearningProgressReset,
-} from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+  LearningProgressRevisionProvider,
+  useLearningProgressRevision,
+} from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
@@ -104,7 +104,7 @@ function Providers({ children }: Readonly<{ children: ReactNode }>) {
       DeckContentProvider,
       null,
       createElement(
-        LearningProgressResetProvider,
+        LearningProgressRevisionProvider,
         null,
         createElement(
           FeedScopeProvider,
@@ -243,7 +243,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     const { result } = renderHook(
       () => ({
         feed: usePreparedReelFeed(cards, "mixed", null, false),
-        ...useLearningProgressReset(),
+        ...useLearningProgressRevision(),
       }),
       { wrapper: Providers }
     );

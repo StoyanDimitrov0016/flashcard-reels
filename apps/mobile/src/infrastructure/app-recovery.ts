@@ -73,6 +73,10 @@ export function applyPendingAppDataReset(): void {
     if (audio.exists) {
       audio.delete();
     }
+    const progressBackups = new Directory(Paths.document, "progress-backups");
+    if (progressBackups.exists) {
+      progressBackups.delete();
+    }
     for (const entry of Paths.cache.exists ? Paths.cache.list() : []) {
       if (entry instanceof File && /^deck-import-.*\.fcrdeck$/.test(entry.name)) {
         entry.delete();

@@ -5,6 +5,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { StudySession } from "@/features/study/domain/study-session.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 
 export type FocusedFeedEvaluation = Readonly<{
@@ -13,6 +14,7 @@ export type FocusedFeedEvaluation = Readonly<{
 }>;
 type EvaluationRequest = Readonly<{
   revision: number;
+  progressRevision: number;
   requestedDeckId: DeckId | null;
   retryKey: number;
 }>;
@@ -25,6 +27,7 @@ export function useFocusedFeedLifecycle(
 ): boolean {
   const { deckService, studyService } = useReels();
   const { revision } = useDeckContentRevision();
+  const { revision: progressRevision } = useLearningProgressRevision();
   const [completedRequest, setCompletedRequest] = useState<EvaluationRequest | null>(null);
 
   useEffect(
@@ -52,7 +55,7 @@ export function useFocusedFeedLifecycle(
         } finally {
           evaluationInFlight = false;
           if (!disposed) {
-            setCompletedRequest({ revision, requestedDeckId, retryKey });
+            setCompletedRequest({ revision, progressRevision, requestedDeckId, retryKey });
           }
         }
       };
@@ -75,12 +78,14 @@ export function useFocusedFeedLifecycle(
       requestedDeckId,
       retryKey,
       revision,
+      progressRevision,
       studyService,
     ]
   );
   return (
     completedRequest === null ||
     completedRequest.revision !== revision ||
+    completedRequest.progressRevision !== progressRevision ||
     completedRequest.requestedDeckId !== requestedDeckId ||
     completedRequest.retryKey !== retryKey
   );

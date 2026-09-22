@@ -4,7 +4,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 
@@ -16,7 +16,7 @@ export function useDeleteDeck(): DeleteDeckState & {
 } {
   const { deckService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
-  const { invalidateLearningProgress } = useLearningProgressReset();
+  const { invalidateLearningProgress } = useLearningProgressRevision();
   const [state, setState] = useState<DeleteDeckState>({ deleting: false, error: null });
   const inFlight = useRef(false);
   const mounted = useRef(true);

@@ -21,6 +21,7 @@ export interface StudyService {
   ): Promise<OpenStudySession>;
   resumeFocusedSession(): Promise<StudySession | null>;
   completeSession(sessionId: string): Promise<void>;
+  settleForProgressBackup(): Promise<void>;
   compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void>;
   findSession(sessionId: string): Promise<StudySession | null>;
   findSessionByScope(scope: StudySessionScope): Promise<StudySession | null>;

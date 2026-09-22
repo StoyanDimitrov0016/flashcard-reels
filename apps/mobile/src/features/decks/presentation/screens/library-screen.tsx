@@ -34,7 +34,7 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
@@ -233,7 +233,7 @@ export default function LibraryScreen() {
   const { entries, loading, refresh } = useDeckCatalog();
   const { savedProgressService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
-  const { invalidateLearningProgress } = useLearningProgressReset();
+  const { invalidateLearningProgress } = useLearningProgressRevision();
   const {
     cancelDownload,
     clearImportError,

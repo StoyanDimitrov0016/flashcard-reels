@@ -10,6 +10,7 @@ import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { DeckService } from "@/features/decks/domain/deck.service";
 import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
+import type { ProgressBackupService } from "@/features/progress-backup/application/progress-backup.service";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
@@ -36,6 +37,10 @@ import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastr
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
+import { ProgressBackupServiceImpl } from "@/features/progress-backup/application/progress-backup.service.impl";
+import { ExpoProgressBackupFileGateway } from "@/features/progress-backup/infrastructure/expo-progress-backup-file.gateway";
+import { SQLiteProgressBackupRestoreTransaction } from "@/features/progress-backup/infrastructure/sqlite-progress-backup-restore.transaction";
+import { SQLiteProgressBackupQuery } from "@/features/progress-backup/infrastructure/sqlite-progress-backup.query";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
@@ -61,6 +66,7 @@ type AppServices = Readonly<{
   savedProgressService: SavedProgressService;
   flashcardService: FlashcardService;
   flashcardProgressService: FlashcardProgressService;
+  progressBackupService: ProgressBackupService;
   reelFeedService: ReelFeedService;
   studyService: StudyService;
 }>;
@@ -172,6 +178,13 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
         learningProgressResetTransaction,
         studyService,
         flashcardService
+      ),
+      progressBackupService: new ProgressBackupServiceImpl(
+        studyService,
+        new SQLiteProgressBackupQuery(drizzleDatabase),
+        new SQLiteProgressBackupRestoreTransaction(drizzleDatabase),
+        new ExpoProgressBackupFileGateway(),
+        clock
       ),
       reelFeedService: new ReelFeedServiceImpl(
         studyService,
