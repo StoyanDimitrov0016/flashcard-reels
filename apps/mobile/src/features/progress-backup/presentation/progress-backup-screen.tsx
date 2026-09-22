@@ -1,18 +1,16 @@
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { ProgressBackupSummary } from "@/features/progress-backup/contracts/progress-backup.schema";
 
-import {
-  PreferenceRow,
-  PreferenceSection,
-} from "@/features/preferences/presentation/components/preference-settings-components";
+import { PreferenceRow } from "@/features/preferences/presentation/components/preference-settings-components";
 import {
   useProgressBackupController,
   type PreparedProgressRestore,
 } from "@/features/progress-backup/presentation/controllers/use-progress-backup-controller";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
+import { ScreenBackButton } from "@/shared/presentation/components/screen-back-button";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
@@ -28,7 +26,6 @@ export default function ProgressBackupScreen() {
     prepared,
     hasSafetyCopy,
     error,
-    notice,
     exportProgress,
     pickBackup,
     restore,
@@ -39,9 +36,7 @@ export default function ProgressBackupScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScreenHeader>
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.link}>Back</Text>
-        </Pressable>
+        <ScreenBackButton accessibilityLabel="Back to Controls" onPress={() => router.back()} />
         <Text accessibilityRole="header" style={styles.title}>
           Progress backup
         </Text>
@@ -52,15 +47,17 @@ export default function ProgressBackupScreen() {
           reviews, schedules, and archived progress. They exclude downloaded decks, audio, and
           preferences. Backup files are readable and are not password protected.
         </Text>
-        <PreferenceSection title="Backup and restore">
+        <View style={styles.actions}>
           <PreferenceRow
             detail="Finishes current study sessions, then shares a progress file"
+            disabled={busy}
             icon={{ android: "upload_file", ios: "square.and.arrow.up", web: "upload_file" }}
             onPress={() => void exportProgress()}
             title="Export progress"
           />
           <PreferenceRow
             detail="Preview a file before replacing progress on this device"
+            disabled={busy}
             icon={{ android: "download", ios: "square.and.arrow.down", web: "download" }}
             onPress={() => void pickBackup()}
             title="Import progress"
@@ -68,18 +65,14 @@ export default function ProgressBackupScreen() {
           {hasSafetyCopy && (
             <PreferenceRow
               detail="Saved automatically before the last import"
+              disabled={busy}
               icon={{ android: "history", ios: "clock.arrow.circlepath", web: "history" }}
               onPress={() => void shareSafetyCopy()}
               title="Share previous progress backup"
             />
           )}
-        </PreferenceSection>
+        </View>
         {busy && !prepared && <Text style={styles.description}>Working on progress backup…</Text>}
-        {notice && (
-          <Text accessibilityRole="alert" style={styles.description}>
-            {notice}
-          </Text>
-        )}
         {error && !prepared && (
           <Text accessibilityRole="alert" style={styles.error}>
             {error}
@@ -105,19 +98,18 @@ function describeSummary(summary: ProgressBackupSummary): string {
   const latest = summary.lastReviewedAt
     ? ` Last reviewed ${new Date(summary.lastReviewedAt).toLocaleDateString()}.`
     : "";
-  return `${summary.deckCount} studied decks and ${summary.reviewCount} reviews.${latest}`;
+  return `${summary.deckCount} studied ${summary.deckCount === 1 ? "deck" : "decks"} and ${summary.reviewCount} ${summary.reviewCount === 1 ? "review" : "reviews"}.${latest}`;
 }
 
 function restorePreview(prepared: PreparedProgressRestore): string {
-  return `Backup: ${describeSummary(prepared.incoming)}\n\nThis device: ${describeSummary(prepared.local)}\n\nYour current learning progress will be replaced. Downloaded decks and preferences stay. Active study sessions will finish first, and a copy of current progress will be saved on this device.`;
+  return `Backup: ${describeSummary(prepared.incoming)}\n\nThis device: ${describeSummary(prepared.local)}\n\nCurrent progress will be replaced after active sessions finish. A copy will be saved on this device. Downloaded decks and preferences stay.`;
 }
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    back: { justifyContent: "center", minWidth: 48 },
-    link: { color: colors.actionPrimary, fontSize: fontSize.body },
     title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
+    actions: { gap: sizes.spacing.xSmall },
     content: {
       gap: sizes.spacing.section,
       padding: sizes.spacing.content,

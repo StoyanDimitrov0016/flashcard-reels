@@ -6,6 +6,7 @@ import { useLearningProgressRevision } from "@/features/flashcard-progress/prese
 import { useProgressBackup } from "@/features/progress-backup/presentation/dependencies/use-progress-backup";
 import { getProgressBackupErrorFeedback } from "@/features/progress-backup/presentation/progress-backup-error-feedback";
 import { reportError } from "@/shared/errors/report-error";
+import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
 
 export type { PreparedProgressRestore };
 
@@ -17,7 +18,6 @@ export function useProgressBackupController() {
   const [prepared, setPrepared] = useState<PreparedProgressRestore | null>(null);
   const [hasSafetyCopy, setHasSafetyCopy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -41,7 +41,6 @@ export function useProgressBackupController() {
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    setNotice(null);
     try {
       await progressBackupService.exportProgress();
     } catch (cause) {
@@ -61,7 +60,6 @@ export function useProgressBackupController() {
     inFlight.current = true;
     setBusy(true);
     setError(null);
-    setNotice(null);
     try {
       setPrepared(await progressBackupService.prepareRestore());
     } catch (cause) {
@@ -84,7 +82,7 @@ export function useProgressBackupController() {
       await progressBackupService.restore(prepared);
       setHasSafetyCopy(true);
       setPrepared(null);
-      setNotice("Learning progress restored. Your previous progress backup is available below.");
+      showSuccessToast("Learning progress restored.");
     } catch (cause) {
       reportError(cause, "Progress restore failure");
       setError(getProgressBackupErrorFeedback(cause, "restore"));
@@ -125,7 +123,6 @@ export function useProgressBackupController() {
     prepared,
     hasSafetyCopy,
     error,
-    notice,
     exportProgress,
     pickBackup,
     restore,

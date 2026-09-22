@@ -326,6 +326,7 @@ export default function LibraryScreen() {
       setSelectedPending(null);
       setConfirmStartFresh(false);
       refreshPendingProgress();
+      showSuccessToast(startFresh ? "Starting fresh with this deck." : "Saved progress continued.");
     } catch {
       setProgressError("Could not update saved progress. Try again.");
       setConfirmStartFresh(false);

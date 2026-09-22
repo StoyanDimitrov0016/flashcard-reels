@@ -10,6 +10,8 @@ const viewTitles: Readonly<Record<string, string>> = {
   "/library": "Couldn’t load Library",
   "/progress": "Couldn’t load Progress",
   "/you": "Couldn’t open Controls",
+  "/archived-progress": "Couldn’t load archived progress",
+  "/progress-backup": "Couldn’t open progress backup",
 };
 
 type ViewErrorBoundaryProps = Readonly<Pick<ErrorBoundaryProps, "error" | "retry">>;
