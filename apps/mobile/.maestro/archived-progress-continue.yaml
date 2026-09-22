@@ -5,7 +5,7 @@ appId: com.flashcardreels.app
 - runFlow: subflows/import-versioned-deck.yaml
 - runFlow: subflows/study-and-archive.yaml
 - tapOn: Back
-- tapOn: Library
+- tapOn: Library tab
 - runFlow: subflows/import-versioned-deck.yaml
 - assertVisible: Saved learning progress
 - tapOn: Continue with saved progress

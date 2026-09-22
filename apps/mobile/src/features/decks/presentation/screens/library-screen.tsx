@@ -124,6 +124,7 @@ function DeckRow({
           onFocus();
         }}
         onPressIn={() => {
+          longPressHandled.current = false;
           if (paused) {
             return;
           }
@@ -499,7 +500,11 @@ export default function LibraryScreen() {
         busy={progressBusy}
         error={progressError}
         progress={confirmStartFresh ? null : selectedPending}
-        onClose={() => setSelectedPending(null)}
+        onClose={() => {
+          if (!confirmStartFresh) {
+            setSelectedPending(null);
+          }
+        }}
         onContinue={() => void resolveProgress(false)}
         onStartFresh={() => setConfirmStartFresh(true)}
       />

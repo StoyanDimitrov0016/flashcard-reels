@@ -41,7 +41,7 @@ try {
   }
   $installedPackage = & $adbPath shell pm path com.flashcardreels.app
   if ($LASTEXITCODE -ne 0 -or -not $installedPackage) {
-    throw "Flashcard Reels is not installed. Supply -ApkPath with a preview APK."
+    throw "Flashcard Reels is not installed. Supply -ApkPath with an APK that embeds JavaScript."
   }
   & $adbPath push $fixturePath /sdcard/Download/versioned-test-deck.fcrdeck
   if ($LASTEXITCODE -ne 0) {
