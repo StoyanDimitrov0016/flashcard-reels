@@ -6,4 +6,6 @@ Downloaded deck content and learner data have different lifetimes. The mobile SQ
 
 The archive screen is reached from Controls. Its size is an estimate of learning rows, including a fixed allowance for SQLite row and index overhead. It excludes downloaded cards and audio; SQLite cannot allocate its shared pages exactly to one deck. Deleting an archive or choosing to start fresh on reinstall removes its review events, summaries, FSRS state, and deck record in one transaction. Reset all learning progress also clears archives.
 
+Card and deck resets also clear their durable review events. A deck reset clears progress for older card IDs that are absent from the currently installed package, so resetting the deck cannot leave hidden archived progress behind.
+
 Stable deck and card IDs are learning identities. A substantial change in what a card teaches requires a new card ID in the package. The current development database uses a new name and a generated schema baseline; no migration from discarded pre-user schemas is supported.

@@ -91,6 +91,8 @@ export class SQLiteLearnerProfileRepository<
   }
 
   async resetCard(flashcardId: string, resetAt: string): Promise<void> {
+    // Summary-only boundary for aggregation. User-facing reset uses
+    // SQLiteLearningProgressResetTransaction to clear events and FSRS state too.
     this.database.transaction((transaction) => {
       const card = transaction
         .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId })

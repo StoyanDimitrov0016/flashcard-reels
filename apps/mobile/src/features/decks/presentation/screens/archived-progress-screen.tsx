@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,16 +22,29 @@ export default function ArchivedProgressScreen() {
   const [selected, setSelected] = useState<ArchivedDeckProgress | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadSequence = useRef(0);
 
   const refresh = useCallback(() => {
+    const sequence = ++loadSequence.current;
     void deckService
       .listArchivedProgress()
-      .then(setRows)
-      .catch(() => setError("Could not load archived progress."));
+      .then((progress) => {
+        if (sequence === loadSequence.current) {
+          setRows(progress);
+        }
+      })
+      .catch(() => {
+        if (sequence === loadSequence.current) {
+          setError("Could not load archived progress.");
+        }
+      });
   }, [deckService]);
   useFocusEffect(
     useCallback(() => {
       refresh();
+      return function cancelArchivedProgressLoad() {
+        loadSequence.current += 1;
+      };
     }, [refresh])
   );
 
