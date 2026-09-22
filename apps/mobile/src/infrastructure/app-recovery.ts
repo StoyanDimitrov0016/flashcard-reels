@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const RESET_MARKER = "flashcard-reels-reset-pending";
-const DATABASE_FILES = ["flashcard-reels.db", "ExpoSQLiteStorage"];
+const DATABASE_FILES = ["flashcard-reels.db", "flashcard-reels-v2.db", "ExpoSQLiteStorage"];
 let storagePrepared = false;
 
 /** Root retries must not apply a new request while storage is already open. */

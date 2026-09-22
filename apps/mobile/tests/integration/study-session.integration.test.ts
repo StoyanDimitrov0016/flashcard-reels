@@ -105,7 +105,7 @@ describe("SQLite study sessions", () => {
     await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
 
     const profileRows = await database.getAllAsync(
-      "SELECT review_count, again_count, good_count FROM learner_profiles ORDER BY flashcard_id"
+      "SELECT review_count, again_count, good_count FROM card_progress ORDER BY flashcard_id"
     );
     expect(profileRows).toEqual([
       { again_count: 1, good_count: 0, review_count: 1 },
@@ -122,7 +122,7 @@ describe("SQLite study sessions", () => {
       await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_recurrences")
     ).toEqual({ count: 1 });
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM learner_profiles")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM card_progress")
     ).toEqual({ count: 2 });
   });
 
@@ -187,6 +187,7 @@ describe("SQLite study sessions", () => {
       focusCards.map((card) => ({
         againCount: 1,
         createdAt: "2026-01-01T00:00:00.000Z",
+        deckId: card.deckId,
         easyCount: 0,
         firstReviewedAt: "2026-01-01T00:00:00.000Z",
         flashcardId: card.id,
@@ -245,7 +246,7 @@ describe("SQLite study sessions", () => {
     await graph.study.recoverPendingCompletedSessionAggregation(1);
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT review_count FROM card_progress WHERE flashcard_id = ?",
         at(focusCards, 0).id
       )
     ).toEqual({ review_count: 1 });
@@ -304,7 +305,7 @@ describe("SQLite study sessions", () => {
     expect(activeDiscover?.completedAt).toBeNull();
     await graph.study.completeSession(discover.studySessionId);
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM learner_profiles")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM card_progress")
     ).toEqual({ count: 2 });
   });
 

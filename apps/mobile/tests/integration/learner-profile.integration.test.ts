@@ -122,11 +122,13 @@ describe("SQLite learner profiles", () => {
     });
   });
 
-  it("cascades a profile when its flashcard is deleted", async () => {
+  it("retains a profile when its downloaded flashcard is deleted", async () => {
     await profiles.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle.delete(flashcards).where(eq(flashcards.id, makeFlashcard(1).id));
 
-    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toBeNull();
+    expect(await profiles.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      flashcardId: makeFlashcard(1).id,
+    });
   });
 
   async function insertDeck(id: string, title: string): Promise<void> {

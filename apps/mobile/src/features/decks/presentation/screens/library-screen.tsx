@@ -1,6 +1,6 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -12,11 +12,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
+import { SavedProgressChoiceSheet } from "@/features/decks/presentation/components/saved-progress-choice-sheet";
+import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 import { useSaveDeckAppearance } from "@/features/decks/presentation/controllers/use-save-deck-appearance";
@@ -30,12 +33,15 @@ import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
+import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
+import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
   HOLD_FEEDBACK_DELAY_MS,
 } from "@/features/reels/presentation/hold-to-focus";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
+import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import {
   hideFlashcardToast,
@@ -200,6 +206,9 @@ export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
+  const { deckService } = useDecks();
+  const invalidateDeckContent = useInvalidateDeckContent();
+  const { invalidateLearningProgress } = useLearningProgressReset();
   const {
     cancelDownload,
     clearImportError,
@@ -213,6 +222,12 @@ export default function LibraryScreen() {
   const [query, setQuery] = useState("");
   const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
+  const [pendingProgress, setPendingProgress] = useState<PendingDeckProgress[]>([]);
+  const promptedProgress = useRef(new Set<string>());
+  const [selectedPending, setSelectedPending] = useState<PendingDeckProgress | null>(null);
+  const [confirmStartFresh, setConfirmStartFresh] = useState(false);
+  const [progressBusy, setProgressBusy] = useState(false);
+  const [progressError, setProgressError] = useState<string | null>(null);
   const [appearanceOverrides, setAppearanceOverrides] = useState(
     () => new Map<string, DeckAppearance>()
   );
@@ -227,6 +242,62 @@ export default function LibraryScreen() {
     ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
     : null;
 
+  const refreshPendingProgress = useCallback(() => {
+    void deckService
+      .listPendingProgress()
+      .then(setPendingProgress)
+      .catch(() => {
+        setProgressError("Could not load saved progress. Try again.");
+      });
+  }, [deckService]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshPendingProgress();
+    }, [refreshPendingProgress])
+  );
+
+  useEffect(
+    function offerUnresolvedProgressChoice() {
+      if (importSheetPresented || selectedPending) {
+        return;
+      }
+      const unprompted = pendingProgress.find(
+        (progress) => !promptedProgress.current.has(progress.deckId)
+      );
+      if (unprompted) {
+        promptedProgress.current.add(unprompted.deckId);
+        setSelectedPending(unprompted);
+      }
+    },
+    [importSheetPresented, pendingProgress, selectedPending]
+  );
+
+  const resolveProgress = async (startFresh: boolean) => {
+    if (!selectedPending || progressBusy) {
+      return;
+    }
+    setProgressBusy(true);
+    setProgressError(null);
+    try {
+      if (startFresh) {
+        await deckService.deleteProgress(selectedPending.deckId);
+      } else {
+        await deckService.continueProgress(selectedPending.deckId);
+      }
+      invalidateDeckContent();
+      invalidateLearningProgress();
+      setSelectedPending(null);
+      setConfirmStartFresh(false);
+      refreshPendingProgress();
+    } catch {
+      setProgressError("Could not update saved progress. Try again.");
+      setConfirmStartFresh(false);
+    } finally {
+      setProgressBusy(false);
+    }
+  };
+
   const handleImport = async (
     importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
   ) => {
@@ -234,6 +305,7 @@ export default function LibraryScreen() {
     if (result) {
       showSuccessToast(getDeckImportResultFeedback(result).message);
       refresh();
+      refreshPendingProgress();
       return true;
     }
     return false;
@@ -288,6 +360,25 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
+        {progressError && !selectedPending && (
+          <Text accessibilityRole="alert" style={styles.pendingError}>
+            {progressError}
+          </Text>
+        )}
+        {pendingProgress.map((progress) => (
+          <Pressable
+            key={progress.deckId}
+            accessibilityRole="button"
+            onPress={() => {
+              setProgressError(null);
+              setSelectedPending(progress);
+            }}
+            style={styles.pendingBanner}
+          >
+            <Text style={styles.pendingTitle}>Choose progress for {progress.title}</Text>
+            <Text style={styles.pendingCopy}>This deck is paused until you decide.</Text>
+          </Pressable>
+        ))}
         <View style={styles.searchShell}>
           <SymbolView
             name={{ android: "search", ios: "magnifyingglass", web: "search" }}
@@ -360,6 +451,25 @@ export default function LibraryScreen() {
         onClearError={clearImportError}
         onScan={(url) => handleImport(() => importFromUrl(url))}
         visible={importSheetPresented}
+      />
+      <SavedProgressChoiceSheet
+        busy={progressBusy}
+        error={progressError}
+        progress={confirmStartFresh ? null : selectedPending}
+        onClose={() => setSelectedPending(null)}
+        onContinue={() => void resolveProgress(false)}
+        onStartFresh={() => setConfirmStartFresh(true)}
+      />
+      <DestructiveConfirmationSheet
+        actionLabel="Delete saved progress"
+        busy={progressBusy}
+        error={progressError}
+        icon={{ android: "delete", ios: "trash.fill", web: "delete" }}
+        message="All saved reviews and learning progress for this deck will be permanently deleted."
+        onCancel={() => setConfirmStartFresh(false)}
+        onConfirm={() => void resolveProgress(true)}
+        title={`Start ${selectedPending?.title ?? "deck"} fresh?`}
+        visible={confirmStartFresh}
       />
     </SafeAreaView>
   );
@@ -439,6 +549,21 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: 36,
     },
+    pendingBanner: {
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.actionPrimary,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      gap: sizes.spacing.xSmall,
+      padding: sizes.spacing.medium,
+    },
+    pendingTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
+    },
+    pendingCopy: { color: colors.textSecondary, fontSize: fontSize.caption },
+    pendingError: { color: colors.error, fontSize: fontSize.caption },
     iconButton: {
       alignItems: "center",
       borderColor: colors.borderSubtle,

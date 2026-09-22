@@ -25,7 +25,9 @@ Audio is optional and may be provided as `audio/<card-id>.answer.mp3` or `audio/
 
 ## Updates
 
-Increment the deck version whenever the complete content snapshot changes. Re-importing the current version is a no-op; older versions are rejected. New versions update content while preserving stable-card learning history, and removed cards become inactive rather than losing their historical records.
+Increment the deck version whenever the complete content snapshot changes. Re-importing the current version is a no-op; older versions are rejected. New versions update content while preserving stable-card learning history, and removed cards become inactive rather than losing their historical records. Assign a new card ID when a revision changes what the card teaches substantially.
+
+Deleting a downloaded deck archives its learning data separately. Reinstalling the same deck ID pauses it until the learner chooses to continue with saved progress or permanently delete that progress and start fresh.
 
 Local-file imports and web QR transfers use the same installer, audio storage, and update behavior. The bundled demo is one generated package; larger libraries are external imports.
 

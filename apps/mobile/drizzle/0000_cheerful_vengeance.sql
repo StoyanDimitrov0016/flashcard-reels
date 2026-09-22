@@ -4,6 +4,14 @@ CREATE TABLE `deck_appearances` (
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE TABLE `deck_progress` (
+	`deck_id` text PRIMARY KEY NOT NULL,
+	`title` text NOT NULL,
+	`version` integer NOT NULL,
+	`last_reviewed_at` text NOT NULL,
+	`resolution` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `decks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`title` text NOT NULL,
@@ -16,6 +24,7 @@ CREATE TABLE `decks` (
 --> statement-breakpoint
 CREATE TABLE `flashcard_memory_states` (
 	`flashcard_id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
 	`state` text NOT NULL,
 	`due_at` text NOT NULL,
 	`stability` real NOT NULL,
@@ -28,7 +37,6 @@ CREATE TABLE `flashcard_memory_states` (
 	`last_review_at` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
-	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
 	CONSTRAINT "flashcard_memory_states_elapsed_days_check" CHECK("flashcard_memory_states"."elapsed_days" >= 0),
 	CONSTRAINT "flashcard_memory_states_scheduled_days_check" CHECK("flashcard_memory_states"."scheduled_days" >= 0),
 	CONSTRAINT "flashcard_memory_states_reps_check" CHECK("flashcard_memory_states"."reps" >= 0),
@@ -36,6 +44,7 @@ CREATE TABLE `flashcard_memory_states` (
 	CONSTRAINT "flashcard_memory_states_learning_steps_check" CHECK("flashcard_memory_states"."learning_steps" >= 0)
 );
 --> statement-breakpoint
+CREATE INDEX `flashcard_memory_states_deck_id_idx` ON `flashcard_memory_states` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `flashcard_review_attempts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,
@@ -71,8 +80,9 @@ CREATE TABLE `flashcards` (
 --> statement-breakpoint
 CREATE INDEX `flashcards_deck_id_idx` ON `flashcards` (`deck_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `flashcards_order_unique` ON `flashcards` (`deck_id`,`order`);--> statement-breakpoint
-CREATE TABLE `learner_profiles` (
+CREATE TABLE `card_progress` (
 	`flashcard_id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
 	`review_count` integer DEFAULT 0 NOT NULL,
 	`again_count` integer DEFAULT 0 NOT NULL,
 	`hard_count` integer DEFAULT 0 NOT NULL,
@@ -83,18 +93,33 @@ CREATE TABLE `learner_profiles` (
 	`reset_at` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
-	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
-	CONSTRAINT "learner_profiles_review_count_check" CHECK("learner_profiles"."review_count" >= 0),
-	CONSTRAINT "learner_profiles_again_count_check" CHECK("learner_profiles"."again_count" >= 0),
-	CONSTRAINT "learner_profiles_hard_count_check" CHECK("learner_profiles"."hard_count" >= 0),
-	CONSTRAINT "learner_profiles_good_count_check" CHECK("learner_profiles"."good_count" >= 0),
-	CONSTRAINT "learner_profiles_easy_count_check" CHECK("learner_profiles"."easy_count" >= 0),
-	CONSTRAINT "learner_profiles_counter_sum_check" CHECK("learner_profiles"."review_count" = "learner_profiles"."again_count" + "learner_profiles"."hard_count" + "learner_profiles"."good_count" + "learner_profiles"."easy_count"),
-	CONSTRAINT "learner_profiles_reviewed_at_presence_check" CHECK(("learner_profiles"."review_count" = 0 AND "learner_profiles"."first_reviewed_at" IS NULL AND "learner_profiles"."last_reviewed_at" IS NULL) OR ("learner_profiles"."review_count" > 0 AND "learner_profiles"."first_reviewed_at" IS NOT NULL AND "learner_profiles"."last_reviewed_at" IS NOT NULL)),
-	CONSTRAINT "learner_profiles_reviewed_at_order_check" CHECK("learner_profiles"."first_reviewed_at" IS NULL OR "learner_profiles"."last_reviewed_at" IS NULL OR "learner_profiles"."first_reviewed_at" <= "learner_profiles"."last_reviewed_at")
+	CONSTRAINT "learner_profiles_review_count_check" CHECK("card_progress"."review_count" >= 0),
+	CONSTRAINT "learner_profiles_again_count_check" CHECK("card_progress"."again_count" >= 0),
+	CONSTRAINT "learner_profiles_hard_count_check" CHECK("card_progress"."hard_count" >= 0),
+	CONSTRAINT "learner_profiles_good_count_check" CHECK("card_progress"."good_count" >= 0),
+	CONSTRAINT "learner_profiles_easy_count_check" CHECK("card_progress"."easy_count" >= 0),
+	CONSTRAINT "learner_profiles_counter_sum_check" CHECK("card_progress"."review_count" = "card_progress"."again_count" + "card_progress"."hard_count" + "card_progress"."good_count" + "card_progress"."easy_count"),
+	CONSTRAINT "learner_profiles_reviewed_at_presence_check" CHECK(("card_progress"."review_count" = 0 AND "card_progress"."first_reviewed_at" IS NULL AND "card_progress"."last_reviewed_at" IS NULL) OR ("card_progress"."review_count" > 0 AND "card_progress"."first_reviewed_at" IS NOT NULL AND "card_progress"."last_reviewed_at" IS NOT NULL)),
+	CONSTRAINT "learner_profiles_reviewed_at_order_check" CHECK("card_progress"."first_reviewed_at" IS NULL OR "card_progress"."last_reviewed_at" IS NULL OR "card_progress"."first_reviewed_at" <= "card_progress"."last_reviewed_at")
 );
 --> statement-breakpoint
-CREATE INDEX `learner_profiles_reset_at_idx` ON `learner_profiles` (`reset_at`);--> statement-breakpoint
+CREATE INDEX `card_progress_deck_id_idx` ON `card_progress` (`deck_id`);--> statement-breakpoint
+CREATE INDEX `card_progress_reset_at_idx` ON `card_progress` (`reset_at`);--> statement-breakpoint
+CREATE TABLE `removed_decks` (
+	`id` text PRIMARY KEY NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `review_events` (
+	`id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
+	`flashcard_id` text NOT NULL,
+	`rating` text NOT NULL,
+	`reviewed_at` text NOT NULL,
+	`finalized_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `review_events_deck_id_idx` ON `review_events` (`deck_id`);--> statement-breakpoint
+CREATE INDEX `review_events_flashcard_id_idx` ON `review_events` (`flashcard_id`);--> statement-breakpoint
 CREATE TABLE `study_session_items` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,

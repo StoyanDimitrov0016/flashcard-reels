@@ -1,0 +1,9 @@
+# Archived deck progress
+
+Downloaded deck content and learner data have different lifetimes. The mobile SQLite schema keeps package-owned cards in `flashcards`, finalized rated reviews in `review_events`, current review summaries in `card_progress`, and FSRS scheduler fields in `flashcard_memory_states`. The latter three store stable deck and card IDs without cascading foreign keys to downloaded content. Unfinished `flashcard_review_attempts` remain session data; they are finalized before a deck is removed.
+
+`deck_progress` stores the last title, package version, last review time, and resolution state. It is created with the first finalized rated review. Removing a studied deck changes its state to `archived` and removes cards, audio, and session references. Removing an unstudied deck creates no archive. A package with the same deck ID changes an archived record to `pending`; card queries exclude its cards from study until the learner chooses to continue or permanently delete saved progress. Progress for card IDs absent from the current package is retained for a possible later package version.
+
+The archive screen is reached from Controls. Its size is an estimate of learning rows, including a fixed allowance for SQLite row and index overhead. It excludes downloaded cards and audio; SQLite cannot allocate its shared pages exactly to one deck. Deleting an archive or choosing to start fresh on reinstall removes its review events, summaries, FSRS state, and deck record in one transaction. Reset all learning progress also clears archives.
+
+Stable deck and card IDs are learning identities. A substantial change in what a card teaches requires a new card ID in the package. The current development database uses a new name and a generated schema baseline; no migration from discarded pre-user schemas is supported.
