@@ -16,10 +16,6 @@ vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }))
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 
-import {
-  LearningProgressResetProvider,
-  useLearningProgressReset,
-} from "@/features/card-progress/presentation/context/learning-progress-reset-context";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
@@ -29,6 +25,10 @@ import {
   useDeckContentRevision,
 } from "@/features/decks/presentation/context/deck-content-context";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
+import {
+  LearningProgressResetProvider,
+  useLearningProgressReset,
+} from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";

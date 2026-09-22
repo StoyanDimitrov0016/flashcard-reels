@@ -24,15 +24,18 @@ vi.mock("@/infrastructure/app-services", () => ({
   useAppServices: () => ({
     deckService: { findById: harness.findDeck, getAppearance: harness.appearance },
     flashcardService: { listByDeckId: harness.cards },
-    cardProgressService: { findByFlashcardIds: harness.progress },
+    flashcardProgressService: { findByFlashcardIds: harness.progress },
   }),
 }));
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useDeckContentRevision: () => ({ revision: 1 }),
 }));
-vi.mock("@/features/card-progress/presentation/context/learning-progress-reset-context", () => ({
-  useLearningProgressReset: () => ({ revision: 1 }),
-}));
+vi.mock(
+  "@/features/flashcard-progress/presentation/context/learning-progress-reset-context",
+  () => ({
+    useLearningProgressReset: () => ({ revision: 1 }),
+  })
+);
 
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 

@@ -1,4 +1,4 @@
-export type CardProgressFields = Readonly<{
+export type FlashcardProgressFields = Readonly<{
   againCount: number;
   createdAt: string;
   easyCount: number;
@@ -12,7 +12,7 @@ export type CardProgressFields = Readonly<{
   updatedAt: string;
 }>;
 
-export class CardProgress {
+export class FlashcardProgress {
   public readonly againCount: number;
   public readonly createdAt: string;
   public readonly easyCount: number;
@@ -25,7 +25,7 @@ export class CardProgress {
   public readonly reviewCount: number;
   public readonly updatedAt: string;
 
-  constructor(fields: CardProgressFields) {
+  constructor(fields: FlashcardProgressFields) {
     if (
       fields.reviewCount !==
       fields.againCount + fields.hardCount + fields.goodCount + fields.easyCount

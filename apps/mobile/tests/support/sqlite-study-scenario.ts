@@ -1,9 +1,9 @@
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 
-import { CardProgressServiceImpl } from "@/features/card-progress/application/card-progress.service.impl";
-import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progress/infrastructure/sqlite-card-progress-aggregation-transaction";
-import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
@@ -37,7 +37,7 @@ export function createScenarioGraph(
   const sessions = new SQLiteStudySessionRepository(database.drizzle);
   const items = new SQLiteStudySessionItemRepository(database.drizzle);
   const recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
-  const progress = new SQLiteCardProgressRepository(database.drizzle);
+  const progress = new SQLiteFlashcardProgressRepository(database.drizzle);
   const scheduler = createLearningScheduler();
   const memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
   const study = new StudyServiceImpl(
@@ -53,7 +53,7 @@ export function createScenarioGraph(
     finalizationTransaction ??
       new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, scheduler),
     random,
-    new SQLiteCardProgressAggregationTransaction(database.drizzle),
+    new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
   return {
@@ -61,7 +61,7 @@ export function createScenarioGraph(
     feed: new ReelFeedServiceImpl(study, memoryStates, scheduler, clock, random),
     memoryStates,
     items,
-    cardProgress: new CardProgressServiceImpl(
+    flashcardProgress: new FlashcardProgressServiceImpl(
       progress,
       clock,
       new SQLiteLearningProgressResetTransaction(database.drizzle),

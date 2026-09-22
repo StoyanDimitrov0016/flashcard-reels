@@ -1,6 +1,6 @@
 type MemoryState = "new" | "learning" | "review" | "relearning";
 
-export type LearnerMemoryState = Readonly<{
+export type FlashcardMemoryState = Readonly<{
   flashcardId: string;
   state: MemoryState;
   dueAt: string;
@@ -16,4 +16,4 @@ export type LearnerMemoryState = Readonly<{
   updatedAt: string;
 }>;
 
-export type SchedulerMemoryState = Readonly<Omit<LearnerMemoryState, "createdAt" | "updatedAt">>;
+export type SchedulerMemoryState = Readonly<Omit<FlashcardMemoryState, "createdAt" | "updatedAt">>;

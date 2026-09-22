@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
-import { useLearningProgressReset } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
-import { useCardProgress } from "@/features/card-progress/presentation/dependencies/use-card-progress";
+import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useFlashcardProgress } from "@/features/flashcard-progress/presentation/dependencies/use-flashcard-progress";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type ResetAllProgressState = Readonly<{
@@ -9,12 +9,12 @@ type ResetAllProgressState = Readonly<{
 }>;
 
 export function useResetAllProgress(): ResetAllProgressState {
-  const { cardProgressService } = useCardProgress();
+  const { flashcardProgressService } = useFlashcardProgress();
   const { invalidateLearningProgress } = useLearningProgressReset();
 
   const resetAllProgress = useCallback(async () => {
     try {
-      await cardProgressService.resetAllProgress();
+      await flashcardProgressService.resetAllProgress();
       invalidateLearningProgress();
     } catch (error) {
       throw toOperationError(error, {
@@ -23,7 +23,7 @@ export function useResetAllProgress(): ResetAllProgressState {
         message: "The learning-progress reset could not be completed",
       });
     }
-  }, [invalidateLearningProgress, cardProgressService]);
+  }, [invalidateLearningProgress, flashcardProgressService]);
 
   return { resetAllProgress };
 }

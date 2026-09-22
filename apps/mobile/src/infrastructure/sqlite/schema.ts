@@ -53,8 +53,8 @@ export const flashcards = sqliteTable(
   ]
 );
 
-export const cardProgress = sqliteTable(
-  "card_progress",
+export const flashcardProgress = sqliteTable(
+  "flashcard_progress",
   {
     flashcardId: text("flashcard_id").primaryKey().notNull(),
     deckId: text("deck_id").notNull(),
@@ -70,25 +70,25 @@ export const cardProgress = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    check("card_progress_review_count_check", sql`${table.reviewCount} >= 0`),
-    check("card_progress_again_count_check", sql`${table.againCount} >= 0`),
-    check("card_progress_hard_count_check", sql`${table.hardCount} >= 0`),
-    check("card_progress_good_count_check", sql`${table.goodCount} >= 0`),
-    check("card_progress_easy_count_check", sql`${table.easyCount} >= 0`),
+    check("flashcard_progress_review_count_check", sql`${table.reviewCount} >= 0`),
+    check("flashcard_progress_again_count_check", sql`${table.againCount} >= 0`),
+    check("flashcard_progress_hard_count_check", sql`${table.hardCount} >= 0`),
+    check("flashcard_progress_good_count_check", sql`${table.goodCount} >= 0`),
+    check("flashcard_progress_easy_count_check", sql`${table.easyCount} >= 0`),
     check(
-      "card_progress_counter_sum_check",
+      "flashcard_progress_counter_sum_check",
       sql`${table.reviewCount} = ${table.againCount} + ${table.hardCount} + ${table.goodCount} + ${table.easyCount}`
     ),
     check(
-      "card_progress_reviewed_at_presence_check",
+      "flashcard_progress_reviewed_at_presence_check",
       sql`(${table.reviewCount} = 0 AND ${table.firstReviewedAt} IS NULL AND ${table.lastReviewedAt} IS NULL) OR (${table.reviewCount} > 0 AND ${table.firstReviewedAt} IS NOT NULL AND ${table.lastReviewedAt} IS NOT NULL)`
     ),
     check(
-      "card_progress_reviewed_at_order_check",
+      "flashcard_progress_reviewed_at_order_check",
       sql`${table.firstReviewedAt} IS NULL OR ${table.lastReviewedAt} IS NULL OR ${table.firstReviewedAt} <= ${table.lastReviewedAt}`
     ),
-    index("card_progress_deck_id_idx").on(table.deckId),
-    index("card_progress_reset_at_idx").on(table.resetAt),
+    index("flashcard_progress_deck_id_idx").on(table.deckId),
+    index("flashcard_progress_reset_at_idx").on(table.resetAt),
   ]
 );
 
@@ -300,7 +300,7 @@ export const databaseSchema = {
   removedDecks,
   deckAppearances,
   flashcards,
-  cardProgress,
+  flashcardProgress,
   flashcardMemoryStates,
   reviewEvents,
   deckProgress,

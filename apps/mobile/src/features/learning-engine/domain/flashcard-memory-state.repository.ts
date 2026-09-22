@@ -1,8 +1,8 @@
-import type { LearnerMemoryState } from "./memory-state";
+import type { FlashcardMemoryState } from "./flashcard-memory-state";
 
 export interface FlashcardMemoryStateRepository {
-  findByFlashcardId(flashcardId: string): Promise<LearnerMemoryState | null>;
+  findByFlashcardId(flashcardId: string): Promise<FlashcardMemoryState | null>;
   findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerMemoryState>>;
+  ): Promise<ReadonlyMap<string, FlashcardMemoryState>>;
 }

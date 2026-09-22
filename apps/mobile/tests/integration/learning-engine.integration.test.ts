@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type {
-  LearnerMemoryState,
+  FlashcardMemoryState,
   SchedulerMemoryState,
-} from "@/features/learning-engine/domain/memory-state";
+} from "@/features/learning-engine/domain/flashcard-memory-state";
+import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
@@ -323,7 +323,7 @@ describe("SQLite learning-engine finalization", () => {
   it("commits memory before feed extension reads candidates", async () => {
     const card = makeFlashcard(1);
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
-    const observedStates: Array<LearnerMemoryState | null> = [];
+    const observedStates: Array<FlashcardMemoryState | null> = [];
     const recordingMemoryStates: FlashcardMemoryStateRepository = {
       findByFlashcardId: (flashcardId) => graph.memoryStates.findByFlashcardId(flashcardId),
       findByFlashcardIds: async (flashcardIds) => {
@@ -401,7 +401,7 @@ describe("SQLite learning-engine finalization", () => {
   }
 });
 
-function withPersistence(state: SchedulerMemoryState): LearnerMemoryState {
+function withPersistence(state: SchedulerMemoryState): FlashcardMemoryState {
   return {
     ...state,
     createdAt: FINALIZED_AT,

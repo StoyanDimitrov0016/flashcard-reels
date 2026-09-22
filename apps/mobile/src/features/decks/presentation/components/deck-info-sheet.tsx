@@ -2,11 +2,11 @@ import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
+import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { explainCardProgress } from "@/features/card-progress/domain/card-progress-explanation";
+import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -16,7 +16,7 @@ type DeckInfoSheetProps = Readonly<{
   cards: readonly Flashcard[];
   deck: Deck | null;
   onClose: () => void;
-  progress: ReadonlyMap<string, CardProgress>;
+  progress: ReadonlyMap<string, FlashcardProgress>;
   visible: boolean;
 }>;
 
@@ -24,15 +24,15 @@ export function DeckInfoSheet({ cards, deck, onClose, progress, visible }: DeckI
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const reviewedProgress = cards.flatMap((card) => {
-    const cardProgress = progress.get(card.id);
-    return cardProgress && cardProgress.reviewCount > 0 ? [cardProgress] : [];
+    const flashcardProgress = progress.get(card.id);
+    return flashcardProgress && flashcardProgress.reviewCount > 0 ? [flashcardProgress] : [];
   });
   const totalReviews = reviewedProgress.reduce(
-    (total, cardProgress) => total + cardProgress.reviewCount,
+    (total, flashcardProgress) => total + flashcardProgress.reviewCount,
     0
   );
-  const recallScores = reviewedProgress.flatMap((cardProgress) => {
-    const score = explainCardProgress(cardProgress).averageRecallScore;
+  const recallScores = reviewedProgress.flatMap((flashcardProgress) => {
+    const score = explainFlashcardProgress(flashcardProgress).averageRecallScore;
     return score === null ? [] : [score];
   });
   const averageRecall =

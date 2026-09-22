@@ -3,11 +3,11 @@ import { useCallback } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useCardProgressList } from "@/features/card-progress/presentation/controllers/use-card-progress-list";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
+import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -19,7 +19,7 @@ export default function ProgressScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { loading, refresh, rows } = useCardProgressList();
+  const { loading, refresh, rows } = useFlashcardProgressList();
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
   const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;

@@ -3,11 +3,11 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
+import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
-import { explainCardProgress } from "@/features/card-progress/domain/card-progress-explanation";
+import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -18,7 +18,7 @@ type FlashcardProgressSheetProps = Readonly<{
   audioSource: AudioReference;
   card: Flashcard | null;
   onClose: () => void;
-  progress: CardProgress | null;
+  progress: FlashcardProgress | null;
 }>;
 
 export function FlashcardProgressSheet({
@@ -30,7 +30,7 @@ export function FlashcardProgressSheet({
 }: FlashcardProgressSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const explanation = explainCardProgress(progress);
+  const explanation = explainFlashcardProgress(progress);
   const reviewed = (progress?.reviewCount ?? 0) > 0;
   const recallPercentage =
     explanation.averageRecallScore === null

@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ResetProgressSheet } from "@/features/card-progress/presentation/components/reset-progress-sheet";
-import { useResetAllProgress } from "@/features/card-progress/presentation/controllers/use-reset-all-progress";
+import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
+import { useResetAllProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-all-progress";
 import { appMetadata } from "@/features/preferences/presentation/app-metadata";
 import {
   AppearanceSelector,

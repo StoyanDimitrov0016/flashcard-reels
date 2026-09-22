@@ -29,9 +29,12 @@ vi.mock("@/infrastructure/app-services", () => ({
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useInvalidateDeckContent: () => harness.content,
 }));
-vi.mock("@/features/card-progress/presentation/context/learning-progress-reset-context", () => ({
-  useLearningProgressReset: () => ({ invalidateLearningProgress: harness.progress }),
-}));
+vi.mock(
+  "@/features/flashcard-progress/presentation/context/learning-progress-reset-context",
+  () => ({
+    useLearningProgressReset: () => ({ invalidateLearningProgress: harness.progress }),
+  })
+);
 vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";

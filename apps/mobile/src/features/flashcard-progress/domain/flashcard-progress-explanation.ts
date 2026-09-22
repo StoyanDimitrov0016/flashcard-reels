@@ -1,15 +1,17 @@
-import type { CardProgress } from "./card-progress.model";
+import type { FlashcardProgress } from "./flashcard-progress.model";
 
 type RecallHistoryBand = "New" | "Needs practice" | "Developing" | "Strong";
 
-export type CardProgressExplanation = Readonly<{
+export type FlashcardProgressExplanation = Readonly<{
   averageRecallScore: number | null;
   historyBand: RecallHistoryBand;
   reason: string;
   reviewCount: number;
 }>;
 
-export function explainCardProgress(progress: CardProgress | null): CardProgressExplanation {
+export function explainFlashcardProgress(
+  progress: FlashcardProgress | null
+): FlashcardProgressExplanation {
   if (!progress || progress.reviewCount === 0) {
     return {
       averageRecallScore: null,

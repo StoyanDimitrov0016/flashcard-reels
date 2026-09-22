@@ -1,5 +1,5 @@
-import type { CardProgressAggregationTransaction } from "@/features/card-progress/application/card-progress-aggregation-transaction";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
@@ -52,7 +52,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
-  private readonly cardProgressAggregationTransaction: CardProgressAggregationTransaction | null;
+  private readonly flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
   private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
@@ -69,7 +69,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
     random: RandomSource = Math.random,
-    cardProgressAggregationTransaction: CardProgressAggregationTransaction | null = null,
+    flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null = null,
     studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
@@ -83,7 +83,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
-    this.cardProgressAggregationTransaction = cardProgressAggregationTransaction;
+    this.flashcardProgressAggregationTransaction = flashcardProgressAggregationTransaction;
     this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
   }
 
@@ -215,7 +215,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   async recoverPendingCompletedSessionAggregation(
     limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
   ): Promise<void> {
-    if (!this.cardProgressAggregationTransaction) {
+    if (!this.flashcardProgressAggregationTransaction) {
       return;
     }
     const pending =
@@ -557,14 +557,14 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
-    if (!this.cardProgressAggregationTransaction) {
+    if (!this.flashcardProgressAggregationTransaction) {
       return;
     }
     const eligibility = await this.getAggregationEligibility(studySessionId);
     if (!eligibility?.shouldCheck) {
       return;
     }
-    await this.cardProgressAggregationTransaction.aggregate(
+    await this.flashcardProgressAggregationTransaction.aggregate(
       studySessionId,
       eligibility.safeThroughReelPosition,
       this.clock.now()
@@ -572,7 +572,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateCompletedSession(studySessionId: string): Promise<void> {
-    const aggregation = this.cardProgressAggregationTransaction;
+    const aggregation = this.flashcardProgressAggregationTransaction;
     if (!aggregation) {
       return;
     }

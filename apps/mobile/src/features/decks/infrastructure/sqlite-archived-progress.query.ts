@@ -4,7 +4,7 @@ import type { ArchivedProgressQuery } from "@/features/decks/domain/archived-pro
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
-  cardProgress,
+  flashcardProgress,
   deckProgress,
   flashcardMemoryStates,
   reviewEvents,
@@ -34,12 +34,12 @@ export class SQLiteArchivedProgressQuery<TRunResult = unknown> implements Archiv
             .where(eq(reviewEvents.deckId, record.deckId)),
           this.database
             .select({
-              reviewCount: sql<number>`coalesce(sum(${cardProgress.reviewCount}), 0)`,
-              reviewedCardCount: sql<number>`sum(case when ${cardProgress.reviewCount} > 0 then 1 else 0 end)`,
-              bytes: sql<number>`coalesce(sum(length(${cardProgress.flashcardId}) + length(${cardProgress.deckId}) + 160), 0)`,
+              reviewCount: sql<number>`coalesce(sum(${flashcardProgress.reviewCount}), 0)`,
+              reviewedCardCount: sql<number>`sum(case when ${flashcardProgress.reviewCount} > 0 then 1 else 0 end)`,
+              bytes: sql<number>`coalesce(sum(length(${flashcardProgress.flashcardId}) + length(${flashcardProgress.deckId}) + 160), 0)`,
             })
-            .from(cardProgress)
-            .where(eq(cardProgress.deckId, record.deckId)),
+            .from(flashcardProgress)
+            .where(eq(flashcardProgress.deckId, record.deckId)),
           this.database
             .select({
               bytes: sql<number>`coalesce(sum(length(${flashcardMemoryStates.flashcardId}) + length(${flashcardMemoryStates.deckId}) + 160), 0)`,

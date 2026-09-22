@@ -1,9 +1,9 @@
 import { and, asc, eq, gt, inArray, isNotNull, lte } from "drizzle-orm";
 
 import type {
-  CardProgressAggregationResult,
-  CardProgressAggregationTransaction,
-} from "@/features/card-progress/application/card-progress-aggregation-transaction";
+  FlashcardProgressAggregationResult,
+  FlashcardProgressAggregationTransaction,
+} from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
@@ -11,7 +11,7 @@ import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts"
 import {
   flashcardReviewAttempts,
   flashcards,
-  cardProgress,
+  flashcardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -24,9 +24,9 @@ type Contribution = Readonly<{
   lastReviewedAt: string;
 }>;
 
-export class SQLiteCardProgressAggregationTransaction<
+export class SQLiteFlashcardProgressAggregationTransaction<
   TRunResult = unknown,
-> implements CardProgressAggregationTransaction {
+> implements FlashcardProgressAggregationTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {
@@ -37,7 +37,7 @@ export class SQLiteCardProgressAggregationTransaction<
     studySessionId: string,
     throughReelPosition: number,
     now: string
-  ): Promise<CardProgressAggregationResult> {
+  ): Promise<FlashcardProgressAggregationResult> {
     return this.database.transaction((transaction) => {
       const session = transaction
         .select({
@@ -83,8 +83,8 @@ export class SQLiteCardProgressAggregationTransaction<
           ? []
           : transaction
               .select()
-              .from(cardProgress)
-              .where(inArray(cardProgress.flashcardId, flashcardIds))
+              .from(flashcardProgress)
+              .where(inArray(flashcardProgress.flashcardId, flashcardIds))
               .all();
       const progressById = new Map(
         existingProgress.map((progress) => [progress.flashcardId, progress])
@@ -153,7 +153,7 @@ export class SQLiteCardProgressAggregationTransaction<
         const goodCount = (progress?.goodCount ?? 0) + contribution.goodCount;
         const easyCount = (progress?.easyCount ?? 0) + contribution.easyCount;
         transaction
-          .insert(cardProgress)
+          .insert(flashcardProgress)
           .values({
             againCount,
             createdAt,
@@ -169,7 +169,7 @@ export class SQLiteCardProgressAggregationTransaction<
             updatedAt: now,
           })
           .onConflictDoUpdate({
-            target: cardProgress.flashcardId,
+            target: flashcardProgress.flashcardId,
             set: {
               againCount,
               easyCount,

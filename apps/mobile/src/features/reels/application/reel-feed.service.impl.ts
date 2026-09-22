@@ -1,8 +1,8 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
-import type { LearnerMemoryState } from "@/features/learning-engine/domain/memory-state";
 import type {
   PreparedReelFeed,
   PreparedReelOccurrence,
@@ -380,7 +380,7 @@ function parseFeedState(rawState: string): FeedState {
 
 function toCandidate(
   card: Flashcard,
-  memoryState: LearnerMemoryState | null,
+  memoryState: FlashcardMemoryState | null,
   pendingRecurrenceCardIds: ReadonlySet<string>,
   scheduler: LearningScheduler,
   now: string
