@@ -2,4 +2,6 @@ import type { ProgressBackupDocument } from "@/features/progress-backup/contract
 
 export interface ProgressBackupQuery {
   read(exportedAt: string): Promise<ProgressBackupDocument>;
+  readSafetyCopyFileName(): Promise<string | null>;
+  readInstalledDeckIds(): Promise<ReadonlySet<string>>;
 }

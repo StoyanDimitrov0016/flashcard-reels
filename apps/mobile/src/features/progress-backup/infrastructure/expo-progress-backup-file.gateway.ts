@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto";
 import * as DocumentPicker from "expo-document-picker";
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -12,7 +13,7 @@ import {
 } from "@/features/progress-backup/domain/progress-backup.errors";
 
 const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
-const SAFETY_COPY_NAME = "before-last-progress-restore.json";
+const SAFETY_COPY_DIRECTORY = "progress-backups";
 
 export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway {
   async pick(): Promise<string | null> {
@@ -46,25 +47,41 @@ export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway 
     await this.shareFile(file);
   }
 
-  async saveSafetyCopy(document: ProgressBackupDocument): Promise<void> {
+  async saveSafetyCopy(document: ProgressBackupDocument): Promise<string> {
     const bytes = encodeBackup(document);
-    const directory = new Directory(Paths.document, "progress-backups");
+    const directory = new Directory(Paths.document, SAFETY_COPY_DIRECTORY);
     directory.create({ idempotent: true });
-    const file = new File(directory, SAFETY_COPY_NAME);
-    file.create({ overwrite: true });
-    file.write(bytes);
+    const fileName = `before-progress-restore-${Crypto.randomUUID()}.json`;
+    const file = new File(directory, fileName);
+    try {
+      file.create();
+      file.write(bytes);
+      return fileName;
+    } catch (cause) {
+      if (file.exists) {
+        file.delete();
+      }
+      throw cause;
+    }
   }
 
-  async hasSafetyCopy(): Promise<boolean> {
-    return new File(Paths.document, "progress-backups", SAFETY_COPY_NAME).exists;
+  async hasSafetyCopy(fileName: string): Promise<boolean> {
+    return new File(Paths.document, SAFETY_COPY_DIRECTORY, fileName).exists;
   }
 
-  async shareSafetyCopy(): Promise<void> {
-    const file = new File(Paths.document, "progress-backups", SAFETY_COPY_NAME);
+  async shareSafetyCopy(fileName: string): Promise<void> {
+    const file = new File(Paths.document, SAFETY_COPY_DIRECTORY, fileName);
     if (!file.exists) {
       throw new Error("No previous progress backup is available");
     }
     await this.shareFile(file);
+  }
+
+  async deleteSafetyCopy(fileName: string): Promise<void> {
+    const file = new File(Paths.document, SAFETY_COPY_DIRECTORY, fileName);
+    if (file.exists) {
+      file.delete();
+    }
   }
 
   private async shareFile(file: File): Promise<void> {

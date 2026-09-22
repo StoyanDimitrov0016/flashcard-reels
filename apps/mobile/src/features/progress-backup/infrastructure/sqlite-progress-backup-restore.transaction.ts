@@ -7,6 +7,7 @@ import {
   decks,
   flashcardMemoryStates,
   flashcardProgress,
+  progressBackupState,
   reviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -22,7 +23,7 @@ export class SQLiteProgressBackupRestoreTransaction<
     this.database = database;
   }
 
-  async restore(document: ProgressBackupDocument): Promise<void> {
+  async restore(document: ProgressBackupDocument, safetyCopyFileName?: string): Promise<void> {
     this.database.transaction((transaction) => {
       const installedDecks = transaction
         .select({ id: decks.id, title: decks.title, version: decks.version })
@@ -74,6 +75,16 @@ export class SQLiteProgressBackupRestoreTransaction<
         transaction
           .insert(reviewEvents)
           .values(document.reviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE))
+          .run();
+      }
+      if (safetyCopyFileName) {
+        transaction
+          .insert(progressBackupState)
+          .values({ id: 1, safetyCopyFileName })
+          .onConflictDoUpdate({
+            target: progressBackupState.id,
+            set: { safetyCopyFileName },
+          })
           .run();
       }
     });

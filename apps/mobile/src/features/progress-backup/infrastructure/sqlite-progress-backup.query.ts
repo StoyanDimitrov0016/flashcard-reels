@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import type { ProgressBackupQuery } from "@/features/progress-backup/application/progress-backup.query";
 import type { ProgressBackupDocument } from "@/features/progress-backup/contracts/progress-backup.schema";
@@ -6,8 +6,10 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
   deckProgress,
+  decks,
   flashcardMemoryStates,
   flashcardProgress,
+  progressBackupState,
   reviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
@@ -36,5 +38,19 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
         .all(),
       reviewEvents: transaction.select().from(reviewEvents).orderBy(asc(reviewEvents.id)).all(),
     }));
+  }
+
+  async readSafetyCopyFileName(): Promise<string | null> {
+    const state = this.database
+      .select({ fileName: progressBackupState.safetyCopyFileName })
+      .from(progressBackupState)
+      .where(eq(progressBackupState.id, 1))
+      .get();
+    return state?.fileName ?? null;
+  }
+
+  async readInstalledDeckIds(): Promise<ReadonlySet<string>> {
+    const rows = this.database.select({ id: decks.id }).from(decks).all();
+    return new Set(rows.map((row) => row.id));
   }
 }
