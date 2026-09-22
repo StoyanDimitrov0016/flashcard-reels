@@ -1,6 +1,6 @@
 # Maestro Android device testing on this machine
 
-The archived progress scenarios live in `apps/mobile/.maestro`. They cover continuing saved progress after reinstalling a deck, deleting saved progress to start fresh, and deleting progress from the archive. The versioned test deck includes an audio fixture, so these flows need no audio generation.
+The scenarios live in `apps/mobile/.maestro`. Three cover continuing saved progress after reinstalling a deck, deleting saved progress to start fresh, and deleting progress from the archive. A fourth checks the full app data reset confirmation sheet and cancels it without resetting data. The versioned test deck includes an audio fixture, so the archive flows need no audio generation.
 
 ## Working local setup (September 23, 2026)
 
@@ -26,7 +26,7 @@ $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 ./apps/mobile/scripts/run-maestro.ps1 -ApkPath ./apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-The runner boots the emulator, installs the APK, generates the deck package, copies it to Android Downloads, and runs all three flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
+The runner boots the emulator, installs the APK, generates the deck package, copies it to Android Downloads, and runs all four flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
 
 ## Findings from the first device runs
 
@@ -36,4 +36,4 @@ The runner boots the emulator, installs the APK, generates the deck package, cop
 - The Start fresh confirmation cleared the selected archived progress when its previous sheet closed. The Library screen now preserves the selection through confirmation.
 - A default upward swipe did not reliably advance the feed. The study subflow now swipes from `78%` to `22%` over 650 ms and checks that the next question face appears.
 
-All three flows passed on September 23 with the longer swipe and confirmation fix. The Continue and Delete flows passed together in 2 minutes 12 seconds; Start fresh passed separately.
+The three archived progress flows passed on September 23 with the longer swipe and confirmation fix. The app data reset confirmation flow was added later and has not yet been run on the device.
