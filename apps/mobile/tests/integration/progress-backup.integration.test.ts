@@ -106,6 +106,72 @@ describe("progress backup", () => {
     expect(document.reviewEvents).toHaveLength(1);
   });
 
+  it("transfers an exported JSON document to another installed deck without changing it on retry", async () => {
+    const source = createDatabase();
+    const flashcardId = testId(1);
+    await seedDeck(source, TEST_DECK_ID, [flashcardId]);
+    const sourceClock = new TestClock();
+    const sourceGraph = createScenarioGraph(source, sourceClock, new SequenceIdGenerator());
+    const session = makeSession(testId(701), "focused", TEST_DECK_ID);
+    await sourceGraph.sessions.create(session);
+    await source.drizzle.insert(flashcardReviewAttempts).values({
+      id: testId(801),
+      studySessionId: session.id,
+      flashcardId,
+      reelPosition: 0,
+      rating: "good",
+      ratedAt: sourceClock.now(),
+      createdAt: sourceClock.now(),
+      updatedAt: sourceClock.now(),
+    });
+    const exportedFiles = new MemoryBackupFiles();
+    const sourceBackup = new ProgressBackupServiceImpl(
+      sourceGraph.study,
+      new SQLiteProgressBackupQuery(source.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(source.drizzle),
+      exportedFiles,
+      sourceClock
+    );
+    await sourceBackup.exportProgress();
+    const exported = exportedFiles.shared;
+    if (!exported) {
+      throw new Error("Expected an exported document");
+    }
+
+    const target = createDatabase();
+    await seedDeck(target, TEST_DECK_ID, [flashcardId]);
+    const targetClock = new TestClock();
+    const targetGraph = createScenarioGraph(target, targetClock, new SequenceIdGenerator());
+    const importedFiles = new MemoryBackupFiles();
+    importedFiles.picked = JSON.stringify(exported);
+    const targetQuery = new SQLiteProgressBackupQuery(target.drizzle);
+    const targetBackup = new ProgressBackupServiceImpl(
+      targetGraph.study,
+      targetQuery,
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle),
+      importedFiles,
+      targetClock
+    );
+    const prepared = await targetBackup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Expected a prepared restore");
+    }
+    expect(await targetBackup.restore(prepared)).toBe(true);
+    const restored = await targetQuery.read(exported.exportedAt);
+    expect(restored.reviewEvents).toEqual(exported.reviewEvents);
+    expect(restored.flashcardProgress).toEqual(exported.flashcardProgress);
+    expect(restored.flashcardMemoryStates).toEqual(exported.flashcardMemoryStates);
+    expect(restored.deckProgress).toEqual(exported.deckProgress);
+
+    const safetyCopyFileName = await targetQuery.readSafetyCopyFileName();
+    const retry = await targetBackup.prepareRestore();
+    if (!retry) {
+      throw new Error("Expected a prepared retry");
+    }
+    expect(await targetBackup.restore(retry)).toBe(false);
+    expect(await targetQuery.readSafetyCopyFileName()).toBe(safetyCopyFileName);
+  });
+
   it("closes an active session and drains progress beyond the foreground batch limit", async () => {
     const database = createDatabase();
     const cardIds = Array.from({ length: 60 }, (_, index) => testId(index + 1));
