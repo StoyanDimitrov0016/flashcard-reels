@@ -6,6 +6,7 @@ import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infr
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import {
   decks,
@@ -52,7 +53,10 @@ describe("SQLite learning progress reset transaction", () => {
       { now: () => RESET_AT },
       new SQLiteLearningProgressResetTransaction(database.drizzle),
       graph.study,
-      new FlashcardServiceImpl(new SQLiteFlashcardRepository(database.drizzle))
+      new FlashcardServiceImpl(
+        new SQLiteFlashcardRepository(database.drizzle),
+        new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+      )
     );
   });
 
@@ -151,7 +155,10 @@ describe("SQLite learning progress reset transaction", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const flashcardRepository = new SQLiteFlashcardRepository(database.drizzle);
-    const flashcardService = new FlashcardServiceImpl(flashcardRepository);
+    const flashcardService = new FlashcardServiceImpl(
+      flashcardRepository,
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+    );
     const settlingService = new FlashcardProgressServiceImpl(
       new SQLiteFlashcardProgressQuery(
         database.drizzle,

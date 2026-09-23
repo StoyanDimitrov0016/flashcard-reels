@@ -17,6 +17,7 @@ import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/de
 import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import {
   deckAppearances,
@@ -294,7 +295,11 @@ describe("deck package installation", () => {
     expect(completedSession?.completedAt).not.toBeNull();
     await graph.study.recoverPendingCompletedSessionAggregation();
     const repository = new SQLiteFlashcardRepository(database.drizzle);
-    expect(await repository.listByDeckId(TEST_DECK_ID)).toMatchObject([
+    expect(
+      await new SQLiteFlashcardAvailabilityQuery(database.drizzle).listAvailableFlashcardsByDeckId(
+        TEST_DECK_ID
+      )
+    ).toMatchObject([
       { id: cardC.id, active: true, order: 0 },
       { id: cardA.id, active: true, answer: "Changed answer", order: 1 },
     ]);

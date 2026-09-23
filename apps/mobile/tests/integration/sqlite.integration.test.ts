@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
@@ -10,6 +10,7 @@ import { StudySessionRecurrence } from "@/features/study/domain/study-session-re
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -34,7 +35,6 @@ describe("SQLite study persistence", () => {
   let items: SQLiteStudySessionItemRepository;
   let attempts: SQLiteReviewAttemptRepository;
   let recurrences: SQLiteStudySessionRecurrenceRepository;
-  let flashcards: SQLiteFlashcardRepository;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -74,7 +74,6 @@ describe("SQLite study persistence", () => {
     items = new SQLiteStudySessionItemRepository(database.drizzle);
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
-    flashcards = new SQLiteFlashcardRepository(database.drizzle);
   });
 
   afterEach(() => {
@@ -123,6 +122,7 @@ describe("SQLite study persistence", () => {
     const service = new StudyServiceImpl(
       attempts,
       sessions,
+      new SQLiteStudySessionAggregationQuery(database.drizzle),
       items,
       recurrences,
       clock,
@@ -152,6 +152,7 @@ describe("SQLite study persistence", () => {
     const service = new StudyServiceImpl(
       attempts,
       sessions,
+      new SQLiteStudySessionAggregationQuery(database.drizzle),
       items,
       recurrences,
       clock,
@@ -176,7 +177,9 @@ describe("SQLite study persistence", () => {
   });
 
   it("reads Focus cards by explicit deck order and enforces deck-order uniqueness", async () => {
-    const cards = await flashcards.listByDeckId(TEST_DECK_ID);
+    const cards = await new SQLiteFlashcardAvailabilityQuery(
+      database.drizzle
+    ).listAvailableFlashcardsByDeckId(TEST_DECK_ID);
     expect(cards.map((card) => [card.id, card.order])).toEqual([
       [makeFlashcard(2).id, 0],
       [makeFlashcard(1).id, 1],
