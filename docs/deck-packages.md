@@ -40,3 +40,22 @@ npm.cmd run decks:check
 ```
 
 The inspector validates a package without installing it. The package and check commands regenerate and verify the bundled demo assets.
+
+## Publishing
+
+```powershell
+npm.cmd run r2:push-decks -- --dry-run path/to/deck.fcrdeck
+npm.cmd run r2:push-decks -- path/to/deck.fcrdeck
+```
+
+The command accepts `.fcrdeck` files or a ZIP of them, and defaults to `flashcard-reels-decks.zip`.
+Before uploading, it compares each package with the published deck that has the same ID and
+reports added, changed, and removed cards. It blocks the whole publish when content changed
+without a higher version, a version went down, a published deck moved to another file name, or a
+card ID appears in more than one deck. Cards removed and re-added with identical text produce a
+warning, because a new ID resets learner progress. Cross-deck checks cover the packages being
+published and the published versions they replace.
+
+Uploading requires typing `publish` in an interactive terminal after reading the report, so an
+agent can prepare and show a review but cannot confirm it. When R2 cannot be read, nothing is
+uploaded. See the [publish check spec](specs/0-deck-publish-check.md).

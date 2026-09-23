@@ -19,7 +19,7 @@
     "typecheck": "turbo run typecheck",
     "check": "npm run format:check && npm run test:custom-rules && npm run lint && npm run typecheck",
     "verify": "npm run check && npm test && npm run check:dead-code && npm run build",
-    "r2:push-decks": "node --env-file=apps/web/.env.local scripts/push-decks-to-r2.mjs",
+    "r2:push-decks": "node --conditions=react-server --env-file=apps/web/.env.local scripts/push-decks-to-r2.mjs",
     "lint:fix": "npm run typegen -w @flashcard-reels/web && oxlint --fix .",
     "check:dead-code": "knip"
   },
