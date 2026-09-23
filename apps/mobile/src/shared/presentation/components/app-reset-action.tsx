@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { toError } from "@/shared/errors/normalize-error";
@@ -11,7 +11,12 @@ import { sizes } from "@/shared/presentation/sizes";
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { fontSize } from "@/shared/presentation/typography";
 
-export function AppResetAction() {
+type AppResetActionProps = Readonly<{
+  /** Renders a custom control that opens the confirmation, such as a settings row. */
+  renderTrigger?: (open: () => void) => ReactNode;
+}>;
+
+export function AppResetAction({ renderTrigger }: AppResetActionProps = {}) {
   const { requestAppDataReset } = useAppRecovery();
   const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
   const styles = createStyles(colors);
@@ -28,18 +33,17 @@ export function AppResetAction() {
     );
   }
 
+  const openConfirmation = () => {
+    setFailure(null);
+    setConfirmationPresented(true);
+  };
+
   return (
     <>
-      {!requested && (
+      {!requested && renderTrigger?.(openConfirmation)}
+      {!requested && !renderTrigger && (
         <View style={styles.container}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              setFailure(null);
-              setConfirmationPresented(true);
-            }}
-            style={styles.button}
-          >
+          <Pressable accessibilityRole="button" onPress={openConfirmation} style={styles.button}>
             <Text style={styles.label}>Reset all app data</Text>
           </Pressable>
         </View>
