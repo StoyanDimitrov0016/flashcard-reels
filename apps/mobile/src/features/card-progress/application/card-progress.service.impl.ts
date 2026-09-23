@@ -1,21 +1,21 @@
+import type { LearningProgressResetTransaction } from "@/features/card-progress/application/learning-progress-reset-transaction";
+import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
+import type { CardProgressRepository } from "@/features/card-progress/domain/card-progress.repository";
+import type { CardProgressService } from "@/features/card-progress/domain/card-progress.service";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
-import type { LearningProgressResetTransaction } from "@/features/learner-profile/application/learning-progress-reset-transaction";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
-import type { LearnerProfileRepository } from "@/features/learner-profile/domain/learner-profile.repository";
-import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
-export class LearnerProfileServiceImpl implements LearnerProfileService {
+export class CardProgressServiceImpl implements CardProgressService {
   private readonly clock: Clock;
-  private readonly repository: LearnerProfileRepository;
+  private readonly repository: CardProgressRepository;
   private readonly resetTransaction: LearningProgressResetTransaction;
   private readonly flashcardService: FlashcardService | null;
   private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
-    repository: LearnerProfileRepository,
+    repository: CardProgressRepository,
     clock: Clock,
     resetTransaction: LearningProgressResetTransaction | null = null,
     sessionSettlement: StudySessionSettlement | null = null,
@@ -30,7 +30,7 @@ export class LearnerProfileServiceImpl implements LearnerProfileService {
 
   async findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerProfile>> {
+  ): Promise<ReadonlyMap<string, CardProgress>> {
     return this.repository.findCurrentByFlashcardIds(flashcardIds);
   }
 

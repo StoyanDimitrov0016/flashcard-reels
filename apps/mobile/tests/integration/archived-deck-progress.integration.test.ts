@@ -1,20 +1,20 @@
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progress/infrastructure/sqlite-card-progress-aggregation-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
-import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import {
   deckProgress,
   flashcardMemoryStates,
   flashcardReviewAttempts,
-  learnerProfiles,
+  cardProgress,
   reviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -67,7 +67,7 @@ describe("archived deck progress", () => {
       createLearningScheduler()
     );
     expect(await finalization.finalizeAttempt(attemptId, reviewedAt, reviewedAt)).toBe(true);
-    const aggregation = new SQLiteLearnerProfileAggregationTransaction(database.drizzle);
+    const aggregation = new SQLiteCardProgressAggregationTransaction(database.drizzle);
     await aggregation.aggregate(sessionId, 0, reviewedAt);
     return new SQLiteDeckRepository(database.drizzle);
   }
@@ -100,7 +100,7 @@ describe("archived deck progress", () => {
     await repository.remove(TEST_DECK_ID);
 
     expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(1);
-    expect(await database.drizzle.select().from(learnerProfiles)).toHaveLength(1);
+    expect(await database.drizzle.select().from(cardProgress)).toHaveLength(1);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toHaveLength(1);
     expect(await repository.listArchivedProgress()).toMatchObject([
       {
@@ -174,7 +174,7 @@ describe("archived deck progress", () => {
     await service.remove(TEST_DECK_ID);
 
     expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(reviewCount);
-    expect(await database.drizzle.select().from(learnerProfiles)).toMatchObject([{ reviewCount }]);
+    expect(await database.drizzle.select().from(cardProgress)).toMatchObject([{ reviewCount }]);
     expect(await repository.listArchivedProgress()).toMatchObject([{ reviewCount }]);
   });
 
@@ -199,7 +199,7 @@ describe("archived deck progress", () => {
     await repository.deleteProgress(TEST_DECK_ID);
 
     expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
-    expect(await database.drizzle.select().from(learnerProfiles)).toEqual([]);
+    expect(await database.drizzle.select().from(cardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
     expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
     expect(
@@ -220,7 +220,7 @@ describe("archived deck progress", () => {
 
     expect(await repository.listArchivedProgress()).toEqual([]);
     expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
-    expect(await database.drizzle.select().from(learnerProfiles)).toEqual([]);
+    expect(await database.drizzle.select().from(cardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
   });
 
@@ -231,7 +231,7 @@ describe("archived deck progress", () => {
 
     expect(await repository.listArchivedProgress()).toEqual([]);
     expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
-    expect(await database.drizzle.select().from(learnerProfiles)).toEqual([]);
+    expect(await database.drizzle.select().from(cardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
   });
 
@@ -289,10 +289,7 @@ describe("archived deck progress", () => {
     );
 
     expect(
-      await database.drizzle
-        .select()
-        .from(learnerProfiles)
-        .where(eq(learnerProfiles.flashcardId, cardId))
+      await database.drizzle.select().from(cardProgress).where(eq(cardProgress.flashcardId, cardId))
     ).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
     expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);

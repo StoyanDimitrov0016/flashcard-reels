@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 
+import { useLearningProgressReset } from "@/features/card-progress/presentation/context/learning-progress-reset-context";
 import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
@@ -34,7 +35,6 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,

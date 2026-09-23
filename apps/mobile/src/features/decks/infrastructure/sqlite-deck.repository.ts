@@ -16,7 +16,7 @@ import {
   flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   removedDecks,
   reviewEvents,
   studySessionItems,
@@ -92,7 +92,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         .where(eq(deckProgress.deckId, id))
         .run();
       if (!savedProgress) {
-        transaction.delete(learnerProfiles).where(eq(learnerProfiles.deckId, id)).run();
+        transaction.delete(cardProgress).where(eq(cardProgress.deckId, id)).run();
         transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
       }
       const cardIds = transaction
@@ -149,7 +149,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       .orderBy(asc(deckProgress.title), asc(deckProgress.deckId));
     return Promise.all(
       records.map(async (record): Promise<ArchivedDeckProgress> => {
-        const [events, profiles, memory] = await Promise.all([
+        const [events, progress, memory] = await Promise.all([
           this.database
             .select({
               bytes: sql<number>`coalesce(sum(length(${reviewEvents.id}) + length(${reviewEvents.deckId}) + length(${reviewEvents.flashcardId}) + length(${reviewEvents.rating}) + length(${reviewEvents.reviewedAt}) + length(${reviewEvents.finalizedAt}) + 64), 0)`,
@@ -158,12 +158,12 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
             .where(eq(reviewEvents.deckId, record.deckId)),
           this.database
             .select({
-              reviewCount: sql<number>`coalesce(sum(${learnerProfiles.reviewCount}), 0)`,
-              reviewedCardCount: sql<number>`sum(case when ${learnerProfiles.reviewCount} > 0 then 1 else 0 end)`,
-              bytes: sql<number>`coalesce(sum(length(${learnerProfiles.flashcardId}) + length(${learnerProfiles.deckId}) + 160), 0)`,
+              reviewCount: sql<number>`coalesce(sum(${cardProgress.reviewCount}), 0)`,
+              reviewedCardCount: sql<number>`sum(case when ${cardProgress.reviewCount} > 0 then 1 else 0 end)`,
+              bytes: sql<number>`coalesce(sum(length(${cardProgress.flashcardId}) + length(${cardProgress.deckId}) + 160), 0)`,
             })
-            .from(learnerProfiles)
-            .where(eq(learnerProfiles.deckId, record.deckId)),
+            .from(cardProgress)
+            .where(eq(cardProgress.deckId, record.deckId)),
           this.database
             .select({
               bytes: sql<number>`coalesce(sum(length(${flashcardMemoryStates.flashcardId}) + length(${flashcardMemoryStates.deckId}) + 160), 0)`,
@@ -176,11 +176,11 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
           title: record.title,
           version: record.version,
           lastReviewedAt: record.lastReviewedAt,
-          reviewCount: profiles[0]?.reviewCount ?? 0,
-          reviewedCardCount: profiles[0]?.reviewedCardCount ?? 0,
+          reviewCount: progress[0]?.reviewCount ?? 0,
+          reviewedCardCount: progress[0]?.reviewedCardCount ?? 0,
           estimatedBytes:
             (events[0]?.bytes ?? 0) +
-            (profiles[0]?.bytes ?? 0) +
+            (progress[0]?.bytes ?? 0) +
             (memory[0]?.bytes ?? 0) +
             record.title.length +
             96,
@@ -235,7 +235,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         throw new Error(`Deck ${id} must be archived or pending before deleting saved progress`);
       }
       transaction.delete(reviewEvents).where(eq(reviewEvents.deckId, id)).run();
-      transaction.delete(learnerProfiles).where(eq(learnerProfiles.deckId, id)).run();
+      transaction.delete(cardProgress).where(eq(cardProgress.deckId, id)).run();
       transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
       transaction.delete(deckProgress).where(eq(deckProgress.deckId, id)).run();
     });

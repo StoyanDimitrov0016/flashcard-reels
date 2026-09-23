@@ -3,11 +3,11 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
+import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
-import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
+import { explainCardProgress } from "@/features/card-progress/domain/card-progress-explanation";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -18,7 +18,7 @@ type FlashcardProgressSheetProps = Readonly<{
   audioSource: AudioReference;
   card: Flashcard | null;
   onClose: () => void;
-  profile: LearnerProfile | null;
+  progress: CardProgress | null;
 }>;
 
 export function FlashcardProgressSheet({
@@ -26,12 +26,12 @@ export function FlashcardProgressSheet({
   audioSource,
   card,
   onClose,
-  profile,
+  progress,
 }: FlashcardProgressSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const explanation = explainLearnerProfile(profile);
-  const reviewed = (profile?.reviewCount ?? 0) > 0;
+  const explanation = explainCardProgress(progress);
+  const reviewed = (progress?.reviewCount ?? 0) > 0;
   const recallPercentage =
     explanation.averageRecallScore === null
       ? 0
@@ -68,7 +68,7 @@ export function FlashcardProgressSheet({
               <Text
                 style={[styles.status, { color: reviewed ? accentColor : colors.textTertiary }]}
               >
-                {reviewed ? `${profile?.reviewCount ?? 0} reviews` : "New"}
+                {reviewed ? `${progress?.reviewCount ?? 0} reviews` : "New"}
               </Text>
               <Text style={styles.caption}>
                 {reviewed
@@ -85,18 +85,18 @@ export function FlashcardProgressSheet({
               />
             </View>
             <View style={styles.ratings}>
-              <ProgressFact color={colors.error} label="Again" value={profile?.againCount ?? 0} />
-              <ProgressFact color={colors.warning} label="Hard" value={profile?.hardCount ?? 0} />
-              <ProgressFact color={colors.success} label="Good" value={profile?.goodCount ?? 0} />
+              <ProgressFact color={colors.error} label="Again" value={progress?.againCount ?? 0} />
+              <ProgressFact color={colors.warning} label="Hard" value={progress?.hardCount ?? 0} />
+              <ProgressFact color={colors.success} label="Good" value={progress?.goodCount ?? 0} />
               <ProgressFact
                 color={colors.recallEasy}
                 label="Easy"
-                value={profile?.easyCount ?? 0}
+                value={progress?.easyCount ?? 0}
               />
             </View>
             <Text style={styles.caption}>
-              {profile?.lastReviewedAt
-                ? `Last reviewed ${new Date(profile.lastReviewedAt).toLocaleDateString()}`
+              {progress?.lastReviewedAt
+                ? `Last reviewed ${new Date(progress.lastReviewedAt).toLocaleDateString()}`
                 : "No review history"}
             </Text>
           </BottomSheetScrollView>

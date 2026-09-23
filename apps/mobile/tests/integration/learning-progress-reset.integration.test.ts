@@ -1,17 +1,17 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { CardProgressServiceImpl } from "@/features/card-progress/application/card-progress.service.impl";
+import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
 import {
   decks,
   flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
-  learnerProfiles,
+  cardProgress,
   studySessionItems,
   studySessionRecurrences,
   studySessions,
@@ -33,7 +33,7 @@ const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
 
 describe("SQLite learning progress reset transaction", () => {
   let database: NodeSqliteDatabase;
-  let service: LearnerProfileServiceImpl;
+  let service: CardProgressServiceImpl;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -42,7 +42,7 @@ describe("SQLite learning progress reset transaction", () => {
     await insertCard(1, TEST_DECK_ID);
     await insertCard(2, TEST_DECK_ID);
     await insertCard(3, OTHER_DECK_ID);
-    service = new LearnerProfileServiceImpl(
+    service = new CardProgressServiceImpl(
       {
         findByFlashcardId: async () => null,
         findByFlashcardIds: async () => new Map(),
@@ -58,17 +58,17 @@ describe("SQLite learning progress reset transaction", () => {
 
   afterEach(() => database.close());
 
-  it("globally resets profiles and memory and cascades active provisional state", async () => {
-    await insertProfile(1);
+  it("globally resets progress and memory and cascades active provisional state", async () => {
+    await insertProgress(1);
     await insertMemory(1);
-    await insertProfile(3);
+    await insertProgress(3);
     await insertMemory(3);
     await insertActiveSession("active-mixed", "mixed", null, true);
     await insertCompletedSession("completed-mixed");
 
     await service.resetAllProgress();
 
-    expect(await profileRows()).toEqual([
+    expect(await progressRows()).toEqual([
       { flashcardId: makeFlashcard(1).id, resetAt: RESET_AT, reviewCount: 0 },
       { flashcardId: makeFlashcard(2).id, resetAt: RESET_AT, reviewCount: 0 },
       { flashcardId: makeFlashcard(3, OTHER_DECK_ID).id, resetAt: RESET_AT, reviewCount: 0 },
@@ -103,20 +103,20 @@ describe("SQLite learning progress reset transaction", () => {
   });
 
   it("resets one deck, preserves other deck state, and invalidates mixed and focused sessions", async () => {
-    await insertProfile(1);
+    await insertProgress(1);
     await insertMemory(1);
-    await insertProfile(2);
+    await insertProgress(2);
     await insertMemory(2);
-    await insertProfile(3);
+    await insertProgress(3);
     await insertMemory(3);
     await insertActiveSession("mixed", "mixed", null, false);
     await insertActiveSession("focused-a", "focused", TEST_DECK_ID, false);
 
     await service.resetDeckProgress(TEST_DECK_ID);
 
-    expect(await profileRow(1)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
-    expect(await profileRow(2)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
-    expect(await profileRow(3)).toMatchObject({ resetAt: null, reviewCount: 1 });
+    expect(await progressRow(1)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
+    expect(await progressRow(2)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
+    expect(await progressRow(3)).toMatchObject({ resetAt: null, reviewCount: 1 });
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(2)).toBeNull();
     expect(await memoryRow(3)).not.toBeNull();
@@ -127,17 +127,17 @@ describe("SQLite learning progress reset transaction", () => {
     ).toEqual({ count: 0 });
   });
 
-  it("resets one card while preserving another card's profile and memory", async () => {
-    await insertProfile(1);
+  it("resets one card while preserving another card's progress and memory", async () => {
+    await insertProgress(1);
     await insertMemory(1);
-    await insertProfile(2);
+    await insertProgress(2);
     await insertMemory(2);
     await insertActiveSession("active", "mixed", null, false);
 
     await service.resetCardProgress(makeFlashcard(1).id);
 
-    expect(await profileRow(1)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
-    expect(await profileRow(2)).toMatchObject({ resetAt: null, reviewCount: 1 });
+    expect(await progressRow(1)).toMatchObject({ resetAt: RESET_AT, reviewCount: 0 });
+    expect(await progressRow(2)).toMatchObject({ resetAt: null, reviewCount: 1 });
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(2)).not.toBeNull();
     expect(
@@ -152,8 +152,8 @@ describe("SQLite learning progress reset transaction", () => {
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const flashcardRepository = new SQLiteFlashcardRepository(database.drizzle);
     const flashcardService = new FlashcardServiceImpl(flashcardRepository);
-    const settlingService = new LearnerProfileServiceImpl(
-      new SQLiteLearnerProfileRepository(database.drizzle),
+    const settlingService = new CardProgressServiceImpl(
+      new SQLiteCardProgressRepository(database.drizzle),
       clock,
       new SQLiteLearningProgressResetTransaction(database.drizzle),
       graph.study,
@@ -185,13 +185,13 @@ describe("SQLite learning progress reset transaction", () => {
 
     await settlingService.resetDeckProgress(TEST_DECK_ID);
 
-    expect(await profileRow(1)).toMatchObject({ reviewCount: 0 });
-    const resetProfile = await database.drizzle
-      .select({ resetAt: learnerProfiles.resetAt })
-      .from(learnerProfiles)
-      .where(eq(learnerProfiles.flashcardId, deckCard.id));
-    expect(resetProfile[0]?.resetAt).not.toBeNull();
-    expect(await profileRow(3)).toMatchObject({ resetAt: null, reviewCount: 1 });
+    expect(await progressRow(1)).toMatchObject({ reviewCount: 0 });
+    const resetProgress = await database.drizzle
+      .select({ resetAt: cardProgress.resetAt })
+      .from(cardProgress)
+      .where(eq(cardProgress.flashcardId, deckCard.id));
+    expect(resetProgress[0]?.resetAt).not.toBeNull();
+    expect(await progressRow(3)).toMatchObject({ resetAt: null, reviewCount: 1 });
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(3)).not.toBeNull();
     const preservedAttempt = await database.drizzle
@@ -224,9 +224,9 @@ describe("SQLite learning progress reset transaction", () => {
     });
   }
 
-  async function insertProfile(index: number): Promise<void> {
+  async function insertProgress(index: number): Promise<void> {
     const card = makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID);
-    await database.drizzle.insert(learnerProfiles).values({
+    await database.drizzle.insert(cardProgress).values({
       againCount: 0,
       createdAt: card.createdAt,
       deckId: card.deckId,
@@ -322,14 +322,14 @@ describe("SQLite learning progress reset transaction", () => {
     });
   }
 
-  async function profileRow(index: number): Promise<unknown> {
+  async function progressRow(index: number): Promise<unknown> {
     return database.getFirstAsync(
       "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM card_progress WHERE flashcard_id = ?",
       makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID).id
     );
   }
 
-  async function profileRows(): Promise<unknown> {
+  async function progressRows(): Promise<unknown> {
     return database.getAllAsync(
       "SELECT flashcard_id AS flashcardId, reset_at AS resetAt, review_count AS reviewCount FROM card_progress ORDER BY flashcard_id"
     );

@@ -15,6 +15,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
+import { FlashcardProgressSheet } from "@/features/card-progress/presentation/components/flashcard-progress-sheet";
+import { ResetProgressSheet } from "@/features/card-progress/presentation/components/reset-progress-sheet";
+import { useResetDeckProgress } from "@/features/card-progress/presentation/controllers/use-reset-deck-progress";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
@@ -27,9 +30,6 @@ import {
   showsLearningProgress,
 } from "@/features/decks/presentation/deck-details-mode";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
-import { FlashcardProgressSheet } from "@/features/learner-profile/presentation/components/flashcard-progress-sheet";
-import { ResetProgressSheet } from "@/features/learner-profile/presentation/components/reset-progress-sheet";
-import { useResetDeckProgress } from "@/features/learner-profile/presentation/controllers/use-reset-deck-progress";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { reportError } from "@/shared/errors/report-error";
 import { ErrorState } from "@/shared/presentation/components/error-state";
@@ -93,7 +93,7 @@ export default function DeckDetailsScreen() {
   const mode = resolveDeckDetailsMode(modeParameter);
   const showProgress = showsLearningProgress(mode);
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
-  const { appearance, cards, deck, loading, profiles } = useDeckDetails(deckId, !deleting);
+  const { appearance, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
   const [query, setQuery] = useState("");
@@ -256,7 +256,7 @@ export default function DeckDetailsScreen() {
         cards={cards}
         deck={deck}
         onClose={() => setShowDeckInfo(false)}
-        profiles={profiles}
+        progress={progress}
         visible={showDeckInfo}
       />
       {showProgress ? (
@@ -265,7 +265,7 @@ export default function DeckDetailsScreen() {
           audioSource={audioSource}
           card={selectedCard}
           onClose={() => setSelectedCard(null)}
-          profile={selectedCard ? (profiles.get(selectedCard.id) ?? null) : null}
+          progress={selectedCard ? (progress.get(selectedCard.id) ?? null) : null}
         />
       ) : (
         <FlashcardDetailsSheet

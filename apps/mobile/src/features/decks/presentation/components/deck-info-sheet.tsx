@@ -2,11 +2,11 @@ import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfile } from "@/features/learner-profile/domain/learner-profile.model";
 
-import { explainLearnerProfile } from "@/features/learner-profile/domain/learner-profile-explanation";
+import { explainCardProgress } from "@/features/card-progress/domain/card-progress-explanation";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -16,20 +16,23 @@ type DeckInfoSheetProps = Readonly<{
   cards: readonly Flashcard[];
   deck: Deck | null;
   onClose: () => void;
-  profiles: ReadonlyMap<string, LearnerProfile>;
+  progress: ReadonlyMap<string, CardProgress>;
   visible: boolean;
 }>;
 
-export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckInfoSheetProps) {
+export function DeckInfoSheet({ cards, deck, onClose, progress, visible }: DeckInfoSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const reviewedProfiles = cards.flatMap((card) => {
-    const profile = profiles.get(card.id);
-    return profile && profile.reviewCount > 0 ? [profile] : [];
+  const reviewedProgress = cards.flatMap((card) => {
+    const cardProgress = progress.get(card.id);
+    return cardProgress && cardProgress.reviewCount > 0 ? [cardProgress] : [];
   });
-  const totalReviews = reviewedProfiles.reduce((total, profile) => total + profile.reviewCount, 0);
-  const recallScores = reviewedProfiles.flatMap((profile) => {
-    const score = explainLearnerProfile(profile).averageRecallScore;
+  const totalReviews = reviewedProgress.reduce(
+    (total, cardProgress) => total + cardProgress.reviewCount,
+    0
+  );
+  const recallScores = reviewedProgress.flatMap((cardProgress) => {
+    const score = explainCardProgress(cardProgress).averageRecallScore;
     return score === null ? [] : [score];
   });
   const averageRecall =
@@ -62,8 +65,8 @@ export function DeckInfoSheet({ cards, deck, onClose, profiles, visible }: DeckI
         <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
           <View style={styles.metrics}>
             <Metric label="Cards" value={cards.length} />
-            <Metric label="Reviewed" value={reviewedProfiles.length} />
-            <Metric label="New" value={cards.length - reviewedProfiles.length} />
+            <Metric label="Reviewed" value={reviewedProgress.length} />
+            <Metric label="New" value={cards.length - reviewedProgress.length} />
             <Metric label="Reviews" value={totalReviews} />
           </View>
           <Text style={styles.recall}>

@@ -19,6 +19,18 @@ vi.mock("react-native", async () => {
   };
 });
 vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.1.0" } } }));
+vi.mock("expo-symbols", () => ({ SymbolView: () => null }));
+vi.mock("@/shared/presentation/components/app-bottom-sheet", async () => {
+  const { createElement: element } = await import("react");
+  return {
+    AppBottomSheet: ({ children, visible }: { children: ReactNode; visible: boolean }) =>
+      visible ? element("div", null, children) : null,
+  };
+});
+vi.mock("@/shared/presentation/theme", async () => {
+  const { getAppColors } = await import("@/shared/presentation/theme-colors");
+  return { useAppTheme: () => ({ colors: getAppColors("dark"), resolvedScheme: "dark" }) };
+});
 
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
@@ -38,10 +50,10 @@ describe("AppResetAction recovery capability", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm full reset" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset app data" }));
 
     expect(requestAppDataReset).toHaveBeenCalledOnce();
-    expect(screen.getByText(/Reset scheduled\./)).toBeTruthy();
+    expect(screen.getByText("Reset scheduled")).toBeTruthy();
   });
 
   it("keeps the failure message visible when the injected request throws", () => {
@@ -56,7 +68,7 @@ describe("AppResetAction recovery capability", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm full reset" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset app data" }));
 
     expect(requestAppDataReset).toHaveBeenCalledOnce();
     expect(
