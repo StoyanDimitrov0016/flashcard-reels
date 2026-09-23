@@ -26,9 +26,10 @@ fails after sessions have already closed.
 The file picker copies a selected file to cache. The app bounds its size, parses and validates
 the entire document, and previews the incoming and local finalized review counts before any
 learning data changes. Confirmation completes active sessions and aggregation, saves the current
-progress as `progress-backups/before-last-progress-restore.json` in app documents, and replaces
-the progress tables in one SQLite transaction. The previous copy can be shared from the same
-screen. Full app-data reset deletes it.
+progress under a unique filename in `progress-backups/` in app documents, and replaces the
+progress tables in one SQLite transaction. That transaction also records which safety copy belongs
+to the successful restore. The previous copy can be shared from the same screen. Full app-data
+reset deletes it.
 
 Validation rejects unsupported versions, duplicate IDs, cross-deck card ownership, missing deck
 progress for review history, and disagreements between review events and their per-card rating
