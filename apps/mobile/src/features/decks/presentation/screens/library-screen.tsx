@@ -231,7 +231,7 @@ export default function LibraryScreen() {
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
-  const { deckService } = useDecks();
+  const { savedProgressService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
   const { invalidateLearningProgress } = useLearningProgressReset();
   const {
@@ -270,7 +270,7 @@ export default function LibraryScreen() {
 
   const refreshPendingProgress = useCallback(() => {
     const sequence = ++pendingLoadSequence.current;
-    void deckService
+    void savedProgressService
       .listPendingProgress()
       .then((progress) => {
         if (sequence === pendingLoadSequence.current) {
@@ -282,7 +282,7 @@ export default function LibraryScreen() {
           setProgressError("Could not load saved progress. Try again.");
         }
       });
-  }, [deckService]);
+  }, [savedProgressService]);
 
   useFocusEffect(
     useCallback(() => {
@@ -317,9 +317,9 @@ export default function LibraryScreen() {
     setProgressError(null);
     try {
       if (startFresh) {
-        await deckService.deleteProgress(selectedPending.deckId);
+        await savedProgressService.deleteProgress(selectedPending.deckId);
       } else {
-        await deckService.continueProgress(selectedPending.deckId);
+        await savedProgressService.continueProgress(selectedPending.deckId);
       }
       invalidateDeckContent();
       invalidateLearningProgress();

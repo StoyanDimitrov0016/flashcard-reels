@@ -17,7 +17,7 @@ export default function ArchivedProgressScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { deckService } = useDecks();
+  const { savedProgressService } = useDecks();
   const [rows, setRows] = useState<ArchivedDeckProgress[]>([]);
   const [selected, setSelected] = useState<ArchivedDeckProgress | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,7 +26,7 @@ export default function ArchivedProgressScreen() {
 
   const refresh = useCallback(() => {
     const sequence = ++loadSequence.current;
-    void deckService
+    void savedProgressService
       .listArchivedProgress()
       .then((progress) => {
         if (sequence === loadSequence.current) {
@@ -38,7 +38,7 @@ export default function ArchivedProgressScreen() {
           setError("Could not load archived progress.");
         }
       });
-  }, [deckService]);
+  }, [savedProgressService]);
   useFocusEffect(
     useCallback(() => {
       refresh();
@@ -55,7 +55,7 @@ export default function ArchivedProgressScreen() {
     setBusy(true);
     setError(null);
     try {
-      await deckService.deleteProgress(selected.deckId);
+      await savedProgressService.deleteProgress(selected.deckId);
       setSelected(null);
       refresh();
     } catch {

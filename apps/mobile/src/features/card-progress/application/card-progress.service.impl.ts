@@ -11,19 +11,19 @@ export class CardProgressServiceImpl implements CardProgressService {
   private readonly clock: Clock;
   private readonly repository: CardProgressRepository;
   private readonly resetTransaction: LearningProgressResetTransaction;
-  private readonly flashcardService: FlashcardService | null;
-  private readonly sessionSettlement: StudySessionSettlement | null;
+  private readonly flashcardService: FlashcardService;
+  private readonly sessionSettlement: StudySessionSettlement;
 
   constructor(
     repository: CardProgressRepository,
     clock: Clock,
-    resetTransaction: LearningProgressResetTransaction | null = null,
-    sessionSettlement: StudySessionSettlement | null = null,
-    flashcardService: FlashcardService | null = null
+    resetTransaction: LearningProgressResetTransaction,
+    sessionSettlement: StudySessionSettlement,
+    flashcardService: FlashcardService
   ) {
     this.repository = repository;
     this.clock = clock;
-    this.resetTransaction = resetTransaction ?? repository;
+    this.resetTransaction = resetTransaction;
     this.sessionSettlement = sessionSettlement;
     this.flashcardService = flashcardService;
   }
@@ -31,19 +31,19 @@ export class CardProgressServiceImpl implements CardProgressService {
   async findByFlashcardIds(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, CardProgress>> {
-    return this.repository.findCurrentByFlashcardIds(flashcardIds);
+    return this.repository.findIncludingPendingRatingsByFlashcardIds(flashcardIds);
   }
 
   async resetCardProgress(flashcardId: string): Promise<void> {
-    const card = await this.flashcardService?.findById(flashcardId);
+    const card = await this.flashcardService.findById(flashcardId);
     if (card) {
-      await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(card.deckId, true);
+      await this.sessionSettlement.settleActiveSessionsAffectedByDeck(card.deckId, true);
     }
     await this.resetTransaction.resetCard(flashcardId, this.clock.now());
   }
 
   async resetDeckProgress(deckId: DeckId): Promise<void> {
-    await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(deckId, true);
+    await this.sessionSettlement.settleActiveSessionsAffectedByDeck(deckId, true);
     await this.resetTransaction.resetDeck(deckId, this.clock.now());
   }
 
