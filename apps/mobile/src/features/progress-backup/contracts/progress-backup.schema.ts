@@ -1,39 +1,39 @@
 import { z } from "zod";
 
-const Id = z.uuid();
+const ProgressBackupIdSchema = z.uuid();
 // SQLite compares these timestamps as text, so backups must keep the app's UTC form.
-const Timestamp = z.iso
+const ProgressBackupTimestampSchema = z.iso
   .datetime()
   .refine(
     (value) => new Date(value).toISOString() === value,
     "Expected a UTC timestamp with milliseconds"
   );
-const Count = z.number().int().nonnegative();
+const ProgressBackupCountSchema = z.number().int().nonnegative();
 
-const DeckProgress = z
+const DeckProgressSchema = z
   .object({
-    deckId: Id,
+    deckId: ProgressBackupIdSchema,
     title: z.string().min(1),
     version: z.number().int().positive(),
-    lastReviewedAt: Timestamp,
+    lastReviewedAt: ProgressBackupTimestampSchema,
     resolution: z.enum(["active", "archived", "pending"]),
   })
   .strict();
 
-const FlashcardProgress = z
+const FlashcardProgressSchema = z
   .object({
-    flashcardId: Id,
-    deckId: Id,
-    reviewCount: Count,
-    againCount: Count,
-    hardCount: Count,
-    goodCount: Count,
-    easyCount: Count,
-    firstReviewedAt: Timestamp.nullable(),
-    lastReviewedAt: Timestamp.nullable(),
-    resetAt: Timestamp.nullable(),
-    createdAt: Timestamp,
-    updatedAt: Timestamp,
+    flashcardId: ProgressBackupIdSchema,
+    deckId: ProgressBackupIdSchema,
+    reviewCount: ProgressBackupCountSchema,
+    againCount: ProgressBackupCountSchema,
+    hardCount: ProgressBackupCountSchema,
+    goodCount: ProgressBackupCountSchema,
+    easyCount: ProgressBackupCountSchema,
+    firstReviewedAt: ProgressBackupTimestampSchema.nullable(),
+    lastReviewedAt: ProgressBackupTimestampSchema.nullable(),
+    resetAt: ProgressBackupTimestampSchema.nullable(),
+    createdAt: ProgressBackupTimestampSchema,
+    updatedAt: ProgressBackupTimestampSchema,
   })
   .strict()
   .refine(
@@ -48,33 +48,33 @@ const FlashcardProgress = z
     "Flashcard review timestamps do not match its count"
   );
 
-const FlashcardMemoryState = z
+const FlashcardMemoryStateSchema = z
   .object({
-    flashcardId: Id,
-    deckId: Id,
+    flashcardId: ProgressBackupIdSchema,
+    deckId: ProgressBackupIdSchema,
     state: z.enum(["new", "learning", "review", "relearning"]),
-    dueAt: Timestamp,
+    dueAt: ProgressBackupTimestampSchema,
     stability: z.number(),
     difficulty: z.number(),
-    elapsedDays: Count,
-    scheduledDays: Count,
-    reps: Count,
-    lapses: Count,
-    learningSteps: Count,
-    lastReviewAt: Timestamp.nullable(),
-    createdAt: Timestamp,
-    updatedAt: Timestamp,
+    elapsedDays: ProgressBackupCountSchema,
+    scheduledDays: ProgressBackupCountSchema,
+    reps: ProgressBackupCountSchema,
+    lapses: ProgressBackupCountSchema,
+    learningSteps: ProgressBackupCountSchema,
+    lastReviewAt: ProgressBackupTimestampSchema.nullable(),
+    createdAt: ProgressBackupTimestampSchema,
+    updatedAt: ProgressBackupTimestampSchema,
   })
   .strict();
 
-const ReviewEvent = z
+const ReviewEventSchema = z
   .object({
-    id: Id,
-    deckId: Id,
-    flashcardId: Id,
+    id: ProgressBackupIdSchema,
+    deckId: ProgressBackupIdSchema,
+    flashcardId: ProgressBackupIdSchema,
     rating: z.enum(["again", "hard", "good", "easy"]),
-    reviewedAt: Timestamp,
-    finalizedAt: Timestamp,
+    reviewedAt: ProgressBackupTimestampSchema,
+    finalizedAt: ProgressBackupTimestampSchema,
   })
   .strict();
 
@@ -82,11 +82,11 @@ const ProgressBackupDocumentUncompiledSchema = z
   .object({
     format: z.literal("flashcard-reels-progress"),
     version: z.literal(1),
-    exportedAt: Timestamp,
-    deckProgress: z.array(DeckProgress),
-    flashcardProgress: z.array(FlashcardProgress),
-    flashcardMemoryStates: z.array(FlashcardMemoryState),
-    reviewEvents: z.array(ReviewEvent),
+    exportedAt: ProgressBackupTimestampSchema,
+    deckProgress: z.array(DeckProgressSchema),
+    flashcardProgress: z.array(FlashcardProgressSchema),
+    flashcardMemoryStates: z.array(FlashcardMemoryStateSchema),
+    reviewEvents: z.array(ReviewEventSchema),
   })
   .strict()
   .superRefine((document, context) => {

@@ -19,20 +19,23 @@ export function useProgressBackupController() {
   const [hasSafetyCopy, setHasSafetyCopy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    void progressBackupService
-      .hasSafetyCopy()
-      .then((exists) => {
-        if (active) {
-          setHasSafetyCopy(exists);
-        }
-      })
-      .catch((cause: unknown) => reportError(cause, "Progress backup availability failure"));
-    return () => {
-      active = false;
-    };
-  }, [progressBackupService]);
+  useEffect(
+    function loadSafetyCopyAvailability() {
+      let active = true;
+      void progressBackupService
+        .hasSafetyCopy()
+        .then((exists) => {
+          if (active) {
+            setHasSafetyCopy(exists);
+          }
+        })
+        .catch((cause: unknown) => reportError(cause, "Progress backup availability failure"));
+      return function cancelSafetyCopyAvailabilityUpdate() {
+        active = false;
+      };
+    },
+    [progressBackupService]
+  );
 
   const exportProgress = async () => {
     if (inFlight.current) {
