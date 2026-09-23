@@ -4,7 +4,7 @@ import type { ReviewAttemptRepository } from "@/features/study/domain/review-att
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
+import { flashcardReviewAttempts } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteReviewAttemptRepository<
   TRunResult = unknown,
@@ -13,37 +13,6 @@ export class SQLiteReviewAttemptRepository<
 
   constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
-  }
-
-  async create(attempt: FlashcardReviewAttempt): Promise<void> {
-    this.database.transaction((transaction) => {
-      const activeSession = transaction
-        .select({ id: studySessions.id })
-        .from(studySessions)
-        .where(and(eq(studySessions.id, attempt.studySessionId), isNull(studySessions.completedAt)))
-        .limit(1)
-        .all()[0];
-      if (!activeSession) {
-        throw new Error(
-          `Cannot create a review attempt for inactive session ${attempt.studySessionId}`
-        );
-      }
-
-      transaction
-        .insert(flashcardReviewAttempts)
-        .values({
-          createdAt: attempt.createdAt,
-          finalizedAt: attempt.finalizedAt,
-          flashcardId: attempt.flashcardId,
-          id: attempt.id,
-          rating: attempt.rating,
-          ratedAt: attempt.ratedAt,
-          reelPosition: attempt.reelPosition,
-          studySessionId: attempt.studySessionId,
-          updatedAt: attempt.updatedAt,
-        })
-        .run();
-    });
   }
 
   async findById(attemptId: string): Promise<FlashcardReviewAttempt | null> {

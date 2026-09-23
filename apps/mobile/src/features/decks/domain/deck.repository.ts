@@ -6,5 +6,4 @@ export interface DeckRepository {
   findByIds(ids: readonly DeckId[]): Promise<Deck[]>;
   list(): Promise<Deck[]>;
   save(deck: Deck): Promise<void>;
-  wasRemoved(id: DeckId): Promise<boolean>;
 }

@@ -8,6 +8,7 @@ import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
@@ -120,6 +121,9 @@ describe("archived deck progress", () => {
 
     const installer = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
     await installer.install(packageForReinstall(), reviewedAt);
+    expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
+      false
+    );
     expect(await new SQLiteDeckProgressRepository(database.drizzle).listPending()).toHaveLength(1);
     const availableFlashcards = new SQLiteFlashcardAvailabilityQuery(database.drizzle);
     expect(await availableFlashcards.listAvailableFlashcards()).toEqual([]);
@@ -196,6 +200,9 @@ describe("archived deck progress", () => {
   it("permanently deletes saved progress when starting a reinstalled deck fresh", async () => {
     await reviewedDeck();
     await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
+      true
+    );
     await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
       packageForReinstall(),
       reviewedAt

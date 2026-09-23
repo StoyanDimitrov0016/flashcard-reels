@@ -396,7 +396,7 @@ describe("SQLite learning-engine finalization", () => {
       studySessionId: testId(900),
       updatedAt: RATED_AT_AGAIN,
     });
-    await attempts.create(attempt);
+    await new SQLiteReviewAttemptTransaction(database.drizzle).createAttempt(attempt);
     return attempt;
   }
 });
