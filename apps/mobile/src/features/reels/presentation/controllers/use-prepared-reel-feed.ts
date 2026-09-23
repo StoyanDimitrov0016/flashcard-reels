@@ -6,7 +6,7 @@ import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
@@ -20,7 +20,7 @@ type PreparationInput = Readonly<{
   cards: readonly Flashcard[];
   deckId: DeckId | null;
   anchorFlashcardId: string | null;
-  resetRevision: number;
+  progressRevision: number;
   scope: StudySessionScope;
   replaceExistingSession: boolean;
   service: ReelFeedService;
@@ -38,7 +38,7 @@ function matchesRequest(request: PreparationRequest | null, input: PreparationIn
     request.cards === input.cards &&
     request.deckId === input.deckId &&
     request.anchorFlashcardId === input.anchorFlashcardId &&
-    request.resetRevision === input.resetRevision &&
+    request.progressRevision === input.progressRevision &&
     request.scope === input.scope &&
     request.replaceExistingSession === input.replaceExistingSession &&
     request.service === input.service
@@ -53,7 +53,7 @@ export function usePreparedReelFeed(
   anchorFlashcardId: string | null = null
 ): PreparedReelFeed | null {
   const { reelFeedService } = useReels();
-  const { revision: resetRevision } = useLearningProgressReset();
+  const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
 
@@ -66,7 +66,7 @@ export function usePreparedReelFeed(
         anchorFlashcardId,
         cards,
         deckId,
-        resetRevision,
+        progressRevision,
         scope,
         replaceExistingSession,
         service: reelFeedService,
@@ -116,7 +116,7 @@ export function usePreparedReelFeed(
       deckId,
       reelFeedService,
       replaceExistingSession,
-      resetRevision,
+      progressRevision,
       scope,
     ]
   );
@@ -126,7 +126,7 @@ export function usePreparedReelFeed(
       anchorFlashcardId,
       cards,
       deckId,
-      resetRevision,
+      progressRevision,
       scope,
       replaceExistingSession,
       service: reelFeedService,

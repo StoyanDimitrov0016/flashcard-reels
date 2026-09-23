@@ -8,7 +8,7 @@ import {
   explainFlashcardProgress,
   type FlashcardProgressExplanation,
 } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useFlashcardProgress } from "@/features/flashcard-progress/presentation/dependencies/use-flashcard-progress";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
@@ -31,7 +31,7 @@ export function useFlashcardProgressList(): FlashcardProgressListState & {
   refresh: () => void;
 } {
   const { deckService, flashcardService, flashcardProgressService } = useFlashcardProgress();
-  const { revision: resetRevision } = useLearningProgressReset();
+  const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<FlashcardProgressListState>(initialState);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => {
@@ -81,7 +81,7 @@ export function useFlashcardProgressList(): FlashcardProgressListState & {
         active = false;
       };
     },
-    [deckService, flashcardService, flashcardProgressService, resetRevision, revision]
+    [deckService, flashcardService, flashcardProgressService, progressRevision, revision]
   );
 
   if (state.error) {
