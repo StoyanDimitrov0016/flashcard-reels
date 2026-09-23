@@ -5,7 +5,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
-  cardProgress,
+  flashcardProgress,
   deckAppearances,
   deckProgress,
   decks,
@@ -39,7 +39,7 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
         .where(eq(deckProgress.deckId, id))
         .run();
       if (!savedProgress) {
-        transaction.delete(cardProgress).where(eq(cardProgress.deckId, id)).run();
+        transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
         transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
       }
       const cardIds = transaction

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
-import { cardProgress } from "@/infrastructure/sqlite/schema";
+import { flashcardProgress } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
@@ -105,7 +105,7 @@ describe("SQLite study sessions", () => {
     await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
 
     const progressRows = await database.getAllAsync(
-      "SELECT review_count, again_count, good_count FROM card_progress ORDER BY flashcard_id"
+      "SELECT review_count, again_count, good_count FROM flashcard_progress ORDER BY flashcard_id"
     );
     expect(progressRows).toEqual([
       { again_count: 1, good_count: 0, review_count: 1 },
@@ -122,7 +122,7 @@ describe("SQLite study sessions", () => {
       await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_recurrences")
     ).toEqual({ count: 1 });
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM card_progress")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM flashcard_progress")
     ).toEqual({ count: 2 });
   });
 
@@ -180,10 +180,10 @@ describe("SQLite study sessions", () => {
     expect(resumed.loadedFromReelPosition).toBeGreaterThanOrEqual(900);
   });
 
-  it("keeps feed selection independent from card-progress counters", async () => {
+  it("keeps feed selection independent from flashcard-progress counters", async () => {
     const initial = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const initialIds = initial.occurrences.map((occurrence) => occurrence.card.id);
-    await database.drizzle.insert(cardProgress).values(
+    await database.drizzle.insert(flashcardProgress).values(
       focusCards.map((card) => ({
         againCount: 1,
         createdAt: "2026-01-01T00:00:00.000Z",
@@ -246,7 +246,7 @@ describe("SQLite study sessions", () => {
     await graph.study.recoverPendingCompletedSessionAggregation(1);
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM card_progress WHERE flashcard_id = ?",
+        "SELECT review_count FROM flashcard_progress WHERE flashcard_id = ?",
         at(focusCards, 0).id
       )
     ).toEqual({ review_count: 1 });
@@ -305,7 +305,7 @@ describe("SQLite study sessions", () => {
     expect(activeDiscover?.completedAt).toBeNull();
     await graph.study.completeSession(discover.studySessionId);
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM card_progress")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM flashcard_progress")
     ).toEqual({ count: 2 });
   });
 

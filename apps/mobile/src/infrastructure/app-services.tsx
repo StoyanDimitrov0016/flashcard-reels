@@ -3,22 +3,18 @@ import { useSQLiteContext } from "expo-sqlite";
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
-import type { CardProgressService } from "@/features/card-progress/domain/card-progress.service";
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
 import type { SavedProgressService } from "@/features/decks/application/saved-progress.service";
 import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { DeckService } from "@/features/decks/domain/deck.service";
+import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
-import { CardProgressServiceImpl } from "@/features/card-progress/application/card-progress.service.impl";
-import { SQLiteCardProgressAggregationTransaction } from "@/features/card-progress/infrastructure/sqlite-card-progress-aggregation-transaction";
-import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SavedProgressServiceImpl } from "@/features/decks/application/saved-progress.service.impl";
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
@@ -29,6 +25,10 @@ import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sq
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
+import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
@@ -56,7 +56,7 @@ type AppServices = Readonly<{
   deckService: DeckService;
   savedProgressService: SavedProgressService;
   flashcardService: FlashcardService;
-  cardProgressService: CardProgressService;
+  flashcardProgressService: FlashcardProgressService;
   reelFeedService: ReelFeedService;
   studyService: StudyService;
 }>;
@@ -89,13 +89,12 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase,
       learningScheduler
     );
-    const cardProgressRepository = new SQLiteCardProgressRepository(drizzleDatabase);
+    const flashcardProgressRepository = new SQLiteFlashcardProgressRepository(drizzleDatabase);
     const learningProgressResetTransaction = new SQLiteLearningProgressResetTransaction(
       drizzleDatabase
     );
-    const cardProgressAggregationTransaction = new SQLiteCardProgressAggregationTransaction(
-      drizzleDatabase
-    );
+    const flashcardProgressAggregationTransaction =
+      new SQLiteFlashcardProgressAggregationTransaction(drizzleDatabase);
     const studySessionItemRepository = new SQLiteStudySessionItemRepository(drizzleDatabase);
     const studySessionFeedTransaction = new SQLiteStudySessionFeedTransaction(drizzleDatabase);
     const studySessionRecurrenceRepository = new SQLiteStudySessionRecurrenceRepository(
@@ -122,7 +121,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       studySessionLifecycleTransaction,
       reviewAttemptFinalizationTransaction,
       Math.random,
-      cardProgressAggregationTransaction,
+      flashcardProgressAggregationTransaction,
       studySessionMaintenanceTransaction
     );
     const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices(
@@ -150,8 +149,8 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
         savedProgressDeletionTransaction
       ),
       flashcardService,
-      cardProgressService: new CardProgressServiceImpl(
-        cardProgressRepository,
+      flashcardProgressService: new FlashcardProgressServiceImpl(
+        flashcardProgressRepository,
         clock,
         learningProgressResetTransaction,
         studyService,

@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { SQLiteCardProgressRepository } from "@/features/card-progress/infrastructure/sqlite-card-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/card-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import {
   decks,
   flashcards,
   flashcardReviewAttempts,
-  cardProgress,
+  flashcardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -16,7 +16,7 @@ import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/s
 
 describe("SQLite card progress", () => {
   let database: NodeSqliteDatabase;
-  let progress: SQLiteCardProgressRepository;
+  let progress: SQLiteFlashcardProgressRepository;
   let reset: SQLiteLearningProgressResetTransaction;
 
   beforeEach(async () => {
@@ -26,7 +26,7 @@ describe("SQLite card progress", () => {
     await insertFlashcard(makeFlashcard(1, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(2, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(3, OTHER_DECK_ID));
-    progress = new SQLiteCardProgressRepository(database.drizzle);
+    progress = new SQLiteFlashcardProgressRepository(database.drizzle);
     reset = new SQLiteLearningProgressResetTransaction(database.drizzle);
   });
 
@@ -88,7 +88,7 @@ describe("SQLite card progress", () => {
   it("resets one card, one deck, and all cards without deleting content", async () => {
     await reset.resetCard(makeFlashcard(1).id, "2026-01-02T00:00:00.000Z");
     await database.drizzle
-      .update(cardProgress)
+      .update(flashcardProgress)
       .set({
         againCount: 1,
         firstReviewedAt: "2026-01-01T00:00:00.000Z",
@@ -96,7 +96,7 @@ describe("SQLite card progress", () => {
         reviewCount: 1,
         updatedAt: "2026-01-01T00:00:00.000Z",
       })
-      .where(eq(cardProgress.flashcardId, makeFlashcard(1).id));
+      .where(eq(flashcardProgress.flashcardId, makeFlashcard(1).id));
 
     await reset.resetDeck(TEST_DECK_ID, "2026-01-03T00:00:00.000Z");
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({

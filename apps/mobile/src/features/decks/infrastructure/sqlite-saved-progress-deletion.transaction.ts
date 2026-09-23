@@ -5,7 +5,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
-  cardProgress,
+  flashcardProgress,
   deckProgress,
   flashcardMemoryStates,
   reviewEvents,
@@ -31,7 +31,7 @@ export class SQLiteSavedProgressDeletionTransaction<
         throw new Error(`Deck ${id} must be archived or pending before deleting saved progress`);
       }
       transaction.delete(reviewEvents).where(eq(reviewEvents.deckId, id)).run();
-      transaction.delete(cardProgress).where(eq(cardProgress.deckId, id)).run();
+      transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
       transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
       transaction.delete(deckProgress).where(eq(deckProgress.deckId, id)).run();
     });

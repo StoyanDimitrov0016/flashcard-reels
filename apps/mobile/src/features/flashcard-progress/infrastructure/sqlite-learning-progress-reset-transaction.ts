@@ -1,14 +1,14 @@
 import { and, eq, isNull, or, sql } from "drizzle-orm";
 
-import type { LearningProgressResetTransaction } from "@/features/card-progress/application/learning-progress-reset-transaction";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
   deckProgress,
   flashcardMemoryStates,
   flashcards,
-  cardProgress,
+  flashcardProgress,
   reviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -34,7 +34,13 @@ export class SQLiteLearningProgressResetTransaction<
         throw new Error(`Missing flashcard ${flashcardId}`);
       }
 
-      this.resetCardProgressRow(transaction, flashcardId, card.deckId, card.createdAt, resetAt);
+      this.resetFlashcardProgressRow(
+        transaction,
+        flashcardId,
+        card.deckId,
+        card.createdAt,
+        resetAt
+      );
       transaction
         .delete(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.flashcardId, flashcardId))
@@ -65,7 +71,7 @@ export class SQLiteLearningProgressResetTransaction<
         .from(flashcards)
         .where(eq(flashcards.deckId, deckId))
         .all();
-      transaction.delete(cardProgress).where(eq(cardProgress.deckId, deckId)).run();
+      transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, deckId)).run();
       this.resetCardsProgress(transaction, cards, resetAt);
       transaction
         .delete(flashcardMemoryStates)
@@ -83,7 +89,7 @@ export class SQLiteLearningProgressResetTransaction<
         .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .all();
-      transaction.delete(cardProgress).run();
+      transaction.delete(flashcardProgress).run();
       this.resetCardsProgress(transaction, cards, resetAt);
       transaction.delete(flashcardMemoryStates).run();
       transaction.delete(reviewEvents).run();
@@ -98,11 +104,11 @@ export class SQLiteLearningProgressResetTransaction<
     resetAt: string
   ): void {
     for (const card of cards) {
-      this.resetCardProgressRow(transaction, card.id, card.deckId, card.createdAt, resetAt);
+      this.resetFlashcardProgressRow(transaction, card.id, card.deckId, card.createdAt, resetAt);
     }
   }
 
-  private resetCardProgressRow(
+  private resetFlashcardProgressRow(
     transaction: Parameters<Parameters<DrizzleDatabase<TRunResult>["transaction"]>[0]>[0],
     flashcardId: string,
     deckId: string,
@@ -110,7 +116,7 @@ export class SQLiteLearningProgressResetTransaction<
     resetAt: string
   ): void {
     transaction
-      .insert(cardProgress)
+      .insert(flashcardProgress)
       .values({
         againCount: 0,
         createdAt,
@@ -126,7 +132,7 @@ export class SQLiteLearningProgressResetTransaction<
         updatedAt: resetAt,
       })
       .onConflictDoUpdate({
-        target: cardProgress.flashcardId,
+        target: flashcardProgress.flashcardId,
         set: {
           againCount: 0,
           easyCount: 0,

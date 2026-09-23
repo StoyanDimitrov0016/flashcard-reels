@@ -80,7 +80,7 @@ CREATE TABLE `flashcards` (
 --> statement-breakpoint
 CREATE INDEX `flashcards_deck_id_idx` ON `flashcards` (`deck_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `flashcards_order_unique` ON `flashcards` (`deck_id`,`order`);--> statement-breakpoint
-CREATE TABLE `card_progress` (
+CREATE TABLE `flashcard_progress` (
 	`flashcard_id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
 	`review_count` integer DEFAULT 0 NOT NULL,
@@ -93,18 +93,18 @@ CREATE TABLE `card_progress` (
 	`reset_at` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
-	CONSTRAINT "card_progress_review_count_check" CHECK("card_progress"."review_count" >= 0),
-	CONSTRAINT "card_progress_again_count_check" CHECK("card_progress"."again_count" >= 0),
-	CONSTRAINT "card_progress_hard_count_check" CHECK("card_progress"."hard_count" >= 0),
-	CONSTRAINT "card_progress_good_count_check" CHECK("card_progress"."good_count" >= 0),
-	CONSTRAINT "card_progress_easy_count_check" CHECK("card_progress"."easy_count" >= 0),
-	CONSTRAINT "card_progress_counter_sum_check" CHECK("card_progress"."review_count" = "card_progress"."again_count" + "card_progress"."hard_count" + "card_progress"."good_count" + "card_progress"."easy_count"),
-	CONSTRAINT "card_progress_reviewed_at_presence_check" CHECK(("card_progress"."review_count" = 0 AND "card_progress"."first_reviewed_at" IS NULL AND "card_progress"."last_reviewed_at" IS NULL) OR ("card_progress"."review_count" > 0 AND "card_progress"."first_reviewed_at" IS NOT NULL AND "card_progress"."last_reviewed_at" IS NOT NULL)),
-	CONSTRAINT "card_progress_reviewed_at_order_check" CHECK("card_progress"."first_reviewed_at" IS NULL OR "card_progress"."last_reviewed_at" IS NULL OR "card_progress"."first_reviewed_at" <= "card_progress"."last_reviewed_at")
+	CONSTRAINT "flashcard_progress_review_count_check" CHECK("flashcard_progress"."review_count" >= 0),
+	CONSTRAINT "flashcard_progress_again_count_check" CHECK("flashcard_progress"."again_count" >= 0),
+	CONSTRAINT "flashcard_progress_hard_count_check" CHECK("flashcard_progress"."hard_count" >= 0),
+	CONSTRAINT "flashcard_progress_good_count_check" CHECK("flashcard_progress"."good_count" >= 0),
+	CONSTRAINT "flashcard_progress_easy_count_check" CHECK("flashcard_progress"."easy_count" >= 0),
+	CONSTRAINT "flashcard_progress_counter_sum_check" CHECK("flashcard_progress"."review_count" = "flashcard_progress"."again_count" + "flashcard_progress"."hard_count" + "flashcard_progress"."good_count" + "flashcard_progress"."easy_count"),
+	CONSTRAINT "flashcard_progress_reviewed_at_presence_check" CHECK(("flashcard_progress"."review_count" = 0 AND "flashcard_progress"."first_reviewed_at" IS NULL AND "flashcard_progress"."last_reviewed_at" IS NULL) OR ("flashcard_progress"."review_count" > 0 AND "flashcard_progress"."first_reviewed_at" IS NOT NULL AND "flashcard_progress"."last_reviewed_at" IS NOT NULL)),
+	CONSTRAINT "flashcard_progress_reviewed_at_order_check" CHECK("flashcard_progress"."first_reviewed_at" IS NULL OR "flashcard_progress"."last_reviewed_at" IS NULL OR "flashcard_progress"."first_reviewed_at" <= "flashcard_progress"."last_reviewed_at")
 );
 --> statement-breakpoint
-CREATE INDEX `card_progress_deck_id_idx` ON `card_progress` (`deck_id`);--> statement-breakpoint
-CREATE INDEX `card_progress_reset_at_idx` ON `card_progress` (`reset_at`);--> statement-breakpoint
+CREATE INDEX `flashcard_progress_deck_id_idx` ON `flashcard_progress` (`deck_id`);--> statement-breakpoint
+CREATE INDEX `flashcard_progress_reset_at_idx` ON `flashcard_progress` (`reset_at`);--> statement-breakpoint
 CREATE TABLE `removed_decks` (
 	`id` text PRIMARY KEY NOT NULL
 );

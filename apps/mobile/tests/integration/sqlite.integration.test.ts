@@ -399,7 +399,7 @@ describe("SQLite study persistence", () => {
     expect(finalizedAttempt?.rating).toBeNull();
   });
 
-  it("rejects incoherent rating and card-progress timestamp states", async () => {
+  it("rejects incoherent rating and flashcard-progress timestamp states", async () => {
     const session = makeSession(testId(274), "mixed");
     await sessions.create(session);
     await expect(
@@ -417,7 +417,7 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
     await expect(
       database.runAsync(
-        "INSERT INTO card_progress (flashcard_id, deck_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flashcard_progress (flashcard_id, deck_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         makeFlashcard(1).id,
         TEST_DECK_ID,
         0,
@@ -738,11 +738,11 @@ describe("SQLite study persistence", () => {
     );
 
     expect(tables).toEqual([
-      { name: "card_progress" },
       { name: "deck_appearances" },
       { name: "deck_progress" },
       { name: "decks" },
       { name: "flashcard_memory_states" },
+      { name: "flashcard_progress" },
       { name: "flashcard_review_attempts" },
       { name: "flashcards" },
       { name: "removed_decks" },

@@ -15,9 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
-import { FlashcardProgressSheet } from "@/features/card-progress/presentation/components/flashcard-progress-sheet";
-import { ResetProgressSheet } from "@/features/card-progress/presentation/components/reset-progress-sheet";
-import { useResetDeckProgress } from "@/features/card-progress/presentation/controllers/use-reset-deck-progress";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
@@ -30,6 +27,9 @@ import {
   showsLearningProgress,
 } from "@/features/decks/presentation/deck-details-mode";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
+import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
+import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
+import { useResetDeckProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-deck-progress";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { reportError } from "@/shared/errors/report-error";
 import { ErrorState } from "@/shared/presentation/components/error-state";

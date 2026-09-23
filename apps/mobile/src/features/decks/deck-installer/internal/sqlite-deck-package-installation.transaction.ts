@@ -13,7 +13,7 @@ import {
   deckProgress,
   flashcardMemoryStates,
   flashcards,
-  cardProgress,
+  flashcardProgress,
   reviewEvents,
   removedDecks,
   studySessions,
@@ -70,9 +70,9 @@ export class SQLiteDeckPackageInstallationTransaction<
       }
       if (incomingIds.length > 0) {
         const progressOwners = transaction
-          .select({ deckId: cardProgress.deckId, id: cardProgress.flashcardId })
-          .from(cardProgress)
-          .where(inArray(cardProgress.flashcardId, incomingIds))
+          .select({ deckId: flashcardProgress.deckId, id: flashcardProgress.flashcardId })
+          .from(flashcardProgress)
+          .where(inArray(flashcardProgress.flashcardId, incomingIds))
           .all();
         const memoryOwners = transaction
           .select({ deckId: flashcardMemoryStates.deckId, id: flashcardMemoryStates.flashcardId })

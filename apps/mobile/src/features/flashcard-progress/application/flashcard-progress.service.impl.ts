@@ -1,21 +1,21 @@
-import type { LearningProgressResetTransaction } from "@/features/card-progress/application/learning-progress-reset-transaction";
-import type { CardProgress } from "@/features/card-progress/domain/card-progress.model";
-import type { CardProgressRepository } from "@/features/card-progress/domain/card-progress.repository";
-import type { CardProgressService } from "@/features/card-progress/domain/card-progress.service";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
+import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
+import type { FlashcardProgressRepository } from "@/features/flashcard-progress/domain/flashcard-progress.repository";
+import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
-export class CardProgressServiceImpl implements CardProgressService {
+export class FlashcardProgressServiceImpl implements FlashcardProgressService {
   private readonly clock: Clock;
-  private readonly repository: CardProgressRepository;
+  private readonly repository: FlashcardProgressRepository;
   private readonly resetTransaction: LearningProgressResetTransaction;
   private readonly flashcardService: FlashcardService;
   private readonly sessionSettlement: StudySessionSettlement;
 
   constructor(
-    repository: CardProgressRepository,
+    repository: FlashcardProgressRepository,
     clock: Clock,
     resetTransaction: LearningProgressResetTransaction,
     sessionSettlement: StudySessionSettlement,
@@ -30,11 +30,11 @@ export class CardProgressServiceImpl implements CardProgressService {
 
   async findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, CardProgress>> {
+  ): Promise<ReadonlyMap<string, FlashcardProgress>> {
     return this.repository.findIncludingPendingRatingsByFlashcardIds(flashcardIds);
   }
 
-  async resetCardProgress(flashcardId: string): Promise<void> {
+  async resetFlashcardProgress(flashcardId: string): Promise<void> {
     const card = await this.flashcardService.findById(flashcardId);
     if (card) {
       await this.sessionSettlement.settleActiveSessionsAffectedByDeck(card.deckId, true);

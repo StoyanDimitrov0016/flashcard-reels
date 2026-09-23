@@ -4,8 +4,8 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { flashcardMemoryStates } from "@/infrastructure/sqlite/schema";
 
+import type { FlashcardMemoryState } from "../domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "../domain/flashcard-memory-state.repository";
-import type { LearnerMemoryState } from "../domain/memory-state";
 
 export class SQLiteFlashcardMemoryStateRepository<
   TRunResult = unknown,
@@ -16,7 +16,7 @@ export class SQLiteFlashcardMemoryStateRepository<
     this.database = database;
   }
 
-  async findByFlashcardId(flashcardId: string): Promise<LearnerMemoryState | null> {
+  async findByFlashcardId(flashcardId: string): Promise<FlashcardMemoryState | null> {
     const rows = await this.database
       .select()
       .from(flashcardMemoryStates)
@@ -28,7 +28,7 @@ export class SQLiteFlashcardMemoryStateRepository<
 
   async findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, LearnerMemoryState>> {
+  ): Promise<ReadonlyMap<string, FlashcardMemoryState>> {
     if (flashcardIds.length === 0) {
       return new Map();
     }
@@ -40,7 +40,7 @@ export class SQLiteFlashcardMemoryStateRepository<
   }
 }
 
-function toModel(row: typeof flashcardMemoryStates.$inferSelect): LearnerMemoryState {
+function toModel(row: typeof flashcardMemoryStates.$inferSelect): FlashcardMemoryState {
   return {
     createdAt: row.createdAt,
     dueAt: row.dueAt,

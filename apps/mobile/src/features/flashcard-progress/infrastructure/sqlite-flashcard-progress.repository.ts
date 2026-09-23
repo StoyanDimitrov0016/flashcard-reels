@@ -1,46 +1,48 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
-import type { CardProgressRepository } from "@/features/card-progress/domain/card-progress.repository";
+import type { FlashcardProgressRepository } from "@/features/flashcard-progress/domain/flashcard-progress.repository";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { CardProgress } from "@/features/card-progress/domain/card-progress.model";
+import { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import {
   flashcardReviewAttempts,
   flashcards,
-  cardProgress,
+  flashcardProgress,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
-export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardProgressRepository {
+export class SQLiteFlashcardProgressRepository<
+  TRunResult = unknown,
+> implements FlashcardProgressRepository {
   private readonly database: DrizzleDatabase<TRunResult>;
 
   constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
   }
 
-  async findByFlashcardId(flashcardId: string): Promise<CardProgress | null> {
+  async findByFlashcardId(flashcardId: string): Promise<FlashcardProgress | null> {
     const progress = await this.findByFlashcardIds([flashcardId]);
     return progress.get(flashcardId) ?? null;
   }
 
   async findByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, CardProgress>> {
+  ): Promise<ReadonlyMap<string, FlashcardProgress>> {
     if (flashcardIds.length === 0) {
       return new Map();
     }
     const rows = await this.database
       .select()
-      .from(cardProgress)
-      .where(inArray(cardProgress.flashcardId, flashcardIds))
-      .orderBy(asc(cardProgress.flashcardId));
+      .from(flashcardProgress)
+      .where(inArray(flashcardProgress.flashcardId, flashcardIds))
+      .orderBy(asc(flashcardProgress.flashcardId));
     return new Map(rows.map((row) => [row.flashcardId, this.toModel(row)] as const));
   }
 
   async findIncludingPendingRatingsByFlashcardIds(
     flashcardIds: readonly string[]
-  ): Promise<ReadonlyMap<string, CardProgress>> {
+  ): Promise<ReadonlyMap<string, FlashcardProgress>> {
     if (flashcardIds.length === 0) {
       return new Map();
     }
@@ -87,8 +89,8 @@ export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardP
     return current;
   }
 
-  private toModel(row: typeof cardProgress.$inferSelect): CardProgress {
-    return new CardProgress({
+  private toModel(row: typeof flashcardProgress.$inferSelect): FlashcardProgress {
+    return new FlashcardProgress({
       againCount: row.againCount,
       createdAt: row.createdAt,
       easyCount: row.easyCount,
@@ -105,17 +107,17 @@ export class SQLiteCardProgressRepository<TRunResult = unknown> implements CardP
 }
 
 function addPendingRating(
-  progress: CardProgress | undefined,
+  progress: FlashcardProgress | undefined,
   flashcardId: string,
   rating: RecallLevel,
   ratedAt: string,
   createdAt: string
-): CardProgress {
+): FlashcardProgress {
   const againCount = (progress?.againCount ?? 0) + (rating === "again" ? 1 : 0);
   const hardCount = (progress?.hardCount ?? 0) + (rating === "hard" ? 1 : 0);
   const goodCount = (progress?.goodCount ?? 0) + (rating === "good" ? 1 : 0);
   const easyCount = (progress?.easyCount ?? 0) + (rating === "easy" ? 1 : 0);
-  return new CardProgress({
+  return new FlashcardProgress({
     againCount,
     createdAt,
     easyCount,
