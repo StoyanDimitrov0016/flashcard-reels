@@ -285,12 +285,15 @@ export default function LibraryScreen() {
   }, [savedProgressService]);
 
   useFocusEffect(
-    useCallback(() => {
-      refreshPendingProgress();
-      return function cancelPendingProgressLoad() {
-        pendingLoadSequence.current += 1;
-      };
-    }, [refreshPendingProgress])
+    useCallback(
+      function refreshPendingProgressWhenFocused() {
+        refreshPendingProgress();
+        return function cancelPendingProgressLoad() {
+          pendingLoadSequence.current += 1;
+        };
+      },
+      [refreshPendingProgress]
+    )
   );
 
   useEffect(
