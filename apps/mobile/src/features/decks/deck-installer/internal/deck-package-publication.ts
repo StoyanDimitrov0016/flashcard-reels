@@ -26,6 +26,8 @@ export type DeckPublicationCandidate = Readonly<{
 
 type PublicationCard = Readonly<{ id: string; question: string }>;
 
+type PublicationLesson = Readonly<{ id: string; title: string }>;
+
 type DeckPublicationStatus = "new" | "unchanged" | "updated" | "blocked";
 
 type DeckPublicationChange = Readonly<{
@@ -40,6 +42,10 @@ type DeckPublicationChange = Readonly<{
   changedCards: readonly PublicationCard[];
   removedCards: readonly PublicationCard[];
   reorderedCardCount: number;
+  addedLessons: readonly PublicationLesson[];
+  changedLessons: readonly PublicationLesson[];
+  removedLessons: readonly PublicationLesson[];
+  reorderedLessonCount: number;
   metadataChanged: boolean;
   audioChanged: boolean;
   blocks: readonly string[];
@@ -74,6 +80,10 @@ type DeckComparison = Pick<
   | "changedCards"
   | "removedCards"
   | "reorderedCardCount"
+  | "addedLessons"
+  | "changedLessons"
+  | "removedLessons"
+  | "reorderedLessonCount"
   | "metadataChanged"
   | "audioChanged"
   | "warnings"
@@ -132,7 +142,7 @@ export async function reviewDeckPublication({
   );
 
   catalogBlocks.push(
-    ...findCrossDeckCardIds([...readCandidates.map(({ deck }) => deck), ...publishedDecks.values()])
+    ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck), ...publishedDecks.values()])
   );
 
   return { blocks: catalogBlocks, decks: changes };
@@ -205,6 +215,7 @@ function reviewDeck({
       ...base,
       ...unchangedComparison(),
       addedCards: deck.cards.map(toPublicationCard),
+      addedLessons: (deck.lessons ?? []).map(toPublicationLesson),
       blocks: [],
       publishedVersion: null,
       status: "new",
@@ -225,6 +236,10 @@ function reviewDeck({
     comparison.changedCards.length > 0 ||
     comparison.removedCards.length > 0 ||
     comparison.reorderedCardCount > 0 ||
+    comparison.addedLessons.length > 0 ||
+    comparison.changedLessons.length > 0 ||
+    comparison.removedLessons.length > 0 ||
+    comparison.reorderedLessonCount > 0 ||
     comparison.metadataChanged ||
     comparison.audioChanged;
 
@@ -258,6 +273,10 @@ function unchangedComparison(): DeckComparison {
     metadataChanged: false,
     removedCards: [],
     reorderedCardCount: 0,
+    addedLessons: [],
+    changedLessons: [],
+    removedLessons: [],
+    reorderedLessonCount: 0,
     warnings: [],
   };
 }
@@ -308,24 +327,65 @@ function compareDecks(published: DeckPackage, candidate: DeckPackage): DeckCompa
       ),
     removedCards: removedCards.map(toPublicationCard),
     reorderedCardCount,
+    ...compareLessons(published, candidate),
     warnings,
   };
 }
 
-function findCrossDeckCardIds(decks: readonly DeckPackage[]): string[] {
-  const owners = new Map<string, Set<string>>();
+function compareLessons(
+  published: DeckPackage,
+  candidate: DeckPackage
+): Pick<
+  DeckComparison,
+  "addedLessons" | "changedLessons" | "removedLessons" | "reorderedLessonCount"
+> {
+  const publishedLessons = new Map((published.lessons ?? []).map((lesson) => [lesson.id, lesson]));
+  const candidateLessons = candidate.lessons ?? [];
+  const candidateIds = new Set(candidateLessons.map((lesson) => lesson.id));
+  const kept = candidateLessons.flatMap((lesson) => {
+    const publishedLesson = publishedLessons.get(lesson.id);
+    return publishedLesson ? [{ lesson, publishedLesson }] : [];
+  });
+  return {
+    addedLessons: candidateLessons
+      .filter((lesson) => !publishedLessons.has(lesson.id))
+      .map(toPublicationLesson),
+    changedLessons: kept
+      .filter(
+        ({ lesson, publishedLesson }) =>
+          lesson.title !== publishedLesson.title ||
+          candidate.lessonFiles.get(lesson.id) !== published.lessonFiles.get(lesson.id)
+      )
+      .map(({ lesson }) => toPublicationLesson(lesson)),
+    removedLessons: (published.lessons ?? [])
+      .filter((lesson) => !candidateIds.has(lesson.id))
+      .map(toPublicationLesson),
+    reorderedLessonCount: kept.filter(
+      ({ lesson, publishedLesson }) => lesson.order !== publishedLesson.order
+    ).length,
+  };
+}
+
+function findCrossDeckIds(decks: readonly DeckPackage[]): string[] {
+  const owners = new Map<string, Readonly<{ kind: string; deckIds: Set<string> }>>();
+  const addOwner = (id: string, kind: string, deckId: string) => {
+    const owner = owners.get(id) ?? { deckIds: new Set<string>(), kind };
+    owner.deckIds.add(deckId);
+    owners.set(id, owner);
+  };
   for (const deck of decks) {
     for (const card of deck.cards) {
-      const deckIds = owners.get(card.id) ?? new Set<string>();
-      deckIds.add(deck.id);
-      owners.set(card.id, deckIds);
+      addOwner(card.id, "Card", deck.id);
+    }
+    for (const lesson of deck.lessons ?? []) {
+      addOwner(lesson.id, "Lesson", deck.id);
     }
   }
   return [...owners.entries()]
-    .filter(([, deckIds]) => deckIds.size > 1)
+    .filter(([, owner]) => owner.deckIds.size > 1)
     .map(
-      ([cardId, deckIds]) =>
-        `Card ${cardId} appears in more than one deck: ${[...deckIds].join(", ")}.`
+      ([id, owner]) =>
+        `${owner.kind} ${id} appears in more than one deck: ${[...owner.deckIds].join(", ")}.`
     );
 }
 
@@ -355,6 +415,10 @@ function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
     }
   }
   return true;
+}
+
+function toPublicationLesson(lesson: Readonly<{ id: string; title: string }>): PublicationLesson {
+  return { id: lesson.id, title: lesson.title };
 }
 
 function toPublicationCard(card: Readonly<{ id: string; question: string }>): PublicationCard {

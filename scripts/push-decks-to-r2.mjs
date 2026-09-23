@@ -114,6 +114,16 @@ function printCards(label, cards) {
   }
 }
 
+function printLessons(label, lessons) {
+  if (lessons.length === 0) {
+    return;
+  }
+  console.log(`  ${label} (${lessons.length}):`);
+  for (const lesson of lessons) {
+    console.log(`    - ${lesson.title} [${lesson.id}]`);
+  }
+}
+
 function printReview(review) {
   for (const change of review.decks) {
     const version =
@@ -130,7 +140,9 @@ function printReview(review) {
       console.log(`  WARNING: ${warning}`);
     }
     if (change.status === "new") {
-      console.log(`  New deck with ${change.addedCards.length} cards.`);
+      console.log(
+        `  New deck with ${change.addedCards.length} cards and ${change.addedLessons.length} lessons.`
+      );
       continue;
     }
     printCards("Added cards", change.addedCards);
@@ -138,6 +150,12 @@ function printReview(review) {
     printCards("Removed cards", change.removedCards);
     if (change.reorderedCardCount > 0) {
       console.log(`  Reordered cards: ${change.reorderedCardCount}`);
+    }
+    printLessons("Added lessons", change.addedLessons);
+    printLessons("Changed lessons", change.changedLessons);
+    printLessons("Removed lessons", change.removedLessons);
+    if (change.reorderedLessonCount > 0) {
+      console.log(`  Reordered lessons: ${change.reorderedLessonCount}`);
     }
     if (change.metadataChanged) {
       console.log("  Deck or card metadata changed.");

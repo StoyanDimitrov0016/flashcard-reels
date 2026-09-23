@@ -19,6 +19,7 @@
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "decks:packages": "node scripts/generate-demo-deck-package.mjs",
+    "decks:generate": "node scripts/generate-deck-package.mjs",
     "decks:inspect": "node scripts/inspect-deck-package.mjs",
     "decks:test:generate": "node scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
