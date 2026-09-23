@@ -14,8 +14,8 @@ export default function NotFoundScreen() {
     <View style={styles.screen}>
       <Text style={styles.eyebrow}>404</Text>
       <Text style={styles.title}>This card wandered off.</Text>
-      <Pressable onPress={() => router.replace("/(tabs)/(discover)")} style={styles.button}>
-        <Text style={styles.buttonLabel}>Return to Discover</Text>
+      <Pressable onPress={() => router.replace("/(tabs)/(study)")} style={styles.button}>
+        <Text style={styles.buttonLabel}>Return to For you</Text>
       </Pressable>
     </View>
   );

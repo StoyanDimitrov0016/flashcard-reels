@@ -30,7 +30,7 @@ describe("focus state handoff", () => {
     openFocusedFeed("deck-1", startFocusedFeed, navigate, "card-1", options);
 
     expect(startFocusedFeed).toHaveBeenCalledWith("deck-1", "card-1", options);
-    expect(navigate).toHaveBeenCalledWith("/(tabs)/focus");
+    expect(navigate).toHaveBeenCalledWith("/(tabs)/(study)/focus");
   });
 
   it.each(focusHandoffCases)(

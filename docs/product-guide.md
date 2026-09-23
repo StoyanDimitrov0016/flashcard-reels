@@ -4,7 +4,7 @@ Flashcard Reels is a local-first study app for practicing technical knowledge in
 
 ## Mobile app
 
-The five destinations are **Discover**, **Focus**, **Library**, **Progress**, and **You**. Discover mixes cards across decks; Focus stays with one deck. Swipe vertically through cards, double-tap to reveal the answer, then rate recall as **Again**, **Hard**, **Good**, or **Easy**. Answer audio is available when a deck includes it.
+The four destinations are **Study**, **Library**, **Progress**, and **You**. Study has two feeds at the top: **For you** (the Discover scope) mixes cards across decks, and **Focus** stays with one deck. Tap the feed names to switch; horizontal swipes still move between destinations. Swipe vertically through cards, double-tap to reveal the answer, then rate recall as **Again**, **Hard**, **Good**, or **Easy**. Answer audio is available when a deck includes it.
 
 Ratings influence what appears later, while Progress summarizes review history and recall patterns. Study can be reset for a card, deck, or the whole library without removing deck content.
 

@@ -139,7 +139,7 @@ export default function FocusedFeedScreen() {
   const chooseDeck = () => router.navigate("../library");
 
   return (
-    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
+    <SafeAreaView edges={["right", "left"]} style={styles.screen}>
       {showRecovery && (
         <FocusRecoveryState onRetry={retryFocusedFeedRestoration} onChooseDeck={chooseDeck} />
       )}

@@ -28,7 +28,7 @@ export default function DiscoverScreen() {
   const { cards, loading } = useFlashcards(null);
 
   return (
-    <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
+    <SafeAreaView edges={["right", "left"]} style={styles.screen}>
       {loading ? <LoadingState /> : <ReadyMixedFeed cards={cards} />}
     </SafeAreaView>
   );

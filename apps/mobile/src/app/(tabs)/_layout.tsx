@@ -66,35 +66,17 @@ export default function TabLayout() {
           }}
         >
           <TopTabs.Screen
-            name="(discover)"
+            name="(study)"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
                 <SymbolView
-                  name={{ android: "explore", ios: "safari.fill", web: "explore" }}
+                  name={{ android: "style", ios: "rectangle.stack.fill", web: "style" }}
                   size={sizes.icon.medium}
                   tintColor={color}
                 />
               ),
-              title: "Discover",
-              tabBarAccessibilityLabel: "Discover tab",
-            }}
-          />
-          <TopTabs.Screen
-            name="focus"
-            options={{
-              tabBarIcon: ({ color }: TabIconProps) => (
-                <SymbolView
-                  name={{
-                    android: "center_focus_strong",
-                    ios: "scope",
-                    web: "center_focus_strong",
-                  }}
-                  size={sizes.icon.medium}
-                  tintColor={color}
-                />
-              ),
-              title: "Focus",
-              tabBarAccessibilityLabel: "Focus tab",
+              title: "Study",
+              tabBarAccessibilityLabel: "Study tab",
             }}
           />
           <TopTabs.Screen
