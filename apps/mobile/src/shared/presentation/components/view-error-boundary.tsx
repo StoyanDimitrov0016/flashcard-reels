@@ -7,12 +7,23 @@ import { ViewErrorState } from "@/shared/presentation/components/view-error-stat
 const viewTitles: Readonly<Record<string, string>> = {
   "/": "Couldn’t load For you",
   "/focus": "Couldn’t load Focus",
+  "/reading": "Couldn’t load Reading",
   "/library": "Couldn’t load Library",
   "/progress": "Couldn’t load Progress",
   "/you": "Couldn’t open Controls",
   "/archived-progress": "Couldn’t load archived progress",
   "/progress-backup": "Couldn’t open progress backup",
 };
+
+function resolveViewTitle(pathname: string): string | undefined {
+  if (pathname.startsWith("/decks/")) {
+    return "Couldn’t load this deck";
+  }
+  if (pathname.startsWith("/lessons/")) {
+    return "Couldn’t load this lesson";
+  }
+  return viewTitles[pathname];
+}
 
 type ViewErrorBoundaryProps = Readonly<Pick<ErrorBoundaryProps, "error" | "retry">>;
 
@@ -34,7 +45,7 @@ export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
       onHomeAction={isHomeRoute ? undefined : () => router.replace("/(tabs)/(study)")}
       retry={retry}
       scope="screen"
-      title={pathname.startsWith("/decks/") ? "Couldn’t load this deck" : viewTitles[pathname]}
+      title={resolveViewTitle(pathname)}
     />
   );
 }

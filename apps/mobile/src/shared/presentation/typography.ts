@@ -12,6 +12,7 @@ export const fontSize = {
   body: 14,
   bodyLarge: 15,
   callout: 16,
+  reading: 17,
   subhead: 17,
   title3: 18,
   title2: 20,
@@ -38,6 +39,9 @@ export const letterSpacing = {
 export const lineHeight = {
   hero: 45,
   heading1: 36,
+  title1: 32,
+  title2: 28,
+  reading: 28,
   flashcardAnswer: 33,
   title3: 26,
   subhead: 24,

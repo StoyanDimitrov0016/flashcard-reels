@@ -19,6 +19,8 @@ export type AppColors = Readonly<{
   overlay: string;
   actionPrimary: string;
   actionPrimaryText: string;
+  codeText: string;
+  codeSurface: string;
   studyIslandSurface: string;
   studyIslandBorder: string;
   recallAgain: string;
@@ -46,6 +48,8 @@ export const lightColors: AppColors = {
   overlay: "rgba(15,15,15,0.35)",
   actionPrimary: "#373530",
   actionPrimaryText: "#FFFFFF",
+  codeText: "#EB5757",
+  codeSurface: "rgba(135,131,120,0.15)",
   studyIslandSurface: "#FFFFFF",
   studyIslandBorder: "rgba(55,53,47,0.22)",
   recallAgain: "#D44C47",
@@ -73,6 +77,8 @@ export const darkColors: AppColors = {
   overlay: "rgba(0,0,0,0.55)",
   actionPrimary: "#D4D4D4",
   actionPrimaryText: "#191919",
+  codeText: "#FF7369",
+  codeSurface: "rgba(135,131,120,0.15)",
   studyIslandSurface: "#252525",
   studyIslandBorder: "rgba(255,255,255,0.16)",
   recallAgain: "#BE524B",
