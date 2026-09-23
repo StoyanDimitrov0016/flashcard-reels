@@ -30,9 +30,9 @@ vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useInvalidateDeckContent: () => harness.content,
 }));
 vi.mock(
-  "@/features/flashcard-progress/presentation/context/learning-progress-reset-context",
+  "@/features/flashcard-progress/presentation/context/learning-progress-revision-context",
   () => ({
-    useLearningProgressReset: () => ({ invalidateLearningProgress: harness.progress }),
+    useLearningProgressRevision: () => ({ invalidateLearningProgress: harness.progress }),
   })
 );
 vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));

@@ -7,7 +7,7 @@
     },
     "apps/mobile": {
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs", "tests/**/*.ts"],
-      "ignoreDependencies": ["expo-updates"]
+      "ignoreDependencies": ["expo-updates", "react-native-pager-view"]
     },
     "apps/web": {
       "entry": ["tests/server-only.ts"]
