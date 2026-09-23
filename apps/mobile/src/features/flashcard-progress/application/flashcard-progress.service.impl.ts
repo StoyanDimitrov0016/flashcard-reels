@@ -1,7 +1,7 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
-import type { FlashcardProgressRepository } from "@/features/flashcard-progress/domain/flashcard-progress.repository";
+import type { FlashcardProgressQuery } from "@/features/flashcard-progress/domain/flashcard-progress.query";
 import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
@@ -9,19 +9,19 @@ import type { Clock } from "@/shared/domain/clock";
 
 export class FlashcardProgressServiceImpl implements FlashcardProgressService {
   private readonly clock: Clock;
-  private readonly repository: FlashcardProgressRepository;
+  private readonly progressQuery: FlashcardProgressQuery;
   private readonly resetTransaction: LearningProgressResetTransaction;
   private readonly flashcardService: FlashcardService;
   private readonly sessionSettlement: StudySessionSettlement;
 
   constructor(
-    repository: FlashcardProgressRepository,
+    progressQuery: FlashcardProgressQuery,
     clock: Clock,
     resetTransaction: LearningProgressResetTransaction,
     sessionSettlement: StudySessionSettlement,
     flashcardService: FlashcardService
   ) {
-    this.repository = repository;
+    this.progressQuery = progressQuery;
     this.clock = clock;
     this.resetTransaction = resetTransaction;
     this.sessionSettlement = sessionSettlement;
@@ -31,7 +31,7 @@ export class FlashcardProgressServiceImpl implements FlashcardProgressService {
   async findByFlashcardIds(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, FlashcardProgress>> {
-    return this.repository.findIncludingPendingRatingsByFlashcardIds(flashcardIds);
+    return this.progressQuery.findIncludingPendingRatingsByFlashcardIds(flashcardIds);
   }
 
   async resetFlashcardProgress(flashcardId: string): Promise<void> {

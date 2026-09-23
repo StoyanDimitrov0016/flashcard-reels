@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import {
@@ -14,7 +15,7 @@ import {
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { OTHER_DECK_ID, TEST_DECK_ID, makeFlashcard, testId } from "../support/study-fixtures";
 
-describe("SQLite card progress", () => {
+describe("SQLite flashcard progress", () => {
   let database: NodeSqliteDatabase;
   let progress: SQLiteFlashcardProgressRepository;
   let reset: SQLiteLearningProgressResetTransaction;
@@ -76,9 +77,10 @@ describe("SQLite card progress", () => {
       updatedAt: "2026-01-02T00:01:00.000Z",
     });
 
-    const currentProgress = await progress.findIncludingPendingRatingsByFlashcardIds([
-      makeFlashcard(1).id,
-    ]);
+    const currentProgress = await new SQLiteFlashcardProgressQuery(
+      database.drizzle,
+      progress
+    ).findIncludingPendingRatingsByFlashcardIds([makeFlashcard(1).id]);
     expect(currentProgress.get(makeFlashcard(1).id)).toMatchObject({
       goodCount: 1,
       reviewCount: 1,
