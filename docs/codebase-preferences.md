@@ -532,3 +532,16 @@ restore.
 
 For each new test, ask: "Which plausible bug would make this fail?" If the answer is only a rename
 or an intentional implementation change with no behavior change, revise or omit the test.
+
+## 13. Service composition
+
+**Preference**
+
+Keep React providers responsible for service lifetime and context. Construct repositories,
+transactions, gateways, and services in plain infrastructure composition functions. A feature
+factory should return the services it builds and declare cross-feature inputs explicitly. The
+top-level `createAppServices` function assembles these results in dependency order.
+
+Use named options for factories with several inputs. Avoid mutable registration containers and
+service locators: explicit inputs and return types make the dependency graph easier to inspect.
+Keep startup-only wiring distinct when it has different dependencies from normal runtime wiring.
