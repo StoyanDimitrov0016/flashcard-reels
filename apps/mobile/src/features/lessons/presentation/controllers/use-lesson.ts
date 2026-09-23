@@ -5,6 +5,7 @@ import type { Lesson, LessonId } from "@/features/lessons/domain/lesson.model";
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import {
   parseLessonMarkdown,
+  withoutRepeatedTitle,
   type LessonBlock,
 } from "@/features/lessons/domain/lesson-markdown.parser";
 import { useLessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
@@ -47,7 +48,9 @@ export function useLesson({ lessonId }: LessonOptions): LessonState {
         try {
           const lesson = await lessonService.findById(lessonId);
           if (active) {
-            const blocks = lesson ? parseLessonMarkdown(lesson.content) : [];
+            const blocks = lesson
+              ? withoutRepeatedTitle(parseLessonMarkdown(lesson.content), lesson.title)
+              : [];
             setState({ blocks, error: null, lesson, lessonId, revision });
           }
         } catch (error) {
