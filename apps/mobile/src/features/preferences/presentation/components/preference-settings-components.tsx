@@ -78,13 +78,21 @@ export function PreferenceSection({ children, title }: PreferenceSectionProps) {
 
 type PreferenceRowProps = Readonly<{
   detail?: string;
+  disabled?: boolean;
   icon: SymbolViewProps["name"];
   iconColor?: string;
   onPress: () => void;
   title: string;
 }>;
 
-export function PreferenceRow({ detail, icon, iconColor, onPress, title }: PreferenceRowProps) {
+export function PreferenceRow({
+  detail,
+  disabled = false,
+  icon,
+  iconColor,
+  onPress,
+  title,
+}: PreferenceRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -92,8 +100,10 @@ export function PreferenceRow({ detail, icon, iconColor, onPress, title }: Prefe
     <Pressable
       accessibilityLabel={title}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.row, disabled && styles.disabled, pressed && styles.pressed]}
     >
       <SymbolView
         name={icon}
@@ -143,6 +153,7 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    disabled: { opacity: 0.5 },
     pressed: { opacity: 0.72 },
     row: {
       alignItems: "center",

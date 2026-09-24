@@ -14,7 +14,7 @@ appId: com.flashcardreels.app
 - assertVisible: Files in Downloads
 - tapOn: progress-backup.json
 - assertVisible: Replace learning progress?
-- assertVisible: "Backup: 1 studied decks and 1 reviews.*"
+- assertVisible: "Backup: 1 studied deck and 1 review.*"
 - tapOn: Replace progress
 - assertVisible: "Learning progress restored.*"
 - tapOn: Back

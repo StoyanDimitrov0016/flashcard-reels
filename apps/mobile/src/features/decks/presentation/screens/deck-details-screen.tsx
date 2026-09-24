@@ -34,6 +34,7 @@ import { useHaptics } from "@/features/preferences/presentation/controllers/use-
 import { reportError } from "@/shared/errors/report-error";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { ScreenBackButton } from "@/shared/presentation/components/screen-back-button";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
@@ -141,19 +142,10 @@ export default function DeckDetailsScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <ScreenHeader>
-        <Pressable
+        <ScreenBackButton
           accessibilityLabel={`Back to ${showProgress ? "Progress" : "Library"}`}
-          accessibilityRole="button"
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <SymbolView
-            name={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
-            size={sizes.icon.medium}
-            tintColor={colors.textPrimary}
-          />
-          <Text style={styles.backLabel}>Back</Text>
-        </Pressable>
+        />
         {showProgress ? (
           <Pressable
             accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
@@ -319,14 +311,6 @@ export default function DeckDetailsScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    backButton: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.xSmall,
-      height: "100%",
-      paddingHorizontal: sizes.spacing.xSmall,
-    },
-    backLabel: { color: colors.textPrimary, fontSize: fontSize.body },
     body: {
       flex: 1,
       gap: sizes.spacing.section,
