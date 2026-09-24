@@ -1,25 +1,32 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { isValidSessionToken, sessionCookie } from "@/lib/auth/session";
+import { isValidSessionToken, sessionCookie } from "@/server/auth/session";
 
-const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
+// The login page posts its server action to /login. /t/<token> links are opened by phones
+// without a session and authorize themselves with a signed, short-lived token.
+function isPublicPath(path: string): boolean {
+  return path === "/login" || path.startsWith("/t/");
+}
 
 export default async function proxy(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  if (PUBLIC_PATHS.has(path) || path.startsWith("/t/")) {
+  const { pathname, search } = request.nextUrl;
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  const authenticated = await isValidSessionToken(request.cookies.get(sessionCookie.name)?.value);
-  if (authenticated) {
+  if (await isValidSessionToken(request.cookies.get(sessionCookie.name)?.value)) {
     return NextResponse.next();
   }
 
-  if (path.startsWith("/api/")) {
+  if (pathname.startsWith("/api/")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.redirect(new URL("/login", request.url));
+  const loginUrl = new URL("/login", request.url);
+  if (pathname !== "/") {
+    loginUrl.searchParams.set("next", pathname + search);
+  }
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
