@@ -43,12 +43,15 @@ export function useArchivedProgress() {
   }, [savedProgressService]);
 
   useFocusEffect(
-    useCallback(() => {
-      refresh();
-      return function cancelArchivedProgressLoad() {
-        loadSequence.current += 1;
-      };
-    }, [refresh])
+    useCallback(
+      function refreshArchivedProgressWhenFocused() {
+        refresh();
+        return function cancelArchivedProgressLoad() {
+          loadSequence.current += 1;
+        };
+      },
+      [refresh]
+    )
   );
 
   const chooseForDeletion = (row: ArchivedDeckProgress) => {

@@ -25,9 +25,12 @@ export default function ProgressScreen() {
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
 
   useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh])
+    useCallback(
+      function refreshProgressWhenFocused() {
+        refresh();
+      },
+      [refresh]
+    )
   );
 
   return (
