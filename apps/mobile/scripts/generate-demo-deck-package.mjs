@@ -18,10 +18,20 @@ for (const fileName of audioFileNames.toSorted()) {
   );
 }
 
+const lessonFiles = {};
+for (const lesson of deckPackage.lessons ?? []) {
+  lessonFiles[lesson.id] = await readFile(
+    path.join(sourceDirectory, "lessons", `${lesson.id}.md`),
+    "utf8"
+  );
+}
+
 const configuredOutput = process.env.DEMO_PACKAGE_OUTPUT;
 const outputPath = configuredOutput
   ? path.resolve(root, configuredOutput)
   : path.join(root, "assets", "decks", `${deckPackage.id}.fcrdeck`);
 await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(outputPath, createDeckPackageArchive(deckPackage, audioFiles));
-console.log(`Generated ${path.relative(root, outputPath)} (${deckPackage.cards.length} cards).`);
+await writeFile(outputPath, createDeckPackageArchive(deckPackage, audioFiles, lessonFiles));
+console.log(
+  `Generated ${path.relative(root, outputPath)} (${deckPackage.cards.length} cards, ${Object.keys(lessonFiles).length} lessons).`
+);
