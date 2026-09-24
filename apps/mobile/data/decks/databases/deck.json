@@ -7,54 +7,109 @@
   "updatedAt": "2026-09-25T19:33:34.817Z",
   "lessons": [
     {
-      "id": "16b8d617-19b0-45f4-98fb-4aa4ca10fe71",
+      "id": "35bdd385-0617-4d90-9888-192ab864d981",
       "order": 0,
-      "title": "Relational modeling"
+      "title": "Relational databases"
     },
     {
-      "id": "ecf40ea9-92d2-4a56-b640-6acd4e51b6d5",
+      "id": "b32df0a9-08c0-4015-90ee-aaead2be8896",
       "order": 1,
-      "title": "Writing SQL queries"
+      "title": "Primary keys"
     },
     {
-      "id": "905c3149-4ca1-445b-a78f-650fbb59cdeb",
+      "id": "643d7f50-2d2d-47b2-be2f-cce73979d9e7",
       "order": 2,
-      "title": "Indexes"
+      "title": "Integrity constraints"
     },
     {
-      "id": "391ffe0f-b837-4ba0-b2bc-5bdf48ce610e",
+      "id": "f6db8a44-e315-4a3c-a104-b06a390a1cc8",
       "order": 3,
-      "title": "Query planning"
+      "title": "Defining and evolving a schema"
     },
     {
-      "id": "026ac858-b3a0-45e2-aea0-8446acac9021",
+      "id": "8f9f0edc-8e09-423c-8d9b-b86a61dd7221",
       "order": 4,
-      "title": "Transactions and isolation"
+      "title": "Querying a single table"
     },
     {
-      "id": "742fcb99-69ff-44a8-9787-9e3329c4370e",
+      "id": "1e578021-80d0-4289-a0e4-0ca1ec32a618",
       "order": 5,
-      "title": "Concurrency and durability"
+      "title": "Joins"
     },
     {
-      "id": "39d4295b-702a-4231-aaae-7b28d42e63c3",
+      "id": "14cd78fd-73f9-42bd-afab-6fb196550b87",
       "order": 6,
-      "title": "Replication and sharding"
+      "title": "Advanced queries"
     },
     {
-      "id": "4236acae-bc1f-452d-ac25-4f580a5082d0",
+      "id": "9782b273-5e13-455a-b7e6-b14bc82306c9",
       "order": 7,
+      "title": "Normalization"
+    },
+    {
+      "id": "8865c5be-5a43-42a1-bcac-e935125dce94",
+      "order": 8,
+      "title": "How indexes work"
+    },
+    {
+      "id": "5e73a748-118a-4289-8b96-868d418be4f6",
+      "order": 9,
+      "title": "How the optimizer chooses a plan"
+    },
+    {
+      "id": "ff055920-1e5f-4329-b797-ed0124a6b03e",
+      "order": 10,
+      "title": "Join algorithms"
+    },
+    {
+      "id": "fbdb39dd-28e9-474e-a035-736861711f54",
+      "order": 11,
+      "title": "Designing indexes"
+    },
+    {
+      "id": "4feaa78e-647c-49f6-8b91-217e941175db",
+      "order": 12,
+      "title": "Transactions"
+    },
+    {
+      "id": "76b990f8-5550-4cb3-8f3e-33b9825ca941",
+      "order": 13,
+      "title": "Isolation levels"
+    },
+    {
+      "id": "ba3e5eea-9650-4354-a7af-9c6a05dcf293",
+      "order": 14,
+      "title": "Concurrency control"
+    },
+    {
+      "id": "9697af27-547e-4b87-ba4a-985801b1cb49",
+      "order": 15,
       "title": "Databases in application code"
     },
     {
-      "id": "871a3546-7289-4481-acc5-6e8d48631bb2",
-      "order": 8,
-      "title": "Beyond relational"
+      "id": "8877492b-5842-4b9e-bceb-a5876a685712",
+      "order": 16,
+      "title": "Recovering from failures"
     },
     {
-      "id": "7ad0e12b-5551-4b45-9d76-47151756a1d3",
-      "order": 9,
-      "title": "Practical details"
+      "id": "bac46b1a-9517-4c09-a282-252cbda58aa0",
+      "order": 17,
+      "title": "Replication"
+    },
+    {
+      "id": "ddaa489c-d764-49e0-96ce-2eff61da6838",
+      "order": 18,
+      "title": "Partitioning data"
+    },
+    {
+      "id": "c66d51fe-545b-4709-bed5-2ff222192b3c",
+      "order": 19,
+      "title": "Distributed transactions"
+    },
+    {
+      "id": "a02c6dba-6806-4c11-b0c3-aa2a404cb0c5",
+      "order": 20,
+      "title": "Non-relational databases"
     }
   ],
   "cards": [
@@ -83,32 +138,56 @@
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "5d326171-b2e6-4333-8818-b7b94b95f9cd",
+      "id": "f3b9b62e-5025-4f2a-a65e-428ce0b14136",
       "order": 3,
+      "question": "What is SQL?",
+      "answer": "SQL is a declarative language for defining, querying, and modifying relational data. The query states the desired result while the database chooses an execution plan.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5d326171-b2e6-4333-8818-b7b94b95f9cd",
+      "order": 4,
       "question": "What is a primary key?",
       "answer": "A primary key is a column or column set whose value uniquely identifies each row in a table.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "00b303cc-04ed-4974-8cc3-54d467e8e461",
-      "order": 4,
-      "question": "What is a foreign key?",
-      "answer": "A foreign key is a constraint requiring values in one table to reference valid key values in another table, or be null when allowed.",
+      "id": "d34dceb2-497c-4b2c-8180-30d5f90601c1",
+      "order": 5,
+      "question": "What is a natural key?",
+      "answer": "A natural key uses domain data that is already unique, such as a stable external code, to identify a row.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "15c15648-dda5-49c8-a654-3fc41680e18e",
-      "order": 5,
-      "question": "What does referential integrity protect?",
-      "answer": "It prevents references to rows that do not exist and can control what happens when referenced rows are updated or deleted.",
+      "id": "b5ae3969-ddfa-4beb-9bbf-4600459ebf89",
+      "order": 6,
+      "question": "What is a surrogate key?",
+      "answer": "A surrogate key is an artificial identifier with no domain meaning, such as an auto-increment integer or UUID.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "93ab7b55-fd9f-4481-8efb-462b0ca7efb3",
+      "order": 7,
+      "question": "What is a database sequence?",
+      "answer": "A sequence generates ordered numeric values independently of table rows, commonly for surrogate identifiers.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cfa80b21-7b8f-4477-ae74-fa50e2a652ff",
+      "order": 8,
+      "question": "What trade-off do UUID primary keys introduce?",
+      "answer": "They allow decentralized ID generation, but are wider than small integers and random forms can reduce index locality unless a locality-friendly variant or storage strategy is used.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "2c46a851-e4ce-4d1c-8920-405b915f27aa",
-      "order": 6,
+      "order": 9,
       "question": "What is a unique constraint?",
       "answer": "It prevents two rows from having the same value or value combination in the constrained columns, subject to the database’s null semantics.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -116,759 +195,47 @@
     },
     {
       "id": "8fa4ae42-aa44-47ec-ad92-384fee273dd8",
-      "order": 7,
+      "order": 10,
       "question": "What is a check constraint?",
       "answer": "A check constraint rejects rows whose values do not satisfy a declared Boolean condition.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "0cc985a9-6e1f-4cad-8d0d-b712cccf7847",
-      "order": 8,
-      "question": "What is database normalization?",
-      "answer": "Normalization decomposes data into related tables so each fact has a clearer single home, reducing update anomalies and unnecessary duplication.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "80cafaee-f4f6-443a-a014-3ad5953ca986",
-      "order": 9,
-      "question": "What problem does first normal form address?",
-      "answer": "It requires table attributes to hold scalar values rather than repeating groups inside one row, making rows and columns consistently queryable.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6bf08c5f-83b5-4e15-b093-653e4e8b1734",
-      "order": 10,
-      "question": "What problem does second normal form address?",
-      "answer": "For tables with composite keys, it removes non-key attributes that depend on only part of that key.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "af431e6f-ea21-4422-a62c-dea8719e2ba8",
+      "id": "00b303cc-04ed-4974-8cc3-54d467e8e461",
       "order": 11,
-      "question": "What problem does third normal form address?",
-      "answer": "It removes non-key attributes that depend on other non-key attributes rather than directly on the key.",
+      "question": "What is a foreign key?",
+      "answer": "A foreign key is a constraint requiring values in one table to reference valid key values in another table, or be null when allowed.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "5703f28c-5f68-476b-9d70-f76d40573503",
+      "id": "15c15648-dda5-49c8-a654-3fc41680e18e",
       "order": 12,
-      "question": "What is denormalization?",
-      "answer": "Denormalization intentionally duplicates or combines data to reduce read-time joins or computation, at the cost of more write complexity and consistency work.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "47c08bd4-3a39-4385-bb18-c3f111781fe0",
-      "order": 13,
-      "question": "What is a database schema?",
-      "answer": "A schema defines stored structures and rules such as tables, columns, data types, indexes, constraints, and relationships.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d32131f1-1c1f-4151-92af-9eb4c9597701",
-      "order": 14,
-      "question": "What is schema migration?",
-      "answer": "A migration is a controlled change to database structure or data shape, applied in a known order so environments can evolve consistently.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "df623b9b-7142-4bd8-b78c-30c2b3d4c5a1",
-      "order": 15,
-      "question": "Why are backward-compatible migrations useful?",
-      "answer": "Old and new application versions may run at the same time during deployment. Additive changes let both versions continue operating while the rollout completes.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f3b9b62e-5025-4f2a-a65e-428ce0b14136",
-      "order": 16,
-      "question": "What is SQL?",
-      "answer": "SQL is a declarative language for defining, querying, and modifying relational data. The query states the desired result while the database chooses an execution plan.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9bee11f8-59fe-4235-aabf-7a0d33822a5a",
-      "order": 17,
-      "question": "What does `SELECT` do?",
-      "answer": "`SELECT` produces a result set from expressions and data sources, optionally filtering, joining, grouping, and ordering rows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d4494a31-d265-46f3-b9c6-e62ee2301011",
-      "order": 18,
-      "question": "What does a `WHERE` clause do?",
-      "answer": "It filters individual input rows before grouping and projection based on a Boolean condition.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f54babe6-d80b-4a06-ab2f-f05261ca5f74",
-      "order": 19,
-      "question": "What does `ORDER BY` guarantee?",
-      "answer": "It requests a defined result ordering by one or more expressions. Without `ORDER BY`, row order is not guaranteed.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d1c53a59-27a5-4c9b-aa20-2696ffb3157c",
-      "order": 20,
-      "question": "What does `GROUP BY` do?",
-      "answer": "It partitions input rows into groups so aggregate functions can compute one result per group.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e5c06410-22ba-4897-9447-e58705b6e802",
-      "order": 21,
-      "question": "What is the difference between `WHERE` and `HAVING`?",
-      "answer": "`WHERE` filters rows before grouping. `HAVING` filters groups after aggregation.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "968fb787-f9df-415d-a687-dd7de11f0bd1",
-      "order": 22,
-      "question": "What does an inner join return?",
-      "answer": "It returns row combinations for which the join condition matches on both sides.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d38112e4-5990-48cb-961d-1ada2f36e254",
-      "order": 23,
-      "question": "What does a left join return?",
-      "answer": "It returns every row from the left side and matching right rows; when no right row matches, right-side columns are null.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d5b19e1c-7efe-4ebd-93f7-4b51715d93b0",
-      "order": 24,
-      "question": "What is a cross join?",
-      "answer": "A cross join returns every combination of a row from the left input with a row from the right input.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "78711fed-4572-48bb-a112-ca4ff27957d4",
-      "order": 25,
-      "question": "Why can joins multiply row counts unexpectedly?",
-      "answer": "If one row matches multiple rows on the other side, the result contains one output row per matching combination.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "5b445b60-a2ce-4d86-bf88-20747481e6eb",
-      "order": 26,
-      "question": "What is a correlated subquery?",
-      "answer": "It is a subquery that references values from the outer query and may logically be evaluated for each outer row, though the optimizer can transform it.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c29e873e-1d62-42a9-b2bb-05ef32c0a8a9",
-      "order": 27,
-      "question": "What is a common table expression?",
-      "answer": "A CTE gives a query expression a temporary name within one statement, improving composition and sometimes enabling recursive queries.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "cdfa1020-67cc-4048-b36c-cdd2e29808a3",
-      "order": 28,
-      "question": "What is a window function?",
-      "answer": "A window function computes a value across a related set of rows while preserving one output row per input row, unlike ordinary aggregation that collapses groups.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6b9932c3-b7a9-48a9-a092-d8bb8a00c22c",
-      "order": 29,
-      "question": "What problem does `ROW_NUMBER()` solve?",
-      "answer": "It assigns sequential numbers within an ordered result or partition, useful for ranking, deduplication, and top-N-per-group queries.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "584893c4-894d-4bec-82f5-3ea485b31897",
-      "order": 30,
-      "question": "What is an index?",
-      "answer": "An index is an additional data structure that lets the database find matching rows without scanning every row, at the cost of storage and extra write maintenance.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "4a669b3c-83c4-4366-a909-3675f7193624",
-      "order": 31,
-      "question": "Why do indexes slow writes?",
-      "answer": "Inserts, deletes, and indexed-column updates must also modify affected index structures, adding I/O and CPU work.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9f83b084-bc4b-4005-8433-0d0576ba9152",
-      "order": 32,
-      "question": "What is a B-tree index good for?",
-      "answer": "It keeps keys ordered, supporting equality lookups, ranges, ordered scans, and prefix matching on composite keys.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "18413cab-4a9a-45f4-9c5c-7a707f7dad6b",
-      "order": 33,
-      "question": "What is a hash index good for?",
-      "answer": "A hash index maps keys to buckets for fast equality lookup, but it generally cannot support ordered range scans.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "dd61eca1-083e-48a5-b574-5bb747c81d4a",
-      "order": 34,
-      "question": "What is a composite index?",
-      "answer": "A composite index stores multiple columns together in a defined order so queries using compatible leading columns can search or order efficiently.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "213f02c6-98fa-4fa4-8aa0-cf95ea7b7889",
-      "order": 35,
-      "question": "Why does column order matter in a composite B-tree index?",
-      "answer": "The tree is ordered first by the leading column, then later columns. Queries that skip unconstrained leading columns often cannot use the index as efficiently for direct range navigation.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "fa8d62f0-0398-4f11-80e5-6561e3e3fd8e",
-      "order": 36,
-      "question": "What is a covering index?",
-      "answer": "A covering index contains all columns needed for a query so the database may answer from the index without fetching the base table rows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f9d07690-ce70-48a5-9a8b-a78eabdef87e",
-      "order": 37,
-      "question": "What is index selectivity?",
-      "answer": "Selectivity describes how narrowly a predicate reduces rows. Highly selective conditions often benefit more from an index than conditions matching most of the table.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "4aec9641-2d33-484c-af27-dab02e4507e6",
-      "order": 38,
-      "question": "Why might a database ignore an available index?",
-      "answer": "The optimizer may estimate that a table scan is cheaper, especially for small tables or predicates matching a large fraction of rows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d3874c6d-42d5-4d56-b24e-dcbc556c24d8",
-      "order": 39,
-      "question": "What is a query execution plan?",
-      "answer": "It is the database’s chosen strategy for a statement, including access paths, join algorithms, sort steps, and estimated or actual row counts.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "87b04af8-f29c-4ad5-9452-719f5504c8a5",
-      "order": 40,
-      "question": "Why inspect actual row counts in an execution plan?",
-      "answer": "Large differences between estimated and actual rows can explain poor choices such as wrong join algorithms, undersized memory, or inefficient access paths.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "fddf524e-8b6b-485c-aa80-685af64accc2",
-      "order": 41,
-      "question": "What are database statistics?",
-      "answer": "Statistics summarize data distributions and table sizes so the optimizer can estimate how many rows operators will process.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "2f7d3361-97a2-44ee-bc23-63d45fe858b8",
-      "order": 42,
-      "question": "What is a full table scan?",
-      "answer": "The database reads the table or relevant storage pages broadly instead of navigating through an index to a narrow subset.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "8e80f2e7-a1a1-41c5-b29e-96c778af243a",
-      "order": 43,
-      "question": "When can a full scan be the correct plan?",
-      "answer": "When most rows are needed, sequentially reading the table can be cheaper than performing many random index lookups.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "968f2b2d-3f7a-4313-8150-b53ac5e7e392",
-      "order": 44,
-      "question": "What is a nested-loop join?",
-      "answer": "For each row from one input, the database searches the other input for matches. It is effective when the outer side is small and the inner lookup is cheap.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "49093542-73e4-4ab2-ad3f-bb79095fde8a",
-      "order": 45,
-      "question": "What is a hash join?",
-      "answer": "The database builds a hash table from one input and probes it with rows from the other, commonly making large equality joins efficient.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "4d585e96-8c2f-4188-9bdc-cf79a882a74f",
-      "order": 46,
-      "question": "What is a merge join?",
-      "answer": "It walks two inputs ordered by the join keys and matches them as it advances, making equality or range-compatible joins efficient when sorted input is available.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7ce5680a-007c-4592-a918-fb4ea569ecb6",
-      "order": 47,
-      "question": "What is a transaction?",
-      "answer": "A transaction groups database operations into one logical unit that commits together or is rolled back according to the database’s guarantees.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "cb42ba8d-1ba4-4b23-a781-7bb35656af39",
-      "order": 48,
-      "question": "What does atomicity mean in ACID?",
-      "answer": "A transaction’s changes are committed as a unit or not committed at all; callers do not get a partially committed transaction.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "75c64375-a01c-49ab-92a5-c57d85d43d27",
-      "order": 49,
-      "question": "What does consistency mean in ACID?",
-      "answer": "A committed transaction preserves constraints and invariants enforced by the database, assuming the transaction itself respects application rules not encoded as constraints.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "306b9e57-001e-4acf-b71d-a3b0d244f3fa",
-      "order": 50,
-      "question": "What does isolation mean in ACID?",
-      "answer": "Concurrent transactions are prevented from observing or producing certain invalid interleavings according to the selected isolation level.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "5f31f714-6fba-41de-903c-f518ce5ee4a0",
-      "order": 51,
-      "question": "What does durability mean in ACID?",
-      "answer": "After commit is acknowledged, the database preserves the transaction against failures covered by its durability model.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b2006772-3cb0-44fd-be80-35ff8aae7662",
-      "order": 52,
-      "question": "What is a dirty read?",
-      "answer": "A transaction reads data written by another transaction that has not committed and may later roll back.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "8bf3d6f9-53f1-4171-96df-e4112e7e0855",
-      "order": 53,
-      "question": "What is a non-repeatable read?",
-      "answer": "A transaction reads the same row twice and sees a different committed value because another transaction updated it between reads.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1d7ec529-836c-4376-8ae1-5455fc194857",
-      "order": 54,
-      "question": "What is a phantom read?",
-      "answer": "Repeating a predicate query returns a different set of matching rows because another transaction inserted, deleted, or changed qualifying rows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e06c15a9-c5f9-4465-9a16-99032beb3afd",
-      "order": 55,
-      "question": "What is a lost update?",
-      "answer": "Two transactions read the same value and both write derived updates, causing one write to overwrite the other’s effect.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1bdd8563-edfd-4519-9d19-efaa7aca4866",
-      "order": 56,
-      "question": "What is transaction isolation level?",
-      "answer": "It selects which effects of concurrent transactions may become visible and how much coordination the database performs to prevent anomalies.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "78362489-98d3-440a-83d5-a866d16b6e01",
-      "order": 57,
-      "question": "What does serializable isolation aim to guarantee?",
-      "answer": "Committed concurrent transactions have an outcome equivalent to some serial execution order, preventing anomalies that cannot occur one transaction at a time.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "582c52e4-8f16-4d42-88e7-973a2372035d",
-      "order": 58,
-      "question": "What trade-off does stronger isolation introduce?",
-      "answer": "It can increase locking, retries, aborts, or coordination, reducing concurrency under conflicting workloads.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "92ba3bf9-7c18-462f-8d1f-0fc388c5bfcf",
-      "order": 59,
-      "question": "What is optimistic concurrency control?",
-      "answer": "Transactions proceed without locking every potential conflict and validate versions or dependencies before commit, aborting or retrying when a conflict is detected.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "09cf6c60-19a0-407d-8ef3-30e5a2b4c460",
-      "order": 60,
-      "question": "What is pessimistic concurrency control?",
-      "answer": "Transactions acquire locks before accessing conflicting data so competing operations wait rather than proceed concurrently.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "55d80fdd-3097-482e-96b2-ab3e58da3fcb",
-      "order": 61,
-      "question": "What is a row lock?",
-      "answer": "A row lock restricts conflicting operations on selected rows while allowing unrelated rows to remain concurrently accessible.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c4b6377d-5132-4d05-a881-29dc34e6d986",
-      "order": 62,
-      "question": "What is a deadlock in a database?",
-      "answer": "Transactions wait cyclically for locks held by one another, so none can proceed. The database typically detects the cycle and aborts one transaction.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "af0b0b64-6387-4fd5-82f1-cf29444dd338",
-      "order": 63,
-      "question": "How can applications reduce deadlocks?",
-      "answer": "Keep transactions short, access shared resources in a consistent order, use appropriate indexes, and retry transactions chosen as deadlock victims.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "071e6a62-6c47-4e74-815b-97999271e053",
-      "order": 64,
-      "question": "What is MVCC?",
-      "answer": "Multi-Version Concurrency Control keeps multiple row versions so readers can observe a consistent snapshot while writers create newer versions, reducing read-write blocking.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9246ab79-18b7-4bff-8761-f9afb0a7e7c8",
-      "order": 65,
-      "question": "What cost does MVCC introduce?",
-      "answer": "Old versions consume storage until no active snapshot needs them, requiring cleanup or vacuum-like maintenance and creating possible bloat.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e260603e-ec06-4b3c-896d-9c19099f3688",
-      "order": 66,
-      "question": "What is a write-ahead log?",
-      "answer": "A WAL records changes in durable log form before modified data pages are considered safely persisted, enabling crash recovery and often replication.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "19d79a15-e277-419b-ae88-705a290d6025",
-      "order": 67,
-      "question": "Why can WAL improve write efficiency?",
-      "answer": "Appending sequential log records is often cheaper than synchronously writing many scattered data pages before acknowledging each transaction.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "68b9ca14-58d4-4b1b-b81e-8e270236732a",
-      "order": 68,
-      "question": "What is a database checkpoint?",
-      "answer": "A checkpoint advances a known recovery point by flushing or recording enough state so crash recovery need not replay the entire historical log.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e001e76e-7fb3-47bc-868d-e21f22a8ae6d",
-      "order": 69,
-      "question": "What is replication in databases?",
-      "answer": "Replication keeps copies of database data on multiple nodes for availability, read scaling, locality, or recovery.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "deba7ffb-d05e-4833-b8fd-589837b749b9",
-      "order": 70,
-      "question": "What is synchronous replication?",
-      "answer": "A write waits for one or more replicas to confirm required persistence before commit is acknowledged, improving failover durability at the cost of latency and availability.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "186ab64f-5c8e-4a78-a94d-8447e0788e23",
-      "order": 71,
-      "question": "What is asynchronous replication?",
-      "answer": "The primary can acknowledge writes before replicas apply them, reducing write latency but allowing lag and possible loss of recently acknowledged data during some failovers.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "a34228e9-25fd-4261-81b2-148e22bffcb1",
-      "order": 72,
-      "question": "What is replication lag in a database?",
-      "answer": "It is the delay between a write becoming authoritative on one node and another replica applying or exposing that write.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "de64cbb2-bbd7-44f9-8c41-27a917b02383",
-      "order": 73,
-      "question": "Why can reading from replicas violate read-your-writes behavior?",
-      "answer": "A client may write to the primary and immediately read from a lagging replica that has not received the update yet.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7f1f4910-2ce7-48a6-8ff4-d44bb7e4e0f9",
-      "order": 74,
-      "question": "What is a read replica?",
-      "answer": "A read replica is a replicated database node used to serve read traffic, reducing load on the write leader while accepting consistency and lag trade-offs.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "21bb9e7b-ea4c-403c-8243-eedd0757c215",
-      "order": 75,
-      "question": "What is database partitioning?",
-      "answer": "Partitioning divides a logical table or dataset into separate physical subsets based on a rule such as range, hash, or list.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "580fa242-7fd1-4b2c-b4e3-1cde8ca0f977",
-      "order": 76,
-      "question": "What problem does partition pruning solve?",
-      "answer": "If a query predicate identifies relevant partitions, the database can skip scanning unrelated partitions.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "bd9c4cd8-2f71-43c7-9061-e7cc5a315608",
-      "order": 77,
-      "question": "What is horizontal sharding?",
-      "answer": "Rows are distributed across separate database servers so storage and traffic can exceed the capacity of one node.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b3fe6d69-515c-450f-bb98-206d248193a7",
-      "order": 78,
-      "question": "What is a shard key?",
-      "answer": "A shard key determines which shard stores a row and often which node can answer a request without contacting every shard.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "20466015-beb1-4fa8-9bb6-02e24e7e6697",
-      "order": 79,
-      "question": "Why are cross-shard transactions expensive?",
-      "answer": "They require coordination across independent nodes, increasing latency and exposing the transaction to more failure modes.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "758caa6b-c3f3-4268-b3c5-fabaad430e75",
-      "order": 80,
-      "question": "What is a distributed transaction?",
-      "answer": "A transaction whose atomic outcome spans multiple independent resource managers or nodes and therefore requires coordination.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "24505dd6-54e3-48e6-a321-fcf487b11424",
-      "order": 81,
-      "question": "What problem does two-phase commit solve?",
-      "answer": "It coordinates participants so they either all commit or all abort, but participants can remain blocked if the coordinator fails at certain points.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f29038c2-5e3e-4ed3-a647-063cfe50e2a0",
-      "order": 82,
-      "question": "What is a database connection pool?",
-      "answer": "A pool keeps reusable database connections so requests avoid repeatedly opening expensive connections and the application can cap concurrent database sessions.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6176d8ff-5da9-461d-878f-c5e3f0052ecd",
-      "order": 83,
-      "question": "Why can an oversized connection pool hurt a database?",
-      "answer": "Too many concurrent sessions can increase memory use, context switching, lock contention, and queued work, reducing throughput rather than increasing it.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "5d193ccd-d6d3-4e4b-bdaa-faf306c02f28",
-      "order": 84,
-      "question": "What is the N+1 query problem?",
-      "answer": "Code runs one query for a collection and then one additional query per item, creating many round trips that could often be batched or joined.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d5b27154-5c36-4d42-8716-26ecd1b3e94c",
-      "order": 85,
-      "question": "What is keyset pagination?",
-      "answer": "It fetches the next page using the last seen sort key, such as `WHERE id > ?`, avoiding the growing scan cost and instability of large offsets.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "3a070026-fe95-49d0-870f-5779b4d937ad",
-      "order": 86,
-      "question": "What trade-off does offset pagination have?",
-      "answer": "Large offsets can require scanning or discarding many rows, and concurrent inserts or deletes can cause items to shift between pages.",
+      "question": "What does referential integrity protect?",
+      "answer": "It prevents references to rows that do not exist and can control what happens when referenced rows are updated or deleted.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "32c16baf-b00d-4807-9b4d-bca62f73ddeb",
-      "order": 87,
+      "order": 13,
       "question": "What is an upsert?",
       "answer": "An upsert inserts a row when no conflicting key exists or updates an existing row when a defined conflict occurs.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "93ab7b55-fd9f-4481-8efb-462b0ca7efb3",
-      "order": 88,
-      "question": "What is a database sequence?",
-      "answer": "A sequence generates ordered numeric values independently of table rows, commonly for surrogate identifiers.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b5ae3969-ddfa-4beb-9bbf-4600459ebf89",
-      "order": 89,
-      "question": "What is a surrogate key?",
-      "answer": "A surrogate key is an artificial identifier with no domain meaning, such as an auto-increment integer or UUID.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "d34dceb2-497c-4b2c-8180-30d5f90601c1",
-      "order": 90,
-      "question": "What is a natural key?",
-      "answer": "A natural key uses domain data that is already unique, such as a stable external code, to identify a row.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "cfa80b21-7b8f-4477-ae74-fa50e2a652ff",
-      "order": 91,
-      "question": "What trade-off do UUID primary keys introduce?",
-      "answer": "They allow decentralized ID generation, but are wider than small integers and random forms can reduce index locality unless a locality-friendly variant or storage strategy is used.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "2c0f575d-72e4-4ade-88b3-c49832899d59",
-      "order": 92,
-      "question": "What is a document database?",
-      "answer": "A document database stores self-contained records such as JSON-like documents and typically allows flexible nested structures and document-level access patterns.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "89a95525-6e4f-48cb-9053-8f66f8dc52fe",
-      "order": 93,
-      "question": "When is a document model useful?",
-      "answer": "It fits data commonly read and written as one aggregate with variable nested fields and few cross-document relational constraints.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "3df3eafa-8c32-4c89-8e6f-fcf323e7b24e",
-      "order": 94,
-      "question": "What is a key-value database?",
-      "answer": "A key-value store retrieves an opaque or semi-structured value by a unique key, favoring simple low-latency access patterns.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "177bd8ed-0a02-4560-b6b0-f9a6075d90cf",
-      "order": 95,
-      "question": "What is a wide-column database?",
-      "answer": "A wide-column store partitions rows by keys and supports sparse or flexible columns, typically designed for large distributed datasets and predictable access paths.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "2d1e2de6-5214-4077-83ac-45aa092914a1",
-      "order": 96,
-      "question": "What is a graph database?",
-      "answer": "A graph database stores vertices and edges as first-class relationships, making multi-hop relationship traversal a primary access pattern.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e22c9748-ba85-4d3e-9e3e-fb4e3669f4e3",
-      "order": 97,
-      "question": "What is eventual consistency in a database?",
-      "answer": "Replicas or derived views may temporarily disagree after a write but converge if updates stop and communication succeeds.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1555580f-65e3-4872-8df5-6bd0ceeba9d5",
-      "order": 98,
-      "question": "What is a materialized view in a database?",
-      "answer": "It stores precomputed query output so repeated reads avoid recomputing the full query, while refresh logic keeps the stored result acceptably current.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7c885f01-eab1-4981-8d42-7663126e655c",
-      "order": 99,
-      "question": "What is database change data capture?",
-      "answer": "CDC emits a stream of committed row or log changes so downstream systems can react without the application writing a separate event for every mutation.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7a7b045f-a8ee-432f-be6b-90a437a276a0",
-      "order": 100,
-      "question": "What is the outbox pattern?",
-      "answer": "The application commits domain changes and an outgoing message record in one database transaction; a publisher later sends the message and marks or removes the outbox record.",
+      "id": "47c08bd4-3a39-4385-bb18-c3f111781fe0",
+      "order": 14,
+      "question": "What is a database schema?",
+      "answer": "A schema defines stored structures and rules such as tables, columns, data types, indexes, constraints, and relationships.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "d42caa93-5ee5-48ba-941a-7473edbc32a4",
-      "order": 101,
+      "order": 15,
       "question": "Why should money usually not be stored as binary floating point?",
       "answer": "Binary floating point cannot exactly represent many decimal fractions. Fixed-precision decimal types or integer minor units preserve required monetary rounding rules.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -876,7 +243,7 @@
     },
     {
       "id": "732f4d44-9960-4d01-81b5-bf0d83a94fc1",
-      "order": 102,
+      "order": 16,
       "question": "Why should timestamps have an explicit time-zone strategy?",
       "answer": "Ambiguous local times can repeat or disappear around daylight-saving changes. Store instants in a timezone-aware form and convert to local zones at boundaries where needed.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -884,15 +251,215 @@
     },
     {
       "id": "6ac3c850-0204-419f-891c-f01e7583c7c0",
-      "order": 103,
+      "order": 17,
       "question": "What does database collation control?",
       "answer": "Collation defines rules for comparing and sorting text, such as case sensitivity and locale-specific ordering.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
+      "id": "d32131f1-1c1f-4151-92af-9eb4c9597701",
+      "order": 18,
+      "question": "What is schema migration?",
+      "answer": "A migration is a controlled change to database structure or data shape, applied in a known order so environments can evolve consistently.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "df623b9b-7142-4bd8-b78c-30c2b3d4c5a1",
+      "order": 19,
+      "question": "Why are backward-compatible migrations useful?",
+      "answer": "Old and new application versions may run at the same time during deployment. Additive changes let both versions continue operating while the rollout completes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9bee11f8-59fe-4235-aabf-7a0d33822a5a",
+      "order": 20,
+      "question": "What does `SELECT` do?",
+      "answer": "`SELECT` produces a result set from expressions and data sources, optionally filtering, joining, grouping, and ordering rows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d4494a31-d265-46f3-b9c6-e62ee2301011",
+      "order": 21,
+      "question": "What does a `WHERE` clause do?",
+      "answer": "It filters individual input rows before grouping and projection based on a Boolean condition.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d1c53a59-27a5-4c9b-aa20-2696ffb3157c",
+      "order": 22,
+      "question": "What does `GROUP BY` do?",
+      "answer": "It partitions input rows into groups so aggregate functions can compute one result per group.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e5c06410-22ba-4897-9447-e58705b6e802",
+      "order": 23,
+      "question": "What is the difference between `WHERE` and `HAVING`?",
+      "answer": "`WHERE` filters rows before grouping. `HAVING` filters groups after aggregation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f54babe6-d80b-4a06-ab2f-f05261ca5f74",
+      "order": 24,
+      "question": "What does `ORDER BY` guarantee?",
+      "answer": "It requests a defined result ordering by one or more expressions. Without `ORDER BY`, row order is not guaranteed.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "968fb787-f9df-415d-a687-dd7de11f0bd1",
+      "order": 25,
+      "question": "What does an inner join return?",
+      "answer": "It returns row combinations for which the join condition matches on both sides.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d38112e4-5990-48cb-961d-1ada2f36e254",
+      "order": 26,
+      "question": "What does a left join return?",
+      "answer": "It returns every row from the left side and matching right rows; when no right row matches, right-side columns are null.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d5b19e1c-7efe-4ebd-93f7-4b51715d93b0",
+      "order": 27,
+      "question": "What is a cross join?",
+      "answer": "A cross join returns every combination of a row from the left input with a row from the right input.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "78711fed-4572-48bb-a112-ca4ff27957d4",
+      "order": 28,
+      "question": "Why can joins multiply row counts unexpectedly?",
+      "answer": "If one row matches multiple rows on the other side, the result contains one output row per matching combination.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5b445b60-a2ce-4d86-bf88-20747481e6eb",
+      "order": 29,
+      "question": "What is a correlated subquery?",
+      "answer": "It is a subquery that references values from the outer query and may logically be evaluated for each outer row, though the optimizer can transform it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c29e873e-1d62-42a9-b2bb-05ef32c0a8a9",
+      "order": 30,
+      "question": "What is a common table expression?",
+      "answer": "A CTE gives a query expression a temporary name within one statement, improving composition and sometimes enabling recursive queries.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cdfa1020-67cc-4048-b36c-cdd2e29808a3",
+      "order": 31,
+      "question": "What is a window function?",
+      "answer": "A window function computes a value across a related set of rows while preserving one output row per input row, unlike ordinary aggregation that collapses groups.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6b9932c3-b7a9-48a9-a092-d8bb8a00c22c",
+      "order": 32,
+      "question": "What problem does `ROW_NUMBER()` solve?",
+      "answer": "It assigns sequential numbers within an ordered result or partition, useful for ranking, deduplication, and top-N-per-group queries.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0cc985a9-6e1f-4cad-8d0d-b712cccf7847",
+      "order": 33,
+      "question": "What is database normalization?",
+      "answer": "Normalization decomposes data into related tables so each fact has a clearer single home, reducing update anomalies and unnecessary duplication.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "80cafaee-f4f6-443a-a014-3ad5953ca986",
+      "order": 34,
+      "question": "What problem does first normal form address?",
+      "answer": "It requires table attributes to hold scalar values rather than repeating groups inside one row, making rows and columns consistently queryable.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6bf08c5f-83b5-4e15-b093-653e4e8b1734",
+      "order": 35,
+      "question": "What problem does second normal form address?",
+      "answer": "For tables with composite keys, it removes non-key attributes that depend on only part of that key.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "af431e6f-ea21-4422-a62c-dea8719e2ba8",
+      "order": 36,
+      "question": "What problem does third normal form address?",
+      "answer": "It removes non-key attributes that depend on other non-key attributes rather than directly on the key.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5703f28c-5f68-476b-9d70-f76d40573503",
+      "order": 37,
+      "question": "What is denormalization?",
+      "answer": "Denormalization intentionally duplicates or combines data to reduce read-time joins or computation, at the cost of more write complexity and consistency work.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1555580f-65e3-4872-8df5-6bd0ceeba9d5",
+      "order": 38,
+      "question": "What is a materialized view in a database?",
+      "answer": "It stores precomputed query output so repeated reads avoid recomputing the full query, while refresh logic keeps the stored result acceptably current.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "584893c4-894d-4bec-82f5-3ea485b31897",
+      "order": 39,
+      "question": "What is an index?",
+      "answer": "An index is an additional data structure that lets the database find matching rows without scanning every row, at the cost of storage and extra write maintenance.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4a669b3c-83c4-4366-a909-3675f7193624",
+      "order": 40,
+      "question": "Why do indexes slow writes?",
+      "answer": "Inserts, deletes, and indexed-column updates must also modify affected index structures, adding I/O and CPU work.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9f83b084-bc4b-4005-8433-0d0576ba9152",
+      "order": 41,
+      "question": "What is a B-tree index good for?",
+      "answer": "It keeps keys ordered, supporting equality lookups, ranges, ordered scans, and prefix matching on composite keys.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "18413cab-4a9a-45f4-9c5c-7a707f7dad6b",
+      "order": 42,
+      "question": "What is a hash index good for?",
+      "answer": "A hash index maps keys to buckets for fast equality lookup, but it generally cannot support ordered range scans.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
       "id": "fad377b3-df5b-40d0-a62d-bbc042dd6ed3",
-      "order": 104,
+      "order": 43,
       "question": "Why can `LIKE \"%term%\"` be hard to index with a normal B-tree?",
       "answer": "A leading wildcard removes a fixed ordered prefix, so the engine cannot usually navigate directly to one contiguous key range.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -900,7 +467,7 @@
     },
     {
       "id": "7904200f-eece-489f-9057-77d726953b9c",
-      "order": 105,
+      "order": 44,
       "question": "What is full-text search indexing?",
       "answer": "It builds structures such as token or inverted indexes optimized for matching words, phrases, and relevance rather than ordinary scalar equality.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -908,41 +475,529 @@
     },
     {
       "id": "4617f29c-315d-4521-9ba8-f610ec606c5e",
-      "order": 106,
+      "order": 45,
       "question": "What is an inverted index?",
       "answer": "It maps terms to the documents or records containing them, allowing search to start from terms instead of scanning every document.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
+      "id": "d3874c6d-42d5-4d56-b24e-dcbc556c24d8",
+      "order": 46,
+      "question": "What is a query execution plan?",
+      "answer": "It is the database’s chosen strategy for a statement, including access paths, join algorithms, sort steps, and estimated or actual row counts.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fddf524e-8b6b-485c-aa80-685af64accc2",
+      "order": 47,
+      "question": "What are database statistics?",
+      "answer": "Statistics summarize data distributions and table sizes so the optimizer can estimate how many rows operators will process.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f9d07690-ce70-48a5-9a8b-a78eabdef87e",
+      "order": 48,
+      "question": "What is index selectivity?",
+      "answer": "Selectivity describes how narrowly a predicate reduces rows. Highly selective conditions often benefit more from an index than conditions matching most of the table.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2f7d3361-97a2-44ee-bc23-63d45fe858b8",
+      "order": 49,
+      "question": "What is a full table scan?",
+      "answer": "The database reads the table or relevant storage pages broadly instead of navigating through an index to a narrow subset.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8e80f2e7-a1a1-41c5-b29e-96c778af243a",
+      "order": 50,
+      "question": "When can a full scan be the correct plan?",
+      "answer": "When most rows are needed, sequentially reading the table can be cheaper than performing many random index lookups.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4aec9641-2d33-484c-af27-dab02e4507e6",
+      "order": 51,
+      "question": "Why might a database ignore an available index?",
+      "answer": "The optimizer may estimate that a table scan is cheaper, especially for small tables or predicates matching a large fraction of rows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "968f2b2d-3f7a-4313-8150-b53ac5e7e392",
+      "order": 52,
+      "question": "What is a nested-loop join?",
+      "answer": "For each row from one input, the database searches the other input for matches. It is effective when the outer side is small and the inner lookup is cheap.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "49093542-73e4-4ab2-ad3f-bb79095fde8a",
+      "order": 53,
+      "question": "What is a hash join?",
+      "answer": "The database builds a hash table from one input and probes it with rows from the other, commonly making large equality joins efficient.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4d585e96-8c2f-4188-9bdc-cf79a882a74f",
+      "order": 54,
+      "question": "What is a merge join?",
+      "answer": "It walks two inputs ordered by the join keys and matches them as it advances, making equality or range-compatible joins efficient when sorted input is available.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "87b04af8-f29c-4ad5-9452-719f5504c8a5",
+      "order": 55,
+      "question": "Why inspect actual row counts in an execution plan?",
+      "answer": "Large differences between estimated and actual rows can explain poor choices such as wrong join algorithms, undersized memory, or inefficient access paths.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "dd61eca1-083e-48a5-b574-5bb747c81d4a",
+      "order": 56,
+      "question": "What is a composite index?",
+      "answer": "A composite index stores multiple columns together in a defined order so queries using compatible leading columns can search or order efficiently.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "213f02c6-98fa-4fa4-8aa0-cf95ea7b7889",
+      "order": 57,
+      "question": "Why does column order matter in a composite B-tree index?",
+      "answer": "The tree is ordered first by the leading column, then later columns. Queries that skip unconstrained leading columns often cannot use the index as efficiently for direct range navigation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fa8d62f0-0398-4f11-80e5-6561e3e3fd8e",
+      "order": 58,
+      "question": "What is a covering index?",
+      "answer": "A covering index contains all columns needed for a query so the database may answer from the index without fetching the base table rows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f28cea5a-a69f-47ac-8fcd-1b30b1ec7aaa",
+      "order": 59,
+      "question": "What should be measured before adding an index?",
+      "answer": "Measure the slow query, its plan, row counts, frequency, and write cost. An index should match a real access pattern rather than be added speculatively.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7ce5680a-007c-4592-a918-fb4ea569ecb6",
+      "order": 60,
+      "question": "What is a transaction?",
+      "answer": "A transaction groups database operations into one logical unit that commits together or is rolled back according to the database’s guarantees.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cb42ba8d-1ba4-4b23-a781-7bb35656af39",
+      "order": 61,
+      "question": "What does atomicity mean in ACID?",
+      "answer": "A transaction’s changes are committed as a unit or not committed at all; callers do not get a partially committed transaction.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "75c64375-a01c-49ab-92a5-c57d85d43d27",
+      "order": 62,
+      "question": "What does consistency mean in ACID?",
+      "answer": "A committed transaction preserves constraints and invariants enforced by the database, assuming the transaction itself respects application rules not encoded as constraints.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "306b9e57-001e-4acf-b71d-a3b0d244f3fa",
+      "order": 63,
+      "question": "What does isolation mean in ACID?",
+      "answer": "Concurrent transactions are prevented from observing or producing certain invalid interleavings according to the selected isolation level.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5f31f714-6fba-41de-903c-f518ce5ee4a0",
+      "order": 64,
+      "question": "What does durability mean in ACID?",
+      "answer": "After commit is acknowledged, the database preserves the transaction against failures covered by its durability model.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b2006772-3cb0-44fd-be80-35ff8aae7662",
+      "order": 65,
+      "question": "What is a dirty read?",
+      "answer": "A transaction reads data written by another transaction that has not committed and may later roll back.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8bf3d6f9-53f1-4171-96df-e4112e7e0855",
+      "order": 66,
+      "question": "What is a non-repeatable read?",
+      "answer": "A transaction reads the same row twice and sees a different committed value because another transaction updated it between reads.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1d7ec529-836c-4376-8ae1-5455fc194857",
+      "order": 67,
+      "question": "What is a phantom read?",
+      "answer": "Repeating a predicate query returns a different set of matching rows because another transaction inserted, deleted, or changed qualifying rows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e06c15a9-c5f9-4465-9a16-99032beb3afd",
+      "order": 68,
+      "question": "What is a lost update?",
+      "answer": "Two transactions read the same value and both write derived updates, causing one write to overwrite the other’s effect.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1bdd8563-edfd-4519-9d19-efaa7aca4866",
+      "order": 69,
+      "question": "What is transaction isolation level?",
+      "answer": "It selects which effects of concurrent transactions may become visible and how much coordination the database performs to prevent anomalies.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "78362489-98d3-440a-83d5-a866d16b6e01",
+      "order": 70,
+      "question": "What does serializable isolation aim to guarantee?",
+      "answer": "Committed concurrent transactions have an outcome equivalent to some serial execution order, preventing anomalies that cannot occur one transaction at a time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "582c52e4-8f16-4d42-88e7-973a2372035d",
+      "order": 71,
+      "question": "What trade-off does stronger isolation introduce?",
+      "answer": "It can increase locking, retries, aborts, or coordination, reducing concurrency under conflicting workloads.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "09cf6c60-19a0-407d-8ef3-30e5a2b4c460",
+      "order": 72,
+      "question": "What is pessimistic concurrency control?",
+      "answer": "Transactions acquire locks before accessing conflicting data so competing operations wait rather than proceed concurrently.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "55d80fdd-3097-482e-96b2-ab3e58da3fcb",
+      "order": 73,
+      "question": "What is a row lock?",
+      "answer": "A row lock restricts conflicting operations on selected rows while allowing unrelated rows to remain concurrently accessible.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c4b6377d-5132-4d05-a881-29dc34e6d986",
+      "order": 74,
+      "question": "What is a deadlock in a database?",
+      "answer": "Transactions wait cyclically for locks held by one another, so none can proceed. The database typically detects the cycle and aborts one transaction.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "af0b0b64-6387-4fd5-82f1-cf29444dd338",
+      "order": 75,
+      "question": "How can applications reduce deadlocks?",
+      "answer": "Keep transactions short, access shared resources in a consistent order, use appropriate indexes, and retry transactions chosen as deadlock victims.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "92ba3bf9-7c18-462f-8d1f-0fc388c5bfcf",
+      "order": 76,
+      "question": "What is optimistic concurrency control?",
+      "answer": "Transactions proceed without locking every potential conflict and validate versions or dependencies before commit, aborting or retrying when a conflict is detected.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "071e6a62-6c47-4e74-815b-97999271e053",
+      "order": 77,
+      "question": "What is MVCC?",
+      "answer": "Multi-Version Concurrency Control keeps multiple row versions so readers can observe a consistent snapshot while writers create newer versions, reducing read-write blocking.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9246ab79-18b7-4bff-8761-f9afb0a7e7c8",
+      "order": 78,
+      "question": "What cost does MVCC introduce?",
+      "answer": "Old versions consume storage until no active snapshot needs them, requiring cleanup or vacuum-like maintenance and creating possible bloat.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f29038c2-5e3e-4ed3-a647-063cfe50e2a0",
+      "order": 79,
+      "question": "What is a database connection pool?",
+      "answer": "A pool keeps reusable database connections so requests avoid repeatedly opening expensive connections and the application can cap concurrent database sessions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6176d8ff-5da9-461d-878f-c5e3f0052ecd",
+      "order": 80,
+      "question": "Why can an oversized connection pool hurt a database?",
+      "answer": "Too many concurrent sessions can increase memory use, context switching, lock contention, and queued work, reducing throughput rather than increasing it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5d193ccd-d6d3-4e4b-bdaa-faf306c02f28",
+      "order": 81,
+      "question": "What is the N+1 query problem?",
+      "answer": "Code runs one query for a collection and then one additional query per item, creating many round trips that could often be batched or joined.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3a070026-fe95-49d0-870f-5779b4d937ad",
+      "order": 82,
+      "question": "What trade-off does offset pagination have?",
+      "answer": "Large offsets can require scanning or discarding many rows, and concurrent inserts or deletes can cause items to shift between pages.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d5b27154-5c36-4d42-8716-26ecd1b3e94c",
+      "order": 83,
+      "question": "What is keyset pagination?",
+      "answer": "It fetches the next page using the last seen sort key, such as `WHERE id > ?`, avoiding the growing scan cost and instability of large offsets.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e260603e-ec06-4b3c-896d-9c19099f3688",
+      "order": 84,
+      "question": "What is a write-ahead log?",
+      "answer": "A WAL records changes in durable log form before modified data pages are considered safely persisted, enabling crash recovery and often replication.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "19d79a15-e277-419b-ae88-705a290d6025",
+      "order": 85,
+      "question": "Why can WAL improve write efficiency?",
+      "answer": "Appending sequential log records is often cheaper than synchronously writing many scattered data pages before acknowledging each transaction.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "68b9ca14-58d4-4b1b-b81e-8e270236732a",
+      "order": 86,
+      "question": "What is a database checkpoint?",
+      "answer": "A checkpoint advances a known recovery point by flushing or recording enough state so crash recovery need not replay the entire historical log.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
       "id": "9c4afa52-ee85-4b24-8a1e-94a138080029",
-      "order": 107,
+      "order": 87,
       "question": "What is database backup?",
       "answer": "A backup is a separately recoverable copy or representation of data used to restore after deletion, corruption, or infrastructure loss.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "f7aa99f9-0ede-4042-96ee-5aa7054d23c9",
-      "order": 108,
-      "question": "Why is replication not a backup?",
-      "answer": "Replication quickly copies legitimate writes and can also copy accidental deletes or corruption. A backup preserves recoverable historical state independent of the live replicas.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
       "id": "ad35b3a8-3dbc-46de-b300-077dd6520c86",
-      "order": 109,
+      "order": 88,
       "question": "What is point-in-time recovery?",
       "answer": "It restores a base backup and replays logs only up to a selected time, allowing recovery to just before an accidental or corrupting change.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "f28cea5a-a69f-47ac-8fcd-1b30b1ec7aaa",
+      "id": "e001e76e-7fb3-47bc-868d-e21f22a8ae6d",
+      "order": 89,
+      "question": "What is replication in databases?",
+      "answer": "Replication keeps copies of database data on multiple nodes for availability, read scaling, locality, or recovery.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "deba7ffb-d05e-4833-b8fd-589837b749b9",
+      "order": 90,
+      "question": "What is synchronous replication?",
+      "answer": "A write waits for one or more replicas to confirm required persistence before commit is acknowledged, improving failover durability at the cost of latency and availability.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "186ab64f-5c8e-4a78-a94d-8447e0788e23",
+      "order": 91,
+      "question": "What is asynchronous replication?",
+      "answer": "The primary can acknowledge writes before replicas apply them, reducing write latency but allowing lag and possible loss of recently acknowledged data during some failovers.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a34228e9-25fd-4261-81b2-148e22bffcb1",
+      "order": 92,
+      "question": "What is replication lag in a database?",
+      "answer": "It is the delay between a write becoming authoritative on one node and another replica applying or exposing that write.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "de64cbb2-bbd7-44f9-8c41-27a917b02383",
+      "order": 93,
+      "question": "Why can reading from replicas violate read-your-writes behavior?",
+      "answer": "A client may write to the primary and immediately read from a lagging replica that has not received the update yet.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7f1f4910-2ce7-48a6-8ff4-d44bb7e4e0f9",
+      "order": 94,
+      "question": "What is a read replica?",
+      "answer": "A read replica is a replicated database node used to serve read traffic, reducing load on the write leader while accepting consistency and lag trade-offs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e22c9748-ba85-4d3e-9e3e-fb4e3669f4e3",
+      "order": 95,
+      "question": "What is eventual consistency in a database?",
+      "answer": "Replicas or derived views may temporarily disagree after a write but converge if updates stop and communication succeeds.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f7aa99f9-0ede-4042-96ee-5aa7054d23c9",
+      "order": 96,
+      "question": "Why is replication not a backup?",
+      "answer": "Replication quickly copies legitimate writes and can also copy accidental deletes or corruption. A backup preserves recoverable historical state independent of the live replicas.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "21bb9e7b-ea4c-403c-8243-eedd0757c215",
+      "order": 97,
+      "question": "What is database partitioning?",
+      "answer": "Partitioning divides a logical table or dataset into separate physical subsets based on a rule such as range, hash, or list.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "580fa242-7fd1-4b2c-b4e3-1cde8ca0f977",
+      "order": 98,
+      "question": "What problem does partition pruning solve?",
+      "answer": "If a query predicate identifies relevant partitions, the database can skip scanning unrelated partitions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bd9c4cd8-2f71-43c7-9061-e7cc5a315608",
+      "order": 99,
+      "question": "What is horizontal sharding?",
+      "answer": "Rows are distributed across separate database servers so storage and traffic can exceed the capacity of one node.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b3fe6d69-515c-450f-bb98-206d248193a7",
+      "order": 100,
+      "question": "What is a shard key?",
+      "answer": "A shard key determines which shard stores a row and often which node can answer a request without contacting every shard.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "758caa6b-c3f3-4268-b3c5-fabaad430e75",
+      "order": 101,
+      "question": "What is a distributed transaction?",
+      "answer": "A transaction whose atomic outcome spans multiple independent resource managers or nodes and therefore requires coordination.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "20466015-beb1-4fa8-9bb6-02e24e7e6697",
+      "order": 102,
+      "question": "Why are cross-shard transactions expensive?",
+      "answer": "They require coordination across independent nodes, increasing latency and exposing the transaction to more failure modes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "24505dd6-54e3-48e6-a321-fcf487b11424",
+      "order": 103,
+      "question": "What problem does two-phase commit solve?",
+      "answer": "It coordinates participants so they either all commit or all abort, but participants can remain blocked if the coordinator fails at certain points.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7a7b045f-a8ee-432f-be6b-90a437a276a0",
+      "order": 104,
+      "question": "What is the outbox pattern?",
+      "answer": "The application commits domain changes and an outgoing message record in one database transaction; a publisher later sends the message and marks or removes the outbox record.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7c885f01-eab1-4981-8d42-7663126e655c",
+      "order": 105,
+      "question": "What is database change data capture?",
+      "answer": "CDC emits a stream of committed row or log changes so downstream systems can react without the application writing a separate event for every mutation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2c0f575d-72e4-4ade-88b3-c49832899d59",
+      "order": 106,
+      "question": "What is a document database?",
+      "answer": "A document database stores self-contained records such as JSON-like documents and typically allows flexible nested structures and document-level access patterns.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "89a95525-6e4f-48cb-9053-8f66f8dc52fe",
+      "order": 107,
+      "question": "When is a document model useful?",
+      "answer": "It fits data commonly read and written as one aggregate with variable nested fields and few cross-document relational constraints.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3df3eafa-8c32-4c89-8e6f-fcf323e7b24e",
+      "order": 108,
+      "question": "What is a key-value database?",
+      "answer": "A key-value store retrieves an opaque or semi-structured value by a unique key, favoring simple low-latency access patterns.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "177bd8ed-0a02-4560-b6b0-f9a6075d90cf",
+      "order": 109,
+      "question": "What is a wide-column database?",
+      "answer": "A wide-column store partitions rows by keys and supports sparse or flexible columns, typically designed for large distributed datasets and predictable access paths.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2d1e2de6-5214-4077-83ac-45aa092914a1",
       "order": 110,
-      "question": "What should be measured before adding an index?",
-      "answer": "Measure the slow query, its plan, row counts, frequency, and write cost. An index should match a real access pattern rather than be added speculatively.",
+      "question": "What is a graph database?",
+      "answer": "A graph database stores vertices and edges as first-class relationships, making multi-hop relationship traversal a primary access pattern.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     }
