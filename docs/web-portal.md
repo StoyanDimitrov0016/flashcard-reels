@@ -4,6 +4,19 @@ The [internal web portal](https://flashcard-reels.vercel.app/) is a Next.js cata
 
 After signing in with the shared team password, users can search decks, browse cards and reveal answers, read a deck's lessons, download `.fcrdeck` packages, and display a phone-transfer QR code. The catalog lists every package uploaded under `decks/` in the R2 bucket, so publishing a deck needs no portal change.
 
+## Server cache
+
+Each server instance keeps an in-memory `lru-cache` for parsed deck summaries and previews.
+Both caches retain at most 32 entries and automatically remove entries after 30 minutes;
+reads update recency but do not extend the TTL. The preview cache also has an 8 MiB budget
+measured by the UTF-8 JSON size of its cards, lessons, and metadata. This is a content-size
+budget, not an exact JavaScript heap limit. Larger previews are served without being cached.
+Audio and complete archive bytes are never retained in these caches.
+
+The storage listing is reused for 60 seconds. Refreshing it removes cached revisions that
+were deleted or replaced. Concurrent preview loads share one read, and failed loads can be
+retried. All caches are local to the server instance and disappear when it restarts.
+
 ## Phone transfer
 
 1. Open a deck in the portal and choose **Send to phone**.
