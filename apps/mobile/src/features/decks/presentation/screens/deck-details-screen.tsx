@@ -30,6 +30,8 @@ import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
 import { useResetDeckProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-deck-progress";
+import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
+import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { reportError } from "@/shared/errors/report-error";
 import { ErrorState } from "@/shared/presentation/components/error-state";
@@ -60,15 +62,13 @@ function CardRow({ card, onPress, showProgress }: CardRowProps) {
           ? "Opens question, answer, audio, and progress"
           : "Opens question, answer, and audio"
       }
-      accessibilityLabel={`Card ${card.order + 1}: ${card.question}`}
+      accessibilityLabel={`Card ${card.order + 1}: ${toSpokenFlashcardText(card.question)}`}
       accessibilityRole="button"
       onPress={onPress}
       style={styles.cardRow}
     >
       <Text style={styles.position}>{card.order + 1}</Text>
-      <Text numberOfLines={2} style={styles.question}>
-        {card.question}
-      </Text>
+      <FlashcardText numberOfLines={2} style={styles.question} text={card.question} />
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
         size={sizes.icon.small}
