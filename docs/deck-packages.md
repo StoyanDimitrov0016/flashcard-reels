@@ -74,11 +74,11 @@ Generate and check the package from `apps/mobile`:
 
 ```powershell
 npm.cmd run decks:generate -- data/decks/system-design-foundations
-npm.cmd run decks:inspect -- dist/decks/<deck-id>.fcrdeck
+npm.cmd run decks:inspect -- build/decks/<deck-id>.fcrdeck
 ```
 
 The generator validates `deck.json`, includes every listed lesson, and includes audio files named
-after cards in the deck. It writes to `dist/decks/<deck-id>.fcrdeck` unless an output path is
+after cards in the deck. It writes to `build/decks/<deck-id>.fcrdeck` unless an output path is
 given. Import the package through **Library → Import**, or publish it with `r2:push-decks`.
 
 ## Publishing

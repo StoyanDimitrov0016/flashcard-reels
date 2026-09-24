@@ -12,6 +12,8 @@ node_modules/
 # Expo
 .expo/
 dist/
+# Generated deck packages
+/apps/mobile/build/
 web-build/
 expo-env.d.ts
 
