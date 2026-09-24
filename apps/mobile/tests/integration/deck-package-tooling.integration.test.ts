@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 
 const temporaryDirectories: string[] = [];
 
@@ -162,5 +163,37 @@ describe("deck package tooling independence", () => {
     expect(invalidResult.status).not.toBe(0);
     expect(invalidResult.stderr).toContain("Validation: failed -");
     expect(invalidResult.stderr).not.toContain("Error [");
+  });
+
+  it("generates a lesson deck from its source directory with optional audio", async () => {
+    const project = await temporaryProject();
+    const source = path.join(project, "system-design-foundations");
+    await cp(path.join(process.cwd(), "data", "decks", "system-design-foundations"), source, {
+      recursive: true,
+    });
+    const document = DeckPackageSchema.parse(
+      JSON.parse(await readFile(path.join(source, "deck.json"), "utf8"))
+    );
+    const [firstCard] = document.cards;
+    await mkdir(path.join(source, "audio"), { recursive: true });
+    await writeFile(
+      path.join(source, "audio", `${firstCard?.id}.question.mp3`),
+      new Uint8Array([1, 2, 3])
+    );
+    const output = path.join(project, "out", "deck.fcrdeck");
+
+    const result = runTool("generate-deck-package.mjs", source, output);
+
+    expect(result.status, result.stderr).toBe(0);
+    const generated = new ArchiveDeckPackageReader().read(new Uint8Array(await readFile(output)));
+    expect(generated.id).toBe(document.id);
+    expect(generated.cards).toHaveLength(document.cards.length);
+    expect(generated.lessonFiles.size).toBe(document.lessons?.length);
+    expect([...generated.audioFiles.keys()]).toEqual([`audio/${firstCard?.id}.question.mp3`]);
+
+    await writeFile(path.join(source, "audio", "stray.mp3"), new Uint8Array([1]));
+    const rejected = runTool("generate-deck-package.mjs", source, output);
+    expect(rejected.status).not.toBe(0);
+    expect(rejected.stderr).toContain("Unexpected audio file stray.mp3");
   });
 });

@@ -58,9 +58,10 @@ function deckDocument(overrides: Partial<DeckPackageDocument> = {}): DeckPackage
 function candidate(
   document: DeckPackageDocument,
   fileName = "Scaling.fcrdeck",
-  audioFiles: Record<string, Uint8Array> = {}
+  audioFiles: Record<string, Uint8Array> = {},
+  lessonFiles: Record<string, string> = {}
 ): DeckPublicationCandidate {
-  const bytes = createDeckPackageArchive(document, audioFiles);
+  const bytes = createDeckPackageArchive(document, audioFiles, lessonFiles);
   return { bytes, fileName, sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 
@@ -209,5 +210,57 @@ describe("deck publication review", () => {
     await expect(review(store, candidate(deckDocument({ version: 2 })))).rejects.toThrow(
       "R2 unreachable"
     );
+  });
+
+  describe("lessons", () => {
+    const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
+    const lessons = [{ id: lessonId, order: 0, title: "Why scale" }];
+    const withLesson = (markdown: string, version = 1, id = deckId) =>
+      candidate(
+        deckDocument({ id, lessons, title: id === deckId ? "Scaling" : "Other", version }),
+        id === deckId ? "Scaling.fcrdeck" : "Other.fcrdeck",
+        {},
+        { [lessonId]: markdown }
+      );
+
+    it("blocks edited lesson content that keeps the published version", async () => {
+      const result = await review(storeWith(withLesson("Original")), withLesson("Edited"));
+
+      expect(result.decks[0]).toMatchObject({
+        changedLessons: [{ id: lessonId, title: "Why scale" }],
+        status: "blocked",
+      });
+    });
+
+    it("lists added and changed lessons for a raised version", async () => {
+      const withoutLessons = candidate(deckDocument());
+
+      const added = await review(storeWith(withoutLessons), withLesson("Original", 2));
+      const changed = await review(storeWith(withLesson("Original")), withLesson("Edited", 2));
+
+      expect(added.decks[0]).toMatchObject({ addedLessons: [{ id: lessonId }], status: "updated" });
+      expect(changed.decks[0]).toMatchObject({
+        changedLessons: [{ id: lessonId }],
+        status: "updated",
+      });
+    });
+
+    it("blocks lesson IDs shared by different decks", async () => {
+      const otherCards = deckCards({
+        0: { id: "5a2d1e6f-7b8c-4d9e-8f1a-2b3c4d5e6f7a" },
+        1: { id: "6b3e2f7a-8c9d-4e0f-9a2b-3c4d5e6f7a8b" },
+        2: { id: "7c4f3a8b-9d0e-4f1a-8b3c-4d5e6f7a8b9c" },
+      });
+      const otherDeck = candidate(
+        deckDocument({ cards: otherCards, id: otherDeckId, lessons, title: "Other" }),
+        "Other.fcrdeck",
+        {},
+        { [lessonId]: "Copy" }
+      );
+
+      const result = await review(storeWith(), withLesson("Original"), otherDeck);
+
+      expect(result.blocks).toEqual([expect.stringContaining(`Lesson ${lessonId}`)]);
+    });
   });
 });
