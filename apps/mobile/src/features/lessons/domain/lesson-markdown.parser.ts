@@ -216,3 +216,23 @@ function isUnderscoreBoundary(
   const neighbour = closing ? text[index + length] : text[index - 1];
   return neighbour === undefined || !WordCharacterPattern.test(neighbour);
 }
+
+/**
+ * Lesson screens show the title from deck.json, and authors often open the Markdown with the same
+ * heading. Dropping a matching leading level-one heading avoids showing the title twice.
+ */
+export function withoutRepeatedTitle(blocks: readonly LessonBlock[], title: string): LessonBlock[] {
+  const [first, ...rest] = blocks;
+  if (
+    first?.type === "heading" &&
+    first.level === 1 &&
+    normalizeTitle(first.content.map((segment) => segment.text).join("")) === normalizeTitle(title)
+  ) {
+    return rest;
+  }
+  return [...blocks];
+}
+
+function normalizeTitle(value: string): string {
+  return value.trim().replaceAll(/\s+/g, " ").toLowerCase();
+}

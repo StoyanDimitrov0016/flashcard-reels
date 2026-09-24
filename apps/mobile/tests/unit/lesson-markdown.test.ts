@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parseLessonMarkdown } from "@/features/lessons/domain/lesson-markdown.parser";
+import {
+  parseLessonMarkdown,
+  withoutRepeatedTitle,
+} from "@/features/lessons/domain/lesson-markdown.parser";
 
 function plain(text: string) {
   return { bold: false, code: false, italic: false, text };
@@ -106,5 +109,13 @@ describe("lesson Markdown", () => {
     expect(parseLessonMarkdown("```\nconst a = 1;")).toEqual([
       { text: "const a = 1;", type: "code" },
     ]);
+  });
+
+  it("drops a leading heading that repeats the lesson title, and keeps other headings", () => {
+    const blocks = parseLessonMarkdown(["#  Caching", "", "Intro", "", "# Caching"].join("\n"));
+
+    expect(withoutRepeatedTitle(blocks, "caching")).toEqual(blocks.slice(1));
+    expect(withoutRepeatedTitle(blocks, "Queues")).toEqual(blocks);
+    expect(withoutRepeatedTitle(parseLessonMarkdown("## Caching"), "Caching")).toHaveLength(1);
   });
 });
