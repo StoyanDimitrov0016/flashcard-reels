@@ -9,6 +9,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
 import { ReelFeed } from "@/features/reels/presentation/components/reel-feed";
+import { useStudyFeedContentInset } from "@/features/reels/presentation/components/study-feed-header";
 import {
   useFeedScope,
   type FocusTransition,
@@ -22,6 +23,7 @@ import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type ReadyFocusedFeedContentProps = Readonly<{
   cards: Flashcard[];
+  contentInsetTop: number;
   deckId: DeckId;
   expectedRevision: number;
   onSessionStarted: (sessionId: string, expectedRevision: number) => void;
@@ -31,6 +33,7 @@ type ReadyFocusedFeedContentProps = Readonly<{
 
 function ReadyFocusedFeedContent({
   cards,
+  contentInsetTop,
   deckId,
   expectedRevision,
   onSessionStarted,
@@ -62,6 +65,7 @@ function ReadyFocusedFeedContent({
 
   return (
     <ReelFeed
+      contentInsetTop={contentInsetTop}
       key={preparedFeed.studySessionId}
       preparedFeed={preparedFeed}
       showMainFeedLink
@@ -72,11 +76,16 @@ function ReadyFocusedFeedContent({
 }
 
 type ReadyFocusedFeedProps = Readonly<{
+  contentInsetTop: number;
   focusedFeed: Extract<FocusedFeedState, { status: "ready" }>;
   onSessionStarted: (sessionId: string, expectedRevision: number) => void;
 }>;
 
-function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedProps) {
+function ReadyFocusedFeed({
+  contentInsetTop,
+  focusedFeed,
+  onSessionStarted,
+}: ReadyFocusedFeedProps) {
   const { cards, loading } = useFlashcards(focusedFeed.deckId);
 
   if (loading) {
@@ -86,6 +95,7 @@ function ReadyFocusedFeed({ focusedFeed, onSessionStarted }: ReadyFocusedFeedPro
   return (
     <ReadyFocusedFeedContent
       cards={cards}
+      contentInsetTop={contentInsetTop}
       deckId={focusedFeed.deckId}
       expectedRevision={focusedFeed.revision}
       onSessionStarted={onSessionStarted}
@@ -137,6 +147,7 @@ export default function FocusedFeedScreen() {
   const showLoading = !isReady && !hasRestorationError && focusRestoring;
   const showEmpty = !isReady && !hasRestorationError && !focusRestoring;
   const chooseDeck = () => router.navigate("../library");
+  const contentInsetTop = useStudyFeedContentInset();
 
   return (
     <SafeAreaView edges={["right", "left"]} style={styles.screen}>
@@ -148,7 +159,7 @@ export default function FocusedFeedScreen() {
       {isReady && (
         <View style={styles.content}>
           {hasRestorationError && (
-            <View style={styles.notice}>
+            <View style={[styles.notice, { marginTop: contentInsetTop }]}>
               <Text accessibilityRole="alert" style={styles.recoveryCopy}>
                 Couldn’t refresh Focus. Your current feed is available.
               </Text>
@@ -162,6 +173,7 @@ export default function FocusedFeedScreen() {
             </View>
           )}
           <ReadyFocusedFeed
+            contentInsetTop={hasRestorationError ? 0 : contentInsetTop}
             focusedFeed={focusedFeed}
             key={`focused-${focusedFeed.deckId}-${focusedFeed.revision}`}
             onSessionStarted={confirmFocusedFeedSession}
@@ -203,6 +215,7 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.title2,
       fontWeight: fontWeight.heavy,
     },
+    // Cards run full-bleed under the status bar and the study feed header.
     screen: { backgroundColor: colors.canvas, flex: 1 },
   });
 }
