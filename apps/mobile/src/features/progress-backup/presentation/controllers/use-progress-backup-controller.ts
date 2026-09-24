@@ -79,10 +79,14 @@ export function useProgressBackupController() {
     setBusy(true);
     setError(null);
     try {
-      await progressBackupService.restore(prepared);
-      setHasSafetyCopy(true);
+      const replaced = await progressBackupService.restore(prepared);
+      if (replaced) {
+        setHasSafetyCopy(true);
+      }
       setPrepared(null);
-      showSuccessToast("Learning progress restored.");
+      showSuccessToast(
+        replaced ? "Learning progress restored." : "Progress already matches this backup."
+      );
     } catch (cause) {
       reportError(cause, "Progress restore failure");
       setError(getProgressBackupErrorFeedback(cause, "restore"));

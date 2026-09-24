@@ -3,7 +3,8 @@ import type { ProgressBackupDocument } from "@/features/progress-backup/contract
 export interface ProgressBackupFileGateway {
   pick(): Promise<string | null>;
   share(document: ProgressBackupDocument): Promise<void>;
-  saveSafetyCopy(document: ProgressBackupDocument): Promise<void>;
-  hasSafetyCopy(): Promise<boolean>;
-  shareSafetyCopy(): Promise<void>;
+  saveSafetyCopy(document: ProgressBackupDocument): Promise<string>;
+  hasSafetyCopy(fileName: string): Promise<boolean>;
+  shareSafetyCopy(fileName: string): Promise<void>;
+  deleteSafetyCopy(fileName: string): Promise<void>;
 }

@@ -12,7 +12,7 @@ export type PreparedProgressRestore = Readonly<{
 export interface ProgressBackupService {
   exportProgress(): Promise<void>;
   prepareRestore(): Promise<PreparedProgressRestore | null>;
-  restore(prepared: PreparedProgressRestore): Promise<void>;
+  restore(prepared: PreparedProgressRestore): Promise<boolean>;
   hasSafetyCopy(): Promise<boolean>;
   shareSafetyCopy(): Promise<void>;
 }

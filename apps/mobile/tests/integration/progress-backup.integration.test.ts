@@ -35,8 +35,13 @@ import {
 class MemoryBackupFiles implements ProgressBackupFileGateway {
   picked: string | null = null;
   shared: ProgressBackupDocument | null = null;
-  safetyCopy: ProgressBackupDocument | null = null;
+  readonly copies = new Map<string, ProgressBackupDocument>();
   failSafetyCopy = false;
+  private nextFile = 0;
+
+  get safetyCopy(): ProgressBackupDocument | null {
+    return [...this.copies.values()].at(-1) ?? null;
+  }
 
   async pick(): Promise<string | null> {
     return this.picked;
@@ -44,16 +49,26 @@ class MemoryBackupFiles implements ProgressBackupFileGateway {
   async share(document: ProgressBackupDocument): Promise<void> {
     this.shared = document;
   }
-  async saveSafetyCopy(document: ProgressBackupDocument): Promise<void> {
+  async saveSafetyCopy(document: ProgressBackupDocument): Promise<string> {
     if (this.failSafetyCopy) {
       throw new Error("Storage is full");
     }
-    this.safetyCopy = document;
+    const fileName = `safety-copy-${++this.nextFile}.json`;
+    this.copies.set(fileName, document);
+    return fileName;
   }
-  async hasSafetyCopy(): Promise<boolean> {
-    return this.safetyCopy !== null;
+  async hasSafetyCopy(fileName: string): Promise<boolean> {
+    return this.copies.has(fileName);
   }
-  async shareSafetyCopy(): Promise<void> {}
+  async shareSafetyCopy(fileName: string): Promise<void> {
+    this.shared = this.copies.get(fileName) ?? null;
+    if (!this.shared) {
+      throw new Error("Missing safety copy");
+    }
+  }
+  async deleteSafetyCopy(fileName: string): Promise<void> {
+    this.copies.delete(fileName);
+  }
 }
 
 function loadDeviceFixture(): ProgressBackupDocument {
@@ -205,7 +220,7 @@ describe("progress backup", () => {
       throw new Error("Expected a prepared restore");
     }
 
-    await backup.restore(prepared);
+    expect(await backup.restore(prepared)).toBe(true);
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(targetClock.now());
     expect(restored.reviewEvents.map((event) => event.id)).toEqual([testId(801)]);
@@ -213,6 +228,84 @@ describe("progress backup", () => {
     expect(restored.flashcardMemoryStates).toHaveLength(1);
     expect(await target.drizzle.select().from(studySessions)).toHaveLength(0);
     expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+
+    const safetyCopyFileName = await new SQLiteProgressBackupQuery(
+      target.drizzle
+    ).readSafetyCopyFileName();
+    expect(await backup.restore(prepared)).toBe(false);
+    expect(await new SQLiteProgressBackupQuery(target.drizzle).readSafetyCopyFileName()).toBe(
+      safetyCopyFileName
+    );
+    expect(files.copies.size).toBe(1);
+    expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+  });
+
+  it("preserves the last successful safety copy when a later restore fails", async () => {
+    const database = createDatabase();
+    const original = loadDeviceFixture();
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    const files = new MemoryBackupFiles();
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const emptyBackup: ProgressBackupDocument = {
+      format: "flashcard-reels-progress",
+      version: 1,
+      exportedAt: clock.now(),
+      deckProgress: [],
+      flashcardProgress: [],
+      flashcardMemoryStates: [],
+      reviewEvents: [],
+    };
+    files.picked = JSON.stringify(emptyBackup);
+    const backup = new ProgressBackupServiceImpl(
+      graph.study,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      files,
+      clock
+    );
+    const firstRestore = await backup.prepareRestore();
+    if (!firstRestore) {
+      throw new Error("Expected a prepared restore");
+    }
+    await backup.restore(firstRestore);
+    const successfulCopyName = await query.readSafetyCopyFileName();
+    expect(successfulCopyName).not.toBeNull();
+
+    files.picked = JSON.stringify(original);
+    const failingBackup = new ProgressBackupServiceImpl(
+      graph.study,
+      query,
+      {
+        restore: async () => {
+          throw new Error("Simulated restore failure");
+        },
+      },
+      files,
+      clock
+    );
+    const laterRestore = await failingBackup.prepareRestore();
+    if (!laterRestore) {
+      throw new Error("Expected a prepared restore");
+    }
+    await expect(failingBackup.restore(laterRestore)).rejects.toMatchObject({
+      code: "PROGRESS_BACKUP_RESTORE_FAILED",
+    });
+    expect(await query.readSafetyCopyFileName()).toBe(successfulCopyName);
+    expect(files.copies.size).toBe(1);
+    expect(await query.read(emptyBackup.exportedAt)).toEqual(emptyBackup);
+    await failingBackup.shareSafetyCopy();
+    expect(files.shared?.reviewEvents).toHaveLength(1);
+
+    const successfulRetry = await backup.prepareRestore();
+    if (!successfulRetry) {
+      throw new Error("Expected a prepared restore");
+    }
+    expect(await backup.restore(successfulRetry)).toBe(true);
+    expect(await query.readSafetyCopyFileName()).not.toBe(successfulCopyName);
+    expect(files.copies.size).toBe(1);
+    expect(files.safetyCopy?.reviewEvents).toHaveLength(0);
   });
 
   it("reports an unsupported backup version before changing local progress", async () => {
@@ -409,6 +502,34 @@ describe("progress backup", () => {
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(document.exportedAt);
     expect(restored.deckProgress[0]?.resolution).toBe("archived");
     expect(restored.deckProgress[0]?.title).toBe("Versioned Test Deck");
+  });
+
+  it("activates matching archived progress when the deck is installed later", async () => {
+    const database = createDatabase();
+    const document = loadDeviceFixture();
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const transaction = new SQLiteProgressBackupRestoreTransaction(database.drizzle);
+    await transaction.restore(document);
+    const archived = await query.read(document.exportedAt);
+    expect(archived.deckProgress[0]?.resolution).toBe("archived");
+    await seedDeck(database, firstRow(document.deckProgress).deckId, [
+      firstRow(document.flashcardProgress).flashcardId,
+    ]);
+
+    const files = new MemoryBackupFiles();
+    files.picked = JSON.stringify(document);
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const backup = new ProgressBackupServiceImpl(graph.study, query, transaction, files, clock);
+    const prepared = await backup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Expected a prepared restore");
+    }
+
+    expect(await backup.restore(prepared)).toBe(true);
+    const restored = await query.read(document.exportedAt);
+    expect(restored.deckProgress[0]?.resolution).toBe("active");
+    expect(await backup.hasSafetyCopy()).toBe(true);
   });
 
   it("rolls back all deletions if a restore row fails a SQLite constraint", async () => {

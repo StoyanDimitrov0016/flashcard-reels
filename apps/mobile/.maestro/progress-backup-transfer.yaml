@@ -22,6 +22,18 @@ appId: com.flashcardreels.app
 - assertVisible: "1 / 3 reviewed"
 - tapOn: You tab
 - tapOn: Progress backup
+- assertVisible: Share previous progress backup
+- tapOn: Import progress
+- tapOn: Show roots
+- waitForAnimationToEnd
+- tapOn:
+    point: "30%, 27%"
+- assertVisible: Files in Downloads
+- tapOn: progress-backup.json
+- assertVisible: Replace learning progress?
+- tapOn: Replace progress
+- assertVisible: Progress already matches this backup.
+- assertVisible: Share previous progress backup
 - tapOn: Export progress
 - waitForAnimationToEnd
 - pressKey: Back
