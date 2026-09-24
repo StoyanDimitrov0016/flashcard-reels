@@ -1,0 +1,437 @@
+{
+  "id": "b0612d11-1111-4f6a-b69b-70d76fd95b30",
+  "version": 1,
+  "title": "System Design Foundations",
+  "description": "Measurement, scaling, caching, queues, and failure handling, with a short lesson for each topic.",
+  "createdAt": "2026-09-25T00:00:00.000Z",
+  "updatedAt": "2026-09-25T00:00:00.000Z",
+  "lessons": [
+    {
+      "id": "a4378c2f-4c3c-416f-a64f-611c5999469f",
+      "order": 0,
+      "title": "Measuring a system"
+    },
+    {
+      "id": "f605d54c-5aea-4009-8a14-b8230782d83b",
+      "order": 1,
+      "title": "Scaling up and out"
+    },
+    {
+      "id": "4d13ca5a-ad73-4557-88cb-fb75838243f0",
+      "order": 2,
+      "title": "Caching"
+    },
+    {
+      "id": "0e5f1f87-4b4d-42ab-8820-8750b07f5c39",
+      "order": 3,
+      "title": "Queues and asynchronous work"
+    },
+    {
+      "id": "e3d85c7b-0134-485b-bbcb-a21d52b1fc89",
+      "order": 4,
+      "title": "Designing for failure"
+    }
+  ],
+  "cards": [
+    {
+      "id": "919c713a-4aef-4c96-a107-7cab7134dfbe",
+      "order": 0,
+      "question": "What is throughput?",
+      "answer": "Throughput is the amount of work a system completes per unit of time, such as requests per second or messages per second.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "ae3210b0-7fa1-4384-bdb3-7536bff7668f",
+      "order": 1,
+      "question": "What is scalability?",
+      "answer": "Scalability is a system's ability to handle more load by adding resources, without an unacceptable loss of latency, throughput, or reliability.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "4765389d-4011-4bd8-870d-3aca841583d1",
+      "order": 2,
+      "question": "What is latency?",
+      "answer": "Latency is the time one operation takes to complete, measured from the caller's point of view.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "7e963a6f-b535-4b40-ad7d-11430ed205b0",
+      "order": 3,
+      "question": "Why are percentile latencies more useful than averages?",
+      "answer": "Percentiles show how slow the tail of requests is. An average can hide a small but important group of very slow requests.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "7d62f080-8ee7-402c-9380-cd7217c3049d",
+      "order": 4,
+      "question": "What does a p99 latency of 800 milliseconds mean?",
+      "answer": "Ninety-nine percent of requests finish in 800 milliseconds or less, and the slowest one percent take longer.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "ec708ea4-b188-402f-a414-6d9cf88f559e",
+      "order": 5,
+      "question": "What is availability?",
+      "answer": "Availability is the fraction of time or requests for which a service can successfully do its intended job.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "87962a27-ff30-45c3-9937-364d8150fd4f",
+      "order": 6,
+      "question": "How is reliability different from availability?",
+      "answer": "Availability means the service answers. Reliability means it keeps producing correct results over time, even during expected failures.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "b7a8f1b5-2156-4bb3-b9d0-4b297d7b4d06",
+      "order": 7,
+      "question": "What is durability?",
+      "answer": "Durability is the promise that data, once acknowledged, stays stored despite failures within the system's stated fault model.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "35e4a6d6-5e93-4275-b5db-f5b4c05eb21b",
+      "order": 8,
+      "question": "What is an error budget?",
+      "answer": "An error budget is the amount of unreliability an SLO allows. Teams spend it on changes, and slow down releases when it runs low.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "fc1c863d-d545-4619-95d7-934fa2558ea9",
+      "order": 9,
+      "question": "What is capacity planning?",
+      "answer": "Capacity planning estimates future resource needs from expected load, growth, and safety margins, so the system meets its targets before it saturates.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "206dac74-5720-443d-a0f7-7f17401a7db2",
+      "order": 10,
+      "question": "What is vertical scaling?",
+      "answer": "Vertical scaling gives one machine more CPU, memory, or storage. It is simple, but it hits hardware limits and keeps one large failure domain.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "56e946e7-7c54-47ca-9d2b-336b8cd32153",
+      "order": 11,
+      "question": "What is horizontal scaling?",
+      "answer": "Horizontal scaling adds more machines or service instances and spreads the work across them, which requires distribution and coordination.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "e615fc3f-2261-4198-847d-50ddfb660b62",
+      "order": 12,
+      "question": "What is a failure domain?",
+      "answer": "A failure domain is the set of components that fail together. One large machine is one large failure domain.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "4bc48563-0d9f-4290-97b7-74f29086ac49",
+      "order": 13,
+      "question": "Why is stateless application logic easier to scale horizontally?",
+      "answer": "Any instance can handle any request because durable state lives elsewhere, so instances can be added, removed, or replaced freely.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "7188715b-8531-4ada-ad11-c47360f9ece5",
+      "order": 14,
+      "question": "What does a load balancer do?",
+      "answer": "A load balancer distributes requests across backend instances and removes unhealthy instances from rotation.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "637be748-3883-4958-b6a1-168392471f85",
+      "order": 15,
+      "question": "What problem do health checks solve?",
+      "answer": "Health checks let routing avoid instances that cannot safely serve traffic, so fewer requests reach failed or unready nodes.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "9c38cac5-bb84-40b1-bcd8-39f9c9f764e9",
+      "order": 16,
+      "question": "What is round-robin load balancing?",
+      "answer": "Round robin sends each new request to the next backend in turn. It is simple but ignores differences in request cost and backend load.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "67a209c0-dd45-4f27-8c3e-225dae8039d9",
+      "order": 17,
+      "question": "When is least-connections load balancing useful?",
+      "answer": "It helps when requests are long-lived or uneven, because it favors backends with fewer active connections.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "80b4e414-4332-4d91-b135-0bf4a124637c",
+      "order": 18,
+      "question": "What is the trade-off of sticky sessions?",
+      "answer": "Sticky sessions let in-memory session state work, but they weaken load balancing and make failover harder.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "807d1ad6-af6d-4273-9736-9414dc997d73",
+      "order": 19,
+      "question": "Why can CPU-only autoscaling fail?",
+      "answer": "A service may run out of memory, connections, queue capacity, or downstream quota long before its CPU becomes busy.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "4c458169-2907-4bcc-942c-fd7351e92b1d",
+      "order": 20,
+      "question": "What is a cache?",
+      "answer": "A cache is temporary storage for expensive or frequently used data, so later reads can skip recomputing or refetching it.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "8b1fa43a-94e5-40a7-aac7-100b90a30dac",
+      "order": 21,
+      "question": "What is cache hit rate?",
+      "answer": "Hit rate is the fraction of reads served from the cache instead of the underlying source. A higher rate means more backend work is avoided.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "f077f9a8-5094-441a-96e3-27cbacd4a631",
+      "order": 22,
+      "question": "How does cache-aside work?",
+      "answer": "The application checks the cache first, reads the source on a miss, and then stores the result in the cache.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "46015b6b-ac92-4b0e-8edf-94ff53de776c",
+      "order": 23,
+      "question": "What is write-through caching?",
+      "answer": "Writes pass through the cache, which updates the backing store before confirming. Cache and source stay in step, but writes are slower.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "d27a7cb4-fb3e-474a-b734-2ff538b453cf",
+      "order": 24,
+      "question": "What is the risk of write-back caching?",
+      "answer": "Writes are confirmed before they reach the backing store, so data can be lost if the cache fails before flushing.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "4c9dc522-6561-499a-982c-3144ea79f683",
+      "order": 25,
+      "question": "What is cache invalidation?",
+      "answer": "Cache invalidation removes or expires cached data when it may no longer match the source of truth.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "cb3c7150-888d-42eb-9c97-3464b39d1e03",
+      "order": 26,
+      "question": "Why is cache invalidation difficult?",
+      "answer": "Copies can outlive updates, invalidation messages can be delayed or lost, and one change can affect many cached results.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "8fab8b28-389c-41fb-8e80-b31577385497",
+      "order": 27,
+      "question": "What is a cache stampede?",
+      "answer": "Many requests miss the same hot key at once and all hit the backend together, which can overwhelm it.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "4d1af264-5532-4353-b757-e8ed4538a220",
+      "order": 28,
+      "question": "Why add jitter to cache expiration times?",
+      "answer": "Randomized expirations stop many keys from expiring at the same moment and causing a synchronized surge of backend traffic.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "b8f5af8a-656c-4ee7-ba87-680609204944",
+      "order": 29,
+      "question": "What is a CDN?",
+      "answer": "A content delivery network serves cached content from locations close to users, which cuts network distance and origin load.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "0e608727-3082-4fa2-8219-b7030a436167",
+      "order": 30,
+      "question": "What is a queue used for in system design?",
+      "answer": "A queue stores work until consumers can process it, which decouples producers from consumers and smooths out bursts.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "ad2beec2-f3c0-4b09-9ec0-88ab81590e5e",
+      "order": 31,
+      "question": "What trade-off does asynchronous messaging introduce?",
+      "answer": "It improves decoupling and burst handling, but results arrive later and the system must handle retries, duplicates, ordering, and visibility.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "d5146101-b814-4a84-963d-4124efd5ac94",
+      "order": 32,
+      "question": "What is at-most-once delivery?",
+      "answer": "A message is delivered zero or one time. There are no duplicates, but work can be lost if a failure happens before processing.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "c89396a3-6a58-4c60-ab61-a9b6ed9878b1",
+      "order": 33,
+      "question": "What is at-least-once delivery?",
+      "answer": "The system retries until delivery seems successful, so work is not intentionally lost, but consumers can receive duplicates.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "fd0f2350-04c9-488a-8415-ee0696108711",
+      "order": 34,
+      "question": "Why is exactly-once delivery difficult?",
+      "answer": "After a failure, it can be unclear whether work finished before the acknowledgment was lost. Systems usually make the effect exactly-once instead.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "9da673d7-a48f-4ced-ba6b-c89c343628f3",
+      "order": 35,
+      "question": "What is an idempotent operation?",
+      "answer": "An operation is idempotent when repeating it with the same request produces the same final result as doing it once.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "1626e829-8f5b-4971-ab2f-c74fcf185719",
+      "order": 36,
+      "question": "How does an idempotency key help an API?",
+      "answer": "The client sends a stable request identifier, and the server stores the outcome, so a retry returns the original result instead of repeating the change.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "e67d2b9d-9adb-454f-b968-d7eced164c0c",
+      "order": 37,
+      "question": "What is a dead-letter queue?",
+      "answer": "A dead-letter queue holds messages that keep failing, so they stop blocking normal traffic and can be inspected and replayed later.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "bade26d0-bab4-4ded-b2e2-b99e3a97e82a",
+      "order": 38,
+      "question": "What is backpressure?",
+      "answer": "Backpressure makes producers slow down, wait, or get rejected when consumers cannot keep up, which prevents unbounded queues.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "7c5cd9c4-f6ce-49b5-b509-5122f1e7e5d7",
+      "order": 39,
+      "question": "What is load shedding?",
+      "answer": "Load shedding deliberately rejects low-priority or excess work when capacity runs out, so the system keeps serving what matters most.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "215c9012-3451-461b-91f6-097c1e98e565",
+      "order": 40,
+      "question": "What is a single point of failure?",
+      "answer": "It is one component whose failure can make the whole service unavailable. Redundancy and failover are the usual ways to remove it.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "df7baff4-5f6c-4c65-91f6-03f90f74d421",
+      "order": 41,
+      "question": "What is redundancy?",
+      "answer": "Redundancy keeps several components able to do the same critical job, so one failure does not stop the service.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "d810f552-8149-45e8-b578-5d10901d9b23",
+      "order": 42,
+      "question": "What is failover?",
+      "answer": "Failover switches traffic or responsibility from a failed component to a healthy replacement, either automatically or manually.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "a15be13c-3765-4cbd-aaf8-f3d3cea98917",
+      "order": 43,
+      "question": "What is fault tolerance?",
+      "answer": "Fault tolerance is the ability to keep providing acceptable service while some components have failed.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "a763b890-b0c3-48c1-b7cf-f68fcc834750",
+      "order": 44,
+      "question": "Why are timeouts necessary in distributed calls?",
+      "answer": "Without a timeout, a caller can wait forever on a failed dependency. A timeout frees resources and lets recovery logic run.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "054f3029-4cdf-49a4-8b20-520164bca6a1",
+      "order": 45,
+      "question": "Why can retries make an outage worse?",
+      "answer": "Many clients retrying a struggling dependency multiply its load exactly when capacity is lowest, causing a retry storm.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "ff762231-6850-4634-8cc3-f2a8931474b9",
+      "order": 46,
+      "question": "What is exponential backoff?",
+      "answer": "Each retry waits longer than the previous one, giving a struggling dependency time to recover.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "e91d16ef-fb6c-478e-b2a3-4aa03cd58b7f",
+      "order": 47,
+      "question": "Why add jitter to retry backoff?",
+      "answer": "Randomness stops many clients from retrying at the same moments and creating repeated traffic spikes.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "8d4d775c-e83b-470c-9073-5054e77d8a25",
+      "order": 48,
+      "question": "What does a circuit breaker do?",
+      "answer": "After repeated failures it stops normal calls to a dependency for a while and fails fast, then sends a few probes to test recovery.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    },
+    {
+      "id": "3d209938-9a79-43a4-a6da-17e0b51cf6af",
+      "order": 49,
+      "question": "What is graceful degradation?",
+      "answer": "Graceful degradation keeps core features working while turning off nonessential ones during failures or overload.",
+      "createdAt": "2026-09-25T00:00:00.000Z",
+      "updatedAt": "2026-09-25T00:00:00.000Z"
+    }
+  ]
+}
