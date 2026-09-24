@@ -4,6 +4,8 @@ import type { DeckPackageDocument } from "./deck-package.schema.ts";
 export type DeckPackage = Readonly<
   DeckPackageDocument & {
     audioFiles: ReadonlyMap<string, Uint8Array>;
+    /** Lesson Markdown keyed by lesson ID. */
+    lessonFiles: ReadonlyMap<string, string>;
   }
 >;
 

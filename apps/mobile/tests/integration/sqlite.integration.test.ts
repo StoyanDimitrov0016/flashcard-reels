@@ -771,6 +771,7 @@ describe("SQLite study persistence", () => {
       { name: "flashcard_progress" },
       { name: "flashcard_review_attempts" },
       { name: "flashcards" },
+      { name: "lessons" },
       { name: "progress_backup_state" },
       { name: "removed_decks" },
       { name: "review_events" },

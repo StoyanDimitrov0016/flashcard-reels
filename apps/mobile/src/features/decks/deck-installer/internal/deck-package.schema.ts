@@ -13,6 +13,15 @@ const DeckPackageCardSchema = z
   })
   .strict();
 
+// Lesson Markdown lives in lessons/<lesson-id>.md; deck.json lists identity, title, and order.
+const DeckPackageLessonSchema = z
+  .object({
+    id: UuidSchema,
+    order: z.number().int().nonnegative(),
+    title: z.string().min(1),
+  })
+  .strict();
+
 export const DeckPackageSchema = z.compile(
   z
     .object({
@@ -23,9 +32,42 @@ export const DeckPackageSchema = z.compile(
       createdAt: z.iso.datetime({ offset: true }),
       updatedAt: z.iso.datetime({ offset: true }),
       cards: z.array(DeckPackageCardSchema),
+      lessons: z.array(DeckPackageLessonSchema).optional(),
     })
     .strict()
     .superRefine((deck, context) => {
+      const lessons = deck.lessons ?? [];
+      const lessonIds = new Set<string>();
+      const lessonOrders = new Set<number>();
+      const cardIds = new Set(deck.cards.map((card) => card.id));
+      for (const [index, lesson] of lessons.entries()) {
+        if (lessonIds.has(lesson.id) || cardIds.has(lesson.id)) {
+          context.addIssue({
+            code: "custom",
+            message: `Duplicate lesson ID: ${lesson.id}`,
+            path: ["lessons", index, "id"],
+          });
+        }
+        if (lessonOrders.has(lesson.order)) {
+          context.addIssue({
+            code: "custom",
+            message: `Duplicate lesson order: ${lesson.order}`,
+            path: ["lessons", index, "order"],
+          });
+        }
+        lessonIds.add(lesson.id);
+        lessonOrders.add(lesson.order);
+      }
+      for (let order = 0; order < lessons.length; order += 1) {
+        if (!lessonOrders.has(order)) {
+          context.addIssue({
+            code: "custom",
+            message: `Lesson orders must be contiguous from 0 through ${lessons.length - 1}`,
+            path: ["lessons"],
+          });
+          break;
+        }
+      }
       const ids = new Set<string>();
       const orders = new Set<number>();
       for (const [index, card] of deck.cards.entries()) {

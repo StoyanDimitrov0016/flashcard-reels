@@ -8,7 +8,8 @@ const stableZipModificationTime = new Date(1980, 0, 1, 0, 0, 0);
 
 export function createDeckPackageArchive(
   document: DeckPackageDocument,
-  audioFiles: Readonly<Record<string, Uint8Array>> = {}
+  audioFiles: Readonly<Record<string, Uint8Array>> = {},
+  lessonFiles: Readonly<Record<string, string>> = {}
 ): Uint8Array {
   const deck = DeckPackageSchema.parse(document);
   const archive: Record<string, Uint8Array> = {
@@ -20,6 +21,13 @@ export function createDeckPackageArchive(
   );
   for (const [path, content] of sortedAudioFiles) {
     archive[path] = content;
+  }
+  // oxlint-disable-next-line unicorn/no-array-sort -- Object.entries creates the array being sorted.
+  const sortedLessonFiles = Object.entries(lessonFiles).sort(([leftId], [rightId]) =>
+    leftId.localeCompare(rightId)
+  );
+  for (const [lessonId, markdown] of sortedLessonFiles) {
+    archive[`lessons/${lessonId}.md`] = strToU8(markdown);
   }
   return zipSync(archive, { level: 6, mtime: stableZipModificationTime });
 }

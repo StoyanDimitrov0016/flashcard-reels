@@ -106,6 +106,7 @@ describe("installed audio lookup", () => {
     const storage = new InstalledAudioStorage();
     const deckPackage = {
       audioFiles: new Map([["audio/card.answer.mp3", new Uint8Array([1, 2, 3])]]),
+      lessonFiles: new Map<string, string>(),
       cards: [],
       createdAt: "2026-01-01T00:00:00.000Z",
       description: "",
