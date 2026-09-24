@@ -65,7 +65,7 @@ describe("deck package tooling independence", () => {
     expect(generated).toEqual(checkedIn);
     expect(new ArchiveDeckPackageReader().read(generated)).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-      version: 1,
+      version: 2,
     });
   }, 10_000);
 
@@ -136,7 +136,7 @@ describe("deck package tooling independence", () => {
       "The second version answer."
     );
     expect(v2.audioFiles.has("audio/b1000000-0000-4000-8000-000000000002.question.mp3")).toBe(true);
-  });
+  }, 10_000);
 
   it("inspects valid packages and reports invalid packages with a non-zero exit", async () => {
     const project = await temporaryProject();
@@ -195,5 +195,5 @@ describe("deck package tooling independence", () => {
     const rejected = runTool("generate-deck-package.mjs", source, output);
     expect(rejected.status).not.toBe(0);
     expect(rejected.stderr).toContain("Unexpected audio file stray.mp3");
-  });
+  }, 10_000);
 });

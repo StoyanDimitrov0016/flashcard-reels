@@ -1,10 +1,10 @@
 {
   "id": "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-  "version": 1,
+  "version": 2,
   "title": "Flashcard Reels Demo",
   "description": "A compact JavaScript sampler for trying reveal, rating, study, and audio.",
   "createdAt": "2026-09-09T00:00:00.000Z",
-  "updatedAt": "2026-09-09T00:00:00.000Z",
+  "updatedAt": "2026-09-25T00:00:00.000Z",
   "cards": [
     {
       "id": "328c777f-291d-40de-8f4e-c2f972c35b7a",
@@ -53,6 +53,18 @@
       "answer": "It reports `\"object\"`. This is a long-standing language quirk, so `value === null` is the reliable null check.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3",
+      "order": 0,
+      "title": "Values and types"
+    },
+    {
+      "id": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
+      "order": 1,
+      "title": "null and undefined"
     }
   ]
 }
