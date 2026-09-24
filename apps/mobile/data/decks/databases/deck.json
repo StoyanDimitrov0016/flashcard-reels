@@ -1,10 +1,10 @@
 {
   "id": "b66fad55-88ba-4047-986b-15e4ff7a3053",
-  "version": 2,
+  "version": 1,
   "title": "Databases",
   "description": "Relational modeling, SQL, indexes, transactions, isolation, query planning, replication, partitioning, and distributed data.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-25T19:33:34.817Z",
+  "updatedAt": "2026-09-26T07:31:45.150Z",
   "lessons": [
     {
       "id": "35bdd385-0617-4d90-9888-192ab864d981",
