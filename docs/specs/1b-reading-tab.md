@@ -1,6 +1,7 @@
 # 1b - Reading tab and lessons
 
-Status: draft for owner review. Depends on [1a](1a-study-tab.md) for the free bottom tab.
+Status: implemented; device acceptance pending. Depends on [1a](1a-study-tab.md) for the free
+bottom tab.
 
 ## Problem and value
 
@@ -78,10 +79,10 @@ These are the owner's sign-off items:
 
 Proposed: one to two weeks of evenings. Owner to confirm.
 
-## Open questions
+## Decisions
 
-1. **Tab position:** where the Reading tab sits in the bottom bar, for example between the study
-   tab and Library.
-2. **Pending decks:** whether a reinstalled deck that is waiting for the continue or start-fresh
-   choice shows its lessons. Proposed: yes, because lessons are content and create no learning
-   data.
+1. **Tab position:** Reading sits between Study and Library.
+2. **Pending decks:** a reinstalled deck waiting for the continue or start-fresh choice shows its
+   lessons, because lessons are content and create no learning data.
+3. **Sample deck:** `apps/mobile/data/decks/system-design-foundations` has 50 cards and five
+   lessons. Its audio is added separately.

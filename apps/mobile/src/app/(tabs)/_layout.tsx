@@ -80,6 +80,20 @@ export default function TabLayout() {
             }}
           />
           <TopTabs.Screen
+            name="reading"
+            options={{
+              tabBarIcon: ({ color }: TabIconProps) => (
+                <SymbolView
+                  name={{ android: "menu_book", ios: "book.fill", web: "menu_book" }}
+                  size={sizes.icon.medium}
+                  tintColor={color}
+                />
+              ),
+              title: "Reading",
+              tabBarAccessibilityLabel: "Reading tab",
+            }}
+          />
+          <TopTabs.Screen
             name="library"
             options={{
               tabBarIcon: ({ color }: TabIconProps) => (
