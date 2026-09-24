@@ -511,3 +511,24 @@ presentation/
   managers/
   processors/
 ```
+
+## 12. Tests protect behavior
+
+**Preference**
+
+Spend test time on user-visible outcomes, durable data invariants, failure recovery, and boundaries
+that can corrupt or discard data. A test should describe a regression a user or another system
+would notice. Prefer a small realistic scenario through the public service and SQLite boundary over
+assertions that repeat a private helper's steps.
+
+Use fixed clocks, IDs, and local fixtures so tests stay deterministic. Mock external or native
+boundaries when needed, but keep the domain logic and persistence real. Assert the resulting state
+and important side effects; avoid asserting internal call order unless that order is the contract.
+
+Do not add tests that merely restate a palette, a layout constant, an enum, or a one-line mapping.
+Visual layout belongs in device review or a scenario that checks the interaction it enables. Keep
+tests of actual invariants, such as readable color contrast or preserved progress after a failed
+restore.
+
+For each new test, ask: "Which plausible bug would make this fail?" If the answer is only a rename
+or an intentional implementation change with no behavior change, revise or omit the test.
