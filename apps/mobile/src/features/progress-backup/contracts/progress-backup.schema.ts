@@ -78,7 +78,7 @@ const ReviewEvent = z
   })
   .strict();
 
-export const ProgressBackupDocumentSchema = z
+const ProgressBackupDocumentUncompiledSchema = z
   .object({
     format: z.literal("flashcard-reels-progress"),
     version: z.literal(1),
@@ -244,6 +244,10 @@ export const ProgressBackupDocumentSchema = z
       }
     }
   });
+
+export const ProgressBackupDocumentSchema = z.compile(ProgressBackupDocumentUncompiledSchema, {
+  strict: true,
+});
 
 export type ProgressBackupDocument = z.infer<typeof ProgressBackupDocumentSchema>;
 
