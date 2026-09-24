@@ -16,7 +16,7 @@ type StartFocusedFeed = (
 export function openFocusedFeed(
   deckId: DeckId,
   startFocusedFeed: StartFocusedFeed,
-  navigate: (href: "/(tabs)/focus") => void,
+  navigate: (href: "/(tabs)/(study)/focus") => void,
   anchorFlashcardId?: string,
   options?: FocusedFeedOptions
 ): void {
@@ -27,5 +27,5 @@ export function openFocusedFeed(
   } else {
     startFocusedFeed(deckId, anchorFlashcardId, options);
   }
-  navigate("/(tabs)/focus");
+  navigate("/(tabs)/(study)/focus");
 }

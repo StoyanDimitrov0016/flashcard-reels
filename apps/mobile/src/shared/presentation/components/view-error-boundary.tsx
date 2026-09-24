@@ -5,7 +5,7 @@ import { reportError } from "@/shared/errors/report-error";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
 
 const viewTitles: Readonly<Record<string, string>> = {
-  "/": "Couldn’t load Discover",
+  "/": "Couldn’t load For you",
   "/focus": "Couldn’t load Focus",
   "/library": "Couldn’t load Library",
   "/progress": "Couldn’t load Progress",
@@ -31,7 +31,7 @@ export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
   return (
     <ViewErrorState
       error={error}
-      onHomeAction={isHomeRoute ? undefined : () => router.replace("/(tabs)/(discover)")}
+      onHomeAction={isHomeRoute ? undefined : () => router.replace("/(tabs)/(study)")}
       retry={retry}
       scope="screen"
       title={pathname.startsWith("/decks/") ? "Couldn’t load this deck" : viewTitles[pathname]}

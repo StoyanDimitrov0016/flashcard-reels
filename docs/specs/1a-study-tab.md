@@ -1,6 +1,6 @@
 # 1a - Study tab with For you and Focus
 
-Status: draft for owner review.
+Status: implemented; device acceptance pending.
 
 ## Problem and value
 
@@ -31,7 +31,7 @@ This step changes navigation only. The feeds, gestures, and learning behavior st
 - **Feed performance:** switching between For you and Focus feels instant and does not reload a
   feed that is already open.
 - **Gesture clarity:** vertical swiping always moves through cards. A horizontal swipe does one
-  predictable thing (see open questions).
+  predictable thing (see decisions).
 - **Layout:** the top tabs and the deck label on each card stay readable, and neither covers the
   card content.
 
@@ -60,9 +60,8 @@ None. This is a navigation change, and navigation can be rearranged later.
 
 Proposed: three to five evenings, including device testing. Owner to confirm.
 
-## Open questions
+## Decisions
 
-1. **Horizontal swipe.** Bottom tabs can be switched by swiping sideways today. Short-video apps
-   use a sideways swipe to switch between their top feeds. Which should it do in the study tab:
-   switch between For you and Focus, or keep switching bottom tabs?
-2. **Name and icon** of the combined bottom tab, for example "Study" or "Feed".
+1. **Horizontal swipe:** keeps switching bottom destinations, as required by the mobile product
+   invariants in `apps/mobile/AGENTS.md`. For you and Focus switch by tapping.
+2. **Name and icon:** "Study", with a stacked-cards icon.
