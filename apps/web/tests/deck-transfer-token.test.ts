@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createDeckTransferToken, readDeckTransferToken } from "@/lib/deck-transfer-token";
+import { createDeckTransferToken, readDeckTransferToken } from "@/server/transfer/transfer-token";
 
 const DECK_ID = "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873";
 const originalSessionSecret = process.env.AUTH_SESSION_SECRET;
