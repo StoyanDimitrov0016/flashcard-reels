@@ -57,7 +57,7 @@ export default function YouScreen() {
       </ScreenHeader>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.sections}>
-          <PreferenceSection title="Appearance">
+          <PreferenceSection grouped={false} title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
           </PreferenceSection>
           <PreferenceSection title="Interaction">
@@ -104,6 +104,7 @@ export default function YouScreen() {
                 setResetPresented(true);
               }}
               title="Reset all learning progress"
+              tone="destructive"
             />
             {storageError !== null && (
               <View>
@@ -113,7 +114,17 @@ export default function YouScreen() {
                 <ErrorDetails error={storageError} />
               </View>
             )}
-            <AppResetAction />
+            <AppResetAction
+              renderTrigger={(open) => (
+                <PreferenceRow
+                  icon={{ android: "delete_forever", ios: "trash", web: "delete_forever" }}
+                  iconColor={colors.error}
+                  onPress={open}
+                  title="Reset all app data"
+                  tone="destructive"
+                />
+              )}
+            />
           </PreferenceSection>
           <PreferenceSection title="About">
             <View style={styles.aboutRow}>
@@ -189,8 +200,9 @@ function createStyles(colors: AppColors) {
     aboutRow: {
       alignItems: "center",
       flexDirection: "row",
-      gap: sizes.spacing.medium,
-      padding: sizes.spacing.medium,
+      gap: sizes.spacing.xLarge,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.large,
     },
     content: {
       gap: sizes.spacing.section,
