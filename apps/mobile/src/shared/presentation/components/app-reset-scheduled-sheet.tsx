@@ -16,7 +16,7 @@ export function AppResetScheduledSheet({ onClose, visible }: AppResetScheduledSh
   const styles = createStyles(colors);
 
   return (
-    <AppBottomSheet onClose={onClose} size="content" visible={visible}>
+    <AppBottomSheet onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.iconShell}>
           <SymbolView

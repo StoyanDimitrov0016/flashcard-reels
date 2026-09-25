@@ -15,6 +15,7 @@ import * as z from "zod";
 
 import { reportError } from "@/shared/errors/report-error";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
@@ -200,44 +201,19 @@ export function ImportDeckSheet({
   };
 
   return (
-    <AppBottomSheet
-      dismissible={!importing || downloading}
-      onClose={close}
-      size="large"
-      visible={visible}
-    >
+    <AppBottomSheet dismissible={!importing || downloading} onClose={close} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <View style={styles.header}>
-          <Pressable
-            accessibilityLabel={
-              mode === "scanner" && !downloading ? "Back to import choices" : "Close import"
-            }
-            accessibilityRole="button"
-            disabled={importing && !downloading}
-            onPress={
-              mode === "scanner" && !downloading
-                ? () => {
-                    resetScanner();
-                  }
-                : close
-            }
-            style={styles.iconButton}
-          >
-            <SymbolView
-              name={
-                mode === "scanner" && !downloading
-                  ? { android: "arrow_back", ios: "chevron.left", web: "arrow_back" }
-                  : { android: "close", ios: "xmark", web: "close" }
-              }
-              size={sizes.icon.medium}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-          <Text accessibilityRole="header" style={styles.title}>
-            {mode === "scanner" ? "Scan QR code" : "Import deck"}
-          </Text>
-          <View style={styles.iconButton} />
-        </View>
+        <SheetHeader
+          back={
+            mode === "scanner" && !downloading
+              ? { label: "Back to import choices", onPress: resetScanner }
+              : undefined
+          }
+          closeDisabled={importing && !downloading}
+          closeLabel="Close import"
+          onClose={close}
+          title={mode === "scanner" ? "Scan QR code" : "Import deck"}
+        />
         <View style={styles.content}>
           {mode === "scanner" ? (
             <ScannerContent
@@ -483,17 +459,18 @@ function ImportChoice({ description, disabled, icon, label, onPress }: ImportCho
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    // A square viewfinder, since the sheet is sized to its content.
     camera: {
+      aspectRatio: 1,
       borderRadius: sizes.radius.card,
-      flex: 1,
       overflow: "hidden",
       width: "100%",
     },
     centered: {
       alignItems: "center",
-      flex: 1,
       gap: sizes.spacing.section,
       justifyContent: "center",
+      paddingVertical: sizes.spacing.spacious,
     },
     choice: {
       alignItems: "center",
@@ -518,7 +495,6 @@ function createStyles(colors: AppColors) {
     },
     choices: { gap: sizes.spacing.section },
     content: {
-      flex: 1,
       paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
     },
@@ -528,24 +504,11 @@ function createStyles(colors: AppColors) {
       lineHeight: lineHeight.footnote,
       textAlign: "center",
     },
-    header: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingBottom: sizes.spacing.section,
-      paddingHorizontal: sizes.spacing.content,
-    },
     hint: {
       color: colors.textSecondary,
       fontSize: fontSize.caption,
       lineHeight: lineHeight.footnote,
       textAlign: "center",
-    },
-    iconButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
     },
     message: { color: colors.textSecondary, fontSize: fontSize.body, textAlign: "center" },
     primaryButton: {
@@ -566,7 +529,7 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.medium,
       justifyContent: "center",
     },
-    scannerShell: { flex: 1, gap: sizes.spacing.section },
+    scannerShell: { gap: sizes.spacing.section },
     statusIcon: {
       alignItems: "center",
       justifyContent: "center",
@@ -576,13 +539,6 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       paddingHorizontal: sizes.spacing.content,
     },
-    sheet: { backgroundColor: colors.surfaceRaised, flex: 1 },
-    title: {
-      color: colors.textPrimary,
-      flex: 1,
-      fontSize: fontSize.title2,
-      fontWeight: fontWeight.heavy,
-      textAlign: "center",
-    },
+    sheet: { flexShrink: 1 },
   });
 }

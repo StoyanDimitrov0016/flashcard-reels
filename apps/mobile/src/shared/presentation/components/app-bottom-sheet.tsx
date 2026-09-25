@@ -3,60 +3,48 @@ import type { ReactNode } from "react";
 import { BottomSheet, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import { StyleSheet, useWindowDimensions } from "react-native";
 
-import {
-  resolveAppBottomSheetConfig,
-  type AppBottomSheetSize,
-} from "@/shared/presentation/components/app-bottom-sheet-config";
 import { useAppTheme } from "@/shared/presentation/theme";
+
+// A sliver of the screen behind stays visible, so a sheet never reads as a new screen.
+const MAX_HEIGHT_RATIO = 0.88;
 
 type AppBottomSheetProps = Readonly<{
   children: ReactNode;
   dismissible?: boolean;
   onClose: () => void;
-  size: AppBottomSheetSize;
   visible: boolean;
 }>;
 
+/**
+ * A native sheet sized to its content. Content taller than the cap scrolls inside a
+ * `BottomSheetScrollView` with `flexShrink: 1`, below a fixed `SheetHeader`.
+ */
 export function AppBottomSheet({
   children,
   dismissible = true,
   onClose,
-  size,
   visible,
 }: AppBottomSheetProps) {
   const { colors } = useAppTheme();
   const { height: windowHeight } = useWindowDimensions();
-  const styles = createStyles(colors.surfaceRaised);
-  const config = resolveAppBottomSheetConfig(size);
-  const contentHeight = config.contentHeightRatio
-    ? windowHeight * config.contentHeightRatio
-    : undefined;
+  const styles = createStyles(colors.surfaceRaised, windowHeight * MAX_HEIGHT_RATIO);
 
   return (
     <BottomSheet
       backgroundStyle={styles.background}
+      enableDynamicSizing
       enablePanDownToClose={dismissible}
-      enableDynamicSizing={config.enableDynamicSizing}
       index={visible ? 0 : -1}
       onClose={onClose}
-      snapPoints={config.snapPoints}
     >
-      <BottomSheetView
-        style={[
-          config.snapPoints ? styles.fixedContent : styles.content,
-          contentHeight === undefined ? null : { height: contentHeight },
-        ]}
-      >
-        {children}
-      </BottomSheetView>
+      <BottomSheetView style={styles.content}>{children}</BottomSheetView>
     </BottomSheet>
   );
 }
 
-function createStyles(backgroundColor: string) {
+function createStyles(backgroundColor: string, maxHeight: number) {
   return StyleSheet.create({
     background: { backgroundColor },
-    content: { backgroundColor },
-    fixedContent: { backgroundColor, flex: 1 },
+    content: { backgroundColor, maxHeight },
   });
 }

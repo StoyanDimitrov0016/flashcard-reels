@@ -12,9 +12,10 @@ import {
   type DeckAppearancePreset,
 } from "@/features/decks/presentation/deck-appearance-presets";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 // Ten presets fill two rows of five exactly.
 const SWATCH_COLUMNS = 5;
@@ -138,43 +139,33 @@ export function DeckAppearanceSheet({
   const previewPreset = pendingPreset ?? currentPreset ?? deckAppearancePresets[0];
 
   return (
-    <AppBottomSheet onClose={onDismiss} size="content" visible={isPresented}>
+    <AppBottomSheet onClose={onDismiss} visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <View style={styles.header}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Deck appearance
-          </Text>
-          <Pressable
-            accessibilityLabel="Close deck appearance"
-            accessibilityRole="button"
-            onPress={onDismiss}
-            style={styles.closeButton}
-          >
-            <SymbolView
-              name={{ android: "close", ios: "xmark", web: "close" }}
-              size={sizes.icon.medium}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
+        <SheetHeader
+          closeLabel="Close deck appearance"
+          onClose={onDismiss}
+          title="Deck appearance"
+        />
+        <View style={styles.body}>
+          {!!previewPreset && <PalettePreview deck={deck} preset={previewPreset} />}
+          <View accessibilityRole="radiogroup" style={styles.swatches}>
+            {deckAppearancePresets.map((preset) => (
+              <PaletteSwatch
+                disabled={pendingPreset !== null}
+                key={preset.id}
+                onSelect={onSelect}
+                pending={pendingPreset === preset}
+                preset={preset}
+                selected={preset === currentPreset && pendingPreset === null}
+              />
+            ))}
+          </View>
+          {!!error && (
+            <Text accessibilityLiveRegion="polite" style={styles.error}>
+              {error}
+            </Text>
+          )}
         </View>
-        {!!previewPreset && <PalettePreview deck={deck} preset={previewPreset} />}
-        <View accessibilityRole="radiogroup" style={styles.swatches}>
-          {deckAppearancePresets.map((preset) => (
-            <PaletteSwatch
-              disabled={pendingPreset !== null}
-              key={preset.id}
-              onSelect={onSelect}
-              pending={pendingPreset === preset}
-              preset={preset}
-              selected={preset === currentPreset && pendingPreset === null}
-            />
-          ))}
-        </View>
-        {!!error && (
-          <Text accessibilityLiveRegion="polite" style={styles.error}>
-            {error}
-          </Text>
-        )}
       </View>
     </AppBottomSheet>
   );
@@ -182,14 +173,7 @@ export function DeckAppearanceSheet({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    closeButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
     error: { color: colors.error, fontSize: fontSize.footnote },
-    header: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.medium },
     pressed: { opacity: 0.72 },
     preview: {
       borderColor: colors.borderSubtle,
@@ -213,15 +197,15 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
       lineHeight: lineHeight.title3,
     },
-    sheet: {
-      alignSelf: "center",
-      backgroundColor: colors.surfaceRaised,
-      borderTopLeftRadius: sizes.radius.panel,
-      borderTopRightRadius: sizes.radius.panel,
+    body: {
       gap: sizes.spacing.xLarge,
-      maxWidth: sizes.sheet.maxWidthCompact,
       paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
+    },
+    sheet: {
+      alignSelf: "center",
+      flexShrink: 1,
+      maxWidth: sizes.sheet.maxWidthCompact,
       width: "100%",
     },
     swatch: {
@@ -259,6 +243,5 @@ function createStyles(colors: AppColors) {
       padding: SWATCH_RING_GAP,
     },
     swatches: { flexDirection: "row", flexWrap: "wrap", rowGap: sizes.spacing.medium },
-    title: { color: colors.textPrimary, flex: 1, ...textStyles.screenTitle },
   });
 }

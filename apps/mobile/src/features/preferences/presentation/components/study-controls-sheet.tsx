@@ -16,6 +16,7 @@ import {
   resolveStudyControlLayout,
 } from "@/features/reels/presentation/study-control-layout";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
@@ -70,27 +71,9 @@ export function StudyControlsSheet({
   };
 
   return (
-    <AppBottomSheet onClose={onClose} size="large" visible={visible}>
+    <AppBottomSheet onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <View style={styles.header}>
-          <View style={styles.headingCopy}>
-            <Text accessibilityRole="header" style={styles.title}>
-              Study island
-            </Text>
-          </View>
-          <Pressable
-            accessibilityLabel="Close study island"
-            accessibilityRole="button"
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <SymbolView
-              name={{ android: "close", ios: "xmark", web: "close" }}
-              size={sizes.icon.medium}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-        </View>
+        <SheetHeader closeLabel="Close study island" onClose={onClose} title="Study island" />
         <View style={styles.content}>
           <View style={styles.preview}>
             <View
@@ -214,9 +197,6 @@ export function StudyControlsSheet({
               onChange={onAudioSideChange}
             />
           </View>
-          <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
-            <Text style={styles.doneLabel}>Done</Text>
-          </Pressable>
         </View>
       </View>
     </AppBottomSheet>
@@ -318,41 +298,12 @@ function OptionGroup<T extends string>({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    closeButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
     content: {
-      flex: 1,
       gap: sizes.spacing.screen,
-      paddingBottom: sizes.spacing.content,
+      paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.small,
     },
     controls: { gap: sizes.spacing.section },
-    doneButton: {
-      alignItems: "center",
-      backgroundColor: colors.actionPrimary,
-      borderRadius: sizes.radius.pill,
-      justifyContent: "center",
-      minHeight: sizes.control.standard,
-    },
-    doneLabel: {
-      color: colors.actionPrimaryText,
-      fontSize: fontSize.body,
-      fontWeight: fontWeight.heavy,
-    },
-    header: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      paddingBottom: sizes.spacing.small,
-      paddingHorizontal: sizes.spacing.content,
-      paddingTop: 0,
-    },
-    headingCopy: { flex: 1, gap: sizes.spacing.small },
     option: {
       alignItems: "center",
       borderColor: colors.studyIslandBorder,
@@ -383,12 +334,12 @@ function createStyles(colors: AppColors) {
       borderColor: colors.borderSubtle,
       borderRadius: sizes.radius.card,
       borderWidth: sizes.border,
-      flex: 1,
+      // Tall enough for the vertical island with four ratings and audio.
+      height: 300,
       justifyContent: "center",
-      minHeight: 160,
       overflow: "hidden",
       position: "relative",
-      width: "75%",
+      width: "62%",
     },
     previewAction: { alignItems: "center", gap: sizes.spacing.xSmall },
     previewActionSide: { gap: sizes.spacing.xSmall / 2 },
@@ -480,16 +431,7 @@ function createStyles(colors: AppColors) {
       width: 28,
     },
     previewMarkerSide: { height: 24, width: 24 },
-    sheet: {
-      alignSelf: "center",
-      backgroundColor: colors.surfaceRaised,
-      borderTopLeftRadius: sizes.radius.panel,
-      borderTopRightRadius: sizes.radius.panel,
-      flex: 1,
-      minHeight: 0,
-      width: "100%",
-    },
-    title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
+    sheet: { flexShrink: 1 },
     audioMarker: {
       alignItems: "center",
       backgroundColor: colors.surfaceHover,

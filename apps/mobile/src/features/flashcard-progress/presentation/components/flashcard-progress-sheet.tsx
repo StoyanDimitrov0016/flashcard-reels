@@ -1,6 +1,5 @@
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
@@ -10,9 +9,10 @@ import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answ
 import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
 
 type FlashcardProgressSheetProps = Readonly<{
   accentColor: string;
@@ -39,28 +39,17 @@ export function FlashcardProgressSheet({
       : Math.round((explanation.averageRecallScore / 3) * 100);
 
   return (
-    <AppBottomSheet onClose={onClose} size="half" visible={card !== null}>
+    <AppBottomSheet onClose={onClose} visible={card !== null}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <View style={styles.header}>
-          <Text accessibilityRole="header" style={styles.title}>
-            {card ? `#${card.order + 1}` : ""}
-          </Text>
-          <Pressable
-            accessibilityLabel="Close card progress"
-            accessibilityRole="button"
-            onPress={onClose}
-            style={styles.iconButton}
-          >
-            <SymbolView
-              name={{ android: "close", ios: "xmark", web: "close" }}
-              size={sizes.icon.medium}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-        </View>
+        {!!card && (
+          <SheetHeader
+            closeLabel="Close card progress"
+            onClose={onClose}
+            title={<FlashcardText style={styles.question} text={card.question} />}
+          />
+        )}
         {!!card && (
           <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
-            <FlashcardText style={styles.question} text={card.question} />
             <View style={styles.answerRow}>
               <FlashcardText style={styles.answer} text={card.answer} />
               {!!audioSource && <AnswerAudioPlayer isActive source={audioSource} />}
@@ -123,7 +112,7 @@ function ProgressFact({ color, label, value }: ProgressFactProps) {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     answer: {
-      color: colors.textSecondary,
+      color: colors.textPrimary,
       flex: 1,
       fontSize: fontSize.bodyLarge,
       lineHeight: lineHeight.bodyLarge,
@@ -134,45 +123,19 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.section,
       paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.small,
     },
     fact: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
     fill: { borderRadius: sizes.radius.pill, height: "100%" },
-    header: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingBottom: sizes.spacing.small,
-      paddingHorizontal: sizes.spacing.content,
-      paddingTop: 0,
-    },
-    iconButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
     progressHeading: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
     },
-    question: {
-      color: colors.textPrimary,
-      fontSize: fontSize.title2,
-      fontWeight: fontWeight.bold,
-      lineHeight: lineHeight.title3,
-    },
+    question: { color: colors.textPrimary, ...textStyles.sheetTitle },
     ratings: { flexDirection: "row" },
-    sheet: {
-      backgroundColor: colors.surfaceRaised,
-      borderTopLeftRadius: sizes.radius.panel,
-      borderTopRightRadius: sizes.radius.panel,
-      flex: 1,
-    },
-    scrollView: { flex: 1 },
+    scrollView: { flexShrink: 1 },
+    sheet: { flexShrink: 1 },
     status: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
-    title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
     track: {
       backgroundColor: colors.borderStrong,
       borderRadius: sizes.radius.pill,

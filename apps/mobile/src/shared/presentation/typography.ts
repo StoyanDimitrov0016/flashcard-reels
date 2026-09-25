@@ -56,6 +56,11 @@ export const textStyles = {
     fontSize: fontSize.title1,
     fontWeight: fontWeight.heavy,
   },
+  sheetTitle: {
+    fontSize: fontSize.title2,
+    fontWeight: fontWeight.heavy,
+    lineHeight: lineHeight.title2,
+  },
   primaryButtonLabel: {
     fontWeight: fontWeight.heavy,
   },
