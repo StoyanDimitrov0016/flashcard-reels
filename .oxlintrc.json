@@ -77,7 +77,6 @@
         "flashcards/require-react-hook-options-type": "error"
       }
     },
-
     {
       "files": ["apps/web/**/*.ts", "apps/web/**/*.tsx"],
       "plugins": [
@@ -475,6 +474,13 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "files": ["apps/web/src/components/ui/**/*.tsx"],
+      "rules": {
+        "flashcards/require-react-component-props-type": "off",
+        "no-restricted-imports": "off"
       }
     }
   ]

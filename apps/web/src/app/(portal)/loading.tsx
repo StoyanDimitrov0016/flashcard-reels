@@ -16,7 +16,7 @@ export default function CatalogLoading() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, index) => (
           <div
-            className="flex min-h-56 flex-col rounded-xl border border-line bg-surface p-5"
+            className="flex min-h-56 flex-col rounded-xl border border-border bg-card p-5"
             key={index}
           >
             <div className="flex items-start gap-3">

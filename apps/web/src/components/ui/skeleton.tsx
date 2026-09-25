@@ -1,14 +1,10 @@
-import type { ComponentPropsWithoutRef } from "react";
-
 import { cn } from "@/lib/utils";
 
-type SkeletonProps = Readonly<ComponentPropsWithoutRef<"div">>;
-
-function Skeleton({ className, ...props }: SkeletonProps) {
+function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      aria-hidden
-      className={cn("animate-pulse rounded-md bg-surface-subtle", className)}
+      data-slot="skeleton"
+      className={cn("animate-pulse rounded-md bg-muted", className)}
       {...props}
     />
   );

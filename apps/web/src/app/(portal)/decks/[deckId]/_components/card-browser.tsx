@@ -99,11 +99,11 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
         <div className="relative">
           <Search
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-subtle"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle-foreground"
           />
           <input
             aria-label="Search cards"
-            className="h-9 w-full rounded-md border border-line-strong bg-surface pr-9 pl-9 text-sm outline-none placeholder:text-fg-subtle focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/20 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="h-9 w-full rounded-md border border-input bg-surface pr-9 pl-9 text-sm outline-none placeholder:text-subtle-foreground focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-ring/20 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
             onChange={(event) => {
               setQuery(event.target.value);
               setRevealed(false);
@@ -117,7 +117,7 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
           {query && (
             <button
               aria-label="Clear card search"
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-fg-subtle hover:bg-surface-hover hover:text-fg"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-subtle-foreground hover:bg-accent hover:text-foreground"
               onClick={() => {
                 setQuery("");
                 syncUrl({ q: "" });
@@ -128,7 +128,7 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
             </button>
           )}
         </div>
-        <p className="mt-3 px-1 text-xs text-fg-subtle">
+        <p className="mt-3 px-1 text-xs text-subtle-foreground">
           {normalizedQuery
             ? `${visibleCards.length} of ${cards.length} cards`
             : `${cards.length} cards`}
@@ -141,14 +141,14 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
                 className={cn(
                   "flex w-full gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors",
                   index === selectedIndex
-                    ? "bg-surface-subtle text-fg"
-                    : "text-fg-muted hover:bg-surface-hover hover:text-fg"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
                 id={`card-${item.id}`}
                 onClick={() => select(index)}
                 type="button"
               >
-                <span className="w-6 shrink-0 pt-px text-right text-xs text-fg-subtle tabular-nums">
+                <span className="w-6 shrink-0 pt-px text-right text-xs text-subtle-foreground tabular-nums">
                   {item.order + 1}
                 </span>
                 <span className="line-clamp-2">
@@ -181,7 +181,7 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
                 disabled={selectedIndex === 0}
                 onClick={() => select(selectedIndex - 1)}
                 size="icon"
-                variant="secondary"
+                variant="outline"
               >
                 <ChevronLeft />
               </Button>
@@ -194,12 +194,12 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
                 disabled={selectedIndex >= visibleCards.length - 1}
                 onClick={() => select(selectedIndex + 1)}
                 size="icon"
-                variant="secondary"
+                variant="outline"
               >
                 <ChevronRight />
               </Button>
             </div>
-            <p className="hidden items-center gap-1.5 text-xs text-fg-subtle md:flex">
+            <p className="hidden items-center gap-1.5 text-xs text-subtle-foreground md:flex">
               <Kbd aria-label="Left arrow">
                 <ArrowLeft aria-hidden className="size-3" />
               </Kbd>
@@ -214,7 +214,7 @@ export function CardBrowser({ cards, intro }: CardBrowserProps) {
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-line-strong px-6 py-16 text-center text-sm text-fg-muted">
+          <div className="rounded-xl border border-dashed border-input px-6 py-16 text-center text-sm text-muted-foreground">
             No cards match &quot;{query.trim()}&quot;.
           </div>
         )}

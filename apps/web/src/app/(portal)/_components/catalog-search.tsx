@@ -44,11 +44,11 @@ export function CatalogSearch() {
     <div className="relative w-full sm:max-w-sm">
       <Search
         aria-hidden
-        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-subtle"
+        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle-foreground"
       />
       <input
         aria-label="Search decks"
-        className="h-10 w-full rounded-md border border-line-strong bg-surface pr-16 pl-9 text-[15px] outline-none placeholder:text-fg-subtle focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/20 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+        className="h-10 w-full rounded-md border border-input bg-card pr-16 pl-9 text-[15px] outline-none placeholder:text-subtle-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
         onChange={(event) => {
           setValue(event.target.value);
           applyQueryLater(event.target.value);
@@ -64,11 +64,11 @@ export function CatalogSearch() {
         value={value}
       />
       <div className="absolute top-1/2 right-2.5 flex -translate-y-1/2 items-center gap-1.5">
-        {pending && <Spinner className="size-3.5 text-fg-subtle" />}
+        {pending && <Spinner className="size-3.5 text-subtle-foreground" />}
         {value ? (
           <button
             aria-label="Clear search"
-            className="rounded p-0.5 text-fg-subtle hover:bg-surface-hover hover:text-fg"
+            className="rounded p-0.5 text-subtle-foreground hover:bg-accent hover:text-foreground"
             onClick={() => {
               clear();
               inputRef.current?.focus();

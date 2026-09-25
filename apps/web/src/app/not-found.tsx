@@ -10,8 +10,8 @@ export default function NotFound() {
       <div className="w-full">
         <EmptyState
           action={
-            <Button asChild variant="primary">
-              <Link href="/">Go to decks</Link>
+            <Button nativeButton={false} render={<Link href="/" />}>
+              Go to decks
             </Button>
           }
           description="The page you opened does not exist."
