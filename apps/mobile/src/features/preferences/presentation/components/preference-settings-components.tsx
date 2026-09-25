@@ -1,9 +1,10 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Children, isValidElement, type ReactNode } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
 
+import { AppSwitch } from "@/shared/presentation/components/app-switch";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
@@ -168,18 +169,10 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
   const styles = createStyles(colors);
 
   return (
-    <View style={[styles.row, styles.switchRow]}>
+    <View style={styles.row}>
       <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.textSecondary} />
       <Text style={[styles.rowTitle, styles.switchLabel]}>{label}</Text>
-      <Switch
-        accessibilityLabel={label}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value }}
-        onValueChange={onValueChange}
-        thumbColor={value ? colors.actionPrimaryText : colors.textTertiary}
-        trackColor={{ false: colors.borderStrong, true: colors.interactive }}
-        value={value}
-      />
+      <AppSwitch accessibilityLabel={label} onValueChange={onValueChange} value={value} />
     </View>
   );
 }
@@ -267,7 +260,5 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.xSmall,
     },
     switchLabel: { flex: 1 },
-    // Android switches carry their own vertical touch padding.
-    switchRow: { paddingVertical: 0 },
   });
 }

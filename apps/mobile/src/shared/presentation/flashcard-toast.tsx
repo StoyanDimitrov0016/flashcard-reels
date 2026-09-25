@@ -36,7 +36,7 @@ function FlashcardToast({ text1, props }: FlashcardToastProps) {
       <SymbolView
         name={icon}
         size={sizes.icon.small}
-        tintColor={error ? colors.error : colors.interactive}
+        tintColor={getToastTint(colors, error, success)}
       />
       <Text style={[styles.label, error && styles.errorLabel]}>{text1}</Text>
     </View>
@@ -107,6 +107,15 @@ export function FlashcardToastHost() {
       topOffset={getTopToastOffset(top, sizes.spacing.small)}
     />
   );
+}
+
+// Icons carry meaning: red for failures, green for success, and neutral for Focus hints.
+// Blue stays reserved for links.
+function getToastTint(colors: AppColors, error: boolean, success: boolean): string {
+  if (error) {
+    return colors.error;
+  }
+  return success ? colors.success : colors.textPrimary;
 }
 
 function createStyles(colors: AppColors) {
