@@ -9,6 +9,7 @@ import {
   type AppPreferences,
   type AppearancePreference,
   type AudioSide,
+  type ControlSide,
   type RatingDirection,
   type RecollectionIslandPosition,
   type ResolvedColorScheme,
@@ -25,6 +26,8 @@ type PreferencesContextValue = Readonly<{
   setAudioEnabled: (enabled: boolean) => void;
   setAudioSide: (audioSide: AudioSide) => void;
   setHapticsEnabled: (enabled: boolean) => void;
+  setReadingEnabled: (enabled: boolean) => void;
+  setReadingSide: (readingSide: ControlSide) => void;
   setRatingDirection: (ratingDirection: RatingDirection) => void;
   setRecollectionIslandPosition: (position: RecollectionIslandPosition) => void;
 }>;
@@ -108,6 +111,8 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
     setAudioEnabled: (enabled) => updatePreferences("audioEnabled", enabled),
     setAudioSide: (audioSide) => updatePreferences("audioSide", audioSide),
     setHapticsEnabled: (enabled) => updatePreferences("hapticsEnabled", enabled),
+    setReadingEnabled: (enabled) => updatePreferences("readingEnabled", enabled),
+    setReadingSide: (readingSide) => updatePreferences("readingSide", readingSide),
     setRatingDirection: (ratingDirection) => updatePreferences("ratingDirection", ratingDirection),
     setRecollectionIslandPosition: (position) =>
       updatePreferences("recollectionIslandPosition", position),

@@ -15,6 +15,8 @@ describe("application preferences", () => {
       audioSide: "primary",
       audioEnabled: true,
       hapticsEnabled: true,
+      readingEnabled: true,
+      readingSide: "opposite",
     });
   });
 
@@ -39,6 +41,20 @@ describe("application preferences", () => {
       hapticsEnabled: false,
     });
   });
+  it("keeps preferences saved before reading controls existed", () => {
+    expect(
+      normalizePersistedPreferences({ audioEnabled: false, recollectionIslandPosition: "bottom" })
+    ).toEqual({
+      ...defaultAppPreferences,
+      audioEnabled: false,
+      recollectionIslandPosition: "bottom",
+    });
+    expect(normalizePersistedPreferences({ readingEnabled: false, readingSide: "left" })).toEqual({
+      ...defaultAppPreferences,
+      readingEnabled: false,
+    });
+  });
+
   it("falls back to a complete model for invalid stored data", () => {
     expect(normalizePersistedPreferences({ appearance: "sepia" })).toEqual(defaultAppPreferences);
     expect(normalizePersistedPreferences("not-json-object")).toEqual(defaultAppPreferences);
