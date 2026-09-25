@@ -1,35 +1,45 @@
 import type { ComponentPropsWithoutRef } from "react";
 
-import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--interactive)] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   {
+    defaultVariants: { size: "md", variant: "secondary" },
     variants: {
-      variant: {
-        default: "bg-[var(--action-primary)] text-[var(--action-primary-text)] hover:opacity-90",
-        outline:
-          "border border-[var(--border-strong)] bg-transparent hover:bg-[var(--surface-hover)]",
+      size: {
+        icon: "size-9",
+        lg: "h-11 px-5 text-[15px]",
+        md: "h-9 px-3.5",
+        sm: "h-8 px-2.5 text-[13px]",
       },
-      size: { default: "h-10 px-4 py-2", lg: "h-11 px-8" },
+      variant: {
+        danger: "bg-danger text-white hover:opacity-90",
+        ghost: "text-fg-muted hover:bg-surface-hover hover:text-fg",
+        primary: "bg-action text-action-fg shadow-sm hover:opacity-90",
+        secondary: "border border-line-strong bg-surface text-fg hover:bg-surface-hover",
+      },
     },
-    defaultVariants: { variant: "default", size: "default" },
   }
 );
 
 type ButtonProps = Readonly<
-  ComponentPropsWithoutRef<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean }
+  ComponentPropsWithoutRef<"button"> &
+    VariantProps<typeof buttonVariants> & {
+      /** Renders the child element, such as a link, with button styling. */
+      asChild?: boolean;
+    }
 >;
 
-function Button({ asChild, className, variant, size, ...props }: ButtonProps) {
-  const classes = cn(buttonVariants({ variant, size, className }));
+function Button({ asChild = false, className, size, type, variant, ...props }: ButtonProps) {
+  const classes = cn(buttonVariants({ size, variant }), className);
   if (asChild) {
-    return <Slot className={classes} {...props} />;
+    return <Slot.Root className={classes} {...props} />;
   }
-  return <button className={classes} {...props} />;
+  return <button className={classes} type={type ?? "button"} {...props} />;
 }
 
 export { Button };
