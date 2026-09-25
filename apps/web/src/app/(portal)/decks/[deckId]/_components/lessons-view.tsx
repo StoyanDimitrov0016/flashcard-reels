@@ -7,6 +7,7 @@ import { withoutRepeatedTitle } from "@/lib/lesson-text";
 import { cn } from "@/lib/utils";
 
 import { LessonList } from "./lesson-list";
+import { LessonPager } from "./lesson-pager";
 
 type LessonsViewProps = Readonly<{
   deckId: string;
@@ -19,7 +20,7 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
   if (!lesson) {
     return null;
   }
-  const nextLesson = lessons[lessons.indexOf(lesson) + 1];
+  const lessonIndex = lessons.indexOf(lesson);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
@@ -56,20 +57,11 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
         <div className="mt-6">
           <LessonMarkdown markdown={withoutRepeatedTitle(lesson.markdown, lesson.title)} />
         </div>
-        {nextLesson && (
-          <Link
-            className="mt-12 flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:bg-accent"
-            href={`/decks/${deckId}?view=lessons&lesson=${nextLesson.id}`}
-          >
-            <span>
-              <span className="block text-xs text-subtle-foreground">Next lesson</span>
-              <span className="mt-0.5 block font-medium">{nextLesson.title}</span>
-            </span>
-            <span aria-hidden className="text-subtle-foreground">
-              →
-            </span>
-          </Link>
-        )}
+        <LessonPager
+          deckId={deckId}
+          next={lessons[lessonIndex + 1]}
+          previous={lessons[lessonIndex - 1]}
+        />
       </article>
     </div>
   );
