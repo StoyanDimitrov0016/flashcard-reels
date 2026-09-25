@@ -69,7 +69,7 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
 
   return (
     // Sized to the viewport height so the whole phone and its controls stay on screen.
-    <div className="mx-auto w-full max-w-[max(15rem,min(21rem,calc((100dvh-13rem)*0.53)))] rounded-[2.75rem] border border-input bg-muted p-2.5 shadow-lg">
+    <div className="mx-auto w-full max-w-[max(14rem,min(21rem,calc((100dvh-18rem)*0.53)))] rounded-[2.75rem] border border-input bg-muted p-2.5 shadow-lg">
       <div className="relative aspect-[9/17] perspective-[1200px]">
         <span
           aria-hidden
