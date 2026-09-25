@@ -1,6 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Search, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Repeat2,
+  Search,
+  Space,
+  X,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -13,6 +22,8 @@ import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { runtimeRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+
+import { PhoneCard } from "./phone-card";
 
 function matches(card: DeckCard, query: string): boolean {
   return `${card.question} ${card.answer}`.toLowerCase().includes(query);
@@ -149,64 +160,52 @@ export function CardBrowser({ cards }: CardBrowserProps) {
         ref={viewerRef}
       >
         {card ? (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between text-sm text-fg-subtle">
-              <span className="tabular-nums">
-                Card {selectedIndex + 1} of {visibleCards.length}
-              </span>
-              <span className="hidden items-center gap-1.5 text-xs md:flex">
-                <Kbd>←</Kbd>
-                <Kbd>→</Kbd> move
-                <Kbd className="ml-2">Space</Kbd> reveal
-              </span>
+          <div className="flex flex-col items-center gap-5">
+            <PhoneCard
+              card={card}
+              key={card.id}
+              onFlip={() => setRevealed((value) => !value)}
+              position={selectedIndex + 1}
+              revealed={revealed}
+              total={visibleCards.length}
+            />
+            <div className="flex items-center gap-3">
+              <Button
+                aria-label="Previous card"
+                disabled={selectedIndex === 0}
+                onClick={() => select(selectedIndex - 1)}
+                size="icon"
+                variant="secondary"
+              >
+                <ChevronLeft />
+              </Button>
+              <Button className="w-40" onClick={() => setRevealed((value) => !value)}>
+                <Repeat2 />
+                {revealed ? "Show question" : "Show answer"}
+              </Button>
+              <Button
+                aria-label="Next card"
+                disabled={selectedIndex >= visibleCards.length - 1}
+                onClick={() => select(selectedIndex + 1)}
+                size="icon"
+                variant="secondary"
+              >
+                <ChevronRight />
+              </Button>
             </div>
-            <article className="flex min-h-[15rem] flex-col rounded-xl border border-line bg-surface shadow-sm sm:min-h-[22rem]">
-              <div className="flex-1 p-6 sm:p-10">
-                <p className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                  Question
-                </p>
-                <h2 className="mt-3 text-2xl leading-snug font-semibold tracking-tight sm:text-3xl">
-                  <FlashcardText text={card.question} />
-                </h2>
-                {revealed && (
-                  <div className="mt-8 border-t border-line pt-6">
-                    <p className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                      Answer
-                    </p>
-                    <p className="mt-3 text-lg leading-8 whitespace-pre-wrap text-fg sm:text-xl sm:leading-9">
-                      <FlashcardText text={card.answer} />
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-6">
-                <Button
-                  aria-label="Previous card"
-                  disabled={selectedIndex === 0}
-                  onClick={() => select(selectedIndex - 1)}
-                  size="icon"
-                  variant="ghost"
-                >
-                  <ChevronLeft />
-                </Button>
-                <Button
-                  onClick={() => setRevealed((value) => !value)}
-                  variant={revealed ? "secondary" : "primary"}
-                >
-                  {revealed ? <EyeOff /> : <Eye />}
-                  {revealed ? "Hide answer" : "Show answer"}
-                </Button>
-                <Button
-                  aria-label="Next card"
-                  disabled={selectedIndex >= visibleCards.length - 1}
-                  onClick={() => select(selectedIndex + 1)}
-                  size="icon"
-                  variant="ghost"
-                >
-                  <ChevronRight />
-                </Button>
-              </div>
-            </article>
+            <p className="hidden items-center gap-1.5 text-xs text-fg-subtle md:flex">
+              <Kbd aria-label="Left arrow">
+                <ArrowLeft aria-hidden className="size-3" />
+              </Kbd>
+              <Kbd aria-label="Right arrow">
+                <ArrowRight aria-hidden className="size-3" />
+              </Kbd>
+              move
+              <Kbd aria-label="Space" className="ml-3">
+                <Space aria-hidden className="size-3" />
+              </Kbd>
+              flip
+            </p>
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-line-strong px-6 py-16 text-center text-sm text-fg-muted">
