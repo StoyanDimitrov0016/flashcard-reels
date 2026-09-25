@@ -1,0 +1,958 @@
+{
+  "id": "40bf0d86-f860-478c-83b8-e490fed65a5e",
+  "version": 2,
+  "title": "System Design",
+  "description": "Scalability, reliability, data flow, distributed systems, APIs, caching, messaging, storage, and operational trade-offs.",
+  "createdAt": "2026-09-06T13:26:00Z",
+  "updatedAt": "2026-09-25T19:33:34.817Z",
+  "lessons": [
+    {
+      "id": "b0bcf169-1c6c-45dc-84a1-d0f8b15a1efb",
+      "order": 0,
+      "title": "Scale and performance"
+    },
+    {
+      "id": "c938a1cb-3a47-4cc9-908e-d45cf0f41c11",
+      "order": 1,
+      "title": "Reliability and availability"
+    },
+    {
+      "id": "5d8605ec-2e88-49af-8c75-dcbd7ed1654d",
+      "order": 2,
+      "title": "Load balancing and the edge"
+    },
+    {
+      "id": "7ff99aa4-c039-4db5-be64-a0b4c64fa644",
+      "order": 3,
+      "title": "Caching"
+    },
+    {
+      "id": "ac58b763-2e88-4f3a-81b3-8d689f1fb0ce",
+      "order": 4,
+      "title": "Overload and queues"
+    },
+    {
+      "id": "8311eec5-3439-46da-997b-47e2271e1084",
+      "order": 5,
+      "title": "Partitioning and replication"
+    },
+    {
+      "id": "f3f5b193-3adb-40a4-b6a3-22affbbed331",
+      "order": 6,
+      "title": "Consistency and coordination"
+    },
+    {
+      "id": "0e79cf82-5c38-4dc0-8b4a-71240264f2d8",
+      "order": 7,
+      "title": "Resilient service calls"
+    },
+    {
+      "id": "e751e9cc-e343-4edb-8d31-1e96783c1caf",
+      "order": 8,
+      "title": "Events and data flow"
+    },
+    {
+      "id": "7b41dab0-ba4d-42d5-91ab-1065b319448e",
+      "order": 9,
+      "title": "Operating in production"
+    }
+  ],
+  "cards": [
+    {
+      "id": "f24a87a7-25fe-4554-b0c9-bd41dd469579",
+      "order": 0,
+      "question": "What is scalability?",
+      "answer": "Scalability is a system’s ability to handle more load by adding resources without unacceptable loss of latency, throughput, or reliability.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "73beba00-d4ba-431d-90e8-2c2dc7506ea5",
+      "order": 1,
+      "question": "What is vertical scaling?",
+      "answer": "Vertical scaling gives one machine more CPU, memory, or storage. It is simple but eventually hits hardware limits and can leave a large failure domain.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1c077e90-972d-4aa1-8200-cbfd468e2a07",
+      "order": 2,
+      "question": "What is horizontal scaling?",
+      "answer": "Horizontal scaling adds more machines or service instances and distributes work across them. It can increase capacity and redundancy but requires coordination and partitioning.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0efab126-ee5e-499c-ac48-e368a4a72c22",
+      "order": 3,
+      "question": "What is throughput?",
+      "answer": "Throughput is the amount of work a system completes per unit time, such as requests per second or messages per second.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "45738c97-4f22-4fe6-bf83-b5aab28081ae",
+      "order": 4,
+      "question": "What is latency?",
+      "answer": "Latency is the elapsed time for one operation to complete from the caller’s perspective.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0acbb6e1-4cd5-4ceb-9771-7a094fb34af9",
+      "order": 5,
+      "question": "Why are percentile latencies more useful than averages?",
+      "answer": "Percentiles show how slow requests are for the tail of users. An average can hide a small but important group of extremely slow requests.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5087e83b-0286-4a0c-b528-03bd38c369d0",
+      "order": 6,
+      "question": "What is availability?",
+      "answer": "Availability is the fraction of time or requests for which a service can successfully perform its intended function.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1407af32-90cd-4e85-baa7-0205eb8159ae",
+      "order": 7,
+      "question": "What is reliability?",
+      "answer": "Reliability is the ability to produce correct results consistently over time, including under expected failures and load.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7445607f-72db-4cb7-824d-7d1096a51609",
+      "order": 8,
+      "question": "What is durability?",
+      "answer": "Durability is the guarantee that acknowledged data remains stored despite failures within the system’s stated fault model.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "273c1165-88f4-49cb-9a3f-d1719731eb2b",
+      "order": 9,
+      "question": "What is a service-level objective?",
+      "answer": "An SLO is a target for a measurable reliability indicator, such as 99.9% successful requests under a latency threshold over a defined period.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6d12a43e-5f2c-4a1c-b23d-f03a30d2d967",
+      "order": 10,
+      "question": "What is an error budget?",
+      "answer": "An error budget is the amount of unreliability allowed by an SLO. Teams can spend it on changes while slowing releases when reliability falls too far.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a356ba0d-d066-45ab-a90f-1ced679165ef",
+      "order": 11,
+      "question": "What is a single point of failure?",
+      "answer": "It is one component whose failure can make the whole service unavailable. Redundancy and failover are common ways to remove it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2ac3fe3c-c86d-43ea-9438-5712ab8912c7",
+      "order": 12,
+      "question": "What is redundancy?",
+      "answer": "Redundancy keeps multiple components able to provide the same critical function so one failure does not necessarily stop the service.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "921d6d7b-e634-4d52-af66-6bf5c702d7a9",
+      "order": 13,
+      "question": "What is failover?",
+      "answer": "Failover switches traffic or responsibility from a failed component to a healthy replacement, either automatically or manually.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "81db6f69-6b9c-4c4a-8004-014d529123ac",
+      "order": 14,
+      "question": "What is fault tolerance?",
+      "answer": "Fault tolerance is the ability to continue providing acceptable service when some components fail.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "036d4757-7d61-461c-bf13-04590ddcdef5",
+      "order": 15,
+      "question": "What is graceful degradation?",
+      "answer": "Graceful degradation keeps core functionality available while disabling or reducing nonessential features under failure or overload.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "10405d01-73f2-4923-a50b-35862060c257",
+      "order": 16,
+      "question": "What is a load balancer?",
+      "answer": "A load balancer distributes requests across multiple backend instances and can remove unhealthy instances from rotation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0e9a6580-7d35-4262-b8e9-6f9cd2332573",
+      "order": 17,
+      "question": "What problem does health checking solve?",
+      "answer": "Health checks let routing systems avoid instances that cannot safely serve traffic, reducing requests sent to failed or unready nodes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3f2fc866-1396-4c60-8aa1-d16a867f1ddc",
+      "order": 18,
+      "question": "What is round-robin load balancing?",
+      "answer": "Round robin sends successive requests to backends in rotation. It is simple but ignores differences in request cost and backend load.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "af034b73-7b9b-4cc4-8a99-44a29ded9e97",
+      "order": 19,
+      "question": "When is least-connections load balancing useful?",
+      "answer": "It favors backends with fewer active connections, which can better distribute long-lived or unevenly timed requests than simple round robin.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "93f28dc9-3903-4cea-acab-3f63d095d910",
+      "order": 20,
+      "question": "What is sticky-session routing?",
+      "answer": "Sticky routing sends a client repeatedly to the same backend, often using a cookie or hash. It can simplify local session state but weakens balancing and failover.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5bd0e398-ed8d-4a46-b24e-101c316730a0",
+      "order": 21,
+      "question": "Why is stateless application logic easier to scale horizontally?",
+      "answer": "Any instance can handle any request because required durable state lives elsewhere. Instances can be added, removed, or replaced without moving user-specific in-memory state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b91e90b0-b303-4296-851f-07c3f604d2e6",
+      "order": 22,
+      "question": "What is a reverse proxy?",
+      "answer": "A reverse proxy accepts client requests on behalf of backend services and can perform routing, TLS termination, authentication, caching, or request shaping.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8e19730c-dae0-4452-8aac-ab49cc6772a6",
+      "order": 23,
+      "question": "What is an API gateway?",
+      "answer": "An API gateway is an edge service that routes API calls and often centralizes cross-cutting concerns such as authentication, rate limits, observability, and protocol translation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5f0a450b-426b-4c39-95a5-06cc46a2643a",
+      "order": 24,
+      "question": "What trade-off does an API gateway introduce?",
+      "answer": "It simplifies clients and centralizes policy, but it can become a high-impact dependency and a bottleneck if overloaded or overburdened with business logic.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bf0e48ad-f848-409e-9895-60fd4b037414",
+      "order": 25,
+      "question": "What is a cache?",
+      "answer": "A cache is temporary storage for expensive or frequently reused data so later reads can avoid recomputing or refetching it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e6163b90-0138-4ccc-af10-223d247a9c0d",
+      "order": 26,
+      "question": "What is cache hit rate?",
+      "answer": "It is the fraction of eligible reads served from the cache rather than the underlying source. A higher hit rate usually means more backend work is avoided.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8c3723d3-1b26-4db9-b481-1a061c41d35f",
+      "order": 27,
+      "question": "What is cache-aside?",
+      "answer": "The application checks the cache first, reads the source on a miss, then writes the result into the cache. Writes to the source usually require invalidation or update of cached entries.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2a39a793-999f-41f1-bc4a-0b899b51d4dd",
+      "order": 28,
+      "question": "What is write-through caching?",
+      "answer": "Writes go through the cache layer, which updates the backing store before acknowledging success. Cache and source stay coordinated at the cost of extra write-path work.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fc6fb513-2a07-4bcb-8abd-8f3e68587841",
+      "order": 29,
+      "question": "What is write-back caching?",
+      "answer": "Writes are acknowledged after updating the cache and persisted to the backing store later. It can reduce write latency but risks data loss unless dirty data is durably protected.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "858111b8-cadc-4889-a2ba-38d4c6cf8d12",
+      "order": 30,
+      "question": "What is cache invalidation?",
+      "answer": "Cache invalidation removes or expires cached data when it may no longer match the source of truth.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b30c8d0f-76cc-44e6-bb59-fc776b7e2f70",
+      "order": 31,
+      "question": "Why is cache invalidation difficult?",
+      "answer": "Multiple copies can outlive updates, messages can be delayed or lost, and dependency relationships can be complex. Stale data may remain unless expiration or versioning provides a fallback.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4a5edb93-0edb-4c82-b340-0dca810fefa0",
+      "order": 32,
+      "question": "What is a cache stampede?",
+      "answer": "Many requests miss the same hot key at once and all recompute or fetch it, overwhelming the backend. Request coalescing, locks, jittered TTLs, or stale serving can reduce it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ff9b06f5-99ee-4889-bf54-a7d3597b2fed",
+      "order": 33,
+      "question": "Why add jitter to cache expirations?",
+      "answer": "Randomizing expiration times prevents many keys from expiring simultaneously and creating a synchronized surge of backend traffic.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2ffd19a2-19c3-444f-ae69-eb7cfbd6c729",
+      "order": 34,
+      "question": "What is a CDN?",
+      "answer": "A content delivery network caches or serves content from geographically distributed edge locations, reducing origin load and network distance to users.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "edb7a3dd-a509-4b3e-bbc5-edaef8827c02",
+      "order": 35,
+      "question": "What is rate limiting?",
+      "answer": "Rate limiting rejects or delays requests that exceed a configured usage rate, protecting capacity and enforcing fairness or quotas.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4441b19d-592a-4de6-be6e-f69585949421",
+      "order": 36,
+      "question": "How does a token bucket rate limiter work?",
+      "answer": "Tokens accumulate up to a capacity at a fixed rate. Each request spends tokens, allowing short bursts while enforcing a long-term average rate.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6454b0e6-d561-4ab6-aff2-ac678b1d7fb7",
+      "order": 37,
+      "question": "What is backpressure?",
+      "answer": "Backpressure makes producers slow down, block, reject, or shed work when downstream consumers cannot keep up, preventing unbounded queues.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2e325d92-026a-443c-ad17-89c5e76d8681",
+      "order": 38,
+      "question": "What is load shedding?",
+      "answer": "Load shedding deliberately rejects lower-priority or excess work when capacity is exhausted so the system can continue serving a manageable subset.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d9f9c816-fed2-476d-99c8-9fe046829fb2",
+      "order": 39,
+      "question": "What is admission control?",
+      "answer": "Admission control decides whether new work is allowed into the system based on capacity, quotas, or resource limits before expensive processing begins.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c2e3424e-f144-4820-acf5-52eb3a079129",
+      "order": 40,
+      "question": "What is a queue used for in system design?",
+      "answer": "A queue decouples producers from consumers by storing work until consumers can process it, smoothing bursts and enabling asynchronous processing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8b426cbe-00ff-4cad-8e75-279cbbed082a",
+      "order": 41,
+      "question": "What trade-off does asynchronous messaging introduce?",
+      "answer": "It improves decoupling and burst handling, but results are delayed and the system must handle retries, duplicates, ordering, and operational visibility.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "04d198d1-6ad8-42f5-b9bb-e018fab3b4c5",
+      "order": 42,
+      "question": "What is at-most-once delivery?",
+      "answer": "A message is delivered zero or one time. It avoids duplicates but can lose work if a failure occurs before successful processing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1e6575b2-b6b4-4289-9220-bc592154721b",
+      "order": 43,
+      "question": "What is at-least-once delivery?",
+      "answer": "The system retries until delivery is believed successful, so messages are not intentionally lost but consumers can receive duplicates.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "819760da-6d12-44a3-a788-0a26325b5c69",
+      "order": 44,
+      "question": "Why is exactly-once delivery difficult in distributed systems?",
+      "answer": "Failures can make it unclear whether work committed before an acknowledgment was lost. Systems usually approximate exactly-once effects with idempotency, transactions, or deduplication.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ab86814f-b396-4426-9dae-4cfe842ce092",
+      "order": 45,
+      "question": "What is an idempotent operation?",
+      "answer": "Repeating an idempotent operation with the same logical request produces the same intended final effect as performing it once.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d0532d3e-6c84-4a35-9ebe-a1b82a4a49f4",
+      "order": 46,
+      "question": "How does an idempotency key help APIs?",
+      "answer": "The client sends a stable request identifier, and the server stores the outcome so retries can return the original result instead of performing the mutation again.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e3e7a274-afb0-4e36-98bb-b09b4540e669",
+      "order": 47,
+      "question": "What is a dead-letter queue?",
+      "answer": "It stores messages that repeatedly fail processing so they stop blocking normal traffic and can be inspected, repaired, or replayed separately.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "da5ab9f3-6a75-46d5-aff1-28c475a5dc37",
+      "order": 48,
+      "question": "What is message ordering?",
+      "answer": "Ordering is a guarantee about the sequence in which consumers observe messages. Global ordering is expensive; many systems guarantee order only within a partition or key.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b90f877d-ebc5-4fd4-be39-916c223a7305",
+      "order": 49,
+      "question": "What is partitioning?",
+      "answer": "Partitioning splits data or work into subsets that can be stored and processed independently, enabling horizontal scale.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e1aabd74-3c97-4e67-8d42-29be3bf91c82",
+      "order": 50,
+      "question": "What is sharding?",
+      "answer": "Sharding partitions a dataset across multiple independent database nodes so no single node must store or serve all records.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b90ad43c-cd43-4ba7-84e3-32db64bf9d1f",
+      "order": 51,
+      "question": "What makes a good shard key?",
+      "answer": "A good shard key spreads load and data reasonably evenly while keeping common access patterns efficient and avoiding hot partitions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d816f3d8-3832-416d-9857-f133e58e0329",
+      "order": 52,
+      "question": "What is a hot partition?",
+      "answer": "A hot partition receives much more traffic or data than others, causing one shard to bottleneck even when the overall cluster has spare capacity.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9cadaea6-e854-4e0a-ae48-536e379430af",
+      "order": 53,
+      "question": "What is consistent hashing?",
+      "answer": "Consistent hashing maps keys and nodes onto a logical ring so adding or removing a node moves only a fraction of keys compared with simple modulo hashing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e1b563bb-3c0f-48cd-92f4-00190e7bae78",
+      "order": 54,
+      "question": "Why use virtual nodes with consistent hashing?",
+      "answer": "Multiple positions per physical node improve load distribution and make it easier to assign more or less capacity to different nodes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e30d4640-79ce-4b7e-96da-c4043f0f897d",
+      "order": 55,
+      "question": "What is replication?",
+      "answer": "Replication keeps copies of data on multiple nodes to improve availability, read capacity, locality, or disaster recovery.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f57c524c-71e7-449c-9e81-4ce7406ab12a",
+      "order": 56,
+      "question": "What is leader-follower replication?",
+      "answer": "One leader accepts authoritative writes and followers copy its changes. Reads may be distributed, but followers can lag behind the leader.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e9fa5ffc-4997-422a-abd6-98c1800a266a",
+      "order": 57,
+      "question": "What is replication lag in a distributed service?",
+      "answer": "Replication lag is the delay between a committed update on a source replica and when another replica applies or exposes that update.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f0f88f9a-0fb4-42ba-ac35-1bdad6370e87",
+      "order": 58,
+      "question": "What is eventual consistency?",
+      "answer": "Replicas may temporarily return different values after updates, but if writes stop and communication succeeds, they converge toward the same state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cce81a5e-0521-4b72-9728-21acd8dded03",
+      "order": 59,
+      "question": "What is strong consistency for a read?",
+      "answer": "A strongly consistent read returns a value compatible with the system’s chosen single-copy ordering guarantees, rather than arbitrarily stale replica data.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "dde07853-b1e8-40a5-9e78-8e7d3b6a5143",
+      "order": 60,
+      "question": "What is read-your-writes consistency?",
+      "answer": "After a client successfully writes a value, its later reads are guaranteed to observe that write or a newer value.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "391d1f8c-d249-4b60-9d0a-92a317ab57bc",
+      "order": 61,
+      "question": "What is monotonic reads consistency?",
+      "answer": "Once a client has observed a version, later reads will not return an older version.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f15aabf7-d104-4e41-9849-644593f2b01e",
+      "order": 62,
+      "question": "What does the CAP theorem state?",
+      "answer": "When a network partition prevents nodes from communicating, a distributed data system cannot guarantee both linearizable consistency and availability for every request.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "716c4808-3f07-4fd0-859e-b58073ef3f24",
+      "order": 63,
+      "question": "What does “choosing consistency” during a partition mean?",
+      "answer": "Some requests are rejected or delayed rather than returning a result that could violate the required consistency guarantee.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7da0e524-5081-43d9-9675-7c5d31fd38fd",
+      "order": 64,
+      "question": "What does “choosing availability” during a partition mean?",
+      "answer": "Nodes continue answering requests despite incomplete coordination, accepting that clients may observe conflicting or stale state that must later reconcile.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9b36eb44-87ac-4cac-94ac-b36d4616246d",
+      "order": 65,
+      "question": "What is quorum replication?",
+      "answer": "Reads and writes contact a configured number of replicas. Overlapping read and write quorums can increase the chance or guarantee, under assumptions, that reads encounter recent writes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ca99158d-31ef-4f38-8e07-13ef83a786bc",
+      "order": 66,
+      "question": "What is a split-brain condition?",
+      "answer": "Separated nodes both believe they are authoritative and accept conflicting operations. Leader election fencing or quorum rules are used to prevent or contain it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5cfc21e7-8797-43b8-a056-8c0fcab42e58",
+      "order": 67,
+      "question": "What is a consensus algorithm used for?",
+      "answer": "Consensus lets multiple nodes agree on an ordered sequence or chosen value despite some failures, commonly for leader election and replicated state machines.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a2ebf8ad-de15-4a8b-99b5-43e6d5a7f614",
+      "order": 68,
+      "question": "Why are timeouts necessary in distributed calls?",
+      "answer": "Without a timeout, a caller may wait indefinitely for a failed or partitioned dependency. A timeout bounds resource occupancy and lets recovery logic run.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1492ff13-7802-49f2-942d-e47819cf51e3",
+      "order": 69,
+      "question": "Why can retries make an outage worse?",
+      "answer": "Many clients retrying a struggling dependency can multiply load exactly when capacity is lowest, causing a retry storm.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1b2abfda-bd3e-4c0d-834d-9178ec0371b2",
+      "order": 70,
+      "question": "What is exponential backoff?",
+      "answer": "Retry delays grow after successive failures, reducing pressure on a dependency that may need time to recover.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ad1be9ad-be19-4088-b2e5-0372faff6b01",
+      "order": 71,
+      "question": "Why add jitter to retry backoff?",
+      "answer": "Randomness prevents many clients from retrying at the same synchronized times and creating repeated traffic spikes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "eeade45c-7bf4-4dbf-a93f-6e65438b6def",
+      "order": 72,
+      "question": "What is a circuit breaker?",
+      "answer": "It stops sending normal requests to a repeatedly failing dependency for a period, failing fast while allowing controlled probes for recovery.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f4e522f3-0cb3-4da7-ab40-ae5273a45f3d",
+      "order": 73,
+      "question": "What is a bulkhead pattern?",
+      "answer": "It isolates resource pools or failure domains so overload in one dependency or workload cannot consume every thread, connection, or worker available to others.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "44a0518b-19fa-4ca5-b289-87de692d0273",
+      "order": 74,
+      "question": "What is a timeout budget?",
+      "answer": "It allocates an end-to-end request deadline across downstream calls so nested services do not each wait longer than the caller can tolerate.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "dc39004b-2c46-4dd5-bd33-969844eacdbc",
+      "order": 75,
+      "question": "What is fan-out?",
+      "answer": "Fan-out occurs when one request triggers parallel calls to many downstream partitions or services. It can reduce individual work per node but increases tail-latency exposure and dependency count.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bd600f34-0cb4-4bda-9858-3382e9e8a93e",
+      "order": 76,
+      "question": "Why does fan-out amplify tail latency?",
+      "answer": "The parent often cannot finish until the slowest required subrequest finishes, so more parallel dependencies increase the chance that at least one is slow.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8fa96e25-e52d-4665-bc3d-8b635c59a19f",
+      "order": 77,
+      "question": "What is hedged requesting?",
+      "answer": "A client sends a duplicate request to another replica after a delay and uses the first successful result, trading extra load for lower tail latency.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e48f4aa5-ecc1-463b-b863-0936b5909c5c",
+      "order": 78,
+      "question": "What is service discovery?",
+      "answer": "Service discovery maps a logical service name to currently reachable instances, allowing clients or proxies to route without fixed host lists.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "71d013b5-fcde-45f4-80b4-e966ba9ba451",
+      "order": 79,
+      "question": "What is a service registry?",
+      "answer": "A registry stores service instance locations and health metadata used by discovery mechanisms.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b991a630-93ed-47f7-8894-17c157cbcef2",
+      "order": 80,
+      "question": "What is synchronous service communication?",
+      "answer": "The caller waits for a downstream response before completing its own operation, creating direct latency and availability dependencies.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "311106b9-365e-497c-9b4e-e8c117253b3c",
+      "order": 81,
+      "question": "What is event-driven architecture?",
+      "answer": "Components publish events describing completed facts, and other components react asynchronously without the publisher calling each consumer directly.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a36fa5be-bc2e-4dc8-80b4-3fde44408719",
+      "order": 82,
+      "question": "What trade-off does event-driven architecture introduce?",
+      "answer": "It reduces direct coupling but makes causality, retries, ordering, schema evolution, and end-to-end debugging more complex.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4f965704-f271-4fa4-a3e0-28c4ef639512",
+      "order": 83,
+      "question": "What is an event log?",
+      "answer": "An event log is an ordered append-only sequence of records that consumers can read by position and often replay.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1ad13616-6ef6-4602-abc1-2174d82acb4d",
+      "order": 84,
+      "question": "What is event sourcing?",
+      "answer": "Event sourcing stores state changes as an authoritative sequence of domain events and derives current state by replaying or projecting those events.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9edf0701-f23f-4d81-b721-74b38396c1ed",
+      "order": 85,
+      "question": "What trade-off does event sourcing introduce?",
+      "answer": "It provides history and replay but makes schema evolution, projections, debugging, and correction of bad events more demanding.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a175034f-6188-4a72-addc-9374b9d0fd7d",
+      "order": 86,
+      "question": "What is CQRS?",
+      "answer": "Command Query Responsibility Segregation separates write models from read models so each can use structures optimized for its workload.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6f6dd3a4-031d-4623-9533-a851783d3000",
+      "order": 87,
+      "question": "What is a materialized view in system design?",
+      "answer": "A materialized view stores precomputed query results or projections so reads avoid repeating expensive joins or aggregations, at the cost of refresh work and possible staleness.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "add565fc-063a-447e-96a5-39277ada708f",
+      "order": 88,
+      "question": "What is denormalization in system design?",
+      "answer": "Denormalization stores duplicated or prejoined data to make reads simpler or faster, trading extra storage and write-time consistency work for read efficiency.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "98873f64-19aa-46b8-b76a-8b00c6975165",
+      "order": 89,
+      "question": "What is a saga?",
+      "answer": "A saga coordinates a multi-service workflow as a sequence of local transactions with compensating actions for steps that must be logically undone after failure.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6bb26716-e27b-4ab8-a85a-722d7e463b3a",
+      "order": 90,
+      "question": "Why is a saga not equivalent to a database transaction?",
+      "answer": "Intermediate steps can become externally visible, and compensation is application logic rather than an atomic rollback of all participants.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9e40e50d-09d8-4901-9aca-3bdac45fd19a",
+      "order": 91,
+      "question": "What is the transactional outbox pattern?",
+      "answer": "A service writes business data and an outgoing-event record in the same local database transaction, then a separate publisher sends the event, avoiding a gap between commit and publish.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "11ffc8b0-e87a-4cac-be1b-b967fa097a09",
+      "order": 92,
+      "question": "What problem does change data capture solve?",
+      "answer": "CDC streams committed database changes to downstream systems without requiring application code to publish a second copy of every write.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ab4c13e6-1838-42e5-b55c-e341db6b261e",
+      "order": 93,
+      "question": "What is API versioning for?",
+      "answer": "Versioning lets an API evolve while preserving behavior expected by existing clients that cannot all upgrade at once.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5e7cb735-aaa5-43e2-9100-2f00d5f01a07",
+      "order": 94,
+      "question": "What is backward compatibility?",
+      "answer": "A change is backward compatible when existing clients can continue using the updated service without changing their behavior or payloads.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4e1be2cf-c1e6-40b2-a791-ad3cc5ee0f67",
+      "order": 95,
+      "question": "Why prefer additive schema changes in distributed systems?",
+      "answer": "Older and newer components often run simultaneously. Adding optional fields is usually safer than renaming or changing meanings that old consumers still expect.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d5688eca-5e1a-4aad-854c-46932ca06bab",
+      "order": 96,
+      "question": "What is observability?",
+      "answer": "Observability is the ability to infer a system’s internal behavior from outputs such as metrics, logs, traces, and profiles.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f9bc5342-043d-474f-8b76-77f08efbefc6",
+      "order": 97,
+      "question": "What is a metric?",
+      "answer": "A metric is a numeric time-series measurement such as request rate, error count, queue depth, or latency distribution.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0bb19ad3-72fd-44ef-a09f-3abac0073e40",
+      "order": 98,
+      "question": "What is structured logging?",
+      "answer": "Structured logging records events as machine-readable fields instead of only free-form text, making filtering and correlation more reliable.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8829647f-3c57-46bc-b56f-e6cf1a640703",
+      "order": 99,
+      "question": "What is distributed tracing?",
+      "answer": "Distributed tracing records the path and timing of one logical request across service boundaries using correlated spans.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "03fabc9c-6859-4e51-8557-0fbda5f5d10a",
+      "order": 100,
+      "question": "What is a correlation ID?",
+      "answer": "It is an identifier propagated across related operations so logs or events from one request or workflow can be connected.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1a381914-bf4a-4477-b60f-4c84a72cc167",
+      "order": 101,
+      "question": "What is the difference between monitoring and alerting?",
+      "answer": "Monitoring records and visualizes system behavior. Alerting notifies people or automation when selected conditions require action.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b965511a-c9d4-4359-94cd-0cf7a63f8d4e",
+      "order": 102,
+      "question": "What makes an alert actionable?",
+      "answer": "It identifies a condition that has user or operational impact and points toward an owner or response, rather than firing on every low-level anomaly.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "84ed17d3-47ed-4596-babf-c8f5d6150555",
+      "order": 103,
+      "question": "What is capacity planning?",
+      "answer": "Capacity planning estimates resource needs from expected load, growth, safety margins, and bottlenecks so the system can meet targets before saturation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "efd5533f-8aa7-4a91-b783-4cb6cc71e583",
+      "order": 104,
+      "question": "What is autoscaling?",
+      "answer": "Autoscaling changes the number or size of service instances in response to measured demand or schedules.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6fed2891-1f8c-4d4d-a352-b9a49fb596cf",
+      "order": 105,
+      "question": "Why can CPU-only autoscaling fail for some services?",
+      "answer": "A service may bottleneck on memory, queue depth, connections, I/O, or downstream limits before CPU becomes high.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "442c4017-90ad-4a2c-98a4-50ef2e8121a9",
+      "order": 106,
+      "question": "What is multi-region deployment?",
+      "answer": "A service runs in multiple geographic regions to reduce latency or survive a regional outage, while coordinating traffic and data across regions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "157a70f9-97ca-4173-bf2c-027ab8eb9662",
+      "order": 107,
+      "question": "What is RPO?",
+      "answer": "Recovery Point Objective is the maximum acceptable amount of recent data loss measured backward from a failure.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f30f4ab1-43ae-4472-ad6d-03f8ad858c78",
+      "order": 108,
+      "question": "What is RTO?",
+      "answer": "Recovery Time Objective is the target maximum time to restore an acceptable level of service after a disruption.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e925dbb8-2f01-4e3e-920c-768c5ecd5e07",
+      "order": 109,
+      "question": "Why should disaster recovery be tested?",
+      "answer": "Backups and failover plans can silently fail or be too slow. Exercises verify that data can actually be restored and that procedures meet RPO and RTO targets.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "61f621ea-471e-4633-819c-1559058c0274",
+      "order": 110,
+      "question": "What is a chaos experiment?",
+      "answer": "It deliberately introduces a bounded failure, such as killing instances or adding latency, to verify that resilience mechanisms behave as expected.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bcf7355b-ece5-4b7c-8a3c-70a346c5f99e",
+      "order": 111,
+      "question": "Why should system design start with workload and requirements?",
+      "answer": "Architecture depends on read/write ratios, data size, latency, consistency, growth, and failure tolerance. Without those constraints, technology choices are mostly guesses.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    }
+  ]
+}

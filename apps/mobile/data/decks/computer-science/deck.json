@@ -1,0 +1,934 @@
+{
+  "id": "ed10310f-6d24-4c52-b5c7-bc98081e1606",
+  "version": 2,
+  "title": "Computer Science",
+  "description": "Algorithms, data structures, complexity, graphs, trees, hashing, concurrency fundamentals, networking, and computation.",
+  "createdAt": "2026-09-06T13:26:00Z",
+  "updatedAt": "2026-09-25T19:33:34.817Z",
+  "lessons": [
+    {
+      "id": "5c7b98f9-fe5f-4bf1-a2e2-6a8718394cda",
+      "order": 0,
+      "title": "Measuring algorithms"
+    },
+    {
+      "id": "1dec9684-816f-4beb-8372-3c96dd68dca8",
+      "order": 1,
+      "title": "Core data structures"
+    },
+    {
+      "id": "73da505b-19ec-4aca-992c-b87dd78b0a59",
+      "order": 2,
+      "title": "Trees"
+    },
+    {
+      "id": "05dfbd5b-ccf1-41fb-bd55-0a91dc7161b9",
+      "order": 3,
+      "title": "Graphs"
+    },
+    {
+      "id": "b4e8859f-560d-44ff-ab18-a25e774a3701",
+      "order": 4,
+      "title": "Shortest paths and spanning trees"
+    },
+    {
+      "id": "4dfd8eb2-ca5e-421b-b293-26e578c51056",
+      "order": 5,
+      "title": "Sorting and searching"
+    },
+    {
+      "id": "dcc8b307-cb54-4144-8417-40bf1aa537a8",
+      "order": 6,
+      "title": "Recursion and algorithm design"
+    },
+    {
+      "id": "208d246f-666e-4ec8-860d-f496e7d2a75d",
+      "order": 7,
+      "title": "Techniques and correctness"
+    },
+    {
+      "id": "1a94d874-1bad-4582-bc0a-17c889a32c1f",
+      "order": 8,
+      "title": "Concurrency and networking"
+    },
+    {
+      "id": "33839ed3-7ba8-48a8-892e-02509c6425ad",
+      "order": 9,
+      "title": "Cryptography and hard problems"
+    }
+  ],
+  "cards": [
+    {
+      "id": "3b70384d-b1bf-49b5-b725-43891854f6bb",
+      "order": 0,
+      "question": "What is an algorithm?",
+      "answer": "An algorithm is a finite procedure that transforms inputs into outputs through a defined sequence of steps.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "82e9a914-798b-4492-9b9e-3d5394d0d682",
+      "order": 1,
+      "question": "What is time complexity?",
+      "answer": "Time complexity describes how the number of basic operations grows as input size grows, usually using asymptotic notation such as O(n).",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4785f2bf-3087-4080-bc9c-21b991de8dbc",
+      "order": 2,
+      "question": "What is space complexity?",
+      "answer": "Space complexity describes how additional memory use grows with input size.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4d388602-9294-407c-a5b4-50c8fabf55a0",
+      "order": 3,
+      "question": "What does Big O notation express?",
+      "answer": "Big O gives an asymptotic upper bound on growth, ignoring constant factors and lower-order terms.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c4d329c1-5ca4-4a6f-8e59-e93fb47ce7ff",
+      "order": 4,
+      "question": "What does Big Omega notation express?",
+      "answer": "Big Omega gives an asymptotic lower bound on growth.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "354b95c5-019b-4057-9531-058167451628",
+      "order": 5,
+      "question": "What does Big Theta notation express?",
+      "answer": "Big Theta gives a tight asymptotic bound: the function grows within constant factors of the stated rate.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "380bb4cb-36ee-4ff9-9d83-67ec88234b65",
+      "order": 6,
+      "question": "Why are constant factors often ignored in asymptotic analysis?",
+      "answer": "Asymptotic analysis focuses on growth for large inputs. Constants still matter in real systems, so two algorithms with the same Big O can have very different practical performance.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4e9cbbf0-3c61-45b5-b652-3dbc13aac32d",
+      "order": 7,
+      "question": "What is amortized analysis?",
+      "answer": "Amortized analysis spreads the cost of occasional expensive operations across a sequence of operations to bound the average cost per operation over that sequence.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "effaf86a-3165-4024-a26d-9c00a5653fdd",
+      "order": 8,
+      "question": "Why is dynamic-array append amortized O(1)?",
+      "answer": "Most appends write into existing capacity. Rare resizes copy many elements, but geometric growth makes the total copying across many appends linear.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fc30910c-e779-45d9-8468-fa793479af00",
+      "order": 9,
+      "question": "What is a data structure?",
+      "answer": "A data structure organizes values and relationships so selected operations can be performed with useful time and space costs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8c8211bb-a92b-40d6-92cb-c8aa5915d78a",
+      "order": 10,
+      "question": "What is an array?",
+      "answer": "An array stores elements in indexed order, typically allowing O(1) access by index while insertion or deletion in the middle may require shifting elements.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4a2f2e77-8209-4240-b6ec-1954ffd8c868",
+      "order": 11,
+      "question": "What is a linked list?",
+      "answer": "A linked list stores elements in nodes connected by references. Insertion near a known node can be O(1), but finding the nth element requires traversal.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "432859e4-fc0a-4201-b9c1-c0ee3124a2b9",
+      "order": 12,
+      "question": "What is a stack?",
+      "answer": "A stack is a last-in, first-out structure supporting operations such as push and pop at one end.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b34d917f-1588-4109-a579-7a8b17bb8197",
+      "order": 13,
+      "question": "What is a queue?",
+      "answer": "A queue is a first-in, first-out structure where items are added at one end and removed from the other.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4e6b8de3-9d42-4822-97cf-85adece40731",
+      "order": 14,
+      "question": "What is a deque?",
+      "answer": "A deque supports insertion and removal at both the front and back.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "55c34272-16d1-431e-b9bf-8682588de0ee",
+      "order": 15,
+      "question": "What is a priority queue?",
+      "answer": "A priority queue removes items according to priority rather than insertion order, commonly implemented with a heap.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b3590ec9-02b3-4c10-89ba-d430eea404d6",
+      "order": 16,
+      "question": "What is a binary heap?",
+      "answer": "A binary heap is a nearly complete binary tree that maintains a heap-order property, enabling O(1) access to the minimum or maximum and O(log n) insertion/removal.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a6cf8ffb-e0dd-49b9-84f8-f9214aef6505",
+      "order": 17,
+      "question": "What is a min-heap?",
+      "answer": "A min-heap maintains every parent value as no greater than its children, so the minimum element is at the root.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9070d392-6c0c-4c27-9bfa-3f8dd24c2f3a",
+      "order": 18,
+      "question": "What is a hash table?",
+      "answer": "A hash table maps keys through a hash function to storage buckets, providing expected O(1) lookup, insertion, and deletion when collisions are controlled.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "89f437a9-37a3-4ffb-ac01-edfc79658968",
+      "order": 19,
+      "question": "What is a hash collision?",
+      "answer": "A collision occurs when distinct keys map to the same hash bucket or position. The table must resolve collisions while still distinguishing the keys.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "19075c68-bff8-4176-a2a5-88e4302d8b78",
+      "order": 20,
+      "question": "What is separate chaining?",
+      "answer": "Each hash bucket stores a collection of entries that hashed to that bucket, such as a linked list or small array.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d9fe6cb7-e393-45f6-91bb-79426a8ab2e9",
+      "order": 21,
+      "question": "What is open addressing?",
+      "answer": "All hash-table entries live in the main table, and collisions are resolved by probing alternative slots according to a rule.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "53001cd9-e4f1-43ba-b9e4-95362c08ce1e",
+      "order": 22,
+      "question": "What is load factor in a hash table?",
+      "answer": "Load factor is the ratio of stored entries to table capacity. High load increases collision or probe costs, so tables often resize before it becomes too large.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7564b005-c7b2-4e35-9724-e6bf987e6143",
+      "order": 23,
+      "question": "What makes a good hash function for a hash table?",
+      "answer": "It deterministically maps equal keys to equal hashes while distributing typical distinct keys across buckets to avoid clustering.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5e83fdca-73fc-4739-9fc9-6feeec110356",
+      "order": 24,
+      "question": "What is a set abstract data type?",
+      "answer": "A set stores unique values and supports membership, insertion, and deletion without attaching a separate value to each key.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b366e38e-98cc-41f2-aac0-f323ef8eddb7",
+      "order": 25,
+      "question": "What is a tree?",
+      "answer": "A tree is a connected acyclic hierarchy of nodes with parent-child relationships and one path between any two nodes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7ec8483e-6e02-420a-a4b3-66a5fa962071",
+      "order": 26,
+      "question": "What is a binary tree?",
+      "answer": "A binary tree is a tree where each node has at most two children.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "93020b8c-9b27-4751-86e2-ddf22d85c330",
+      "order": 27,
+      "question": "What is a binary search tree?",
+      "answer": "A BST orders nodes so keys in one subtree compare lower and keys in the other compare higher according to its ordering rule.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "adcf6958-122a-41a8-86ae-14039671a565",
+      "order": 28,
+      "question": "What is the search cost in a balanced binary search tree?",
+      "answer": "Search is O(log n) because each comparison eliminates a large fraction of the remaining tree.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f430fce9-7ba0-4163-ae02-f2f57ee22b9d",
+      "order": 29,
+      "question": "Why can a plain binary search tree degrade to O(n)?",
+      "answer": "If insertions create a highly skewed tree, its height can approach the number of nodes, turning search into linear traversal.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4d635cb8-bd2d-4969-bb73-414ed217d83e",
+      "order": 30,
+      "question": "What problem do self-balancing search trees solve?",
+      "answer": "They maintain logarithmic height through rotations or restructuring so lookup, insertion, and deletion remain O(log n).",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "eacd6cbc-23eb-4d02-82b8-3e50d0856b20",
+      "order": 31,
+      "question": "What is a trie?",
+      "answer": "A trie stores keys by prefixes along tree edges, making lookup proportional to key length rather than the number of stored keys.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "40e0f626-7c43-4b1e-ae68-2f9529562875",
+      "order": 32,
+      "question": "When is a trie useful?",
+      "answer": "It is useful for prefix searches, autocomplete, dictionaries, and routing structures where shared prefixes matter.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f061c6b1-9d9b-4e33-b4af-f5a3b76b227c",
+      "order": 33,
+      "question": "What is a graph?",
+      "answer": "A graph is a set of vertices connected by edges that model relationships between entities.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6ce20e42-b45f-4998-8785-9ce5e82135d4",
+      "order": 34,
+      "question": "What is the difference between a directed and undirected graph?",
+      "answer": "Directed edges have an orientation from one vertex to another. Undirected edges represent a symmetric connection.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "11a2d67e-e55c-46b5-b38f-38a3360f3ad4",
+      "order": 35,
+      "question": "What is a weighted graph?",
+      "answer": "A weighted graph assigns a cost, distance, capacity, or other numeric value to edges.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5568f253-17e4-4a62-83d8-c51c28057b12",
+      "order": 36,
+      "question": "What is an adjacency list?",
+      "answer": "It stores, for each vertex, the edges or neighbors leaving that vertex. It is space-efficient for sparse graphs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0dcdbb8f-6025-44fa-a53a-f7b931a981a5",
+      "order": 37,
+      "question": "What is an adjacency matrix?",
+      "answer": "It stores a table indexed by vertex pairs indicating whether or with what weight an edge exists. Edge lookup is O(1) but storage is O(V²).",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4e9ef43c-f8b7-4c4f-9f5f-09a68c9cd53d",
+      "order": 38,
+      "question": "What is breadth-first search?",
+      "answer": "BFS explores graph vertices in layers from a start vertex using a queue. In an unweighted graph it finds shortest paths measured by edge count.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5cf0f943-0f15-4f61-b423-97a80c7f37ee",
+      "order": 39,
+      "question": "What is depth-first search?",
+      "answer": "DFS follows one path deeply before backtracking, using recursion or an explicit stack.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6a93456b-b5bb-4189-9879-1492ac43cf93",
+      "order": 40,
+      "question": "When is DFS useful?",
+      "answer": "It is useful for traversal, cycle detection, topological reasoning, connected components, and exploring paths where layer order is unnecessary.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fddcc3dc-defa-4ed9-8b4a-c6a30898ac58",
+      "order": 41,
+      "question": "What is a connected component?",
+      "answer": "It is a maximal set of vertices in an undirected graph where each vertex can reach every other through graph edges.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a776ad4d-2273-4034-821d-5627e06c5c78",
+      "order": 42,
+      "question": "What is a strongly connected component?",
+      "answer": "In a directed graph, it is a maximal set of vertices where every vertex can reach every other following edge directions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cbedce08-a142-4b57-baf7-6fcaaba92d96",
+      "order": 43,
+      "question": "What is a cycle in a graph?",
+      "answer": "A cycle is a path that returns to a previously visited vertex without needing to reuse an edge in the intended cycle definition.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ba27efeb-e90b-46bf-b382-b68ec6eacfa6",
+      "order": 44,
+      "question": "What is a directed acyclic graph?",
+      "answer": "A DAG is a directed graph with no directed cycles.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e442103d-4a28-412f-8873-91198a54bb33",
+      "order": 45,
+      "question": "What is topological ordering?",
+      "answer": "It is an ordering of DAG vertices where every directed edge goes from an earlier vertex to a later one.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5ac1a4f6-b29e-4d50-b695-417a2610a516",
+      "order": 46,
+      "question": "When is topological sorting useful?",
+      "answer": "It is useful for dependency scheduling such as build steps, course prerequisites, or jobs that must run after other jobs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6990711f-d3f1-44f2-a6a8-68126bc58763",
+      "order": 47,
+      "question": "What does Dijkstra’s algorithm solve?",
+      "answer": "It finds shortest paths from one source in a graph with non-negative edge weights.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d42ba1a9-a3bf-40cb-91e6-de17d6498ee0",
+      "order": 48,
+      "question": "Why does Dijkstra’s algorithm fail with negative edge weights?",
+      "answer": "It assumes that once the smallest tentative distance is finalized, no later path can improve it. A negative edge can violate that assumption.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0ef95f7a-2c81-48c6-9e87-7afc8ec72c90",
+      "order": 49,
+      "question": "What does Bellman-Ford solve?",
+      "answer": "It finds single-source shortest paths even with negative edge weights and can detect a reachable negative-weight cycle.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "10b32537-88a8-43b3-86bd-98b95b951a14",
+      "order": 50,
+      "question": "What does Floyd-Warshall solve?",
+      "answer": "It computes shortest-path distances between all pairs of vertices using dynamic programming in O(V³) time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "044c719f-1f12-4939-9548-4433aedb5c2f",
+      "order": 51,
+      "question": "What is a minimum spanning tree?",
+      "answer": "It connects all vertices of a weighted undirected graph with no cycles and minimum total edge weight.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f3c9dfe8-7979-41c1-8b34-32bb2cfa3c95",
+      "order": 52,
+      "question": "What does Kruskal’s algorithm do?",
+      "answer": "It processes edges from lowest to highest weight, adding an edge when it connects two previously separate components.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "561ea537-cc49-4d3e-892d-9d3c77cf28f2",
+      "order": 53,
+      "question": "What does Prim’s algorithm do?",
+      "answer": "It grows one connected tree by repeatedly adding the cheapest edge from the current tree to a new vertex.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e20947e2-d74f-4e6b-a0a5-3ecc09418cfe",
+      "order": 54,
+      "question": "What is union-find?",
+      "answer": "Union-find maintains disjoint sets with operations to find a set representative and merge two sets, useful for connectivity problems.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6f60ce4d-8edf-49de-a261-01efab5811b0",
+      "order": 55,
+      "question": "What does path compression do in union-find?",
+      "answer": "During find operations it rewrites parent links toward the set root, making future finds much faster.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f0f6c45a-da44-49d5-9673-9ff27dee067e",
+      "order": 56,
+      "question": "What is sorting?",
+      "answer": "Sorting rearranges items into an order defined by a comparison or key.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "96b18a6a-5368-42b4-bb1f-54a4d17b026a",
+      "order": 57,
+      "question": "What is a stable sort?",
+      "answer": "A stable sort preserves the relative order of records that compare equal.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "885c984f-d81c-48c8-96a7-5af1e06e25fc",
+      "order": 58,
+      "question": "What is merge sort?",
+      "answer": "Merge sort recursively sorts halves and merges them, giving O(n log n) worst-case time and commonly O(n) auxiliary space for arrays.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7cebdf65-79db-42e5-b0dd-ebe71f60f4da",
+      "order": 59,
+      "question": "What is quicksort?",
+      "answer": "Quicksort partitions elements around a pivot and recursively sorts partitions, with expected O(n log n) time but O(n²) worst-case time under bad pivots.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2731543e-54eb-4a5e-924a-2f374edfd6b0",
+      "order": 60,
+      "question": "What is heapsort?",
+      "answer": "Heapsort builds a heap and repeatedly extracts the extreme element, giving O(n log n) worst-case time and O(1) auxiliary array storage in common in-place implementations.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "62e81261-2c00-4551-a7a8-3ab4f2b1fdfa",
+      "order": 61,
+      "question": "Why is comparison sorting generally bounded below by Ω(n log n)?",
+      "answer": "A comparison sort must distinguish among n! possible input orders, requiring a decision tree with logarithmic depth proportional to log(n!).",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "106bd2b0-fd2c-475c-94b1-f0a6b0a48cc0",
+      "order": 62,
+      "question": "How can counting sort beat O(n log n)?",
+      "answer": "It uses numeric key ranges rather than only comparisons, running in O(n + k) when keys fall in a manageable range of size k.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e5bb2608-cfbb-49c6-b83d-7c4e1346d8ea",
+      "order": 63,
+      "question": "What is binary search?",
+      "answer": "Binary search repeatedly halves a sorted search range by comparing the target with the middle element, giving O(log n) comparisons.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7ed14915-aebe-4ac8-a047-3d766ddc471f",
+      "order": 64,
+      "question": "What condition is required for ordinary binary search?",
+      "answer": "The search space must have a monotonic ordering or predicate so one comparison tells which half can be discarded.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4092ead6-7e44-4742-be40-07c0f56e67e9",
+      "order": 65,
+      "question": "What common bug occurs in binary-search boundaries?",
+      "answer": "Mixing inclusive and exclusive interval conventions can skip candidates or loop forever. Define the interval invariant before coding.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "814c7189-5bb2-4d3a-ad93-58b06bc680f4",
+      "order": 66,
+      "question": "What is recursion?",
+      "answer": "Recursion solves a problem by calling the same function on smaller subproblems until a base case stops further calls.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c20e8e38-3a7f-4f70-8d16-905535fb0ecf",
+      "order": 67,
+      "question": "What is a base case?",
+      "answer": "A base case is an input that can be answered directly and stops recursive expansion.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "de26678b-99b9-4792-84f0-b4b075ba964c",
+      "order": 68,
+      "question": "What is a call stack?",
+      "answer": "The call stack stores active function frames, including return locations and local execution state, in nested call order.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4f0286d1-877b-4f19-a62a-64c29fd3c699",
+      "order": 69,
+      "question": "Why can deep recursion fail?",
+      "answer": "Each recursive call consumes stack space. Sufficient depth can exceed the runtime’s stack limit even when the algorithm is logically correct.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e431b6ee-510b-440a-941f-d5069f6cee1d",
+      "order": 70,
+      "question": "What is dynamic programming?",
+      "answer": "Dynamic programming solves overlapping subproblems once and reuses their results to construct the final answer.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7ed1596f-36fb-4b0e-979d-e250659253b1",
+      "order": 71,
+      "question": "What is memoization in dynamic programming?",
+      "answer": "Memoization is top-down DP that caches results of subproblems when recursive calls first compute them.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7d671556-d36c-41d7-8a44-4ce16de33726",
+      "order": 72,
+      "question": "What is tabulation in dynamic programming?",
+      "answer": "Tabulation is bottom-up DP that fills a table of smaller subproblem results in an order that makes later results available.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2367295b-bf3d-410c-82e3-62a7a92386ac",
+      "order": 73,
+      "question": "What is optimal substructure?",
+      "answer": "A problem has optimal substructure when an optimal solution can be built from optimal solutions to suitable subproblems.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cbb7c2bd-2875-4221-ab11-6cad4e33f8e7",
+      "order": 74,
+      "question": "What are overlapping subproblems?",
+      "answer": "They are subproblems reached repeatedly from different branches of a naive recursive solution, making cached results reusable.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "663075d0-9669-4c7a-8f09-a3e52260867c",
+      "order": 75,
+      "question": "What is a greedy algorithm?",
+      "answer": "A greedy algorithm repeatedly makes a locally best choice without revisiting previous choices.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ff4dd881-9c65-4143-954e-999d529bc557",
+      "order": 76,
+      "question": "When is a greedy strategy correct?",
+      "answer": "Only when the problem has a property proving that locally optimal choices can be extended into a globally optimal solution.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0a44bcdd-99b9-47b7-8edd-da5357cafd58",
+      "order": 77,
+      "question": "What is divide and conquer?",
+      "answer": "It splits a problem into smaller independent subproblems, solves them recursively, and combines their results.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "46908741-f1d0-45ec-99db-0d26288efc15",
+      "order": 78,
+      "question": "What is backtracking?",
+      "answer": "Backtracking incrementally builds candidates and abandons a partial candidate as soon as it cannot lead to a valid solution.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7a62a55a-e724-4d79-a20c-4d744f28579d",
+      "order": 79,
+      "question": "What is branch and bound?",
+      "answer": "It explores a search space while using bounds on the best possible remaining result to prune branches that cannot beat the current best solution.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "07bb72d7-4d17-4fba-8896-173df80caec9",
+      "order": 80,
+      "question": "What is a two-pointer technique?",
+      "answer": "It maintains two indexes that move according to an invariant, often reducing nested scanning of ordered or sequence data to linear time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "73175d7a-7187-4e34-ad00-36083aa94950",
+      "order": 81,
+      "question": "What is a sliding window technique?",
+      "answer": "It maintains information about a contiguous range while moving its boundaries, reusing work instead of recomputing every range from scratch.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bd03c8f5-475a-480b-b671-99f4c757ca83",
+      "order": 82,
+      "question": "What is a prefix sum?",
+      "answer": "A prefix-sum array stores cumulative totals so a range sum can be computed from two prefix values in O(1) after O(n) preprocessing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "34188b5f-95b7-45bd-affe-445017bb9494",
+      "order": 83,
+      "question": "What is a monotonic stack?",
+      "answer": "It keeps elements in increasing or decreasing order while processing a sequence, enabling nearest-greater or nearest-smaller queries in linear time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9e453a8a-f91a-4508-90d1-aaf968dcc92d",
+      "order": 84,
+      "question": "What is a bitset useful for?",
+      "answer": "A bitset stores many Boolean flags compactly and lets word-sized bit operations process many flags at once.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e46a6f36-35ac-4ff3-ae17-38460b34afae",
+      "order": 85,
+      "question": "What is the pigeonhole principle?",
+      "answer": "If more items are placed into fewer containers, at least one container must hold more than one item. It is often used to prove that a collision or repetition must exist.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d0de5b20-533b-4597-8069-b60656ac95b7",
+      "order": 86,
+      "question": "What is an invariant in an algorithm?",
+      "answer": "An invariant is a condition that remains true at a defined point in every iteration or recursive step and helps prove correctness.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9f019de4-95c2-40ab-b313-9bb21c6f4d86",
+      "order": 87,
+      "question": "What is a loop invariant used for?",
+      "answer": "It provides a structured proof: show it holds initially, remains true after each iteration, and implies the desired result at termination.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f3432882-a785-416b-a9c3-55b655987191",
+      "order": 88,
+      "question": "What is a race condition in concurrent algorithms?",
+      "answer": "A race condition occurs when correctness depends on the relative timing of concurrent operations that are not properly coordinated.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b6f77519-e415-4862-8b89-c45365c863b0",
+      "order": 89,
+      "question": "What is mutual exclusion?",
+      "answer": "Mutual exclusion ensures that only one execution path at a time can enter a protected critical section for shared state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "95654597-fcf9-4d3b-8002-7838822dc04e",
+      "order": 90,
+      "question": "What is a semaphore conceptually?",
+      "answer": "A semaphore is a counter used to control access to a limited number of permits, allowing up to a configured number of concurrent holders.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "46b3dc84-a796-448a-96c2-454d7b8dda90",
+      "order": 91,
+      "question": "What is a deadlock?",
+      "answer": "A deadlock is a state where a set of participants each waits for a condition that only another waiting participant can satisfy.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e5308c07-b169-445e-af99-d2ca7d186efc",
+      "order": 92,
+      "question": "What four conditions are classically necessary for resource deadlock?",
+      "answer": "Mutual exclusion, hold-and-wait, no forced preemption, and a circular wait must all be possible for the classic deadlock model.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ee8323dc-7ca7-4dfa-a963-01d4efd8a920",
+      "order": 93,
+      "question": "What is starvation?",
+      "answer": "Starvation occurs when a runnable participant repeatedly loses access to a needed resource and makes no progress even though the system overall continues.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cff51a34-2dc2-4c61-96c4-9311534ffc7a",
+      "order": 94,
+      "question": "What is a networking packet?",
+      "answer": "A packet is a bounded unit of data sent through a packet-switched network, carrying payload plus protocol headers used for delivery and processing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "80c80236-fb05-490b-9f12-f15571ccbbab",
+      "order": 95,
+      "question": "What is an IP address?",
+      "answer": "An IP address identifies a network interface endpoint for routing packets across IP networks.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "441b1a3b-2f70-4e42-a225-de186cb15988",
+      "order": 96,
+      "question": "What is a port number?",
+      "answer": "A transport-layer port identifies a logical endpoint on a host so multiple networked applications can share one IP address.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "757be9d4-4454-445d-9b2d-c81b09eb5d8b",
+      "order": 97,
+      "question": "What does TCP provide?",
+      "answer": "TCP provides a reliable ordered byte stream between endpoints, using acknowledgments, retransmission, sequencing, flow control, and congestion control.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f6137dd6-6b58-4698-b46c-1b1c994ef1cc",
+      "order": 98,
+      "question": "What does UDP provide?",
+      "answer": "UDP sends independent datagrams without built-in delivery, ordering, retransmission, or connection state, giving applications more control and lower protocol overhead.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "006bbb21-4b1a-4164-a3d7-a83019871c5e",
+      "order": 99,
+      "question": "What is DNS?",
+      "answer": "DNS maps domain names and other records through a distributed hierarchical naming system, commonly resolving names to IP addresses.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b9464645-5d23-4bd1-b345-9fb65b5b7554",
+      "order": 100,
+      "question": "What is HTTP?",
+      "answer": "HTTP is an application protocol where clients send requests and servers return responses containing status, headers, and optional bodies.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "365e566d-e963-44ce-8dd7-f2535a938302",
+      "order": 101,
+      "question": "What is TLS?",
+      "answer": "TLS authenticates endpoints using certificates and establishes encrypted, integrity-protected communication over an untrusted network.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d959c4a9-7e86-4825-af5f-dc6ee4aab99f",
+      "order": 102,
+      "question": "What does a cryptographic hash function provide?",
+      "answer": "It deterministically maps arbitrary input to a fixed-size digest designed to make collisions, preimages, and related manipulations computationally difficult.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3f05932b-771a-48c6-97f7-9cfe1c9324a3",
+      "order": 103,
+      "question": "Why is a password hash different from a general fast hash?",
+      "answer": "Password hashing intentionally uses salt and expensive computation or memory so guessing each candidate password costs an attacker substantial resources.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b248b069-d73c-4d88-8293-ec15f2eda5e6",
+      "order": 104,
+      "question": "What is public-key encryption?",
+      "answer": "It uses a public key for an allowed operation such as encryption and a mathematically related private key for the corresponding protected operation such as decryption.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bcbacb29-e0a5-4c26-ac0e-e8677ebf3df2",
+      "order": 105,
+      "question": "What is a digital signature?",
+      "answer": "A signer uses a private key to produce a signature that others can verify with the public key, providing integrity and evidence that the private-key holder signed the message.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "04d44c7a-634b-4c39-8410-0258edafee25",
+      "order": 106,
+      "question": "What is NP-completeness useful for in engineering reasoning?",
+      "answer": "Showing a problem is NP-complete suggests no known polynomial-time exact algorithm is likely to scale generally, motivating approximation, heuristics, restricted inputs, or exponential search with pruning.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ea69c95e-b64a-446f-8d98-f917bd8a4e65",
+      "order": 107,
+      "question": "What does it mean for one problem to reduce to another?",
+      "answer": "A reduction transforms instances of one problem into instances of another so solving the second would solve the first, allowing complexity or hardness results to transfer.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f45c79cd-4b98-4c8a-98bd-12a4629b8ae9",
+      "order": 108,
+      "question": "Why should algorithm choice follow input constraints?",
+      "answer": "An O(n²) solution may be fine for hundreds of items and unusable for millions. Input size, memory, constants, and data distribution determine what is practical.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    }
+  ]
+}
