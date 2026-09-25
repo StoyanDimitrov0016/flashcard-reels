@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,9 +17,9 @@ import { useHaptics } from "@/features/preferences/presentation/controllers/use-
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
-import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -47,6 +47,15 @@ export default function YouScreen() {
   const [resetError, setResetError] = useState<string | null>(null);
   const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
+
+  useEffect(
+    function announceStorageFailure() {
+      if (storageError !== null) {
+        showErrorToast(getErrorFeedback(storageError).message);
+      }
+    },
+    [storageError]
+  );
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -106,14 +115,6 @@ export default function YouScreen() {
               title="Reset all learning progress"
               tone="destructive"
             />
-            {storageError !== null && (
-              <View>
-                <Text accessibilityRole="alert" style={styles.rowDetail}>
-                  {getErrorFeedback(storageError).message}
-                </Text>
-                <ErrorDetails error={storageError} />
-              </View>
-            )}
             <AppResetAction
               renderTrigger={(open) => (
                 <PreferenceRow

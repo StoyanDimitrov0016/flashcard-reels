@@ -41,6 +41,7 @@ import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
+  showErrorToast,
   showSuccessToast,
 } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -289,6 +290,16 @@ export default function LibraryScreen() {
   );
 
   useEffect(
+    function announceProgressFailure() {
+      // Inside the sheet the error shows next to its buttons.
+      if (progressError && !selectedPending) {
+        showErrorToast(progressError);
+      }
+    },
+    [progressError, selectedPending]
+  );
+
+  useEffect(
     function offerUnresolvedProgressChoice() {
       if (importSheetPresented || selectedPending) {
         return;
@@ -400,11 +411,6 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
-        {progressError && !selectedPending && (
-          <Text accessibilityRole="alert" style={styles.pendingError}>
-            {progressError}
-          </Text>
-        )}
         {pendingProgress.map((progress) => (
           <Pressable
             key={progress.deckId}
@@ -571,7 +577,6 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     pendingCopy: { color: colors.textSecondary, fontSize: fontSize.caption },
-    pendingError: { color: colors.error, fontSize: fontSize.caption },
     iconButton: {
       alignItems: "center",
       borderColor: colors.borderSubtle,

@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,6 +15,7 @@ import {
 } from "@/features/progress-backup/presentation/controllers/use-progress-backup-controller";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
+import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -34,6 +36,16 @@ export default function ProgressBackupScreen() {
     shareSafetyCopy,
     cancelRestore,
   } = useProgressBackupController();
+
+  useEffect(
+    function announceBackupFailure() {
+      // During a restore the error shows in the confirmation sheet.
+      if (error && !prepared) {
+        showErrorToast(error);
+      }
+    },
+    [error, prepared]
+  );
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -72,11 +84,6 @@ export default function ProgressBackupScreen() {
           )}
         </PreferenceSection>
         {busy && !prepared && <Text style={styles.description}>Working on progress backup…</Text>}
-        {error && !prepared && (
-          <Text accessibilityRole="alert" style={styles.error}>
-            {error}
-          </Text>
-        )}
       </ScrollView>
       <DestructiveConfirmationSheet
         actionLabel="Replace progress"
@@ -117,6 +124,5 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.body,
       lineHeight: lineHeight.body,
     },
-    error: { color: colors.error, fontSize: fontSize.body },
   });
 }

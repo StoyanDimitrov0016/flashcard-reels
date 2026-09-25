@@ -14,6 +14,7 @@ import { useReelController } from "@/features/reels/presentation/controllers/use
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type ReelFeedProps = Readonly<{
@@ -85,6 +86,15 @@ export function ReelFeed({
     deckIds.every((deckId) => appearances.has(deckId) && decks.has(deckId));
 
   useEffect(
+    function announceRefreshFailure() {
+      if (refreshError) {
+        showErrorToast("The feed couldn’t refresh. Your rating is saved.");
+      }
+    },
+    [refreshError]
+  );
+
+  useEffect(
     function synchronizeActiveOccurrence() {
       if (activeOccurrenceReelPosition !== undefined) {
         onOccurrenceBecameActive(activeOccurrenceReelPosition);
@@ -154,11 +164,6 @@ export function ReelFeed({
           </Pressable>
         </View>
       )}
-      {!!refreshError && (
-        <Text accessibilityRole="alert" style={styles.refreshNotice}>
-          The feed could not be refreshed. Your saved rating is still recorded.
-        </Text>
-      )}
       {!metadataReady && <LoadingState accessibilityLabel="Preparing cards" />}
       {metadataReady && height > 0 && width > 0 && (
         <FlashList
@@ -192,7 +197,6 @@ function createStyles(colors: AppColors) {
     },
     feed: { backgroundColor: colors.canvas, flex: 1 },
     noticeText: { color: colors.textSecondary, textAlign: "center" },
-    refreshNotice: { color: colors.textSecondary, padding: 8, textAlign: "center" },
     retryLabel: { color: colors.actionPrimary, fontWeight: "700" },
   });
 }
