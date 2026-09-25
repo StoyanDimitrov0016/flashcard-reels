@@ -7,70 +7,125 @@
   "updatedAt": "2026-09-25T19:33:34.817Z",
   "lessons": [
     {
-      "id": "3a7e0cf9-1d93-4b32-92e0-a3c440c43c42",
+      "id": "51e3806c-4a27-43aa-9f66-fdb0a6cc7163",
       "order": 0,
-      "title": "Components and state"
+      "title": "Describing UI with components"
     },
     {
-      "id": "5e612341-3a42-44ce-8d95-b0a7d1c99e42",
+      "id": "835e406e-7f74-4d07-88bb-692c80d259d8",
       "order": 1,
-      "title": "Reconciliation and pure rendering"
+      "title": "Component state"
     },
     {
-      "id": "357eadfa-2752-48ac-8036-c41552a59d08",
+      "id": "1883ca50-fb8e-4432-9033-f7caa8dbd379",
       "order": 2,
-      "title": "Reducers and refs"
+      "title": "Render and commit"
     },
     {
-      "id": "750e8e11-14d8-4d80-b16b-617d5eb703a7",
+      "id": "3cbe4415-4c9a-46d9-a90d-b40629f30dfa",
       "order": 3,
-      "title": "Effects"
+      "title": "How reconciliation preserves state"
     },
     {
-      "id": "b891495d-81d5-4dbc-8ba0-6a2e85fcb23e",
+      "id": "d2e369d9-9e73-4670-ab6a-0c4fbbb5875f",
       "order": 4,
-      "title": "Context, custom Hooks, and memoization"
+      "title": "Sharing state between components"
     },
     {
-      "id": "ab7f9399-aefb-443f-a14d-7d862c6152cc",
+      "id": "83b7fc0f-9021-4bb7-ab32-1cd3e3df8760",
       "order": 5,
-      "title": "Strict Mode, Suspense, and the server"
+      "title": "Choosing the state structure"
     },
     {
-      "id": "dc88e27b-d463-43d9-a320-285db0237a64",
+      "id": "be15fad8-0dd1-4d99-abb6-c764f4071a28",
       "order": 6,
-      "title": "Transitions and Actions"
+      "title": "Managing state with reducers"
     },
     {
-      "id": "e763b0dc-9d67-477a-a719-17c9facbb42d",
+      "id": "8572fa07-20d1-4756-ae43-c9185d441006",
       "order": 7,
-      "title": "Portals, refs, and component patterns"
+      "title": "Passing data deeply with context"
     },
     {
-      "id": "7bf1465a-e55f-4c9a-887d-36b374d42a67",
+      "id": "b7cd53e2-6a0a-4373-b583-3fea8b4fd82c",
       "order": 8,
-      "title": "Structuring state"
+      "title": "Refs"
     },
     {
-      "id": "a1f21fc3-055d-4b31-87f9-075eaf3b6870",
+      "id": "31013b66-4735-4147-8d76-0adbab6729e7",
       "order": 9,
-      "title": "Performance and robust components"
+      "title": "Building accessible overlays"
+    },
+    {
+      "id": "adb4cd8c-42c8-4230-a33a-7dae26483668",
+      "order": 10,
+      "title": "Synchronizing with Effects"
+    },
+    {
+      "id": "b3062f98-4f09-431b-bb35-3e3f8204a4ce",
+      "order": 11,
+      "title": "Strict Mode"
+    },
+    {
+      "id": "9866f6a8-df9a-48c4-a282-57af26389cc0",
+      "order": 12,
+      "title": "You might not need an Effect"
+    },
+    {
+      "id": "12be99a2-fb81-4d4f-a5b9-f70afe140f2b",
+      "order": 13,
+      "title": "Reusing logic with custom Hooks"
+    },
+    {
+      "id": "de31021d-37b0-4c47-b088-1a19d17e9120",
+      "order": 14,
+      "title": "Skipping work with memoization"
+    },
+    {
+      "id": "51f09a98-0e0c-4db0-82a3-a337877abd67",
+      "order": 15,
+      "title": "Optimizing performance"
+    },
+    {
+      "id": "c263cf64-2f0a-4569-9f72-0942091dde11",
+      "order": 16,
+      "title": "Suspense and error boundaries"
+    },
+    {
+      "id": "765f93c5-c696-4087-ac20-f8ebf1477b94",
+      "order": 17,
+      "title": "Transitions"
+    },
+    {
+      "id": "eeba5176-9d95-4297-b82f-190dacb5445f",
+      "order": 18,
+      "title": "Subscribing to external stores"
+    },
+    {
+      "id": "a8eb800d-74d6-4375-96de-203602740d1e",
+      "order": 19,
+      "title": "Mutating data with Actions"
+    },
+    {
+      "id": "619e5eef-951e-414f-80a4-7196f368116b",
+      "order": 20,
+      "title": "Rendering on the server"
     }
   ],
   "cards": [
     {
-      "id": "b9f16517-78e7-417c-9e43-1541a4afccc6",
+      "id": "b7e5b6d3-973d-47d2-a465-89e645414ab9",
       "order": 0,
-      "question": "What is a React component?",
-      "answer": "A component is a JavaScript function that receives props and returns React elements, usually written as JSX.",
+      "question": "What is the practical purpose of React’s declarative model?",
+      "answer": "Code describes the UI that corresponds to current state. React computes the host changes needed to make the screen match that description instead of requiring manual step-by-step DOM updates.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "aaf427c0-3449-4ec0-abce-4deb6d84abac",
+      "id": "b9f16517-78e7-417c-9e43-1541a4afccc6",
       "order": 1,
-      "question": "What are props in React?",
-      "answer": "Props are read-only inputs passed from a parent component to a child. A component uses them to decide what UI to return.",
+      "question": "What is a React component?",
+      "answer": "A component is a JavaScript function that receives props and returns React elements, usually written as JSX.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
@@ -91,18 +146,18 @@
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "9ce63281-3a1e-49ab-bd04-263a66c8b7e5",
+      "id": "aaf427c0-3449-4ec0-abce-4deb6d84abac",
       "order": 4,
-      "question": "What does rendering mean in React?",
-      "answer": "Rendering means React calls components to compute the next element tree. React then commits the necessary host updates, such as DOM changes, afterward.",
+      "question": "What are props in React?",
+      "answer": "Props are read-only inputs passed from a parent component to a child. A component uses them to decide what UI to return.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "a69e8edb-f82d-48b7-8b7f-7f27b463513e",
+      "id": "6e78cefe-9ab0-48ae-9e2c-56ab2200245f",
       "order": 5,
-      "question": "What causes a component to render again?",
-      "answer": "A component can render again when its own state updates, when its parent renders and includes it, or when consumed context changes.",
+      "question": "What is conditional rendering?",
+      "answer": "Conditional rendering returns different element trees depending on current props or state, using normal JavaScript conditions.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
@@ -115,8 +170,16 @@
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "440e8bb9-7d28-4dc0-9ced-2528aef4a8e9",
+      "id": "8d9d83b9-09f3-4f5f-ad67-c45c81725280",
       "order": 7,
+      "question": "What is `useState` for?",
+      "answer": "`useState` gives a component a retained value and a setter that queues updates and future renders.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "440e8bb9-7d28-4dc0-9ced-2528aef4a8e9",
+      "order": 8,
       "question": "Why does setting state not change the current render’s variable?",
       "answer": "Each render receives a snapshot of state values. Calling a setter queues an update for a future render; it does not mutate variables captured by the current render.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -124,7 +187,7 @@
     },
     {
       "id": "93e82eb1-6f61-4781-a492-ba1398d982be",
-      "order": 8,
+      "order": 9,
       "question": "What problem does a functional state update solve?",
       "answer": "Passing a function such as `setCount(c => c + 1)` calculates the next value from the latest queued state, avoiding stale snapshot values when multiple updates depend on previous state.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -132,7 +195,7 @@
     },
     {
       "id": "f67cee4b-ac05-48ac-b457-a0a6548ea1e1",
-      "order": 9,
+      "order": 10,
       "question": "What does React batching do?",
       "answer": "React groups multiple state updates and processes them together before committing the next UI, avoiding unnecessary intermediate renders.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -140,127 +203,31 @@
     },
     {
       "id": "12846dae-3a23-4667-aac9-169ef81f543e",
-      "order": 10,
+      "order": 11,
       "question": "Why should React state be treated as immutable?",
       "answer": "Replacing changed objects and arrays gives React and memoization tools a reliable identity signal. Mutating existing state can make changes invisible to shallow comparisons and corrupt prior render snapshots.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "cb6b29e8-6ad6-4e6d-9755-665761a72cb1",
-      "order": 11,
-      "question": "What is a controlled input?",
-      "answer": "A controlled input gets its displayed value from React state and reports edits through an event handler that updates that state.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "22f6b247-7796-42aa-a100-b1c74c2f0d5b",
+      "id": "9ce63281-3a1e-49ab-bd04-263a66c8b7e5",
       "order": 12,
-      "question": "What is an uncontrolled input?",
-      "answer": "An uncontrolled input keeps its current value in the DOM rather than React state. Code typically reads it through a ref or form submission.",
+      "question": "What does rendering mean in React?",
+      "answer": "Rendering means React calls components to compute the next element tree. React then commits the necessary host updates, such as DOM changes, afterward.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "792d59c6-47a5-4553-a455-c139c0eaba2f",
+      "id": "a69e8edb-f82d-48b7-8b7f-7f27b463513e",
       "order": 13,
-      "question": "What does lifting state up mean?",
-      "answer": "It means moving shared state to the nearest common ancestor so multiple descendants receive one consistent source of truth through props.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "385308eb-17b2-434f-a965-430f737b2b71",
-      "order": 14,
-      "question": "What is derived state?",
-      "answer": "Derived state is a value computable from existing props or state. It should usually be calculated during render rather than stored separately, which avoids synchronization bugs.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c3ebee02-2271-4184-b848-0779d28b0985",
-      "order": 15,
-      "question": "Why can duplicated state become inconsistent?",
-      "answer": "If the same fact is stored in multiple state variables, every update must keep all copies synchronized. Missing one update creates contradictory values.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f795b5f9-5188-4f44-b538-9b289dbcd697",
-      "order": 16,
-      "question": "What is one-way data flow in React?",
-      "answer": "Parents pass data down through props, while children request changes by calling callbacks or dispatching actions. This keeps ownership of state explicit.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6e78cefe-9ab0-48ae-9e2c-56ab2200245f",
-      "order": 17,
-      "question": "What is conditional rendering?",
-      "answer": "Conditional rendering returns different element trees depending on current props or state, using normal JavaScript conditions.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "2f83c143-d2d1-47c7-8987-9af075d70281",
-      "order": 18,
-      "question": "Why do list items need keys?",
-      "answer": "Keys give sibling elements stable identities across renders so React can match old and new items when items move, appear, or disappear.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "11a25e3d-9014-4172-8be0-a769910173c8",
-      "order": 19,
-      "question": "What makes a good React key?",
-      "answer": "A good key is stable and unique among siblings for the lifetime of the underlying item, such as a database ID.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "04589e4c-dd01-4f8e-8c55-1228687dbead",
-      "order": 20,
-      "question": "Why can array indexes be poor keys?",
-      "answer": "If items are inserted, removed, or reordered, index keys can make React associate existing component state with the wrong logical item.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6932cdee-6c29-40cb-8d5f-8fd74cae2bc2",
-      "order": 21,
-      "question": "What happens when a component’s key changes?",
-      "answer": "React treats it as a different component instance, unmounting the old subtree and mounting a new one with fresh local state.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f631d1e3-902a-417b-9234-3f67963a6145",
-      "order": 22,
-      "question": "What is reconciliation?",
-      "answer": "Reconciliation is React’s process for comparing a newly rendered element tree with the previous one to decide which component instances and host nodes can be reused.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1ddfd1e3-d0f5-47a2-a7a4-2980f2bbc539",
-      "order": 23,
-      "question": "What happens when an element type changes at the same tree position?",
-      "answer": "React generally replaces that subtree because the old and new elements represent different component or host types, resetting local state below that point.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7f67ca58-65a1-420a-8c26-e1110f9298a5",
-      "order": 24,
-      "question": "How does tree position affect state preservation?",
-      "answer": "React associates local state with a component type and position in the rendered tree. Keeping the same component at the same position usually preserves its state.",
+      "question": "What causes a component to render again?",
+      "answer": "A component can render again when its own state updates, when its parent renders and includes it, or when consumed context changes.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "5931740c-764d-4f10-a5c4-6a22353bc49a",
-      "order": 25,
+      "order": 14,
       "question": "What is the render phase?",
       "answer": "During render, React calls components and computes the next UI. Render code should be pure because React may run it more than once or abandon the result.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -268,7 +235,7 @@
     },
     {
       "id": "5a179b43-2a07-42ee-a69d-3fb161bb27bf",
-      "order": 26,
+      "order": 15,
       "question": "What is the commit phase?",
       "answer": "During commit, React applies the chosen changes to the host environment, updates refs, and runs layout-related effects as appropriate.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -276,7 +243,7 @@
     },
     {
       "id": "c439b81b-4e8a-4c4c-a360-320e4d9c0183",
-      "order": 27,
+      "order": 16,
       "question": "What does it mean for a component to be pure?",
       "answer": "Given the same props, state, and context, a pure component returns the same UI description and does not change external state during render.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -284,607 +251,175 @@
     },
     {
       "id": "44823dfa-e551-41eb-9c9e-b8a34f5a8d1f",
-      "order": 28,
+      "order": 17,
       "question": "Why are side effects unsafe during render?",
       "answer": "React may render more than once or discard a render. A side effect performed during render can therefore happen without a corresponding committed UI or happen multiple times.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "8d9d83b9-09f3-4f5f-ad67-c45c81725280",
-      "order": 29,
-      "question": "What is `useState` for?",
-      "answer": "`useState` gives a component a retained value and a setter that queues updates and future renders.",
+      "id": "f631d1e3-902a-417b-9234-3f67963a6145",
+      "order": 18,
+      "question": "What is reconciliation?",
+      "answer": "Reconciliation is React’s process for comparing a newly rendered element tree with the previous one to decide which component instances and host nodes can be reused.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "b1047524-02f5-4c9e-8b6e-1409c57adc14",
-      "order": 30,
-      "question": "What is `useReducer` for?",
-      "answer": "`useReducer` centralizes state transitions in a reducer function that receives current state and an action and returns next state.",
+      "id": "7f67ca58-65a1-420a-8c26-e1110f9298a5",
+      "order": 19,
+      "question": "How does tree position affect state preservation?",
+      "answer": "React associates local state with a component type and position in the rendered tree. Keeping the same component at the same position usually preserves its state.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "93b1e712-4db2-487a-b6ee-10e09cb71188",
-      "order": 31,
-      "question": "When is `useReducer` preferable to several `useState` calls?",
-      "answer": "It is useful when multiple fields change together, transitions are action-oriented, or update logic is complex enough to benefit from one explicit state machine-like function.",
+      "id": "1ddfd1e3-d0f5-47a2-a7a4-2980f2bbc539",
+      "order": 20,
+      "question": "What happens when an element type changes at the same tree position?",
+      "answer": "React generally replaces that subtree because the old and new elements represent different component or host types, resetting local state below that point.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "ad80b8bd-0de5-4f74-b079-021f9a775a49",
-      "order": 32,
-      "question": "What must a React reducer avoid?",
-      "answer": "A reducer should not mutate existing state or perform side effects. It should compute and return the next state from its inputs.",
+      "id": "2f83c143-d2d1-47c7-8987-9af075d70281",
+      "order": 21,
+      "question": "Why do list items need keys?",
+      "answer": "Keys give sibling elements stable identities across renders so React can match old and new items when items move, appear, or disappear.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "4372ebac-e759-4a47-929c-bde4c90b186d",
-      "order": 33,
-      "question": "What is a ref in React?",
-      "answer": "A ref is a stable object whose `.current` field can hold mutable data across renders without causing a render when it changes.",
+      "id": "11a25e3d-9014-4172-8be0-a769910173c8",
+      "order": 22,
+      "question": "What makes a good React key?",
+      "answer": "A good key is stable and unique among siblings for the lifetime of the underlying item, such as a database ID.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "ba340f39-3295-4756-a699-1ece68f7a6b3",
-      "order": 34,
-      "question": "When should a ref be used instead of state?",
-      "answer": "Use a ref for values needed by imperative code but not for rendering, such as DOM nodes, timer handles, or previous mutable bookkeeping.",
+      "id": "04589e4c-dd01-4f8e-8c55-1228687dbead",
+      "order": 23,
+      "question": "Why can array indexes be poor keys?",
+      "answer": "If items are inserted, removed, or reordered, index keys can make React associate existing component state with the wrong logical item.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "3ecb0d82-fee3-4d16-8dd5-08a044b42fd0",
-      "order": 35,
-      "question": "Why should UI-visible data usually not live only in a ref?",
-      "answer": "Changing a ref does not request a render, so the screen will not automatically update to reflect the new value.",
+      "id": "6932cdee-6c29-40cb-8d5f-8fd74cae2bc2",
+      "order": 24,
+      "question": "What happens when a component’s key changes?",
+      "answer": "React treats it as a different component instance, unmounting the old subtree and mounting a new one with fresh local state.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "23dc60da-6dbd-462d-b396-4bc70314430c",
-      "order": 36,
-      "question": "What does `useRef` return across renders?",
-      "answer": "It returns the same ref object for the lifetime of that component instance.",
+      "id": "f795b5f9-5188-4f44-b538-9b289dbcd697",
+      "order": 25,
+      "question": "What is one-way data flow in React?",
+      "answer": "Parents pass data down through props, while children request changes by calling callbacks or dispatching actions. This keeps ownership of state explicit.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "34761984-cdf6-4a4a-bd50-14913c5e150f",
-      "order": 37,
-      "question": "What problem does `useEffect` solve?",
-      "answer": "`useEffect` synchronizes a committed React component with an external system, such as a network connection, browser API, timer, or non-React widget.",
+      "id": "792d59c6-47a5-4553-a455-c139c0eaba2f",
+      "order": 26,
+      "question": "What does lifting state up mean?",
+      "answer": "It means moving shared state to the nearest common ancestor so multiple descendants receive one consistent source of truth through props.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "e6f91ca3-4217-4b5d-b22a-6eafeabcdc76",
-      "order": 38,
-      "question": "When does an Effect cleanup run?",
-      "answer": "Cleanup runs before the effect is set up again after relevant dependency changes, and when the component unmounts.",
+      "id": "cb6b29e8-6ad6-4e6d-9755-665761a72cb1",
+      "order": 27,
+      "question": "What is a controlled input?",
+      "answer": "A controlled input gets its displayed value from React state and reports edits through an event handler that updates that state.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "8d64357e-141a-4ce9-b4f6-29f6a1244c52",
-      "order": 39,
-      "question": "Why should an Effect that subscribes also unsubscribe?",
-      "answer": "Without cleanup, old subscriptions can continue delivering events after props change or after unmount, causing duplicate work, stale updates, or leaks.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "cff12479-50aa-4c14-bc46-da1becd34175",
-      "order": 40,
-      "question": "What does an empty Effect dependency array mean?",
-      "answer": "It declares that the effect does not read reactive values that can change. It normally sets up after mount and cleans up on unmount, with development checks potentially exercising setup and cleanup extra times.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "eb3071d9-9ce3-4e20-96a1-3d48e0d1f007",
-      "order": 41,
-      "question": "What happens when an Effect has no dependency array?",
-      "answer": "It is scheduled after every committed render of that component.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c21723c2-57fe-42d5-ad2b-87eb17e3927e",
-      "order": 42,
-      "question": "Why must reactive values read by an Effect appear in its dependencies?",
-      "answer": "Otherwise the effect can keep using values captured by an older render instead of re-synchronizing when those values change.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c85ae033-1626-4757-aa49-29ffebd07618",
-      "order": 43,
-      "question": "What is a stale closure in React?",
-      "answer": "It is a callback or effect that reads props or state captured from an older render when the programmer expected current values.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f3c30686-09da-4282-9735-fea0dd436b65",
-      "order": 44,
-      "question": "How can an Effect create an infinite update loop?",
-      "answer": "If the effect updates state and that update changes one of the effect’s dependencies on every render, the effect can repeatedly trigger itself.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "4c09c25b-fc95-4aa6-a091-e92f252397cd",
-      "order": 45,
-      "question": "When should logic not be put in an Effect?",
-      "answer": "If the value can be calculated during render or the action is directly caused by a user event, putting it in an Effect often adds unnecessary synchronization and extra renders.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1b27c8d3-bfcb-42c1-9969-2d0a5ac6a284",
-      "order": 46,
-      "question": "Why is fetching in an Effect vulnerable to races?",
-      "answer": "Requests can finish out of order. An older request can resolve after a newer one and overwrite current state unless stale results are ignored or canceled.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "09528619-028d-4d7b-8d20-ef2eb09620d0",
-      "order": 47,
-      "question": "What is `useLayoutEffect` for?",
-      "answer": "It runs after DOM mutations but before the browser paints, allowing code to measure layout or synchronously adjust the DOM when a visible intermediate frame would be wrong.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "0f7676cb-56dc-442b-9c7c-90ae25884ab8",
-      "order": 48,
-      "question": "Why should `useLayoutEffect` be used sparingly?",
-      "answer": "Work there blocks painting. Expensive synchronous logic can delay visible updates and make the interface feel unresponsive.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "51361efd-3f70-4773-9e33-a53e8ffad922",
-      "order": 49,
-      "question": "What is context in React?",
-      "answer": "Context lets a provider make a value available to descendants without passing that value through every intermediate component as props.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b21a4a3d-e7f8-4e91-8bbe-b0091da7e3bc",
-      "order": 50,
-      "question": "What happens when a consumed context value changes?",
-      "answer": "React schedules consumers of that context to render with the new value.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "8faac04e-866d-4e83-89bb-50584706f108",
-      "order": 51,
-      "question": "Why can a frequently changing context value cause broad rerenders?",
-      "answer": "Every consumer reading that context is eligible to render when the provider value changes, even if each consumer uses only part of a large object.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "167e9f33-7053-46ad-a034-b06dc2bd529b",
-      "order": 52,
-      "question": "What is a custom Hook?",
-      "answer": "A custom Hook is a function whose name starts with `use` and that composes React Hooks to reuse stateful or synchronization logic.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7df62a47-29e6-431c-b6bc-a3acf645cf2b",
-      "order": 53,
-      "question": "Do custom Hooks share state between their callers?",
-      "answer": "No. Each call gets its own Hook state unless the custom Hook explicitly connects callers to shared external state or context.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "512c9899-66bd-4cc7-928e-6a0f65158bb8",
-      "order": 54,
-      "question": "Why must Hooks be called at the top level?",
-      "answer": "React matches Hook state by call order. Conditional or looped Hook calls can change that order between renders and associate state with the wrong Hook.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "6bd3115c-cdf5-48b0-ade1-3edc5d89a8dc",
-      "order": 55,
-      "question": "Where can React Hooks be called?",
-      "answer": "Hooks can be called from React function components and custom Hooks, following the Rules of Hooks.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "ba92a552-9f8e-477f-ba80-5a06538a2d61",
-      "order": 56,
-      "question": "What does `useMemo` do?",
-      "answer": "It caches the result of a calculation between renders until one of its dependencies changes. It is a performance optimization, not a semantic guarantee for application correctness.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "91098edf-8040-470f-b776-6d0f1636539e",
-      "order": 57,
-      "question": "What does `useCallback` do?",
-      "answer": "It caches a function reference between renders until dependencies change, which can help when function identity affects memoized children or another Hook.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b9f629ba-46a2-4c03-b2ce-157fae451f08",
-      "order": 58,
-      "question": "When can `useMemo` make code worse?",
-      "answer": "If the calculation is cheap or dependencies change often, memoization adds comparison, memory, and complexity without meaningful saved work.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "75bab5e3-4aae-4ac0-a256-14b5fe02072f",
-      "order": 59,
-      "question": "What does `React.memo` do?",
-      "answer": "It can skip rendering a component when its props are shallowly equal to the previous props. Context changes and the component’s own state can still cause renders.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "19c4eee1-33ca-4dc6-82ab-1fa1cecc40d2",
-      "order": 60,
-      "question": "Why can passing a new object defeat memoization?",
-      "answer": "A newly created object has a different reference even if its contents are equal, so shallow prop comparison treats it as changed.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "eb1e7368-d70e-43fa-8b9a-494473e1fddf",
-      "order": 61,
-      "question": "What is the difference between preventing a render and preventing a DOM update?",
-      "answer": "A component may render and produce the same result, after which React can avoid changing the DOM. Memoization can skip the component render itself under suitable conditions.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9c4f8e4f-1211-4562-841c-e7f3e596aede",
-      "order": 62,
-      "question": "What is Strict Mode used for in development?",
-      "answer": "Strict Mode adds development-only checks that intentionally exercise components and effects in ways that reveal impure rendering and missing cleanup.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b4183711-ee4f-4fe5-99df-c3b7402d6142",
-      "order": 63,
-      "question": "Why can an Effect appear to run twice in development Strict Mode?",
-      "answer": "React may perform an extra setup-and-cleanup cycle to verify that cleanup correctly reverses setup. Production behavior is not simply “run every effect twice.”",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "601228a0-5db5-44af-8204-9934aa687ffe",
-      "order": 64,
-      "question": "What is an error boundary?",
-      "answer": "An error boundary is a component boundary that can render fallback UI when a descendant throws during rendering or lifecycle processing. It does not catch every asynchronous or event-handler error.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9b9d606b-1ae3-4265-8d33-dcf8d21faa29",
-      "order": 65,
-      "question": "What problem does Suspense solve?",
-      "answer": "Suspense lets a subtree declare that it cannot render yet and allows React to show a fallback while the required resource or code is pending.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "8cc1a6f3-deee-4d5c-bacb-15a3e0ee5dfb",
-      "order": 66,
-      "question": "What is code splitting in React applications?",
-      "answer": "Code splitting divides JavaScript into chunks loaded on demand, so users do not need to download every feature before the initial interface can start.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "0e7bb207-1fc3-4700-ba65-ca5bdff2d51a",
-      "order": 67,
-      "question": "What does `lazy` do?",
-      "answer": "`lazy` defers loading a component module until React needs to render it, and the component can suspend while that module is loading.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "04cd4d33-ff4d-4623-9c2b-f6dec4a00bf1",
-      "order": 68,
-      "question": "What is hydration?",
-      "answer": "Hydration attaches React behavior to HTML that was already rendered on the server, reusing the existing markup instead of rebuilding the whole page from scratch.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "ae61fbe1-9201-440f-af42-e7f67b828988",
-      "order": 69,
-      "question": "What causes a hydration mismatch?",
-      "answer": "A mismatch occurs when the client’s initial rendered output differs from the server HTML, often because render logic depends on time, randomness, browser-only state, or different data.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "bef667ca-6b49-4f72-9305-f3dbdac037e6",
-      "order": 70,
-      "question": "Why should server and client initial renders be deterministic?",
-      "answer": "Matching output lets React safely attach to server-rendered markup. Divergence can trigger warnings, discarded markup, or incorrect UI assumptions.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "df60ea1e-0966-4229-b986-016d1890001d",
-      "order": 71,
-      "question": "What is server-side rendering?",
-      "answer": "Server-side rendering produces HTML on the server for an initial request so users and crawlers can receive meaningful markup before client JavaScript finishes loading.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1bc58ad2-e888-4444-885b-f5e3d93fe504",
-      "order": 72,
-      "question": "What trade-off does server-side rendering introduce?",
-      "answer": "It can improve initial content delivery, but adds server work, data coordination, hydration cost, and constraints around browser-only code.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "bd608751-8739-4058-a42f-f5d56a5cbcb4",
-      "order": 73,
-      "question": "What is a React Server Component conceptually?",
-      "answer": "A Server Component renders on the server and can access server-side resources without sending its component implementation to the client bundle. Interactive client behavior still requires client components.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e6b3753d-7687-4a1b-bf85-b4a2c02adb16",
-      "order": 74,
-      "question": "What problem do client component boundaries solve in a server-component architecture?",
-      "answer": "They mark where browser-only interactivity, state, effects, and event handlers are needed, limiting client JavaScript to interactive parts of the tree.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "de157e8f-de45-46fc-8ab0-4fd734c482d8",
-      "order": 75,
-      "question": "What is `startTransition` for?",
-      "answer": "It marks supported state updates as non-urgent so React can keep urgent interactions responsive while rendering the transition in the background.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "fd827482-a303-4760-b5c7-4d19069dbfde",
-      "order": 76,
-      "question": "What guarantee does a transition not provide?",
-      "answer": "It does not make slow computation free or move JavaScript work to another thread. Heavy synchronous work can still block the main thread.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "4134993c-c1f7-461e-a365-8f24bdede628",
-      "order": 77,
-      "question": "What is `useTransition` for?",
-      "answer": "It starts transition updates and exposes whether transition work is pending so the UI can reflect that non-urgent update state.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "3f7cd9a2-df2b-4756-b68b-39be88a3e2cd",
-      "order": 78,
-      "question": "What is `useDeferredValue` for?",
-      "answer": "It lets a non-urgent part of the UI lag behind a rapidly changing value, allowing urgent updates such as typing to render first.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "00c65ddd-6cf6-43ba-9ff3-2764c92e1702",
-      "order": 79,
-      "question": "What is optimistic UI?",
-      "answer": "Optimistic UI shows the expected result of an operation before the server confirms it, then reconciles with success or rolls back or corrects on failure.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "eafc544d-4915-4a14-90f7-be178ca6f8e4",
-      "order": 80,
-      "question": "What trade-off does optimistic UI introduce?",
-      "answer": "It reduces perceived latency but requires explicit handling for rejection, conflicts, duplicate submissions, and authoritative server results.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "1b99aa0e-8fd0-47f0-a74a-5bf547daed03",
-      "order": 81,
-      "question": "What is `useOptimistic` intended to model?",
-      "answer": "It helps render a temporary optimistic version of state while an asynchronous action is pending, before the authoritative result is known.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "028111f2-afd5-4c30-87fc-0e3dbc8c1c41",
-      "order": 82,
-      "question": "What is an Action in modern React terminology?",
-      "answer": "An Action is an asynchronous transition-oriented operation that can perform a mutation and coordinate pending, error, optimistic, and form-related UI flows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "3bcaad33-f221-4afa-a55d-59da932dc15f",
-      "order": 83,
-      "question": "What is `useActionState` for?",
-      "answer": "It manages state produced by an Action and exposes whether that Action is pending, which is useful for form or mutation workflows.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "f0004f07-4341-4dcf-8ed6-d62c8c9ae0b8",
-      "order": 84,
-      "question": "What does `useFormStatus` provide?",
-      "answer": "Within a form subtree, it exposes status about the parent form submission, such as whether that form is currently pending.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "c48ecfa6-9a90-4361-b346-bbd6f562b29a",
-      "order": 85,
-      "question": "What problem does `use` solve in React?",
-      "answer": "`use` lets supported render code read a resource such as a Promise or context, suspending when the Promise is pending and resuming when it settles.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "658d4099-0ca8-4826-80bb-5bdc5d626b48",
-      "order": 86,
-      "question": "Why must render-time data sources be compatible with Suspense semantics?",
-      "answer": "React may restart or replay rendering around suspension, so the resource must provide stable, cacheable behavior rather than launching uncontrolled side effects on every render.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "324e74d9-341d-46d8-ab61-1da41e7fc1ff",
-      "order": 87,
-      "question": "What is a portal?",
-      "answer": "A portal renders React children into a different DOM container while keeping them in the same React tree for context and React event propagation.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "987307b3-40e8-463c-b271-3c25727b2696",
-      "order": 88,
-      "question": "Why are portals useful for modals and overlays?",
-      "answer": "They let visual content escape clipping or stacking constraints of an ancestor DOM container without disconnecting it from the React component tree.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "02cbe479-dfa9-43bf-8965-92c36a733d8e",
-      "order": 89,
-      "question": "How do React events propagate through portals?",
-      "answer": "React event propagation follows the React tree, not only the physical DOM parent chain, so an event from a portal can reach React ancestors outside the portal container.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e02ac8e7-dc33-4651-9149-a4d6c7a2adc6",
-      "order": 90,
-      "question": "What is `forwardRef` historically used for?",
-      "answer": "It lets a component expose a child DOM node or imperative handle through a ref passed by its parent. Modern React also supports ref as a prop in newer component patterns.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "9525fb77-117f-4fe6-a4c1-4e00baab0872",
-      "order": 91,
-      "question": "What does `useImperativeHandle` do?",
-      "answer": "It customizes the value exposed through a ref, letting a component reveal a small imperative API instead of its raw DOM node.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "e3e2e943-9fda-4072-bbcd-c42744ff6f21",
-      "order": 92,
-      "question": "Why should imperative handles be narrow?",
-      "answer": "Exposing fewer operations keeps parent components from depending on internal DOM structure and preserves component encapsulation.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "5e5d3894-530a-40f2-bf98-ac99876e51ad",
-      "order": 93,
-      "question": "What is a compound component pattern?",
-      "answer": "Several components cooperate through shared context or conventions to form one higher-level UI API, such as tabs with tab and panel children.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "ed74157d-2db0-4888-9b0c-b5198db270f0",
-      "order": 94,
-      "question": "What is a render prop?",
-      "answer": "A render prop is a function passed as a prop that a component calls to decide what UI to render using data or behavior it provides.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "7ed0d795-8a0b-4864-8a06-c2eeb32b5e16",
-      "order": 95,
-      "question": "What problem do custom Hooks often solve better than render props?",
-      "answer": "Custom Hooks can share stateful logic without adding extra wrapper elements or deeply nested callback rendering structure.",
-      "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
-    },
-    {
-      "id": "b99b536e-11b2-4c71-9c91-bafcd22b618a",
-      "order": 96,
-      "question": "What is state colocation?",
-      "answer": "State colocation means keeping state as close as practical to the components that actually use and update it, reducing unnecessary dependencies and broad rerenders.",
+      "id": "22f6b247-7796-42aa-a100-b1c74c2f0d5b",
+      "order": 28,
+      "question": "What is an uncontrolled input?",
+      "answer": "An uncontrolled input keeps its current value in the DOM rather than React state. Code typically reads it through a ref or form submission.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "a5b0210e-bcc3-4472-b811-c04bee7d4797",
-      "order": 97,
+      "order": 29,
       "question": "When should state be moved upward?",
       "answer": "Move it upward when multiple components need a coordinated value or when a parent must control the lifecycle and consistency of that state.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "f1853cad-4162-4c10-8804-7faf79834674",
-      "order": 98,
-      "question": "What is external store state?",
-      "answer": "It is state owned outside React, such as a library store or browser-backed subscription source, that components subscribe to for updates.",
+      "id": "b99b536e-11b2-4c71-9c91-bafcd22b618a",
+      "order": 30,
+      "question": "What is state colocation?",
+      "answer": "State colocation means keeping state as close as practical to the components that actually use and update it, reducing unnecessary dependencies and broad rerenders.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "2448fc83-5c0d-4d45-a1fc-68cbcbe2709a",
-      "order": 99,
-      "question": "What does `useSyncExternalStore` solve?",
-      "answer": "It provides a standard way to subscribe to an external store and read consistent snapshots in rendering modes where updates can be concurrent.",
+      "id": "385308eb-17b2-434f-a965-430f737b2b71",
+      "order": 31,
+      "question": "What is derived state?",
+      "answer": "Derived state is a value computable from existing props or state. It should usually be calculated during render rather than stored separately, which avoids synchronization bugs.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "fc749552-6a4e-4df6-bc4a-9f22f430dd95",
-      "order": 100,
-      "question": "Why can directly reading a mutable external store during render be unsafe?",
-      "answer": "The store can change while React is preparing a render, causing different components to observe inconsistent versions unless subscription and snapshot semantics are coordinated.",
+      "id": "c3ebee02-2271-4184-b848-0779d28b0985",
+      "order": 32,
+      "question": "Why can duplicated state become inconsistent?",
+      "answer": "If the same fact is stored in multiple state variables, every update must keep all copies synchronized. Missing one update creates contradictory values.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "4d44de02-207e-442d-853e-45c664faa84e",
-      "order": 101,
-      "question": "What is tearing in UI rendering?",
-      "answer": "Tearing is when different parts of one visible UI reflect different versions of shared state because reads were not synchronized.",
+      "id": "b72d1473-2792-4de8-9020-458f75776b1b",
+      "order": 33,
+      "question": "Why can multiple booleans produce impossible UI states?",
+      "answer": "Independent flags can form combinations that the interface should never allow, such as simultaneously “idle” and “loading.” A single status value can encode mutual exclusivity directly.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "c607f158-1ce5-487a-8337-e7a270dc1d59",
-      "order": 102,
-      "question": "Why is component composition often preferable to broad context?",
-      "answer": "Composition can pass concrete UI or behavior only where needed, avoiding hidden dependencies and rerenders caused by a large shared context value.",
+      "id": "b1047524-02f5-4c9e-8b6e-1409c57adc14",
+      "order": 34,
+      "question": "What is `useReducer` for?",
+      "answer": "`useReducer` centralizes state transitions in a reducer function that receives current state and an action and returns next state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ad80b8bd-0de5-4f74-b079-021f9a775a49",
+      "order": 35,
+      "question": "What must a React reducer avoid?",
+      "answer": "A reducer should not mutate existing state or perform side effects. It should compute and return the next state from its inputs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "93b1e712-4db2-487a-b6ee-10e09cb71188",
+      "order": 36,
+      "question": "When is `useReducer` preferable to several `useState` calls?",
+      "answer": "It is useful when multiple fields change together, transitions are action-oriented, or update logic is complex enough to benefit from one explicit state machine-like function.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6ffa8e8c-4fa3-4caf-9960-52d6a6166a8d",
+      "order": 37,
+      "question": "What is a state machine approach to UI state?",
+      "answer": "It models UI as explicit states and allowed events or transitions, preventing impossible combinations that can arise from unrelated booleans.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "d55524da-9c89-4eb6-ae09-b4fb1c7f0378",
-      "order": 103,
+      "order": 38,
       "question": "What is prop drilling?",
       "answer": "Prop drilling is passing data through intermediate components that do not use it themselves solely so deeper descendants can receive it.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -892,71 +427,111 @@
     },
     {
       "id": "58f397a3-4065-470d-ab57-9729a81ca866",
-      "order": 104,
+      "order": 39,
       "question": "When is prop drilling acceptable?",
       "answer": "It is often simplest when the path is short and ownership remains clear. Context is not automatically better for every shared value.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "6ffa8e8c-4fa3-4caf-9960-52d6a6166a8d",
-      "order": 105,
-      "question": "What is a state machine approach to UI state?",
-      "answer": "It models UI as explicit states and allowed events or transitions, preventing impossible combinations that can arise from unrelated booleans.",
+      "id": "c607f158-1ce5-487a-8337-e7a270dc1d59",
+      "order": 40,
+      "question": "Why is component composition often preferable to broad context?",
+      "answer": "Composition can pass concrete UI or behavior only where needed, avoiding hidden dependencies and rerenders caused by a large shared context value.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "b72d1473-2792-4de8-9020-458f75776b1b",
-      "order": 106,
-      "question": "Why can multiple booleans produce impossible UI states?",
-      "answer": "Independent flags can form combinations that the interface should never allow, such as simultaneously “idle” and “loading.” A single status value can encode mutual exclusivity directly.",
+      "id": "51361efd-3f70-4773-9e33-a53e8ffad922",
+      "order": 41,
+      "question": "What is context in React?",
+      "answer": "Context lets a provider make a value available to descendants without passing that value through every intermediate component as props.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "9f717ac7-2237-455a-9794-1689d7d9a1e5",
-      "order": 107,
-      "question": "What should determine whether React performance work is necessary?",
-      "answer": "Measure user-visible latency and profiling data first. Optimize components or data flow only where rendering, computation, network, or bundle cost is actually significant.",
+      "id": "b21a4a3d-e7f8-4e91-8bbe-b0091da7e3bc",
+      "order": 42,
+      "question": "What happens when a consumed context value changes?",
+      "answer": "React schedules consumers of that context to render with the new value.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "a5a1daa8-6727-4081-891d-6a4d6440cf8d",
-      "order": 108,
-      "question": "What does the React Profiler help identify?",
-      "answer": "It records component render timing and commit information so developers can locate expensive or unexpectedly frequent renders.",
+      "id": "8faac04e-866d-4e83-89bb-50584706f108",
+      "order": 43,
+      "question": "Why can a frequently changing context value cause broad rerenders?",
+      "answer": "Every consumer reading that context is eligible to render when the provider value changes, even if each consumer uses only part of a large object.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "d2f4ccc4-f964-4203-97ea-9a5ae873e60f",
-      "order": 109,
-      "question": "Why can memoization hide architectural problems?",
-      "answer": "Wrapping many components in memoization may reduce symptoms while leaving oversized state ownership, unstable data flow, or expensive parent work unchanged.",
+      "id": "5e5d3894-530a-40f2-bf98-ac99876e51ad",
+      "order": 44,
+      "question": "What is a compound component pattern?",
+      "answer": "Several components cooperate through shared context or conventions to form one higher-level UI API, such as tabs with tab and panel children.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "c344e152-64cd-427b-b1a0-88d48d7cb049",
-      "order": 110,
-      "question": "What is windowing or list virtualization?",
-      "answer": "It renders only the visible portion of a large list plus a small buffer, reducing DOM nodes and rendering work compared with mounting every row.",
+      "id": "4372ebac-e759-4a47-929c-bde4c90b186d",
+      "order": 45,
+      "question": "What is a ref in React?",
+      "answer": "A ref is a stable object whose `.current` field can hold mutable data across renders without causing a render when it changes.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "2c1a4525-1f77-417e-ac2d-54aa13b8f45a",
-      "order": 111,
-      "question": "What trade-off does list virtualization introduce?",
-      "answer": "It adds scroll measurement and focus/accessibility complexity, and off-screen items may not exist in the DOM until they approach the viewport.",
+      "id": "23dc60da-6dbd-462d-b396-4bc70314430c",
+      "order": 46,
+      "question": "What does `useRef` return across renders?",
+      "answer": "It returns the same ref object for the lifetime of that component instance.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ba340f39-3295-4756-a699-1ece68f7a6b3",
+      "order": 47,
+      "question": "When should a ref be used instead of state?",
+      "answer": "Use a ref for values needed by imperative code but not for rendering, such as DOM nodes, timer handles, or previous mutable bookkeeping.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3ecb0d82-fee3-4d16-8dd5-08a044b42fd0",
+      "order": 48,
+      "question": "Why should UI-visible data usually not live only in a ref?",
+      "answer": "Changing a ref does not request a render, so the screen will not automatically update to reflect the new value.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e02ac8e7-dc33-4651-9149-a4d6c7a2adc6",
+      "order": 49,
+      "question": "What is `forwardRef` historically used for?",
+      "answer": "It lets a component expose a child DOM node or imperative handle through a ref passed by its parent. Modern React also supports ref as a prop in newer component patterns.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9525fb77-117f-4fe6-a4c1-4e00baab0872",
+      "order": 50,
+      "question": "What does `useImperativeHandle` do?",
+      "answer": "It customizes the value exposed through a ref, letting a component reveal a small imperative API instead of its raw DOM node.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e3e2e943-9fda-4072-bbcd-c42744ff6f21",
+      "order": 51,
+      "question": "Why should imperative handles be narrow?",
+      "answer": "Exposing fewer operations keeps parent components from depending on internal DOM structure and preserves component encapsulation.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
       "id": "c19fe9d2-5063-42af-85e5-a2ff6111ac40",
-      "order": 112,
+      "order": 52,
       "question": "Why is accessibility part of component correctness?",
       "answer": "A visually correct component can still be unusable if semantics, keyboard behavior, focus management, names, or state are not exposed to assistive technology.",
       "createdAt": "2026-09-06T13:26:00Z",
@@ -964,33 +539,513 @@
     },
     {
       "id": "997ca234-f7e7-4e53-aef1-4247350f6a8e",
-      "order": 113,
+      "order": 53,
       "question": "Why prefer semantic HTML before adding ARIA?",
       "answer": "Native elements already provide browser-defined semantics and interaction behavior. ARIA can describe missing semantics but does not automatically implement keyboard or control behavior.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
+      "id": "324e74d9-341d-46d8-ab61-1da41e7fc1ff",
+      "order": 54,
+      "question": "What is a portal?",
+      "answer": "A portal renders React children into a different DOM container while keeping them in the same React tree for context and React event propagation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "987307b3-40e8-463c-b271-3c25727b2696",
+      "order": 55,
+      "question": "Why are portals useful for modals and overlays?",
+      "answer": "They let visual content escape clipping or stacking constraints of an ancestor DOM container without disconnecting it from the React component tree.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "02cbe479-dfa9-43bf-8965-92c36a733d8e",
+      "order": 56,
+      "question": "How do React events propagate through portals?",
+      "answer": "React event propagation follows the React tree, not only the physical DOM parent chain, so an event from a portal can reach React ancestors outside the portal container.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "34761984-cdf6-4a4a-bd50-14913c5e150f",
+      "order": 57,
+      "question": "What problem does `useEffect` solve?",
+      "answer": "`useEffect` synchronizes a committed React component with an external system, such as a network connection, browser API, timer, or non-React widget.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e6f91ca3-4217-4b5d-b22a-6eafeabcdc76",
+      "order": 58,
+      "question": "When does an Effect cleanup run?",
+      "answer": "Cleanup runs before the effect is set up again after relevant dependency changes, and when the component unmounts.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8d64357e-141a-4ce9-b4f6-29f6a1244c52",
+      "order": 59,
+      "question": "Why should an Effect that subscribes also unsubscribe?",
+      "answer": "Without cleanup, old subscriptions can continue delivering events after props change or after unmount, causing duplicate work, stale updates, or leaks.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cff12479-50aa-4c14-bc46-da1becd34175",
+      "order": 60,
+      "question": "What does an empty Effect dependency array mean?",
+      "answer": "It declares that the effect does not read reactive values that can change. It normally sets up after mount and cleans up on unmount, with development checks potentially exercising setup and cleanup extra times.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "eb3071d9-9ce3-4e20-96a1-3d48e0d1f007",
+      "order": 61,
+      "question": "What happens when an Effect has no dependency array?",
+      "answer": "It is scheduled after every committed render of that component.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c21723c2-57fe-42d5-ad2b-87eb17e3927e",
+      "order": 62,
+      "question": "Why must reactive values read by an Effect appear in its dependencies?",
+      "answer": "Otherwise the effect can keep using values captured by an older render instead of re-synchronizing when those values change.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c85ae033-1626-4757-aa49-29ffebd07618",
+      "order": 63,
+      "question": "What is a stale closure in React?",
+      "answer": "It is a callback or effect that reads props or state captured from an older render when the programmer expected current values.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "09528619-028d-4d7b-8d20-ef2eb09620d0",
+      "order": 64,
+      "question": "What is `useLayoutEffect` for?",
+      "answer": "It runs after DOM mutations but before the browser paints, allowing code to measure layout or synchronously adjust the DOM when a visible intermediate frame would be wrong.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0f7676cb-56dc-442b-9c7c-90ae25884ab8",
+      "order": 65,
+      "question": "Why should `useLayoutEffect` be used sparingly?",
+      "answer": "Work there blocks painting. Expensive synchronous logic can delay visible updates and make the interface feel unresponsive.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9c4f8e4f-1211-4562-841c-e7f3e596aede",
+      "order": 66,
+      "question": "What is Strict Mode used for in development?",
+      "answer": "Strict Mode adds development-only checks that intentionally exercise components and effects in ways that reveal impure rendering and missing cleanup.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b4183711-ee4f-4fe5-99df-c3b7402d6142",
+      "order": 67,
+      "question": "Why can an Effect appear to run twice in development Strict Mode?",
+      "answer": "React may perform an extra setup-and-cleanup cycle to verify that cleanup correctly reverses setup. Production behavior is not simply “run every effect twice.”",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
       "id": "9cc20796-a21f-499f-8f04-841bd032e3e2",
-      "order": 114,
+      "order": 68,
       "question": "What is an idempotent Effect setup/cleanup pair?",
       "answer": "Running setup, cleanup, and setup again leaves the external system in the same intended state as one correct setup. This makes effects robust to remounting and development checks.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
+      "id": "4c09c25b-fc95-4aa6-a091-e92f252397cd",
+      "order": 69,
+      "question": "When should logic not be put in an Effect?",
+      "answer": "If the value can be calculated during render or the action is directly caused by a user event, putting it in an Effect often adds unnecessary synchronization and extra renders.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
       "id": "f7789a41-c0f2-46c2-bb8d-d55ace778c10",
-      "order": 115,
+      "order": 70,
       "question": "Why should a network mutation usually originate from an event or Action rather than a mount Effect?",
       "answer": "A mutation represents a user or application action, not merely the fact that a component became visible. Tying it to mount can duplicate writes during remounts or navigation.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     },
     {
-      "id": "b7e5b6d3-973d-47d2-a465-89e645414ab9",
+      "id": "f3c30686-09da-4282-9735-fea0dd436b65",
+      "order": 71,
+      "question": "How can an Effect create an infinite update loop?",
+      "answer": "If the effect updates state and that update changes one of the effect’s dependencies on every render, the effect can repeatedly trigger itself.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1b27c8d3-bfcb-42c1-9969-2d0a5ac6a284",
+      "order": 72,
+      "question": "Why is fetching in an Effect vulnerable to races?",
+      "answer": "Requests can finish out of order. An older request can resolve after a newer one and overwrite current state unless stale results are ignored or canceled.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6bd3115c-cdf5-48b0-ade1-3edc5d89a8dc",
+      "order": 73,
+      "question": "Where can React Hooks be called?",
+      "answer": "Hooks can be called from React function components and custom Hooks, following the Rules of Hooks.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "512c9899-66bd-4cc7-928e-6a0f65158bb8",
+      "order": 74,
+      "question": "Why must Hooks be called at the top level?",
+      "answer": "React matches Hook state by call order. Conditional or looped Hook calls can change that order between renders and associate state with the wrong Hook.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "167e9f33-7053-46ad-a034-b06dc2bd529b",
+      "order": 75,
+      "question": "What is a custom Hook?",
+      "answer": "A custom Hook is a function whose name starts with `use` and that composes React Hooks to reuse stateful or synchronization logic.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7df62a47-29e6-431c-b6bc-a3acf645cf2b",
+      "order": 76,
+      "question": "Do custom Hooks share state between their callers?",
+      "answer": "No. Each call gets its own Hook state unless the custom Hook explicitly connects callers to shared external state or context.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ed74157d-2db0-4888-9b0c-b5198db270f0",
+      "order": 77,
+      "question": "What is a render prop?",
+      "answer": "A render prop is a function passed as a prop that a component calls to decide what UI to render using data or behavior it provides.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7ed0d795-8a0b-4864-8a06-c2eeb32b5e16",
+      "order": 78,
+      "question": "What problem do custom Hooks often solve better than render props?",
+      "answer": "Custom Hooks can share stateful logic without adding extra wrapper elements or deeply nested callback rendering structure.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "eb1e7368-d70e-43fa-8b9a-494473e1fddf",
+      "order": 79,
+      "question": "What is the difference between preventing a render and preventing a DOM update?",
+      "answer": "A component may render and produce the same result, after which React can avoid changing the DOM. Memoization can skip the component render itself under suitable conditions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "75bab5e3-4aae-4ac0-a256-14b5fe02072f",
+      "order": 80,
+      "question": "What does `React.memo` do?",
+      "answer": "It can skip rendering a component when its props are shallowly equal to the previous props. Context changes and the component’s own state can still cause renders.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "19c4eee1-33ca-4dc6-82ab-1fa1cecc40d2",
+      "order": 81,
+      "question": "Why can passing a new object defeat memoization?",
+      "answer": "A newly created object has a different reference even if its contents are equal, so shallow prop comparison treats it as changed.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ba92a552-9f8e-477f-ba80-5a06538a2d61",
+      "order": 82,
+      "question": "What does `useMemo` do?",
+      "answer": "It caches the result of a calculation between renders until one of its dependencies changes. It is a performance optimization, not a semantic guarantee for application correctness.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "91098edf-8040-470f-b776-6d0f1636539e",
+      "order": 83,
+      "question": "What does `useCallback` do?",
+      "answer": "It caches a function reference between renders until dependencies change, which can help when function identity affects memoized children or another Hook.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b9f629ba-46a2-4c03-b2ce-157fae451f08",
+      "order": 84,
+      "question": "When can `useMemo` make code worse?",
+      "answer": "If the calculation is cheap or dependencies change often, memoization adds comparison, memory, and complexity without meaningful saved work.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9f717ac7-2237-455a-9794-1689d7d9a1e5",
+      "order": 85,
+      "question": "What should determine whether React performance work is necessary?",
+      "answer": "Measure user-visible latency and profiling data first. Optimize components or data flow only where rendering, computation, network, or bundle cost is actually significant.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a5a1daa8-6727-4081-891d-6a4d6440cf8d",
+      "order": 86,
+      "question": "What does the React Profiler help identify?",
+      "answer": "It records component render timing and commit information so developers can locate expensive or unexpectedly frequent renders.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d2f4ccc4-f964-4203-97ea-9a5ae873e60f",
+      "order": 87,
+      "question": "Why can memoization hide architectural problems?",
+      "answer": "Wrapping many components in memoization may reduce symptoms while leaving oversized state ownership, unstable data flow, or expensive parent work unchanged.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c344e152-64cd-427b-b1a0-88d48d7cb049",
+      "order": 88,
+      "question": "What is windowing or list virtualization?",
+      "answer": "It renders only the visible portion of a large list plus a small buffer, reducing DOM nodes and rendering work compared with mounting every row.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2c1a4525-1f77-417e-ac2d-54aa13b8f45a",
+      "order": 89,
+      "question": "What trade-off does list virtualization introduce?",
+      "answer": "It adds scroll measurement and focus/accessibility complexity, and off-screen items may not exist in the DOM until they approach the viewport.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9b9d606b-1ae3-4265-8d33-dcf8d21faa29",
+      "order": 90,
+      "question": "What problem does Suspense solve?",
+      "answer": "Suspense lets a subtree declare that it cannot render yet and allows React to show a fallback while the required resource or code is pending.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8cc1a6f3-deee-4d5c-bacb-15a3e0ee5dfb",
+      "order": 91,
+      "question": "What is code splitting in React applications?",
+      "answer": "Code splitting divides JavaScript into chunks loaded on demand, so users do not need to download every feature before the initial interface can start.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0e7bb207-1fc3-4700-ba65-ca5bdff2d51a",
+      "order": 92,
+      "question": "What does `lazy` do?",
+      "answer": "`lazy` defers loading a component module until React needs to render it, and the component can suspend while that module is loading.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c48ecfa6-9a90-4361-b346-bbd6f562b29a",
+      "order": 93,
+      "question": "What problem does `use` solve in React?",
+      "answer": "`use` lets supported render code read a resource such as a Promise or context, suspending when the Promise is pending and resuming when it settles.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "658d4099-0ca8-4826-80bb-5bdc5d626b48",
+      "order": 94,
+      "question": "Why must render-time data sources be compatible with Suspense semantics?",
+      "answer": "React may restart or replay rendering around suspension, so the resource must provide stable, cacheable behavior rather than launching uncontrolled side effects on every render.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "601228a0-5db5-44af-8204-9934aa687ffe",
+      "order": 95,
+      "question": "What is an error boundary?",
+      "answer": "An error boundary is a component boundary that can render fallback UI when a descendant throws during rendering or lifecycle processing. It does not catch every asynchronous or event-handler error.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "de157e8f-de45-46fc-8ab0-4fd734c482d8",
+      "order": 96,
+      "question": "What is `startTransition` for?",
+      "answer": "It marks supported state updates as non-urgent so React can keep urgent interactions responsive while rendering the transition in the background.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fd827482-a303-4760-b5c7-4d19069dbfde",
+      "order": 97,
+      "question": "What guarantee does a transition not provide?",
+      "answer": "It does not make slow computation free or move JavaScript work to another thread. Heavy synchronous work can still block the main thread.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4134993c-c1f7-461e-a365-8f24bdede628",
+      "order": 98,
+      "question": "What is `useTransition` for?",
+      "answer": "It starts transition updates and exposes whether transition work is pending so the UI can reflect that non-urgent update state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3f7cd9a2-df2b-4756-b68b-39be88a3e2cd",
+      "order": 99,
+      "question": "What is `useDeferredValue` for?",
+      "answer": "It lets a non-urgent part of the UI lag behind a rapidly changing value, allowing urgent updates such as typing to render first.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f1853cad-4162-4c10-8804-7faf79834674",
+      "order": 100,
+      "question": "What is external store state?",
+      "answer": "It is state owned outside React, such as a library store or browser-backed subscription source, that components subscribe to for updates.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fc749552-6a4e-4df6-bc4a-9f22f430dd95",
+      "order": 101,
+      "question": "Why can directly reading a mutable external store during render be unsafe?",
+      "answer": "The store can change while React is preparing a render, causing different components to observe inconsistent versions unless subscription and snapshot semantics are coordinated.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4d44de02-207e-442d-853e-45c664faa84e",
+      "order": 102,
+      "question": "What is tearing in UI rendering?",
+      "answer": "Tearing is when different parts of one visible UI reflect different versions of shared state because reads were not synchronized.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2448fc83-5c0d-4d45-a1fc-68cbcbe2709a",
+      "order": 103,
+      "question": "What does `useSyncExternalStore` solve?",
+      "answer": "It provides a standard way to subscribe to an external store and read consistent snapshots in rendering modes where updates can be concurrent.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "028111f2-afd5-4c30-87fc-0e3dbc8c1c41",
+      "order": 104,
+      "question": "What is an Action in modern React terminology?",
+      "answer": "An Action is an asynchronous transition-oriented operation that can perform a mutation and coordinate pending, error, optimistic, and form-related UI flows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3bcaad33-f221-4afa-a55d-59da932dc15f",
+      "order": 105,
+      "question": "What is `useActionState` for?",
+      "answer": "It manages state produced by an Action and exposes whether that Action is pending, which is useful for form or mutation workflows.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f0004f07-4341-4dcf-8ed6-d62c8c9ae0b8",
+      "order": 106,
+      "question": "What does `useFormStatus` provide?",
+      "answer": "Within a form subtree, it exposes status about the parent form submission, such as whether that form is currently pending.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "00c65ddd-6cf6-43ba-9ff3-2764c92e1702",
+      "order": 107,
+      "question": "What is optimistic UI?",
+      "answer": "Optimistic UI shows the expected result of an operation before the server confirms it, then reconciles with success or rolls back or corrects on failure.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "eafc544d-4915-4a14-90f7-be178ca6f8e4",
+      "order": 108,
+      "question": "What trade-off does optimistic UI introduce?",
+      "answer": "It reduces perceived latency but requires explicit handling for rejection, conflicts, duplicate submissions, and authoritative server results.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1b99aa0e-8fd0-47f0-a74a-5bf547daed03",
+      "order": 109,
+      "question": "What is `useOptimistic` intended to model?",
+      "answer": "It helps render a temporary optimistic version of state while an asynchronous action is pending, before the authoritative result is known.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "df60ea1e-0966-4229-b986-016d1890001d",
+      "order": 110,
+      "question": "What is server-side rendering?",
+      "answer": "Server-side rendering produces HTML on the server for an initial request so users and crawlers can receive meaningful markup before client JavaScript finishes loading.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1bc58ad2-e888-4444-885b-f5e3d93fe504",
+      "order": 111,
+      "question": "What trade-off does server-side rendering introduce?",
+      "answer": "It can improve initial content delivery, but adds server work, data coordination, hydration cost, and constraints around browser-only code.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "04cd4d33-ff4d-4623-9c2b-f6dec4a00bf1",
+      "order": 112,
+      "question": "What is hydration?",
+      "answer": "Hydration attaches React behavior to HTML that was already rendered on the server, reusing the existing markup instead of rebuilding the whole page from scratch.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ae61fbe1-9201-440f-af42-e7f67b828988",
+      "order": 113,
+      "question": "What causes a hydration mismatch?",
+      "answer": "A mismatch occurs when the client’s initial rendered output differs from the server HTML, often because render logic depends on time, randomness, browser-only state, or different data.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bef667ca-6b49-4f72-9305-f3dbdac037e6",
+      "order": 114,
+      "question": "Why should server and client initial renders be deterministic?",
+      "answer": "Matching output lets React safely attach to server-rendered markup. Divergence can trigger warnings, discarded markup, or incorrect UI assumptions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bd608751-8739-4058-a42f-f5d56a5cbcb4",
+      "order": 115,
+      "question": "What is a React Server Component conceptually?",
+      "answer": "A Server Component renders on the server and can access server-side resources without sending its component implementation to the client bundle. Interactive client behavior still requires client components.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e6b3753d-7687-4a1b-bf85-b4a2c02adb16",
       "order": 116,
-      "question": "What is the practical purpose of React’s declarative model?",
-      "answer": "Code describes the UI that corresponds to current state. React computes the host changes needed to make the screen match that description instead of requiring manual step-by-step DOM updates.",
+      "question": "What problem do client component boundaries solve in a server-component architecture?",
+      "answer": "They mark where browser-only interactivity, state, effects, and event handlers are needed, limiting client JavaScript to interactive parts of the tree.",
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z"
     }
