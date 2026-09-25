@@ -9,6 +9,7 @@ import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View, useColorScheme } from "react-native";
 
+import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
@@ -151,15 +152,17 @@ function RootLayoutContent() {
           onInit={initializeAppDatabase}
         >
           <DeckContentProvider>
-            <LearningProgressRevisionProvider>
-              <PreferencesProvider service={preferencesService}>
-                <PreferencesThemeProvider>
-                  <AppServicesProvider>
-                    <AppNavigation />
-                  </AppServicesProvider>
-                </PreferencesThemeProvider>
-              </PreferencesProvider>
-            </LearningProgressRevisionProvider>
+            <DeckAppearanceProvider>
+              <LearningProgressRevisionProvider>
+                <PreferencesProvider service={preferencesService}>
+                  <PreferencesThemeProvider>
+                    <AppServicesProvider>
+                      <AppNavigation />
+                    </AppServicesProvider>
+                  </PreferencesThemeProvider>
+                </PreferencesProvider>
+              </LearningProgressRevisionProvider>
+            </DeckAppearanceProvider>
           </DeckContentProvider>
         </SQLiteProvider>
       </View>

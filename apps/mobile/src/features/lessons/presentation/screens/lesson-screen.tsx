@@ -1,8 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
+import { ReadingProgressBar } from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
@@ -15,11 +19,19 @@ import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presen
 const readingColumnMaxWidth = sizes.sheet.maxWidthWide;
 
 export default function LessonScreen() {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
+  const { appearances } = useDeckAppearances(lesson ? [lesson.deckId] : []);
+  const appearance = lesson ? appearances.get(lesson.deckId) : undefined;
+  const accent = appearance
+    ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+    : colors.textSecondary;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -36,14 +48,29 @@ export default function LessonScreen() {
         </View>
       )}
       {!loading && lesson && (
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.column}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {lesson.title}
-            </Text>
-            <LessonMarkdownView blocks={blocks} />
-          </View>
-        </ScrollView>
+        <>
+          <ReadingProgressBar
+            color={accent}
+            scrollableHeight={Math.max(contentHeight - viewportHeight, 0)}
+            scrollY={scrollY}
+          />
+          <Animated.ScrollView
+            contentContainerStyle={styles.content}
+            onContentSizeChange={(_width, height) => setContentHeight(height)}
+            onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: true,
+            })}
+            scrollEventThrottle={16}
+          >
+            <View style={styles.column}>
+              <Text accessibilityRole="header" style={styles.title}>
+                {lesson.title}
+              </Text>
+              <LessonMarkdownView blocks={blocks} />
+            </View>
+          </Animated.ScrollView>
+        </>
       )}
     </SafeAreaView>
   );
