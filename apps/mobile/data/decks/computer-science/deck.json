@@ -1,10 +1,10 @@
 {
   "id": "ed10310f-6d24-4c52-b5c7-bc98081e1606",
-  "version": 2,
+  "version": 1,
   "title": "Computer Science",
   "description": "Algorithms, data structures, complexity, graphs, trees, hashing, concurrency fundamentals, networking, and computation.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-25T19:33:34.817Z",
+  "updatedAt": "2026-09-26T07:31:45.150Z",
   "lessons": [
     {
       "id": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
