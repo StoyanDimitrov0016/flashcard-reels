@@ -5,6 +5,7 @@ Flashcard Reels keeps app preferences separate from deck content. Preferences co
 - Light, Dark, or Device appearance;
 - Study Island position and rating direction;
 - contextual audio placement and audio enabled/disabled;
+- contextual reading placement and reading enabled/disabled;
 - haptics enabled/disabled.
 
 Preferences are stored locally and validated when loaded. Missing or invalid values fall back to the app defaults.
@@ -15,6 +16,8 @@ The application theme controls navigation, sheets, settings, controls, overlays,
 
 ## Study controls
 
-The Study Island can sit on the left, right, or bottom of a card. Rating direction changes visual order without changing the meaning of the recall labels. Audio follows the selected primary/opposite placement.
+The Study Island can sit on the left, right, or bottom of a card. Rating direction changes visual order without changing the meaning of the recall labels. Audio and Reading buttons each follow their own primary/opposite placement; when one side is empty, a matching space keeps the ratings centered on the card.
+
+The Reading button appears on answers from decks that have lessons. It opens a sheet with the deck's lessons; opening one pushes it over the feed, so Back returns to the same card.
 
 Haptics are limited to meaningful study events such as rating, successful Hold-to-Focus, and successful learning reset.

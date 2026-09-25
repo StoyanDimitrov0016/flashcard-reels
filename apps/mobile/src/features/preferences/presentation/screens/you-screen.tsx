@@ -38,6 +38,8 @@ export default function YouScreen() {
     setAudioEnabled,
     setAudioSide,
     setHapticsEnabled,
+    setReadingEnabled,
+    setReadingSide,
     setRatingDirection,
     setRecollectionIslandPosition,
   } = usePreferences();
@@ -86,6 +88,12 @@ export default function YouScreen() {
               label="Audio"
               onValueChange={setAudioEnabled}
               value={preferences.audioEnabled}
+            />
+            <PreferenceSwitch
+              icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
+              label="Reading"
+              onValueChange={setReadingEnabled}
+              value={preferences.readingEnabled}
             />
             <PreferenceSwitch
               icon={{ android: "vibration", ios: "waveform.path.ecg", web: "vibration" }}
@@ -177,6 +185,7 @@ export default function YouScreen() {
         onClose={() => setStudyControlsPresented(false)}
         onPositionChange={setRecollectionIslandPosition}
         onRatingDirectionChange={setRatingDirection}
+        onReadingSideChange={setReadingSide}
         preferences={preferences}
         visible={studyControlsPresented}
       />

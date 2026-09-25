@@ -343,6 +343,7 @@ export function ReelCard({
               <AnswerControlRegion>
                 <StudyControlCluster
                   audioSource={audioSource}
+                  deckId={card.deckId}
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}
