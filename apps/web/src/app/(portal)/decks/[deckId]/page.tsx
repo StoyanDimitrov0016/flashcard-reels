@@ -1,7 +1,7 @@
 import type { Metadata, Route } from "next";
 import type { ReactNode } from "react";
 
-import { BookOpen, ChevronRight, Download, Layers, Volume2 } from "lucide-react";
+import { BookOpen, ChevronRight, Download, Layers, Smartphone, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -27,7 +27,9 @@ function SectionTab<T extends string>({ active, children, href }: SectionTabProp
       aria-current={active ? "page" : undefined}
       className={cn(
         "-mb-px border-b-2 pb-2.5 text-sm font-medium transition-colors",
-        active ? "border-fg text-fg" : "border-transparent text-fg-muted hover:text-fg"
+        active
+          ? "border-foreground text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground"
       )}
       href={href}
       scroll={false}
@@ -52,12 +54,15 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
 
   const intro = (
     <>
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-fg-subtle">
-        <Link className="rounded hover:text-fg" href="/">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1 text-sm text-subtle-foreground"
+      >
+        <Link className="rounded hover:text-foreground" href="/">
           Decks
         </Link>
         <ChevronRight aria-hidden className="size-3.5" />
-        <span aria-current="page" className="truncate text-fg-muted">
+        <span aria-current="page" className="truncate text-muted-foreground">
           {deck.title}
         </span>
       </nav>
@@ -65,9 +70,9 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
       <header className="mt-3 flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{deck.title}</h1>
-          <p className="mt-1.5 max-w-2xl leading-6 text-fg-muted">{deck.description}</p>
+          <p className="mt-1.5 max-w-2xl leading-6 text-muted-foreground">{deck.description}</p>
           {/* One line of details instead of a row of badges keeps the card viewer near the top. */}
-          <ul className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-fg-subtle [&_svg]:size-3.5">
+          <ul className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-subtle-foreground [&_svg]:size-3.5">
             <li className="flex items-center gap-1">
               <Layers aria-hidden />
               {pluralize(deck.cardCount, "card")}
@@ -91,18 +96,25 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
           </ul>
         </div>
         <div className="flex shrink-0 gap-2">
-          <SendToPhoneDialog deckId={deck.id} deckTitle={deck.title} />
-          <Button asChild variant="secondary">
-            <a download href={`/decks/${deck.id}/download`}>
-              <Download />
-              Download
-            </a>
+          <SendToPhoneDialog deckId={deck.id} deckTitle={deck.title}>
+            <Button>
+              <Smartphone />
+              Send to phone
+            </Button>
+          </SendToPhoneDialog>
+          <Button
+            nativeButton={false}
+            render={<a download href={`/decks/${deck.id}/download`} />}
+            variant="outline"
+          >
+            <Download />
+            Download
           </Button>
         </div>
       </header>
 
       {deck.lessons.length > 0 && (
-        <nav aria-label="Deck sections" className="mt-6 flex gap-6 border-b border-line">
+        <nav aria-label="Deck sections" className="mt-6 flex gap-6 border-b border-border">
           <SectionTab active={!showLessons} href={`/decks/${deck.id}`}>
             Cards
           </SectionTab>

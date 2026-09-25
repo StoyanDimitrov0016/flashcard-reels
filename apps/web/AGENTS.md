@@ -31,6 +31,16 @@ on this service being available.
   deck storage and package reading, and transfer tokens. Client code must not
   import it, except for `import type`.
 - `src/components` holds shared UI, with primitives in `src/components/ui`.
+- `src/components/ui` comes from the shadcn CLI with the Base UI style
+  (`base-vega` in `components.json`). Add or update primitives with
+  `npx shadcn@latest add <name>` rather than writing them by hand; polymorphic
+  components take a `render` prop (for example `render={<Link href="/" />}`
+  with `nativeButton={false}`) instead of `asChild`. Check the current shadcn
+  docs through Context7 before using a component.
+- `globals.css` maps shadcn's theme names (`background`, `muted-foreground`,
+  `border`, `primary`, `accent`, …) onto the shared design tokens. Use those
+  names in class lists; `subtle-foreground`, `link`, `overlay`, and `code` cover
+  roles shadcn has no name for.
   `src/lib` and `src/hooks` must stay safe to run in the browser.
 - Pages read decks on the server through `getDeckLibrary()`. The browser only
   calls Route Handlers for actions that start from the UI, such as creating a

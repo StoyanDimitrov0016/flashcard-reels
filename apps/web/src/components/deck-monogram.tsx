@@ -17,7 +17,7 @@ export function DeckMonogram({ title, className }: DeckMonogramProps) {
     <span
       aria-hidden
       className={cn(
-        "flex size-10 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-subtle text-sm font-semibold text-fg-muted",
+        "flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-sm font-semibold text-muted-foreground",
         className
       )}
     >

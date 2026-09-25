@@ -21,18 +21,18 @@ function CardFace({ children, footer, hidden, label, position, side }: CardFaceP
     <span
       aria-hidden={hidden}
       className={cn(
-        "absolute inset-0 flex flex-col rounded-[2.25rem] border border-line bg-canvas px-6 pt-12 pb-6 backface-hidden",
+        "absolute inset-0 flex flex-col rounded-[2.25rem] border border-border bg-background px-6 pt-12 pb-6 backface-hidden",
         side === "back" && "rotate-y-180"
       )}
     >
-      <span className="flex items-center justify-between text-xs font-medium text-fg-subtle">
+      <span className="flex items-center justify-between text-xs font-medium text-subtle-foreground">
         <span className="tracking-wide uppercase">{label}</span>
         <span className="tabular-nums">{position}</span>
       </span>
       <span className="-mr-3 flex min-h-0 flex-1 flex-col justify-center-safe overflow-y-auto py-6 pr-3 [scrollbar-width:thin]">
         {children}
       </span>
-      <span className="flex items-center justify-center gap-1.5 text-xs text-fg-subtle">
+      <span className="flex items-center justify-center gap-1.5 text-xs text-subtle-foreground">
         {footer}
       </span>
     </span>
@@ -69,14 +69,14 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
 
   return (
     // Sized to the viewport height so the whole phone and its controls stay on screen.
-    <div className="mx-auto w-full max-w-[max(15rem,min(21rem,calc((100dvh-13rem)*0.53)))] rounded-[2.75rem] border border-line-strong bg-surface-subtle p-2.5 shadow-lg">
+    <div className="mx-auto w-full max-w-[max(15rem,min(21rem,calc((100dvh-13rem)*0.53)))] rounded-[2.75rem] border border-input bg-muted p-2.5 shadow-lg">
       <div className="relative aspect-[9/17] perspective-[1200px]">
         <span
           aria-hidden
-          className="pointer-events-none absolute top-4 left-1/2 z-10 h-1.5 w-14 -translate-x-1/2 rounded-full bg-line-strong"
+          className="pointer-events-none absolute top-4 left-1/2 z-10 h-1.5 w-14 -translate-x-1/2 rounded-full bg-input"
         />
         <button
-          className="absolute inset-0 cursor-pointer rounded-[2.25rem] text-left outline-none focus-visible:ring-3 focus-visible:ring-accent/30"
+          className="absolute inset-0 cursor-pointer rounded-[2.25rem] text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
           onClick={onFlip}
           type="button"
         >
@@ -104,7 +104,7 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
               position={positionLabel}
               side="back"
             >
-              <span className="text-base leading-7 whitespace-pre-wrap text-fg">
+              <span className="text-base leading-7 whitespace-pre-wrap text-foreground">
                 <FlashcardText text={card.answer} />
               </span>
             </CardFace>
