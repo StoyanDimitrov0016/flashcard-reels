@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 
 import type { DeckCard } from "@/server/decks";
 
@@ -29,13 +29,17 @@ function matches(card: DeckCard, query: string): boolean {
   return `${card.question} ${card.answer}`.toLowerCase().includes(query);
 }
 
-type CardBrowserProps = Readonly<{ cards: readonly DeckCard[] }>;
+type CardBrowserProps = Readonly<{
+  cards: readonly DeckCard[];
+  /** The deck header. On wide screens it shares the left column with the card list. */
+  intro: ReactNode;
+}>;
 
 /**
  * Browse a deck's cards like the app does: one card at a time, answer hidden until revealed.
  * The selected card and search live in the URL, so a card can be linked directly.
  */
-export function CardBrowser({ cards }: CardBrowserProps) {
+export function CardBrowser({ cards, intro }: CardBrowserProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -88,8 +92,10 @@ export function CardBrowser({ cards }: CardBrowserProps) {
   });
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8">
-      <aside className="order-2 lg:order-1">
+    // Small screens stack header, phone, list. Wide screens keep the phone beside both.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr] lg:gap-x-12">
+      <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1">{intro}</div>
+      <aside className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">
         <div className="relative">
           <Search
             aria-hidden
@@ -127,7 +133,7 @@ export function CardBrowser({ cards }: CardBrowserProps) {
             ? `${visibleCards.length} of ${cards.length} cards`
             : `${cards.length} cards`}
         </p>
-        <ol className="mt-2 lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto lg:pr-1">
+        <ol className="mt-2">
           {visibleCards.map((item, index) => (
             <li key={item.id}>
               <button
@@ -156,7 +162,7 @@ export function CardBrowser({ cards }: CardBrowserProps) {
 
       <section
         aria-label="Card viewer"
-        className="order-1 min-w-0 scroll-mt-20 lg:order-2"
+        className="order-2 min-w-0 scroll-mt-20 lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start"
         ref={viewerRef}
       >
         {card ? (

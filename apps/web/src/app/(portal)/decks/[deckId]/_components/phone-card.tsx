@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 
-import { MousePointerClick, Space } from "lucide-react";
+import { MousePointerClick } from "lucide-react";
 
 import type { DeckCard } from "@/server/decks";
 
 import { FlashcardText } from "@/components/flashcard-text";
-import { Kbd } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
 
 type CardFaceProps = Readonly<{
@@ -30,7 +29,7 @@ function CardFace({ children, footer, hidden, label, position, side }: CardFaceP
         <span className="tracking-wide uppercase">{label}</span>
         <span className="tabular-nums">{position}</span>
       </span>
-      <span className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto py-6">
+      <span className="-mr-3 flex min-h-0 flex-1 flex-col justify-center-safe overflow-y-auto py-6 pr-3 [scrollbar-width:thin]">
         {children}
       </span>
       <span className="flex items-center justify-center gap-1.5 text-xs text-fg-subtle">
@@ -46,12 +45,9 @@ function FlipHint({ action }: FlipHintProps) {
   return (
     <>
       <MousePointerClick aria-hidden className="size-3.5" />
-      <span className="md:hidden">Tap</span>
-      <span className="hidden md:inline">Click or press</span>
-      <Kbd aria-label="Space" className="hidden md:inline-flex">
-        <Space aria-hidden className="size-3" />
-      </Kbd>
-      {action}
+      {/* The keyboard hints sit under the phone, so the phone only names the pointer action. */}
+      <span className="md:hidden">Tap {action}</span>
+      <span className="hidden md:inline">Click {action}</span>
     </>
   );
 }
@@ -72,7 +68,8 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
   const positionLabel = `${position} / ${total}`;
 
   return (
-    <div className="mx-auto w-full max-w-[21rem] rounded-[2.75rem] border border-line-strong bg-surface-subtle p-2.5 shadow-lg">
+    // Sized to the viewport height so the whole phone and its controls stay on screen.
+    <div className="mx-auto w-full max-w-[max(15rem,min(21rem,calc((100dvh-13rem)*0.53)))] rounded-[2.75rem] border border-line-strong bg-surface-subtle p-2.5 shadow-lg">
       <div className="relative aspect-[9/17] perspective-[1200px]">
         <span
           aria-hidden
@@ -96,7 +93,7 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
               position={positionLabel}
               side="front"
             >
-              <span className="text-2xl leading-snug font-semibold tracking-tight text-balance">
+              <span className="text-xl leading-snug font-semibold tracking-tight text-balance">
                 <FlashcardText text={card.question} />
               </span>
             </CardFace>
@@ -107,7 +104,7 @@ export function PhoneCard({ card, onFlip, position, revealed, total }: PhoneCard
               position={positionLabel}
               side="back"
             >
-              <span className="text-lg leading-8 whitespace-pre-wrap text-fg">
+              <span className="text-base leading-7 whitespace-pre-wrap text-fg">
                 <FlashcardText text={card.answer} />
               </span>
             </CardFace>
