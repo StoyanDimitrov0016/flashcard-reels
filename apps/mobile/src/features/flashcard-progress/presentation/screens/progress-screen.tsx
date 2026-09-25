@@ -10,6 +10,7 @@ import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-m
 import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -18,6 +19,7 @@ import { fontSize, fontWeight } from "@/shared/presentation/typography";
 export default function ProgressScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const { loading, refresh, rows } = useFlashcardProgressList();
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
@@ -41,7 +43,10 @@ export default function ProgressScreen() {
         </Text>
       </ScreenHeader>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: sizes.spacing.content + tabBarInset },
+        ]}
         refreshControl={renderRefreshControl(loading && rows.length > 0, refresh, colors)}
       >
         {loading && rows.length === 0 ? (

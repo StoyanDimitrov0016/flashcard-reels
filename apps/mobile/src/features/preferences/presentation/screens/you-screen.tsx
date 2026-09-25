@@ -18,6 +18,7 @@ import { usePreferences } from "@/features/preferences/presentation/hooks/use-pr
 import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -30,6 +31,7 @@ import appIcon from "../../../../../assets/images/app-icon.png";
 export default function YouScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const {
     preferences,
@@ -66,7 +68,12 @@ export default function YouScreen() {
           Controls
         </Text>
       </ScreenHeader>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: sizes.spacing.spacious + tabBarInset },
+        ]}
+      >
         <View style={styles.sections}>
           <PreferenceSection grouped={false} title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />

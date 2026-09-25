@@ -37,6 +37,7 @@ import { DestructiveConfirmationSheet } from "@/shared/presentation/components/d
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { SearchField } from "@/shared/presentation/components/search-field";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import {
   hideFlashcardToast,
   showFocusedToast,
@@ -221,6 +222,7 @@ function EmptyLibrary() {
 export default function LibraryScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
@@ -436,7 +438,10 @@ export default function LibraryScreen() {
           <LibrarySkeleton />
         ) : (
           <FlatList
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[
+              styles.list,
+              { paddingBottom: sizes.spacing.content + tabBarInset },
+            ]}
             data={visibleEntries}
             keyboardShouldPersistTaps="handled"
             keyExtractor={({ deck }) => deck.id}

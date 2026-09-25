@@ -11,6 +11,7 @@ import { useReadingLists } from "@/features/lessons/presentation/controllers/use
 import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -19,6 +20,7 @@ import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presen
 export default function ReadingScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const { loading, readingLists } = useReadingLists();
   const { appearances } = useDeckAppearances(readingLists.map((list) => list.deckId));
 
@@ -32,7 +34,12 @@ export default function ReadingScreen() {
       {loading && <LoadingState />}
       {!loading && readingLists.length === 0 && <EmptyReadingList colors={colors} />}
       {!loading && readingLists.length > 0 && (
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: sizes.spacing.wide + tabBarInset },
+          ]}
+        >
           {readingLists.map((readingList) => {
             const appearance = appearances.get(readingList.deckId);
             const accent = appearance
