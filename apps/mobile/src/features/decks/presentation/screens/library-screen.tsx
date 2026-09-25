@@ -474,6 +474,7 @@ export default function LibraryScreen() {
       </View>
       <DeckAppearanceSheet
         appearance={sheetAppearance}
+        deck={selectedEntry?.deck ?? null}
         error={saveError}
         isPresented={selectedEntry !== null}
         onDismiss={() => {
