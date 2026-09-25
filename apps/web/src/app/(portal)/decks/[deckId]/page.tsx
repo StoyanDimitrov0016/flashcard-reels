@@ -7,7 +7,6 @@ import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/page-container";
 import { SendToPhoneDialog } from "@/components/send-to-phone-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatBytes, formatDate, pluralize } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -51,8 +50,8 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
   }
   const showLessons = view === "lessons" && deck.lessons.length > 0;
 
-  return (
-    <PageContainer className="sm:py-8">
+  const intro = (
+    <>
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-fg-subtle">
         <Link className="rounded hover:text-fg" href="/">
           Decks
@@ -63,36 +62,37 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
         </span>
       </nav>
 
-      <header className="mt-5 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+      <header className="mt-3 flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
         <div className="min-w-0">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{deck.title}</h1>
-          <p className="mt-3 max-w-2xl leading-7 text-fg-muted">{deck.description}</p>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            <Badge>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{deck.title}</h1>
+          <p className="mt-1.5 max-w-2xl leading-6 text-fg-muted">{deck.description}</p>
+          {/* One line of details instead of a row of badges keeps the card viewer near the top. */}
+          <ul className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-fg-subtle [&_svg]:size-3.5">
+            <li className="flex items-center gap-1">
               <Layers aria-hidden />
               {pluralize(deck.cardCount, "card")}
-            </Badge>
+            </li>
             {deck.lessonCount > 0 && (
-              <Badge>
+              <li className="flex items-center gap-1">
                 <BookOpen aria-hidden />
                 {pluralize(deck.lessonCount, "lesson")}
-              </Badge>
+              </li>
             )}
             {deck.audioCount > 0 && (
-              <Badge>
+              <li className="flex items-center gap-1">
                 <Volume2 aria-hidden />
-                {pluralize(deck.audioCount, "audio clip")}
-              </Badge>
+                Audio
+              </li>
             )}
-            <Badge>{formatBytes(deck.sizeBytes)}</Badge>
-            <Badge>
+            <li>{formatBytes(deck.sizeBytes)}</li>
+            <li>
               Version {deck.version} · Updated {formatDate(deck.updatedAt)}
-            </Badge>
-          </div>
+            </li>
+          </ul>
         </div>
         <div className="flex shrink-0 gap-2">
           <SendToPhoneDialog deckId={deck.id} deckTitle={deck.title} />
-          <Button asChild>
+          <Button asChild variant="secondary">
             <a download href={`/decks/${deck.id}/download`}>
               <Download />
               Download
@@ -102,7 +102,7 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
       </header>
 
       {deck.lessons.length > 0 && (
-        <nav aria-label="Deck sections" className="mt-8 flex gap-6 border-b border-line">
+        <nav aria-label="Deck sections" className="mt-6 flex gap-6 border-b border-line">
           <SectionTab active={!showLessons} href={`/decks/${deck.id}`}>
             Cards
           </SectionTab>
@@ -111,14 +111,21 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
           </SectionTab>
         </nav>
       )}
+    </>
+  );
 
-      <div className={deck.lessons.length > 0 ? "mt-6" : "mt-10"}>
-        {showLessons ? (
-          <LessonsView deckId={deck.id} lessons={deck.lessons} selectedLessonId={lesson} />
-        ) : (
-          <CardBrowser cards={deck.cards} key={deck.id} />
-        )}
-      </div>
+  return (
+    <PageContainer className="sm:py-6">
+      {showLessons ? (
+        <>
+          {intro}
+          <div className="mt-6">
+            <LessonsView deckId={deck.id} lessons={deck.lessons} selectedLessonId={lesson} />
+          </div>
+        </>
+      ) : (
+        <CardBrowser cards={deck.cards} intro={intro} key={deck.id} />
+      )}
     </PageContainer>
   );
 }
