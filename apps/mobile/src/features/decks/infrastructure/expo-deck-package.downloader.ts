@@ -1,6 +1,9 @@
 import { DownloadTask, File, Paths } from "expo-file-system";
 
-import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
+import type {
+  DeckDownloadProgress,
+  DeckPackageDownloader,
+} from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 
 import { OperationError } from "@/shared/errors/operation-error";
@@ -9,7 +12,11 @@ import { reportError } from "@/shared/errors/report-error";
 export const DECK_DOWNLOAD_TIMEOUT_MS = 60_000;
 
 export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
-  async download(url: string, signal?: AbortSignal): Promise<DeckPackageSelection> {
+  async download(
+    url: string,
+    signal?: AbortSignal,
+    onProgress?: (progress: DeckDownloadProgress) => void
+  ): Promise<DeckPackageSelection> {
     const destination = new File(Paths.cache, `deck-import-${Date.now()}.fcrdeck`);
     const controller = new AbortController();
     const cancel = () => controller.abort();
@@ -24,7 +31,13 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
     }, DECK_DOWNLOAD_TIMEOUT_MS);
     let task: DownloadTask | undefined;
     try {
-      task = new DownloadTask(url, destination, { signal: controller.signal });
+      task = new DownloadTask(url, destination, {
+        onProgress: onProgress
+          ? ({ bytesWritten, totalBytes }) =>
+              onProgress({ bytesWritten, totalBytes: totalBytes > 0 ? totalBytes : null })
+          : undefined,
+        signal: controller.signal,
+      });
       const file = await task.downloadAsync();
       if (!file || controller.signal.aborted) {
         throw new Error("Deck download was interrupted");
