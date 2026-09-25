@@ -17,6 +17,9 @@ describe("deck appearance presets", () => {
       for (const variant of [preset.light, preset.dark]) {
         expect(contrastRatio(variant.textPrimary, variant.background)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(variant.accent, variant.background)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(variant.textSecondary, variant.background)).toBeGreaterThanOrEqual(
+          4.5
+        );
       }
     }
   });
