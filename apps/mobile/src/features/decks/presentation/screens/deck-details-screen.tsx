@@ -41,12 +41,14 @@ import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentat
 type CardRowProps = Readonly<{
   card: Flashcard;
   onPress: () => void;
+  /** Fits the deck's largest card number, so numbers line up and never wrap. */
+  numberWidth: number;
   position: "first" | "middle" | "last" | "only";
   showProgress: boolean;
 }>;
 
 /** One row of the grouped card list: rows share a card, split by inset dividers. */
-function CardRow({ card, onPress, position, showProgress }: CardRowProps) {
+function CardRow({ card, numberWidth, onPress, position, showProgress }: CardRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -67,14 +69,18 @@ function CardRow({ card, onPress, position, showProgress }: CardRowProps) {
         pressed && styles.cardRowPressed,
       ]}
     >
-      <Text style={styles.position}>{card.order + 1}</Text>
+      <Text numberOfLines={1} style={[styles.position, { width: numberWidth }]}>
+        {card.order + 1}
+      </Text>
       <FlashcardText numberOfLines={2} style={styles.question} text={card.question} />
       <SymbolView
         name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
         size={sizes.icon.small}
         tintColor={colors.textTertiary}
       />
-      {position !== "last" && position !== "only" && <View style={styles.divider} />}
+      {position !== "last" && position !== "only" && (
+        <View style={[styles.divider, { left: getDividerInset(numberWidth) }]} />
+      )}
     </Pressable>
   );
 }
@@ -86,6 +92,17 @@ function EmptyCardList() {
       title="No cards found"
     />
   );
+}
+
+// Footnote-size tabular digits are about 8pt wide.
+const DIGIT_WIDTH = 9;
+
+function getNumberWidth(cardCount: number): number {
+  return Math.max(22, String(Math.max(cardCount, 1)).length * DIGIT_WIDTH);
+}
+
+function getDividerInset(numberWidth: number): number {
+  return sizes.spacing.xLarge + numberWidth + sizes.spacing.medium;
 }
 
 function getRowPosition(index: number, count: number): CardRowProps["position"] {
@@ -122,10 +139,12 @@ export default function DeckDetailsScreen() {
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
   const deckColors = appearance ? resolveDeckAppearance(appearance.presetId, resolvedScheme) : null;
   const accentColor = deckColors?.accent ?? colors.actionPrimary;
+  const numberWidth = getNumberWidth(cards.length);
   const renderCard: ListRenderItem<Flashcard> = ({ index, item }) => (
     <CardRow
       card={item}
       onPress={() => setSelectedCard(item)}
+      numberWidth={numberWidth}
       position={getRowPosition(index, visibleCards.length)}
       showProgress={showProgress}
     />
@@ -349,8 +368,6 @@ function createStyles(colors: AppColors) {
       backgroundColor: colors.borderSubtle,
       bottom: 0,
       height: StyleSheet.hairlineWidth,
-      // Inset past the card number, as in the settings lists.
-      left: sizes.spacing.xLarge + 22 + sizes.spacing.medium,
       position: "absolute",
       right: 0,
     },
@@ -381,7 +398,6 @@ function createStyles(colors: AppColors) {
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
       textAlign: "center",
-      width: 22,
     },
     headerActionButton: {
       alignItems: "center",
