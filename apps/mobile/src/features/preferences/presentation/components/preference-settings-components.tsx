@@ -64,20 +64,30 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
 
 type PreferenceSectionProps = Readonly<{
   children: ReactNode;
-  title: string;
+  /** Explanatory text under the group, as in platform settings lists. */
+  footnote?: string;
+  /** Leave out when the screen title already names the only group. */
+  title?: string;
   /** Rows sit in one card with dividers. Controls with their own frame opt out. */
   grouped?: boolean;
 }>;
 
-export function PreferenceSection({ children, title, grouped = true }: PreferenceSectionProps) {
+export function PreferenceSection({
+  children,
+  footnote,
+  grouped = true,
+  title,
+}: PreferenceSectionProps) {
   const styles = createStyles(useAppTheme().colors);
   const rows = Children.toArray(children);
 
   return (
     <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        {title}
-      </Text>
+      {!!title && (
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          {title}
+        </Text>
+      )}
       {grouped ? (
         <View style={styles.group}>
           {rows.map((row, index) => (
@@ -90,6 +100,7 @@ export function PreferenceSection({ children, title, grouped = true }: Preferenc
       ) : (
         rows
       )}
+      {!!footnote && <Text style={styles.footnote}>{footnote}</Text>}
     </View>
   );
 }
@@ -177,6 +188,12 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     destructiveTitle: { color: colors.error },
     disabled: { opacity: 0.5 },
+    footnote: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption,
+      lineHeight: lineHeight.footnote,
+      paddingHorizontal: sizes.spacing.xSmall,
+    },
     pressed: { backgroundColor: colors.surfaceHover },
     divider: {
       backgroundColor: colors.borderSubtle,

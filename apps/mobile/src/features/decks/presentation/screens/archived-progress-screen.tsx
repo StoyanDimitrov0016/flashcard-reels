@@ -5,13 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useArchivedProgress } from "@/features/decks/presentation/controllers/use-archived-progress";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
+import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { ScreenBackButton } from "@/shared/presentation/components/screen-back-button";
-import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight } from "@/shared/presentation/typography";
+import { fontSize, lineHeight, fontWeight } from "@/shared/presentation/typography";
 
 export default function ArchivedProgressScreen() {
   const { colors } = useAppTheme();
@@ -32,17 +32,18 @@ export default function ArchivedProgressScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <ScreenHeader>
-        <ScreenBackButton accessibilityLabel="Back to Controls" onPress={() => router.back()} />
-        <Text accessibilityRole="header" style={styles.title}>
-          Archived progress
-        </Text>
-      </ScreenHeader>
+      <SubScreenHeader
+        backLabel="Back to Controls"
+        onBack={() => router.back()}
+        title="Archived progress"
+      />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.description}>
-          Learning progress saved for decks removed from this device. Sizes are approximate and
-          exclude deck cards and audio.
-        </Text>
+        {rows.length > 0 && (
+          <Text style={styles.description}>
+            Learning progress saved for decks removed from this device. Sizes are approximate and
+            exclude deck cards and audio.
+          </Text>
+        )}
         {loading && rows.length === 0 && (
           <LoadingState accessibilityLabel="Loading archived progress" fill={false} />
         )}
@@ -57,7 +58,11 @@ export default function ArchivedProgressScreen() {
           </View>
         )}
         {!loading && !loadError && rows.length === 0 && (
-          <Text style={styles.empty}>No archived progress yet.</Text>
+          <EmptyState
+            icon={{ android: "archive", ios: "archivebox", web: "archive" }}
+            message="When you delete a deck, its learning progress is kept here."
+            title="No archived progress"
+          />
         )}
         {rows.map((row) => (
           <View key={row.deckId} style={styles.card}>
@@ -113,14 +118,17 @@ function formatBytes(bytes: number): string {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
     content: {
       gap: sizes.spacing.section,
       padding: sizes.spacing.content,
       paddingTop: screenLayout.contentTopGap,
       paddingBottom: sizes.spacing.spacious,
     },
-    description: { color: colors.textSecondary, fontSize: fontSize.body },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.body,
+      lineHeight: lineHeight.body,
+    },
     card: {
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderSubtle,
@@ -140,7 +148,6 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
     },
     deleteText: { color: colors.error, fontSize: fontSize.body },
-    empty: { color: colors.textTertiary, fontSize: fontSize.body },
     error: { color: colors.error, fontSize: fontSize.body },
     loadError: { alignItems: "flex-start", gap: sizes.spacing.small },
     retryButton: { justifyContent: "center", minHeight: sizes.touchTarget.minimum },
