@@ -6,6 +6,7 @@ import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const RESET_MARKER = "flashcard-reels-reset-pending";
 const DATABASE_FILES = ["flashcard-reels.db", "flashcard-reels-v2.db", "ExpoSQLiteStorage"];
+const DeckImportFileNamePattern = /^deck-import-.*\.fcrdeck$/;
 let storagePrepared = false;
 
 /** Root retries must not apply a new request while storage is already open. */
@@ -73,8 +74,12 @@ export function applyPendingAppDataReset(): void {
     if (audio.exists) {
       audio.delete();
     }
+    const progressBackups = new Directory(Paths.document, "progress-backups");
+    if (progressBackups.exists) {
+      progressBackups.delete();
+    }
     for (const entry of Paths.cache.exists ? Paths.cache.list() : []) {
-      if (entry instanceof File && /^deck-import-.*\.fcrdeck$/.test(entry.name)) {
+      if (entry instanceof File && DeckImportFileNamePattern.test(entry.name)) {
         entry.delete();
       }
     }

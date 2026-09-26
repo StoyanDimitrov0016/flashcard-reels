@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
 
-// Exercise hook-owned async operations with state/ref doubles, without native rendering.
-const harness = vi.hoisted(() => ({
-  state: undefined as unknown,
-  cleanup: undefined as (() => void) | undefined,
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const services = vi.hoisted(() => ({
   download: vi.fn(),
   install: vi.fn(),
   remove: vi.fn(),
@@ -11,182 +11,167 @@ const harness = vi.hoisted(() => ({
   invalidate: vi.fn(),
   report: vi.fn(),
 }));
-vi.mock("react", () => ({
-  useRef: (current: unknown) => ({ current }),
-  useEffect: (effect: () => () => void) => {
-    harness.cleanup = effect();
-  },
-  useState: (initial: unknown) => {
-    harness.state = initial;
-    return [
-      initial,
-      (next: unknown) => {
-        harness.state = typeof next === "function" ? next(harness.state) : next;
-      },
-    ];
-  },
-}));
-vi.mock("@/infrastructure/app-services", () => ({
-  useAppServices: () => ({
-    deckInstaller: { installFromFile: harness.install },
-    deckPackageDownloader: { download: harness.download, remove: harness.remove },
-    deckPackagePicker: { pick: harness.pick },
+vi.mock("@/features/decks/presentation/dependencies/use-decks", () => ({
+  useDecks: () => ({
+    deckInstaller: { installFromFile: services.install },
+    deckPackageDownloader: { download: services.download, remove: services.remove },
+    deckPackagePicker: { pick: services.pick },
   }),
 }));
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
-  useInvalidateDeckContent: () => harness.invalidate,
+  useInvalidateDeckContent: () => services.invalidate,
 }));
-vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
+vi.mock("@/shared/errors/report-error", () => ({ reportError: services.report }));
 
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 
-describe("deck import cancellation and feedback lifetime", () => {
+const downloadedFile = { uri: "file:///cache/deck.fcrdeck" };
+const installedDeck = { deckId: "deck", status: "installed", version: 1 };
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((finish) => {
+    resolve = finish;
+  });
+  return { promise, resolve };
+}
+
+describe("deck import lifetime", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    harness.cleanup = undefined;
-    harness.download.mockResolvedValue({ uri: "file:///cache/deck.fcrdeck" });
-    harness.install.mockResolvedValue({ deckId: "deck", status: "installed", version: 1 });
+    services.download.mockResolvedValue(downloadedFile);
+    services.install.mockResolvedValue(installedDeck);
   });
 
-  it("installs completed downloads, invalidates content and cleans the temporary file", async () => {
-    const hook = useImportDeckPackage();
-    await expect(hook.importFromUrl("https://example.com/deck")).resolves.toMatchObject({
-      status: "installed",
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("installs a download, refreshes deck content, and removes the temporary file", async () => {
+    const hook = renderHook(useImportDeckPackage);
+    let imported;
+    await act(async () => {
+      imported = await hook.result.current.importFromUrl("https://example.com/deck");
     });
-    expect(harness.invalidate).toHaveBeenCalledOnce();
-    expect(harness.remove).toHaveBeenCalledOnce();
-    expect(harness.state).toMatchObject({ error: null, importing: false, downloading: false });
+
+    expect(imported).toMatchObject({ status: "installed" });
+    expect(services.invalidate).toHaveBeenCalledOnce();
+    expect(services.remove).toHaveBeenCalledOnce();
+    expect(hook.result.current).toMatchObject({
+      error: null,
+      importing: false,
+      downloading: false,
+    });
   });
 
-  it("does not install or report intentional cancellation as an error", async () => {
-    harness.download.mockImplementation(
+  it("treats cancellation as a normal result and cleans a late download", async () => {
+    const download = deferred<typeof downloadedFile>();
+    services.download.mockReturnValue(download.promise);
+    const hook = renderHook(useImportDeckPackage);
+    let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
+    act(() => {
+      pending = hook.result.current.importFromUrl("https://example.com/deck");
+      hook.result.current.cancelDownload();
+    });
+    await act(async () => {
+      download.resolve(downloadedFile);
+      expect(await pending).toBeNull();
+    });
+
+    expect(services.install).not.toHaveBeenCalled();
+    expect(services.report).not.toHaveBeenCalled();
+    expect(services.remove).toHaveBeenCalledOnce();
+    expect(hook.result.current.error).toBeNull();
+  });
+
+  it("prevents a second import while the first is pending", async () => {
+    const download = deferred<typeof downloadedFile>();
+    services.download.mockReturnValue(download.promise);
+    const hook = renderHook(useImportDeckPackage);
+    let first!: ReturnType<typeof hook.result.current.importFromUrl>;
+    act(() => {
+      first = hook.result.current.importFromUrl("https://example.com/deck");
+    });
+    await expect(
+      hook.result.current.importFromUrl("https://example.com/other")
+    ).resolves.toBeNull();
+    expect(services.download).toHaveBeenCalledOnce();
+    await act(async () => {
+      download.resolve(downloadedFile);
+      await first;
+    });
+  });
+
+  it("aborts an owned download when the screen unmounts", async () => {
+    services.download.mockImplementation(
       (_url: string, signal: AbortSignal) =>
         new Promise((_resolve, reject) => {
           signal.addEventListener("abort", () => reject(new Error("aborted")));
         })
     );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromUrl("https://example.com/deck");
-    hook.cancelDownload();
-    await expect(result).resolves.toBeNull();
-    expect(harness.install).not.toHaveBeenCalled();
-    expect(harness.report).not.toHaveBeenCalled();
-    expect(harness.state).toMatchObject({ error: null, importing: false });
+    const hook = renderHook(useImportDeckPackage);
+    let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
+    act(() => {
+      pending = hook.result.current.importFromUrl("https://example.com/deck");
+    });
+    hook.unmount();
+
+    await expect(pending).resolves.toBeNull();
+    expect(services.install).not.toHaveBeenCalled();
   });
 
-  it("cleans a late download completion after cancellation without installing it", async () => {
-    let resolveDownload: ((file: { uri: string }) => void) | undefined;
-    harness.download.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveDownload = resolve;
-        })
-    );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromUrl("https://example.com/deck");
-    hook.cancelDownload();
-    resolveDownload?.({ uri: "file:///cache/deck.fcrdeck" });
-    await expect(result).resolves.toBeNull();
-    expect(harness.install).not.toHaveBeenCalled();
-    expect(harness.remove).toHaveBeenCalledOnce();
+  it("shows failed-import feedback until the learner clears it", async () => {
+    services.download.mockRejectedValue(new Error("offline"));
+    const hook = renderHook(useImportDeckPackage);
+    await act(async () => {
+      await hook.result.current.importFromUrl("https://example.com/deck");
+    });
+    expect(hook.result.current.error).toMatchObject({ code: "DECK_OPERATION_FAILED" });
+
+    act(() => hook.result.current.clearImportError());
+    expect(hook.result.current.error).toBeNull();
   });
 
-  it("prevents overlapping imports", async () => {
-    let resolveDownload: ((file: { uri: string }) => void) | undefined;
-    harness.download.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveDownload = resolve;
-        })
-    );
-    const hook = useImportDeckPackage();
-    const first = hook.importFromUrl("https://example.com/deck");
-    await expect(hook.importFromUrl("https://example.com/other")).resolves.toBeNull();
-    expect(harness.download).toHaveBeenCalledOnce();
-    resolveDownload?.({ uri: "file:///cache/deck.fcrdeck" });
-    await first;
+  it("does not cancel installation after the download has completed", async () => {
+    const installation = deferred<typeof installedDeck>();
+    services.install.mockReturnValue(installation.promise);
+    const hook = renderHook(useImportDeckPackage);
+    let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
+    act(() => {
+      pending = hook.result.current.importFromUrl("https://example.com/deck");
+    });
+    await waitFor(() => expect(hook.result.current.downloading).toBe(false));
+    expect(hook.result.current.importing).toBe(true);
+    act(() => hook.result.current.cancelDownload());
+    await act(async () => {
+      installation.resolve(installedDeck);
+      expect(await pending).toMatchObject({ status: "installed" });
+    });
   });
 
-  it("cancels an owned download on unmount", async () => {
-    harness.download.mockImplementation(
-      (_url: string, signal: AbortSignal) =>
-        new Promise((_resolve, reject) => {
-          signal.addEventListener("abort", () => reject(new Error("aborted")));
-        })
-    );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromUrl("https://example.com/deck");
-    harness.cleanup?.();
-    await expect(result).resolves.toBeNull();
-    expect(harness.install).not.toHaveBeenCalled();
+  it("ignores a file-picker result delivered after the screen unmounts", async () => {
+    const picker = deferred<{ uri: string }>();
+    services.pick.mockReturnValue(picker.promise);
+    const hook = renderHook(useImportDeckPackage);
+    const pending = hook.result.current.importFromDevice();
+    hook.unmount();
+    picker.resolve({ uri: "file:///documents/deck.fcrdeck" });
+
+    await expect(pending).resolves.toBeNull();
+    expect(services.install).not.toHaveBeenCalled();
   });
 
-  it("clears failed-import feedback when dismissed or retried", async () => {
-    harness.download.mockRejectedValue(new Error("offline"));
-    const hook = useImportDeckPackage();
-    await hook.importFromUrl("https://example.com/deck");
-    expect(harness.state).toMatchObject({ error: { code: "DECK_OPERATION_FAILED" } });
-    hook.clearImportError();
-    expect(harness.state).toMatchObject({ error: null });
-  });
+  it("finishes an in-flight installation after unmount without publishing stale success", async () => {
+    const installation = deferred<typeof installedDeck>();
+    services.install.mockReturnValue(installation.promise);
+    const hook = renderHook(useImportDeckPackage);
+    const pending = hook.result.current.importFromUrl("https://example.com/deck");
+    await waitFor(() => expect(services.install).toHaveBeenCalledOnce());
+    hook.unmount();
+    installation.resolve(installedDeck);
 
-  it("does not cancel installation once the download is complete", async () => {
-    let finishInstall:
-      | ((result: { deckId: string; status: string; version: number }) => void)
-      | undefined;
-    harness.install.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finishInstall = resolve;
-        })
-    );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromUrl("https://example.com/deck");
-    await Promise.resolve();
-    expect(harness.state).toMatchObject({ downloading: false, importing: true });
-    hook.cancelDownload();
-    finishInstall?.({ deckId: "deck", status: "installed", version: 1 });
-    await expect(result).resolves.toMatchObject({ status: "installed" });
-  });
-
-  it("ignores a file-picker result delivered after unmount", async () => {
-    let finishPicker: ((selection: { uri: string }) => void) | undefined;
-    harness.pick.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finishPicker = resolve;
-        })
-    );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromDevice();
-    const lastMountedState = harness.state;
-    harness.cleanup?.();
-    finishPicker?.({ uri: "file:///documents/deck.fcrdeck" });
-    await expect(result).resolves.toBeNull();
-    expect(harness.install).not.toHaveBeenCalled();
-    expect(harness.remove).not.toHaveBeenCalled();
-    expect(harness.state).toBe(lastMountedState);
-  });
-
-  it("finishes an atomic installation after unmount without publishing stale success", async () => {
-    let finishInstall:
-      | ((result: { deckId: string; status: string; version: number }) => void)
-      | undefined;
-    harness.install.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finishInstall = resolve;
-        })
-    );
-    const hook = useImportDeckPackage();
-    const result = hook.importFromUrl("https://example.com/deck");
-    await Promise.resolve();
-    const lastMountedState = harness.state;
-    harness.cleanup?.();
-    finishInstall?.({ deckId: "deck", status: "installed", version: 1 });
-    await expect(result).resolves.toBeNull();
-    expect(harness.invalidate).toHaveBeenCalledOnce();
-    expect(harness.remove).toHaveBeenCalledOnce();
-    expect(harness.state).toBe(lastMountedState);
+    await expect(pending).resolves.toBeNull();
+    expect(services.invalidate).toHaveBeenCalledOnce();
+    expect(services.remove).toHaveBeenCalledOnce();
   });
 });

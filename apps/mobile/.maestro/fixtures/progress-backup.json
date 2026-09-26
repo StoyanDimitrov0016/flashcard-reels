@@ -1,0 +1,58 @@
+{
+  "format": "flashcard-reels-progress",
+  "version": 1,
+  "exportedAt": "2026-01-02T00:00:00.000Z",
+  "deckProgress": [
+    {
+      "deckId": "a1000000-0000-4000-8000-000000000001",
+      "title": "Versioned Test Deck",
+      "version": 1,
+      "lastReviewedAt": "2026-01-01T12:00:00.000Z",
+      "resolution": "archived"
+    }
+  ],
+  "flashcardProgress": [
+    {
+      "flashcardId": "b1000000-0000-4000-8000-000000000001",
+      "deckId": "a1000000-0000-4000-8000-000000000001",
+      "reviewCount": 1,
+      "againCount": 0,
+      "hardCount": 0,
+      "goodCount": 1,
+      "easyCount": 0,
+      "firstReviewedAt": "2026-01-01T12:00:00.000Z",
+      "lastReviewedAt": "2026-01-01T12:00:00.000Z",
+      "resetAt": null,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T12:00:00.000Z"
+    }
+  ],
+  "flashcardMemoryStates": [
+    {
+      "flashcardId": "b1000000-0000-4000-8000-000000000001",
+      "deckId": "a1000000-0000-4000-8000-000000000001",
+      "state": "review",
+      "dueAt": "2026-01-02T12:00:00.000Z",
+      "stability": 1,
+      "difficulty": 5,
+      "elapsedDays": 0,
+      "scheduledDays": 1,
+      "reps": 1,
+      "lapses": 0,
+      "learningSteps": 0,
+      "lastReviewAt": "2026-01-01T12:00:00.000Z",
+      "createdAt": "2026-01-01T12:00:00.000Z",
+      "updatedAt": "2026-01-01T12:00:00.000Z"
+    }
+  ],
+  "reviewEvents": [
+    {
+      "id": "c1000000-0000-4000-8000-000000000001",
+      "deckId": "a1000000-0000-4000-8000-000000000001",
+      "flashcardId": "b1000000-0000-4000-8000-000000000001",
+      "rating": "good",
+      "reviewedAt": "2026-01-01T12:00:00.000Z",
+      "finalizedAt": "2026-01-01T12:00:00.000Z"
+    }
+  ]
+}

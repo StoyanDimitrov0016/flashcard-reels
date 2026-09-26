@@ -11,7 +11,7 @@ import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { LearningProgressResetProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
@@ -29,7 +29,7 @@ import { StartupLoadingState } from "@/shared/presentation/components/startup-lo
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
-import { getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
+import { AppThemeProvider, getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 import { getAppColors } from "@/shared/presentation/theme-colors";
 
 import "../../global.css";
@@ -39,9 +39,13 @@ const appRecoveryCapability = { requestAppDataReset };
 type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const resolvedScheme = useColorScheme() === "dark" ? "dark" : "light";
+
   return (
     <AppRecoveryProvider capability={appRecoveryCapability}>
-      <GlobalErrorState error={error} retry={retry} />
+      <AppThemeProvider resolvedScheme={resolvedScheme}>
+        <GlobalErrorState error={error} retry={retry} />
+      </AppThemeProvider>
     </AppRecoveryProvider>
   );
 }
@@ -87,6 +91,7 @@ function AppNavigation() {
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="archived-progress" />
+          <Stack.Screen name="progress-backup" />
           <Stack.Screen
             name="decks/[deckId]"
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
@@ -98,7 +103,7 @@ function AppNavigation() {
   );
 }
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const [prepared, setPrepared] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
   const [preparationError, setPreparationError] = useState<Error | null>(null);
@@ -137,7 +142,7 @@ export default function RootLayout() {
           onInit={initializeAppDatabase}
         >
           <DeckContentProvider>
-            <LearningProgressResetProvider>
+            <LearningProgressRevisionProvider>
               <PreferencesProvider service={preferencesService}>
                 <PreferencesThemeProvider>
                   <AppServicesProvider>
@@ -145,11 +150,21 @@ export default function RootLayout() {
                   </AppServicesProvider>
                 </PreferencesThemeProvider>
               </PreferencesProvider>
-            </LearningProgressResetProvider>
+            </LearningProgressRevisionProvider>
           </DeckContentProvider>
         </SQLiteProvider>
       </View>
     </AppRecoveryProvider>
+  );
+}
+
+export default function RootLayout() {
+  const resolvedScheme = useColorScheme() === "dark" ? "dark" : "light";
+
+  return (
+    <AppThemeProvider resolvedScheme={resolvedScheme}>
+      <RootLayoutContent />
+    </AppThemeProvider>
   );
 }
 

@@ -31,9 +31,9 @@ vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useDeckContentRevision: () => ({ revision: 1 }),
 }));
 vi.mock(
-  "@/features/flashcard-progress/presentation/context/learning-progress-reset-context",
+  "@/features/flashcard-progress/presentation/context/learning-progress-revision-context",
   () => ({
-    useLearningProgressReset: () => ({ revision: 1 }),
+    useLearningProgressRevision: () => ({ revision: 1 }),
   })
 );
 

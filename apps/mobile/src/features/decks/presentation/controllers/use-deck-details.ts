@@ -7,7 +7,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{
@@ -22,7 +22,7 @@ type DeckDetailsState = Readonly<{
 export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
   const { deckService, flashcardService, flashcardProgressService } = useDecks();
   const { revision } = useDeckContentRevision();
-  const { revision: resetRevision } = useLearningProgressReset();
+  const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<DeckDetailsState>({
     appearance: null,
     cards: [],
@@ -92,7 +92,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
       enabled,
       flashcardService,
       flashcardProgressService,
-      resetRevision,
+      progressRevision,
       revision,
     ]
   );
