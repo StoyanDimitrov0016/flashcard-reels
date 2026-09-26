@@ -12,7 +12,8 @@ type DestructiveConfirmationSheetProps = Readonly<{
   actionLabel: string;
   busy: boolean;
   error: string | null;
-  icon: ComponentProps<typeof SymbolView>["name"];
+  /** Per-platform names; a bare SF Symbol name draws nothing on Android. */
+  icon: Exclude<ComponentProps<typeof SymbolView>["name"], string>;
   message: string;
   onCancel: () => void;
   onConfirm: () => void;

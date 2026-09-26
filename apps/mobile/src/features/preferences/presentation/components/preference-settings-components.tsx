@@ -233,11 +233,16 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     segmentLabelSelected: { color: colors.textPrimary },
-    segmentSelected: { backgroundColor: colors.surfaceHover, borderRadius: sizes.radius.medium },
+    segmentSelected: {
+      backgroundColor: colors.surfaceHover,
+      // Concentric with the card corner around it.
+      borderRadius: sizes.radius.row - sizes.spacing.xSmall,
+    },
+    // Framed like the grouped setting cards.
     segmentedControl: {
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.medium,
+      borderRadius: sizes.radius.row,
       borderWidth: sizes.border,
       flexDirection: "row",
       gap: sizes.spacing.large,
