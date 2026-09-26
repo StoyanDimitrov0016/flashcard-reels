@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
-
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { Children, isValidElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
 
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
 const appearanceLabels: Record<AppearancePreference, string> = {
   light: "Light",
@@ -63,15 +62,34 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
   );
 }
 
-type PreferenceSectionProps = Readonly<{ children: ReactNode; title: string }>;
+type PreferenceSectionProps = Readonly<{
+  children: ReactNode;
+  title: string;
+  /** Rows sit in one card with dividers. Controls with their own frame opt out. */
+  grouped?: boolean;
+}>;
 
-export function PreferenceSection({ children, title }: PreferenceSectionProps) {
+export function PreferenceSection({ children, title, grouped = true }: PreferenceSectionProps) {
   const styles = createStyles(useAppTheme().colors);
+  const rows = Children.toArray(children);
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionContent}>{children}</View>
+      <Text accessibilityRole="header" style={styles.sectionTitle}>
+        {title}
+      </Text>
+      {grouped ? (
+        <View style={styles.group}>
+          {rows.map((row, index) => (
+            <View key={isValidElement(row) && row.key !== null ? row.key : index}>
+              {index > 0 && <View style={styles.divider} />}
+              {row}
+            </View>
+          ))}
+        </View>
+      ) : (
+        rows
+      )}
     </View>
   );
 }
@@ -83,6 +101,7 @@ type PreferenceRowProps = Readonly<{
   iconColor?: string;
   onPress: () => void;
   title: string;
+  tone?: "default" | "destructive";
 }>;
 
 export function PreferenceRow({
@@ -92,6 +111,7 @@ export function PreferenceRow({
   iconColor,
   onPress,
   title,
+  tone = "default",
 }: PreferenceRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
@@ -111,7 +131,9 @@ export function PreferenceRow({
         tintColor={iconColor ?? colors.textSecondary}
       />
       <View style={styles.rowCopy}>
-        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={[styles.rowTitle, tone === "destructive" && styles.destructiveTitle]}>
+          {title}
+        </Text>
         {!!detail && <Text style={styles.rowDetail}>{detail}</Text>}
       </View>
       <SymbolView
@@ -135,7 +157,7 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
   const styles = createStyles(colors);
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, styles.switchRow]}>
       <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.textSecondary} />
       <Text style={[styles.rowTitle, styles.switchLabel]}>{label}</Text>
       <Switch
@@ -153,15 +175,29 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    destructiveTitle: { color: colors.error },
     disabled: { opacity: 0.5 },
-    pressed: { opacity: 0.72 },
+    pressed: { backgroundColor: colors.surfaceHover },
+    divider: {
+      backgroundColor: colors.borderSubtle,
+      height: StyleSheet.hairlineWidth,
+      // Inset past the icon, as in platform settings lists.
+      marginLeft: sizes.spacing.xLarge + sizes.icon.medium + sizes.spacing.xLarge,
+    },
+    group: {
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      overflow: "hidden",
+    },
     row: {
       alignItems: "center",
       flexDirection: "row",
-      gap: sizes.spacing.medium,
-      minHeight: 64,
-      paddingHorizontal: sizes.spacing.medium,
-      paddingVertical: sizes.spacing.small,
+      gap: sizes.spacing.xLarge,
+      minHeight: sizes.input.standard + sizes.spacing.xSmall,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.large,
     },
     rowCopy: { flex: 1, gap: sizes.spacing.xSmall },
     rowDetail: {
@@ -169,13 +205,18 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.caption,
       lineHeight: lineHeight.footnote,
     },
-    rowTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    section: { gap: sizes.spacing.small },
-    sectionContent: { gap: sizes.spacing.xSmall },
+    rowTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.bodyLarge,
+      fontWeight: fontWeight.semibold,
+    },
+    section: { gap: sizes.spacing.medium },
     sectionTitle: {
-      color: colors.textTertiary,
+      color: colors.textSecondary,
       fontSize: fontSize.caption,
       fontWeight: fontWeight.bold,
+      letterSpacing: letterSpacing.wider,
+      paddingHorizontal: sizes.spacing.xSmall,
       textTransform: "uppercase",
     },
     segment: {
@@ -204,5 +245,7 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.xSmall,
     },
     switchLabel: { flex: 1 },
+    // Android switches carry their own vertical touch padding.
+    switchRow: { paddingVertical: 0 },
   });
 }

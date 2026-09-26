@@ -67,3 +67,18 @@ installer.
 production-dependency audit, the web build, database validation, dead-code checks,
 Expo Doctor, and an Android export. EAS production builds are intentionally separate
 and run manually or from `mobile-v*` tags.
+
+## Dependency versions
+
+Expo SDK packages, React, React Native, and their native libraries follow the installed Expo
+SDK. Update them with `npx expo install --check` from `apps/mobile` rather than to the npm
+`latest` tag, which can be ahead of the SDK. Other dependencies track their latest releases.
+
+The workspaces share one `@types/react` version, the one pinned by the Expo SDK. A second copy
+makes hoisted libraries such as Radix resolve different React types and breaks the web type
+check.
+
+Some mobile dependencies are loaded by other libraries instead of imported by app code:
+`react-native-tab-view` for Expo Router's TopTabs and `react-native-pager-view` for the native
+pager. Dead-code analysis cannot see them, so `knip.json` ignores them and an architecture test
+keeps them declared.

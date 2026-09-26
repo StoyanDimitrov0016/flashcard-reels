@@ -19,6 +19,8 @@ export type AppColors = Readonly<{
   overlay: string;
   actionPrimary: string;
   actionPrimaryText: string;
+  codeText: string;
+  codeSurface: string;
   studyIslandSurface: string;
   studyIslandBorder: string;
   recallAgain: string;
@@ -34,18 +36,20 @@ export const lightColors: AppColors = {
   surfaceSubtle: "#F1F1EF",
   surfaceHover: "#EFEFED",
   textPrimary: "#373530",
-  textSecondary: "#787774",
-  textTertiary: "#9B9A97",
+  textSecondary: "#70706C",
+  textTertiary: "#83827E",
   borderSubtle: "rgba(55,53,47,0.12)",
   borderStrong: "rgba(55,53,47,0.22)",
-  interactive: "#2383E2",
+  interactive: "#1F75CB",
   interactiveHover: "#0B6BCB",
   success: "#2E7D32",
   warning: "#C58A16",
-  error: "#D44C47",
+  error: "#C4403B",
   overlay: "rgba(15,15,15,0.35)",
   actionPrimary: "#373530",
   actionPrimaryText: "#FFFFFF",
+  codeText: "#C23A35",
+  codeSurface: "rgba(135,131,120,0.15)",
   studyIslandSurface: "#FFFFFF",
   studyIslandBorder: "rgba(55,53,47,0.22)",
   recallAgain: "#D44C47",
@@ -62,17 +66,19 @@ export const darkColors: AppColors = {
   surfaceHover: "#2F2F2F",
   textPrimary: "#D4D4D4",
   textSecondary: "#9B9B9B",
-  textTertiary: "#737373",
+  textTertiary: "#7F7F7F",
   borderSubtle: "rgba(255,255,255,0.08)",
   borderStrong: "rgba(255,255,255,0.16)",
   interactive: "#2383E2",
   interactiveHover: "#4A9EF0",
   success: "#4F9768",
   warning: "#C19138",
-  error: "#BE524B",
+  error: "#D6625B",
   overlay: "rgba(0,0,0,0.55)",
   actionPrimary: "#D4D4D4",
   actionPrimaryText: "#191919",
+  codeText: "#FF7369",
+  codeSurface: "rgba(135,131,120,0.15)",
   studyIslandSurface: "#252525",
   studyIslandBorder: "rgba(255,255,255,0.16)",
   recallAgain: "#BE524B",

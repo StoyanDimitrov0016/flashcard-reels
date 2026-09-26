@@ -96,6 +96,7 @@ describe("archived deck progress", () => {
         },
       ],
       audioFiles: new Map<string, Uint8Array>(),
+      lessonFiles: new Map<string, string>(),
     };
   }
 

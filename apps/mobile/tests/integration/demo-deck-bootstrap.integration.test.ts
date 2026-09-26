@@ -68,16 +68,17 @@ describe("built-in demo package", () => {
 
     expect(parsed.cards).toHaveLength(6);
     expect(parsed.audioFiles.size).toBe(2);
+    expect(parsed.lessonFiles.size).toBe(2);
     await expect(installer.installFromFile({ uri: "bundled-demo" })).resolves.toMatchObject({
       deckId: demoId,
       status: "installed",
-      version: 1,
+      version: 2,
     });
-    expect(await new SQLiteDeckRepository(database.drizzle).findVersion(demoId)).toBe(1);
+    expect(await new SQLiteDeckRepository(database.drizzle).findVersion(demoId)).toBe(2);
     const audioCard = parsed.cards[0];
     if (!audioCard) {
       throw new Error("Demo package has no cards");
     }
-    expect(audio.find(demoId, 1, audioCard.id)).not.toBeNull();
+    expect(audio.find(demoId, 2, audioCard.id)).not.toBeNull();
   });
 });

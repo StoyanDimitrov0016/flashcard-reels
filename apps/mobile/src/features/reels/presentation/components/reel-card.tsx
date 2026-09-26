@@ -44,19 +44,30 @@ const DOUBLE_TAP_WINDOW_MS = 450;
 type CardPageProps = Readonly<{
   backgroundColor: string;
   children: React.ReactNode;
+  contentInsetTop: number;
   height: number;
   width: number;
 }>;
 
-function CardPage({ backgroundColor, children, height, width }: CardPageProps) {
+function CardPage({ backgroundColor, children, contentInsetTop, height, width }: CardPageProps) {
   const styles = createStyles();
 
-  return <View style={[styles.page, { backgroundColor, height, width }]}>{children}</View>;
+  return (
+    <View
+      style={[
+        styles.page,
+        { backgroundColor, height, paddingTop: sizes.spacing.screen + contentInsetTop, width },
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 type ReelCardProps = Readonly<{
   audioSource: AudioReference;
   card: Flashcard;
+  contentInsetTop: number;
   deck: Deck;
   deckCardCount: number;
   appearance: DeckAppearance;
@@ -76,6 +87,7 @@ type ReelCardProps = Readonly<{
 export function ReelCard({
   audioSource,
   card,
+  contentInsetTop,
   deck,
   deckCardCount,
   appearance,
@@ -274,7 +286,12 @@ export function ReelCard({
           { transform: [{ rotateY: frontRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={reelAppearance.background} height={height} width={width}>
+        <CardPage
+          backgroundColor={reelAppearance.background}
+          contentInsetTop={contentInsetTop}
+          height={height}
+          width={width}
+        >
           <ReelHeader
             appearance={reelAppearance}
             card={card}
@@ -300,7 +317,12 @@ export function ReelCard({
           { transform: [{ rotateY: backRotation }, { perspective: 1000 }] },
         ]}
       >
-        <CardPage backgroundColor={reelAppearance.background} height={height} width={width}>
+        <CardPage
+          backgroundColor={reelAppearance.background}
+          contentInsetTop={contentInsetTop}
+          height={height}
+          width={width}
+        >
           <ReelHeader
             appearance={reelAppearance}
             card={card}
