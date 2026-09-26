@@ -12,7 +12,8 @@ type DestructiveConfirmationSheetProps = Readonly<{
   actionLabel: string;
   busy: boolean;
   error: string | null;
-  icon: ComponentProps<typeof SymbolView>["name"];
+  /** Per-platform names; a bare SF Symbol name draws nothing on Android. */
+  icon: Exclude<ComponentProps<typeof SymbolView>["name"], string>;
   message: string;
   onCancel: () => void;
   onConfirm: () => void;
@@ -35,7 +36,7 @@ export function DestructiveConfirmationSheet({
   const styles = createStyles(colors);
 
   return (
-    <AppBottomSheet dismissible={!busy} onClose={onCancel} size="content" visible={visible}>
+    <AppBottomSheet dismissible={!busy} onClose={onCancel} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.iconShell}>
           <SymbolView name={icon} size={sizes.icon.large} tintColor={colors.error} />

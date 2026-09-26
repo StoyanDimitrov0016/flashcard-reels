@@ -32,6 +32,7 @@ import {
   getReelRotationValue,
   shouldSynchronizeReelRotation,
 } from "@/features/reels/presentation/reel-rotation";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import {
   hideFlashcardToast,
   showFocusedToast,
@@ -51,12 +52,19 @@ type CardPageProps = Readonly<{
 
 function CardPage({ backgroundColor, children, contentInsetTop, height, width }: CardPageProps) {
   const styles = createStyles();
+  const tabBarInset = useTabBarInset();
 
   return (
     <View
       style={[
         styles.page,
-        { backgroundColor, height, paddingTop: sizes.spacing.screen + contentInsetTop, width },
+        {
+          backgroundColor,
+          height,
+          paddingBottom: sizes.spacing.content + tabBarInset,
+          paddingTop: sizes.spacing.screen + contentInsetTop,
+          width,
+        },
       ]}
     >
       {children}
@@ -343,6 +351,7 @@ export function ReelCard({
               <AnswerControlRegion>
                 <StudyControlCluster
                   audioSource={audioSource}
+                  deckId={card.deckId}
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}

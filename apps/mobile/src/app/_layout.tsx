@@ -7,9 +7,9 @@ import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View, useColorScheme } from "react-native";
 
+import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
@@ -29,8 +29,9 @@ import { StartupLoadingState } from "@/shared/presentation/components/startup-lo
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-context";
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
+// Must run before the first render, so it is imported for its side effect here.
+import { revealApp } from "@/shared/presentation/native-splash";
 import { AppThemeProvider, getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
-import { getAppColors } from "@/shared/presentation/theme-colors";
 
 import "../../global.css";
 
@@ -40,6 +41,9 @@ type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const resolvedScheme = useColorScheme() === "dark" ? "dark" : "light";
+  useEffect(function revealErrorState() {
+    revealApp();
+  }, []);
 
   return (
     <AppRecoveryProvider capability={appRecoveryCapability}>
@@ -51,14 +55,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 export function SuspenseFallback() {
-  const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
-
-  return (
-    <SafeAreaView style={[styles.fallbackScreen, { backgroundColor: colors.canvas }]}>
-      <ActivityIndicator color={colors.textPrimary} size="large" />
-      <Text style={{ color: colors.textPrimary }}>Starting the app…</Text>
-    </SafeAreaView>
-  );
+  return <StartupLoadingState />;
 }
 
 export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
@@ -74,8 +71,17 @@ function AppNavigation() {
     [colors.canvas]
   );
 
+  useEffect(
+    function revealWhenReady() {
+      if (ready) {
+        revealApp();
+      }
+    },
+    [ready]
+  );
+
   if (!ready) {
-    return <StartupLoadingState label="Loading your preferences…" />;
+    return <StartupLoadingState />;
   }
 
   return (
@@ -94,6 +100,10 @@ function AppNavigation() {
           <Stack.Screen name="progress-backup" />
           <Stack.Screen
             name="decks/[deckId]"
+            options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
+          />
+          <Stack.Screen
+            name="reading/[deckId]"
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
           />
           <Stack.Screen
@@ -146,15 +156,17 @@ function RootLayoutContent() {
           onInit={initializeAppDatabase}
         >
           <DeckContentProvider>
-            <LearningProgressRevisionProvider>
-              <PreferencesProvider service={preferencesService}>
-                <PreferencesThemeProvider>
-                  <AppServicesProvider>
-                    <AppNavigation />
-                  </AppServicesProvider>
-                </PreferencesThemeProvider>
-              </PreferencesProvider>
-            </LearningProgressRevisionProvider>
+            <DeckAppearanceProvider>
+              <LearningProgressRevisionProvider>
+                <PreferencesProvider service={preferencesService}>
+                  <PreferencesThemeProvider>
+                    <AppServicesProvider>
+                      <AppNavigation />
+                    </AppServicesProvider>
+                  </PreferencesThemeProvider>
+                </PreferencesProvider>
+              </LearningProgressRevisionProvider>
+            </DeckAppearanceProvider>
           </DeckContentProvider>
         </SQLiteProvider>
       </View>
@@ -173,6 +185,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  fallbackScreen: { flex: 1, alignItems: "center", justifyContent: "center" },
   navigationRoot: { flex: 1 },
 });

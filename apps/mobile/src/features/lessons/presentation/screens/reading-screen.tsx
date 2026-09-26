@@ -3,14 +3,16 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import type { DeckReadingList, LessonSummary } from "@/features/lessons/domain/lesson.model";
+import type { DeckReadingList } from "@/features/lessons/domain/lesson.model";
 
+import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
-import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
+import { getDeckLessonsHref } from "@/features/lessons/presentation/lesson-href";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -19,6 +21,7 @@ import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presen
 export default function ReadingScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const { loading, readingLists } = useReadingLists();
   const { appearances } = useDeckAppearances(readingLists.map((list) => list.deckId));
 
@@ -32,14 +35,19 @@ export default function ReadingScreen() {
       {loading && <LoadingState />}
       {!loading && readingLists.length === 0 && <EmptyReadingList colors={colors} />}
       {!loading && readingLists.length > 0 && (
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: sizes.spacing.wide + tabBarInset },
+          ]}
+        >
           {readingLists.map((readingList) => {
             const appearance = appearances.get(readingList.deckId);
             const accent = appearance
               ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
               : colors.textTertiary;
             return (
-              <DeckLessons
+              <DeckLessonsCard
                 accent={accent}
                 colors={colors}
                 key={readingList.deckId}
@@ -53,69 +61,62 @@ export default function ReadingScreen() {
   );
 }
 
-type DeckLessonsProps = Readonly<{
+// Enough titles to show what the deck teaches without turning the card into the list.
+const TEASER_LESSON_COUNT = 3;
+
+type DeckLessonsCardProps = Readonly<{
   accent: string;
   colors: AppColors;
   readingList: DeckReadingList;
 }>;
 
-function DeckLessons({ accent, colors, readingList }: DeckLessonsProps) {
-  const styles = createStyles(colors);
-  const lessonCount = readingList.lessons.length;
-
-  return (
-    <View style={styles.deckSection}>
-      <View style={styles.deckHeading}>
-        <View style={[styles.deckAccent, { backgroundColor: accent }]} />
-        <Text accessibilityRole="header" numberOfLines={1} style={styles.deckTitle}>
-          {readingList.deckTitle}
-        </Text>
-        <Text style={styles.lessonCount}>
-          {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}
-        </Text>
-      </View>
-      <View style={styles.lessonGroup}>
-        {readingList.lessons.map((lesson, index) => (
-          <LessonRow colors={colors} isFirst={index === 0} key={lesson.id} lesson={lesson} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-type LessonRowProps = Readonly<{
-  colors: AppColors;
-  isFirst: boolean;
-  lesson: LessonSummary;
-}>;
-
-function LessonRow({ colors, isFirst, lesson }: LessonRowProps) {
+/** A deck's lessons at a glance; the whole list opens on its own screen. */
+function DeckLessonsCard({ accent, colors, readingList }: DeckLessonsCardProps) {
   const styles = createStyles(colors);
   const router = useRouter();
+  const lessonCount = readingList.lessons.length;
+  const teaser = readingList.lessons.slice(0, TEASER_LESSON_COUNT);
+  const remaining = lessonCount - teaser.length;
 
   return (
     <Pressable
-      accessibilityHint="Opens the lesson"
-      accessibilityLabel={`Lesson ${lesson.order + 1}: ${lesson.title}`}
+      accessibilityHint="Shows this deck's lessons"
+      accessibilityLabel={`${readingList.deckTitle}, ${formatLessonCount(lessonCount)}`}
       accessibilityRole="button"
-      onPress={() => router.push(getLessonHref(lesson.id))}
-      style={({ pressed }) => [
-        styles.lessonRow,
-        !isFirst && styles.lessonDivider,
-        pressed && styles.pressed,
-      ]}
+      onPress={() => router.push(getDeckLessonsHref(readingList.deckId))}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <Text style={styles.lessonPosition}>{lesson.order + 1}</Text>
-      <Text numberOfLines={2} style={styles.lessonTitle}>
-        {lesson.title}
-      </Text>
-      <SymbolView
-        name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
-        size={sizes.icon.small}
-        tintColor={colors.textTertiary}
-      />
+      <View style={styles.cardHeading}>
+        <DeckCover accentColor={accent} asset={readingList.deckCoverAsset} />
+        <View style={styles.cardTitleGroup}>
+          <Text numberOfLines={2} style={styles.deckTitle}>
+            {readingList.deckTitle}
+          </Text>
+          <Text style={styles.lessonCount}>{formatLessonCount(lessonCount)}</Text>
+        </View>
+        <SymbolView
+          name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
+          size={sizes.icon.small}
+          tintColor={colors.textTertiary}
+        />
+      </View>
+      <View style={styles.teaser}>
+        {teaser.map((lesson) => (
+          <View key={lesson.id} style={styles.teaserRow}>
+            <Text style={styles.teaserPosition}>{lesson.order + 1}</Text>
+            <Text numberOfLines={1} style={styles.teaserTitle}>
+              {lesson.title}
+            </Text>
+          </View>
+        ))}
+        {remaining > 0 && <Text style={styles.teaserMore}>+{remaining} more</Text>}
+      </View>
     </Pressable>
   );
+}
+
+function formatLessonCount(count: number): string {
+  return `${count} ${count === 1 ? "lesson" : "lessons"}`;
 }
 
 type EmptyReadingListProps = Readonly<{ colors: AppColors }>;
@@ -143,25 +144,27 @@ function EmptyReadingList({ colors }: EmptyReadingListProps) {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.card,
+      borderWidth: sizes.border,
+      gap: sizes.spacing.xLarge,
+      padding: sizes.spacing.xLarge,
+    },
+    cardHeading: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.large },
+    cardTitleGroup: { flex: 1, gap: sizes.spacing.xSmall },
     content: {
-      gap: sizes.spacing.wide,
+      gap: sizes.spacing.large,
       paddingBottom: sizes.spacing.wide,
       paddingHorizontal: screenLayout.horizontalPadding,
       paddingTop: screenLayout.contentTopGap,
     },
-    deckAccent: { borderRadius: sizes.radius.small, height: 14, width: 3 },
-    deckHeading: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      paddingHorizontal: sizes.spacing.xSmall,
-    },
-    deckSection: { gap: sizes.spacing.large },
     deckTitle: {
       color: colors.textPrimary,
-      flex: 1,
-      fontSize: fontSize.callout,
+      fontSize: fontSize.bodyLarge,
       fontWeight: fontWeight.bold,
+      lineHeight: lineHeight.bodyLarge,
     },
     empty: {
       alignItems: "center",
@@ -187,15 +190,21 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.caption,
       letterSpacing: letterSpacing.wide,
     },
-    lessonDivider: { borderTopColor: colors.borderSubtle, borderTopWidth: sizes.border },
-    lessonGroup: {
-      backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.row,
-      borderWidth: sizes.border,
-      overflow: "hidden",
+    pressed: { backgroundColor: colors.surfaceHover },
+    screen: { backgroundColor: colors.canvas, flex: 1 },
+    teaser: {
+      borderTopColor: colors.borderSubtle,
+      borderTopWidth: sizes.border,
+      gap: sizes.spacing.medium,
+      paddingTop: sizes.spacing.large,
     },
-    lessonPosition: {
+    teaserMore: {
+      color: colors.textTertiary,
+      fontSize: fontSize.footnote,
+      fontWeight: fontWeight.semibold,
+      paddingLeft: 22 + sizes.spacing.medium,
+    },
+    teaserPosition: {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontVariant: ["tabular-nums"],
@@ -203,23 +212,13 @@ function createStyles(colors: AppColors) {
       textAlign: "center",
       width: 22,
     },
-    lessonRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.large,
-      minHeight: sizes.control.standard + sizes.spacing.medium,
-      paddingHorizontal: sizes.spacing.xLarge,
-      paddingVertical: sizes.spacing.xLarge,
-    },
-    lessonTitle: {
-      color: colors.textPrimary,
+    teaserRow: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.medium },
+    teaserTitle: {
+      color: colors.textSecondary,
       flex: 1,
-      fontSize: fontSize.bodyLarge,
-      fontWeight: fontWeight.semibold,
-      lineHeight: lineHeight.bodyLarge,
+      fontSize: fontSize.body,
+      lineHeight: lineHeight.body,
     },
-    pressed: { backgroundColor: colors.surfaceHover },
-    screen: { backgroundColor: colors.canvas, flex: 1 },
     title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
   });
 }

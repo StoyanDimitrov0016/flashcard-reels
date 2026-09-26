@@ -1,9 +1,10 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Children, isValidElement, type ReactNode } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
 
+import { AppSwitch } from "@/shared/presentation/components/app-switch";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
@@ -64,20 +65,30 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
 
 type PreferenceSectionProps = Readonly<{
   children: ReactNode;
-  title: string;
+  /** Explanatory text under the group, as in platform settings lists. */
+  footnote?: string;
+  /** Leave out when the screen title already names the only group. */
+  title?: string;
   /** Rows sit in one card with dividers. Controls with their own frame opt out. */
   grouped?: boolean;
 }>;
 
-export function PreferenceSection({ children, title, grouped = true }: PreferenceSectionProps) {
+export function PreferenceSection({
+  children,
+  footnote,
+  grouped = true,
+  title,
+}: PreferenceSectionProps) {
   const styles = createStyles(useAppTheme().colors);
   const rows = Children.toArray(children);
 
   return (
     <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        {title}
-      </Text>
+      {!!title && (
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          {title}
+        </Text>
+      )}
       {grouped ? (
         <View style={styles.group}>
           {rows.map((row, index) => (
@@ -90,6 +101,7 @@ export function PreferenceSection({ children, title, grouped = true }: Preferenc
       ) : (
         rows
       )}
+      {!!footnote && <Text style={styles.footnote}>{footnote}</Text>}
     </View>
   );
 }
@@ -157,18 +169,10 @@ export function PreferenceSwitch({ icon, label, onValueChange, value }: Preferen
   const styles = createStyles(colors);
 
   return (
-    <View style={[styles.row, styles.switchRow]}>
+    <View style={styles.row}>
       <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.textSecondary} />
       <Text style={[styles.rowTitle, styles.switchLabel]}>{label}</Text>
-      <Switch
-        accessibilityLabel={label}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value }}
-        onValueChange={onValueChange}
-        thumbColor={value ? colors.actionPrimaryText : colors.textTertiary}
-        trackColor={{ false: colors.borderStrong, true: colors.interactive }}
-        value={value}
-      />
+      <AppSwitch accessibilityLabel={label} onValueChange={onValueChange} value={value} />
     </View>
   );
 }
@@ -177,6 +181,12 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     destructiveTitle: { color: colors.error },
     disabled: { opacity: 0.5 },
+    footnote: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption,
+      lineHeight: lineHeight.footnote,
+      paddingHorizontal: sizes.spacing.xSmall,
+    },
     pressed: { backgroundColor: colors.surfaceHover },
     divider: {
       backgroundColor: colors.borderSubtle,
@@ -233,11 +243,16 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     segmentLabelSelected: { color: colors.textPrimary },
-    segmentSelected: { backgroundColor: colors.surfaceHover, borderRadius: sizes.radius.medium },
+    segmentSelected: {
+      backgroundColor: colors.surfaceHover,
+      // Concentric with the card corner around it.
+      borderRadius: sizes.radius.row - sizes.spacing.xSmall,
+    },
+    // Framed like the grouped setting cards.
     segmentedControl: {
       backgroundColor: colors.surfaceRaised,
       borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.medium,
+      borderRadius: sizes.radius.row,
       borderWidth: sizes.border,
       flexDirection: "row",
       gap: sizes.spacing.large,
@@ -245,7 +260,5 @@ function createStyles(colors: AppColors) {
       padding: sizes.spacing.xSmall,
     },
     switchLabel: { flex: 1 },
-    // Android switches carry their own vertical touch padding.
-    switchRow: { paddingVertical: 0 },
   });
 }

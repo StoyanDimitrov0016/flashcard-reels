@@ -21,23 +21,35 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
   }
 
   async read(exportedAt: string): Promise<ProgressBackupDocument> {
-    return this.database.transaction((transaction) => ({
-      format: "flashcard-reels-progress" as const,
-      version: 1 as const,
-      exportedAt,
-      deckProgress: transaction.select().from(deckProgress).orderBy(asc(deckProgress.deckId)).all(),
-      flashcardProgress: transaction
+    return this.database.transaction((transaction) => {
+      const progress = transaction
         .select()
         .from(flashcardProgress)
         .orderBy(asc(flashcardProgress.flashcardId))
-        .all(),
-      flashcardMemoryStates: transaction
-        .select()
-        .from(flashcardMemoryStates)
-        .orderBy(asc(flashcardMemoryStates.flashcardId))
-        .all(),
-      reviewEvents: transaction.select().from(reviewEvents).orderBy(asc(reviewEvents.id)).all(),
-    }));
+        .all();
+      for (const row of progress) {
+        // Card creation dates come from packages, which also allow offsets and omitted milliseconds.
+        // Normalize only the backup snapshot; leave the original persisted timestamps untouched.
+        row.createdAt = new Date(row.createdAt).toISOString();
+      }
+      return {
+        format: "flashcard-reels-progress" as const,
+        version: 1 as const,
+        exportedAt,
+        deckProgress: transaction
+          .select()
+          .from(deckProgress)
+          .orderBy(asc(deckProgress.deckId))
+          .all(),
+        flashcardProgress: progress,
+        flashcardMemoryStates: transaction
+          .select()
+          .from(flashcardMemoryStates)
+          .orderBy(asc(flashcardMemoryStates.flashcardId))
+          .all(),
+        reviewEvents: transaction.select().from(reviewEvents).orderBy(asc(reviewEvents.id)).all(),
+      };
+    });
   }
 
   async readSafetyCopyFileName(): Promise<string | null> {

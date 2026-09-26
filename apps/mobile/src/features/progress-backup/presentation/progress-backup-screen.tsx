@@ -1,21 +1,25 @@
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { ProgressBackupSummary } from "@/features/progress-backup/contracts/progress-backup.schema";
 
-import { PreferenceRow } from "@/features/preferences/presentation/components/preference-settings-components";
+import {
+  PreferenceRow,
+  PreferenceSection,
+} from "@/features/preferences/presentation/components/preference-settings-components";
 import {
   useProgressBackupController,
   type PreparedProgressRestore,
 } from "@/features/progress-backup/presentation/controllers/use-progress-backup-controller";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
-import { ScreenBackButton } from "@/shared/presentation/components/screen-back-button";
-import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
+import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight } from "@/shared/presentation/typography";
+import { fontSize, lineHeight } from "@/shared/presentation/typography";
 
 export default function ProgressBackupScreen() {
   const { colors } = useAppTheme();
@@ -33,21 +37,28 @@ export default function ProgressBackupScreen() {
     cancelRestore,
   } = useProgressBackupController();
 
+  useEffect(
+    function announceBackupFailure() {
+      // During a restore the error shows in the confirmation sheet.
+      if (error && !prepared) {
+        showErrorToast(error);
+      }
+    },
+    [error, prepared]
+  );
+
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <ScreenHeader>
-        <ScreenBackButton accessibilityLabel="Back to Controls" onPress={() => router.back()} />
-        <Text accessibilityRole="header" style={styles.title}>
-          Progress backup
-        </Text>
-      </ScreenHeader>
+      <SubScreenHeader
+        backLabel="Back to Controls"
+        onBack={() => router.back()}
+        title="Progress backup"
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.description}>
-          Save your learning progress to a file or move it to another device. Backups include
-          reviews, schedules, and archived progress. They exclude downloaded decks, audio, and
-          preferences. Backup files are readable and are not password protected.
+          Save your learning progress to a file, or restore it on another device.
         </Text>
-        <View style={styles.actions}>
+        <PreferenceSection footnote="Backups include reviews, schedules, and archived progress, but not decks, audio, or preferences. Files are readable and not password protected.">
           <PreferenceRow
             detail="Finishes current study sessions, then shares a progress file"
             disabled={busy}
@@ -71,13 +82,8 @@ export default function ProgressBackupScreen() {
               title="Share previous progress backup"
             />
           )}
-        </View>
+        </PreferenceSection>
         {busy && !prepared && <Text style={styles.description}>Working on progress backup…</Text>}
-        {error && !prepared && (
-          <Text accessibilityRole="alert" style={styles.error}>
-            {error}
-          </Text>
-        )}
       </ScrollView>
       <DestructiveConfirmationSheet
         actionLabel="Replace progress"
@@ -108,14 +114,15 @@ function restorePreview(prepared: PreparedProgressRestore): string {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    title: { color: colors.textPrimary, fontSize: fontSize.title1, fontWeight: fontWeight.heavy },
-    actions: { gap: sizes.spacing.xSmall },
     content: {
       gap: sizes.spacing.section,
       padding: sizes.spacing.content,
       paddingTop: screenLayout.contentTopGap,
     },
-    description: { color: colors.textSecondary, fontSize: fontSize.body },
-    error: { color: colors.error, fontSize: fontSize.body },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.body,
+      lineHeight: lineHeight.body,
+    },
   });
 }

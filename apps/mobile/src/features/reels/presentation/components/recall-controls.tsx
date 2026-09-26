@@ -69,7 +69,16 @@ function createStyles(colors: AppColors, orientation: "horizontal" | "vertical")
       gap: orientation === "horizontal" ? 0 : sizes.spacing.medium,
       paddingHorizontal: sizes.spacing.medium,
       paddingVertical: sizes.spacing.medium,
-      ...(orientation === "horizontal" ? sizes.study.horizontalIsland : {}),
+      // A bottom island shares the row with the audio and reading buttons: it takes the room
+      // left over, up to a width where the four ratings still sit close together.
+      ...(orientation === "horizontal"
+        ? {
+            flexBasis: 0,
+            flexGrow: 1,
+            flexShrink: 1,
+            maxWidth: sizes.study.horizontalIslandMaxWidth,
+          }
+        : {}),
     },
     action: {
       alignItems: "center",

@@ -56,7 +56,7 @@ export function AppResetAction({ renderTrigger }: AppResetActionProps = {}) {
             ? `${getErrorFeedback(failure).message} You can clear app storage in device settings instead.`
             : null
         }
-        icon="trash"
+        icon={{ android: "delete_forever", ios: "trash.fill", web: "delete_forever" }}
         message="Erase decks, audio, progress and settings on the next launch? Bundled decks will return. This cannot be undone."
         onCancel={() => {
           setConfirmationPresented(false);

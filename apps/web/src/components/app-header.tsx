@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link className="flex items-center gap-2.5 rounded-md" href="/">
           <Image

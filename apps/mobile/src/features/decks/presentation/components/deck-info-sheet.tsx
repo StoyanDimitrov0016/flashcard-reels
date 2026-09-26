@@ -1,6 +1,5 @@
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
@@ -8,6 +7,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
+import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
@@ -43,43 +43,28 @@ export function DeckInfoSheet({ cards, deck, onClose, progress, visible }: DeckI
         );
 
   return (
-    <AppBottomSheet onClose={onClose} size="half" visible={visible}>
+    <AppBottomSheet onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <View style={styles.header}>
-          <Text accessibilityRole="header" style={styles.title}>
-            {deck?.title ?? "Deck information"}
-          </Text>
-          <Pressable
-            accessibilityLabel="Close deck information"
-            accessibilityRole="button"
-            onPress={onClose}
-            style={styles.iconButton}
-          >
-            <SymbolView
-              name={{ android: "close", ios: "xmark", web: "close" }}
-              size={sizes.icon.medium}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-        </View>
+        <SheetHeader
+          closeLabel="Close deck information"
+          onClose={onClose}
+          title={deck?.title ?? "Deck information"}
+        />
         <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
-          <View style={styles.metrics}>
-            <Metric label="Cards" value={cards.length} />
-            <Metric label="Reviewed" value={reviewedProgress.length} />
-            <Metric label="New" value={cards.length - reviewedProgress.length} />
-            <Metric label="Reviews" value={totalReviews} />
-          </View>
-          <Text style={styles.recall}>
-            {averageRecall === null ? "No recall data yet" : `${averageRecall}% average recall`}
-          </Text>
           {!!deck && <Text style={styles.description}>{deck.description}</Text>}
+          <View style={styles.metrics}>
+            <Metric label="Cards" value={String(cards.length)} />
+            <Metric label="New" value={String(cards.length - reviewedProgress.length)} />
+            <Metric label="Reviews" value={String(totalReviews)} />
+            <Metric label="Recall" value={averageRecall === null ? "–" : `${averageRecall}%`} />
+          </View>
         </BottomSheetScrollView>
       </View>
     </AppBottomSheet>
   );
 }
 
-type MetricProps = Readonly<{ label: string; value: number }>;
+type MetricProps = Readonly<{ label: string; value: string }>;
 
 function Metric({ label, value }: MetricProps) {
   const styles = createStyles(useAppTheme().colors);
@@ -98,49 +83,27 @@ function createStyles(colors: AppColors) {
       gap: sizes.spacing.section,
       paddingBottom: sizes.spacing.spacious,
       paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.small,
     },
     description: {
       color: colors.textSecondary,
       fontSize: fontSize.body,
       lineHeight: lineHeight.body,
     },
-    header: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      justifyContent: "space-between",
-      paddingBottom: sizes.spacing.small,
-      paddingHorizontal: sizes.spacing.content,
-      paddingTop: 0,
-    },
-    iconButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
     metric: { alignItems: "center", flex: 1, gap: sizes.spacing.xSmall },
     metricLabel: { color: colors.textTertiary, fontSize: fontSize.caption },
-    metrics: { flexDirection: "row" },
+    metrics: {
+      backgroundColor: colors.surfaceSubtle,
+      borderRadius: sizes.radius.row,
+      flexDirection: "row",
+      paddingVertical: sizes.spacing.xLarge,
+    },
     metricValue: {
       color: colors.textPrimary,
       fontSize: fontSize.title2,
+      fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
     },
-    recall: { color: colors.textPrimary, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    sheet: {
-      backgroundColor: colors.surfaceRaised,
-      borderTopLeftRadius: sizes.radius.panel,
-      borderTopRightRadius: sizes.radius.panel,
-      flex: 1,
-    },
-    scrollView: { flex: 1 },
-    title: {
-      color: colors.textPrimary,
-      flex: 1,
-      fontSize: fontSize.title2,
-      fontWeight: fontWeight.heavy,
-    },
+    scrollView: { flexShrink: 1 },
+    sheet: { flexShrink: 1 },
   });
 }

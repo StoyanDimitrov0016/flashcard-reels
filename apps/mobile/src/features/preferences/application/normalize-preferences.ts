@@ -12,6 +12,8 @@ export const AppPreferencesSchema = z.object({
   audioSide: z.enum(["primary", "opposite"]),
   audioEnabled: z.boolean(),
   hapticsEnabled: z.boolean(),
+  readingEnabled: z.boolean(),
+  readingSide: z.enum(["primary", "opposite"]),
 });
 
 const preferenceKeys: ReadonlyArray<keyof AppPreferences> = [
@@ -21,6 +23,8 @@ const preferenceKeys: ReadonlyArray<keyof AppPreferences> = [
   "audioSide",
   "audioEnabled",
   "hapticsEnabled",
+  "readingEnabled",
+  "readingSide",
 ];
 
 export function normalizePersistedPreferences(value: unknown): AppPreferences {

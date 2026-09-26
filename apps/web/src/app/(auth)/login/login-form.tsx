@@ -55,7 +55,7 @@ export function LoginForm({ returnTo }: LoginFormProps) {
           />
           <button
             aria-label={passwordVisible ? "Hide password" : "Show password"}
-            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-fg-subtle transition-colors hover:text-fg"
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-subtle-foreground transition-colors hover:text-foreground"
             onClick={() => setPasswordVisible((visible) => !visible)}
             type="button"
           >
@@ -63,12 +63,12 @@ export function LoginForm({ returnTo }: LoginFormProps) {
           </button>
         </div>
         {errors.password && (
-          <p className="text-sm text-danger" id="password-error" role="alert">
+          <p className="text-sm text-destructive" id="password-error" role="alert">
             {errors.password.message}
           </p>
         )}
       </div>
-      <Button disabled={pending} size="lg" type="submit" variant="primary">
+      <Button disabled={pending} size="lg" type="submit">
         {pending ? <Spinner /> : null}
         {pending ? "Signing in" : "Continue"}
         {!pending && <ArrowRight />}

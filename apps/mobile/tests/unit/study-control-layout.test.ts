@@ -41,6 +41,8 @@ describe("study control derivation", () => {
         audioEnabled: true,
         audioSide: "opposite",
         ratingDirection: "reverse",
+        readingEnabled: true,
+        readingSide: "primary",
         recollectionIslandPosition: "right",
       })
     ).toEqual({
@@ -49,12 +51,16 @@ describe("study control derivation", () => {
       orientation: "vertical",
       position: "right",
       ratingOrder: ["easy", "good", "hard", "again"],
+      readingEnabled: true,
+      readingPosition: "above",
     });
     expect(
       resolveStudyControlLayout({
         audioEnabled: false,
         audioSide: "primary",
         ratingDirection: "forward",
+        readingEnabled: false,
+        readingSide: "opposite",
         recollectionIslandPosition: "bottom",
       })
     ).toEqual({
@@ -63,6 +69,8 @@ describe("study control derivation", () => {
       orientation: "horizontal",
       position: "bottom",
       ratingOrder: ["again", "hard", "good", "easy"],
+      readingEnabled: false,
+      readingPosition: "right",
     });
   });
 });

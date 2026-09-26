@@ -124,6 +124,7 @@ describe("deck lessons", () => {
 
     expect(await graph.lessons.listReadingLists()).toEqual([
       {
+        deckCoverAsset: "cards",
         deckId: TEST_DECK_ID,
         deckTitle: "Scaling",
         lessons: [

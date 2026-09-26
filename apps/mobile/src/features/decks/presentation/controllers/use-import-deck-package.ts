@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import type { DeckDownloadProgress } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
 
@@ -9,9 +10,15 @@ import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 
+export type { DeckDownloadProgress };
+
 type ImportState = Readonly<{ error: Error | null; importing: boolean; downloading: boolean }>;
 
+// Progress events arrive far faster than the bar needs to redraw.
+const PROGRESS_INTERVAL_MS = 120;
+
 export function useImportDeckPackage(): ImportState & {
+  downloadProgress: DeckDownloadProgress | null;
   importFromDevice: () => Promise<DeckInstallResult | null>;
   importFromUrl: (url: string) => Promise<DeckInstallResult | null>;
   cancelDownload: () => void;
@@ -24,6 +31,8 @@ export function useImportDeckPackage(): ImportState & {
     importing: false,
     downloading: false,
   });
+  const [downloadProgress, setDownloadProgress] = useState<DeckDownloadProgress | null>(null);
+  const lastProgressAt = useRef(0);
   const inFlight = useRef(false);
   const mounted = useRef(true);
   const downloadController = useRef<AbortController | null>(null);
@@ -42,6 +51,15 @@ export function useImportDeckPackage(): ImportState & {
     }
   };
 
+  const reportProgress = (progress: DeckDownloadProgress) => {
+    const now = Date.now();
+    const finished = progress.totalBytes !== null && progress.bytesWritten >= progress.totalBytes;
+    if (mounted.current && (finished || now - lastProgressAt.current >= PROGRESS_INTERVAL_MS)) {
+      lastProgressAt.current = now;
+      setDownloadProgress(progress);
+    }
+  };
+
   const install = async (
     getSelection: (signal?: AbortSignal) => Promise<DeckPackageSelection | null>,
     removeAfterInstall = false
@@ -50,6 +68,8 @@ export function useImportDeckPackage(): ImportState & {
       return null;
     }
     inFlight.current = true;
+    setDownloadProgress(null);
+    lastProgressAt.current = 0;
     const controller = removeAfterInstall ? new AbortController() : null;
     downloadController.current = controller;
     updateImportState({ error: null, importing: true, downloading: removeAfterInstall });
@@ -97,10 +117,11 @@ export function useImportDeckPackage(): ImportState & {
 
   const importFromDevice = () => install(() => deckPackagePicker.pick());
   const importFromUrl = (url: string) =>
-    install((signal) => deckPackageDownloader.download(url, signal), true);
+    install((signal) => deckPackageDownloader.download(url, signal, reportProgress), true);
 
   return {
     ...state,
+    downloadProgress,
     cancelDownload: () => downloadController.current?.abort(),
     clearImportError: () => {
       if (mounted.current) {

@@ -36,17 +36,19 @@ export const deckAppearancePresets: readonly DeckAppearancePreset[] = [
   {
     id: "gold",
     name: "Gold",
+    // Yellow rather than amber, so it stays distinct from Orange.
     light: {
-      background: "#FFFBEB",
-      accent: "#B45309",
-      textPrimary: "#78350F",
-      textSecondary: "#B45309",
+      background: "#FEFCE8",
+      accent: "#A16207",
+      textPrimary: "#713F12",
+      textSecondary: "#854D0E",
     },
+    // Warm hues turn brown at Tailwind 950, so the dark backgrounds are near-black tints.
     dark: {
-      background: "#451A03",
-      accent: "#FBBF24",
-      textPrimary: "#FEF3C7",
-      textSecondary: "#FBBF24",
+      background: "#1A1708",
+      accent: "#FACC15",
+      textPrimary: "#FEF9C3",
+      textSecondary: "#FACC15",
     },
   },
   {
@@ -59,7 +61,7 @@ export const deckAppearancePresets: readonly DeckAppearancePreset[] = [
       textSecondary: "#C2410C",
     },
     dark: {
-      background: "#431407",
+      background: "#1F1009",
       accent: "#FB923C",
       textPrimary: "#FFEDD5",
       textSecondary: "#FB923C",

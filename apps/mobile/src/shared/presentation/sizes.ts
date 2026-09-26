@@ -18,10 +18,7 @@ export const sizes = {
     sideControlRegion: 84,
     sideEdgeOffset: 14,
     answerMaxWidth: 480,
-    horizontalIsland: {
-      maxWidth: 360,
-      width: "80%",
-    },
+    horizontalIslandMaxWidth: 268,
   },
   sheet: {
     maxWidthCompact: 560,

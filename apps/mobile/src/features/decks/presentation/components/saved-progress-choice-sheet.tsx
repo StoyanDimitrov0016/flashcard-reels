@@ -5,7 +5,7 @@ import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, textStyles } from "@/shared/presentation/typography";
 
 type SavedProgressChoiceSheetProps = Readonly<{
   busy: boolean;
@@ -26,7 +26,7 @@ export function SavedProgressChoiceSheet({
 }: SavedProgressChoiceSheetProps) {
   const styles = createStyles(useAppTheme().colors);
   return (
-    <AppBottomSheet dismissible={!busy} onClose={onClose} size="medium" visible={progress !== null}>
+    <AppBottomSheet dismissible={!busy} onClose={onClose} visible={progress !== null}>
       <View accessibilityViewIsModal style={styles.content}>
         <Text accessibilityRole="header" style={styles.title}>
           Saved learning progress
@@ -76,15 +76,19 @@ export function SavedProgressChoiceSheet({
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    content: { gap: sizes.spacing.section, padding: sizes.spacing.content },
-    title: { color: colors.textPrimary, fontSize: fontSize.title2, fontWeight: fontWeight.bold },
+    content: {
+      gap: sizes.spacing.section,
+      paddingBottom: sizes.spacing.spacious,
+      paddingHorizontal: sizes.spacing.content,
+    },
+    title: { color: colors.textPrimary, ...textStyles.sheetTitle },
     copy: { color: colors.textSecondary, fontSize: fontSize.body },
     detail: { color: colors.textTertiary, fontSize: fontSize.caption },
     error: { color: colors.error, fontSize: fontSize.caption },
     primary: {
       alignItems: "center",
       backgroundColor: colors.actionPrimary,
-      borderRadius: sizes.radius.control,
+      borderRadius: sizes.radius.pill,
       minHeight: sizes.control.standard,
       justifyContent: "center",
       padding: sizes.spacing.medium,

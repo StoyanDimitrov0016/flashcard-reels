@@ -16,6 +16,8 @@ export function StudyControlLayoutProvider({ children }: StudyControlLayoutProvi
     audioEnabled: preferences.audioEnabled,
     audioSide: preferences.audioSide,
     ratingDirection: preferences.ratingDirection,
+    readingEnabled: preferences.readingEnabled,
+    readingSide: preferences.readingSide,
     recollectionIslandPosition: preferences.recollectionIslandPosition,
   });
 

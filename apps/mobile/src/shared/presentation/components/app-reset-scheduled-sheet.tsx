@@ -16,13 +16,13 @@ export function AppResetScheduledSheet({ onClose, visible }: AppResetScheduledSh
   const styles = createStyles(colors);
 
   return (
-    <AppBottomSheet onClose={onClose} size="content" visible={visible}>
+    <AppBottomSheet onClose={onClose} visible={visible}>
       <View accessibilityViewIsModal style={styles.sheet}>
         <View style={styles.iconShell}>
           <SymbolView
             name={{ android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" }}
             size={sizes.icon.large}
-            tintColor={colors.interactive}
+            tintColor={colors.success}
           />
         </View>
         <Text accessibilityRole="header" style={styles.title}>
@@ -46,7 +46,7 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
     doneButton: {
       alignItems: "center",
-      backgroundColor: colors.interactive,
+      backgroundColor: colors.actionPrimary,
       borderRadius: sizes.radius.pill,
       justifyContent: "center",
       marginTop: sizes.spacing.medium,
@@ -60,8 +60,8 @@ function createStyles(colors: AppColors) {
     iconShell: {
       alignItems: "center",
       alignSelf: "center",
-      backgroundColor: colors.interactive + "18",
-      borderColor: colors.interactive + "38",
+      backgroundColor: colors.success + "18",
+      borderColor: colors.success + "38",
       borderRadius: sizes.radius.pill,
       borderWidth: sizes.border,
       height: 64,

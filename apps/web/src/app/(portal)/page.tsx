@@ -28,12 +28,14 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     <PageContainer>
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Decks</h1>
-        <p className="text-fg-muted">Curated decks, ready to send to the Flashcard Reels app.</p>
+        <p className="text-muted-foreground">
+          Curated decks, ready to send to the Flashcard Reels app.
+        </p>
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CatalogSearch />
-        <p aria-live="polite" className="text-sm text-fg-subtle">
+        <p aria-live="polite" className="text-sm text-subtle-foreground">
           {query
             ? `${visibleDecks.length} of ${pluralize(decks.length, "deck")}`
             : pluralize(decks.length, "deck")}
@@ -51,8 +53,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         {decks.length > 0 && visibleDecks.length === 0 && (
           <EmptyState
             action={
-              <Button asChild size="sm">
-                <Link href="/">Clear search</Link>
+              <Button size="sm" nativeButton={false} render={<Link href="/" />}>
+                Clear search
               </Button>
             }
             description={`Nothing matches "${q.trim()}". Try a topic such as caching or React.`}

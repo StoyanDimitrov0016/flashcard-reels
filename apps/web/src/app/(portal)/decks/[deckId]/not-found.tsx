@@ -10,8 +10,8 @@ export default function DeckNotFound() {
     <PageContainer className="py-16">
       <EmptyState
         action={
-          <Button asChild variant="primary">
-            <Link href="/">Back to decks</Link>
+          <Button nativeButton={false} render={<Link href="/" />}>
+            Back to decks
           </Button>
         }
         description="This deck is not published, or it was removed. Check the link or choose another deck."

@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,9 +17,10 @@ import { useHaptics } from "@/features/preferences/presentation/controllers/use-
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
-import { ErrorDetails } from "@/shared/presentation/components/error-details";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
+import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -27,9 +28,10 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 
 import appIcon from "../../../../../assets/images/app-icon.png";
 
-export default function YouScreen() {
+export default function ControlsScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const {
     preferences,
@@ -38,6 +40,8 @@ export default function YouScreen() {
     setAudioEnabled,
     setAudioSide,
     setHapticsEnabled,
+    setReadingEnabled,
+    setReadingSide,
     setRatingDirection,
     setRecollectionIslandPosition,
   } = usePreferences();
@@ -48,6 +52,15 @@ export default function YouScreen() {
   const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
 
+  useEffect(
+    function announceStorageFailure() {
+      if (storageError !== null) {
+        showErrorToast(getErrorFeedback(storageError).message);
+      }
+    },
+    [storageError]
+  );
+
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScreenHeader>
@@ -55,7 +68,12 @@ export default function YouScreen() {
           Controls
         </Text>
       </ScreenHeader>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: sizes.spacing.spacious + tabBarInset },
+        ]}
+      >
         <View style={styles.sections}>
           <PreferenceSection grouped={false} title="Appearance">
             <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
@@ -77,6 +95,12 @@ export default function YouScreen() {
               label="Audio"
               onValueChange={setAudioEnabled}
               value={preferences.audioEnabled}
+            />
+            <PreferenceSwitch
+              icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
+              label="Reading"
+              onValueChange={setReadingEnabled}
+              value={preferences.readingEnabled}
             />
             <PreferenceSwitch
               icon={{ android: "vibration", ios: "waveform.path.ecg", web: "vibration" }}
@@ -106,14 +130,6 @@ export default function YouScreen() {
               title="Reset all learning progress"
               tone="destructive"
             />
-            {storageError !== null && (
-              <View>
-                <Text accessibilityRole="alert" style={styles.rowDetail}>
-                  {getErrorFeedback(storageError).message}
-                </Text>
-                <ErrorDetails error={storageError} />
-              </View>
-            )}
             <AppResetAction
               renderTrigger={(open) => (
                 <PreferenceRow
@@ -176,6 +192,7 @@ export default function YouScreen() {
         onClose={() => setStudyControlsPresented(false)}
         onPositionChange={setRecollectionIslandPosition}
         onRatingDirectionChange={setRatingDirection}
+        onReadingSideChange={setReadingSide}
         preferences={preferences}
         visible={studyControlsPresented}
       />

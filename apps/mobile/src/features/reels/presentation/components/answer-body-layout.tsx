@@ -124,7 +124,9 @@ function createStyles(
     },
     controlRegion: { alignItems: "center", justifyContent: "center" },
     controlRegionBottom: {
-      alignSelf: "center",
+      alignSelf: "stretch",
+      // Keeps the island clear of the gesture hints below it.
+      paddingBottom: sizes.spacing.xLarge,
       paddingTop: sizes.spacing.medium,
     },
     controlRegionSide: {

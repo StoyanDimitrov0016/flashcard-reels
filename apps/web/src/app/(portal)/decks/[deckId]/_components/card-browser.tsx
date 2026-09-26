@@ -1,30 +1,48 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Search, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Repeat2,
+  Search,
+  Space,
+  X,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 
 import type { DeckCard } from "@/server/decks";
 
 import { FlashcardText } from "@/components/flashcard-text";
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { Input } from "@/components/ui/input";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useHotkeys } from "@/hooks/use-hotkeys";
 import { runtimeRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
+import { PhoneCard } from "./phone-card";
+
 function matches(card: DeckCard, query: string): boolean {
   return `${card.question} ${card.answer}`.toLowerCase().includes(query);
 }
 
-type CardBrowserProps = Readonly<{ cards: readonly DeckCard[] }>;
+type CardBrowserProps = Readonly<{
+  cards: readonly DeckCard[];
+  /** Deck actions and facts; on wide screens they sit above the phone. */
+  details: ReactNode;
+  header: ReactNode;
+  sectionNav?: ReactNode;
+}>;
 
 /**
  * Browse a deck's cards like the app does: one card at a time, answer hidden until revealed.
  * The selected card and search live in the URL, so a card can be linked directly.
  */
-export function CardBrowser({ cards }: CardBrowserProps) {
+export function CardBrowser({ cards, details, header, sectionNav }: CardBrowserProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -77,16 +95,83 @@ export function CardBrowser({ cards }: CardBrowserProps) {
   });
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8">
-      <aside className="order-2 lg:order-1">
-        <div className="relative">
+    // Small screens stack header, details, sections, phone, and list. Wide screens keep the header,
+    // sections, and list on the left and pin the details and phone on the right. The right column
+    // uses `contents` on small screens so its children join the stacking order.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_auto_1fr] lg:gap-x-12">
+      <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1">{header}</div>
+      <div className="contents lg:sticky lg:top-20 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:flex lg:flex-col lg:gap-5 lg:self-start">
+        <div className="order-2">{details}</div>
+        <section aria-label="Card viewer" className="order-4 min-w-0 scroll-mt-20" ref={viewerRef}>
+          {card ? (
+            <div className="flex flex-col items-center gap-5">
+              <PhoneCard
+                card={card}
+                key={card.id}
+                onFlip={() => setRevealed((value) => !value)}
+                position={selectedIndex + 1}
+                revealed={revealed}
+                total={visibleCards.length}
+              />
+              <div className="flex items-center gap-3">
+                <Button
+                  aria-label="Previous card"
+                  disabled={selectedIndex === 0}
+                  onClick={() => select(selectedIndex - 1)}
+                  size="icon"
+                  variant="outline"
+                >
+                  <ChevronLeft />
+                </Button>
+                <Button className="w-40" onClick={() => setRevealed((value) => !value)}>
+                  <Repeat2 />
+                  {revealed ? "Show question" : "Show answer"}
+                </Button>
+                <Button
+                  aria-label="Next card"
+                  disabled={selectedIndex >= visibleCards.length - 1}
+                  onClick={() => select(selectedIndex + 1)}
+                  size="icon"
+                  variant="outline"
+                >
+                  <ChevronRight />
+                </Button>
+              </div>
+              <p className="hidden items-center gap-1.5 text-xs text-subtle-foreground md:flex">
+                <KbdGroup>
+                  <Kbd aria-label="Left arrow">
+                    <ArrowLeft aria-hidden />
+                  </Kbd>
+                  <Kbd aria-label="Right arrow">
+                    <ArrowRight aria-hidden />
+                  </Kbd>
+                </KbdGroup>
+                move
+                <Kbd aria-label="Space" className="ml-3">
+                  <Space aria-hidden />
+                </Kbd>
+                flip
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-input px-6 py-16 text-center text-sm text-muted-foreground">
+              No cards match &quot;{query.trim()}&quot;.
+            </div>
+          )}
+        </section>
+      </div>
+      {sectionNav && (
+        <div className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">{sectionNav}</div>
+      )}
+      <aside aria-label="Cards" className="order-5 min-w-0 lg:col-start-1 lg:row-start-3">
+        <search className="relative block">
           <Search
             aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-subtle"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle-foreground"
           />
-          <input
+          <Input
             aria-label="Search cards"
-            className="h-9 w-full rounded-md border border-line-strong bg-surface pr-9 pl-9 text-sm outline-none placeholder:text-fg-subtle focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/20 focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="px-9 [&::-webkit-search-cancel-button]:hidden"
             onChange={(event) => {
               setQuery(event.target.value);
               setRevealed(false);
@@ -98,25 +183,26 @@ export function CardBrowser({ cards }: CardBrowserProps) {
             value={query}
           />
           {query && (
-            <button
+            <Button
               aria-label="Clear card search"
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-fg-subtle hover:bg-surface-hover hover:text-fg"
+              className="absolute top-1/2 right-1 -translate-y-1/2"
               onClick={() => {
                 setQuery("");
                 syncUrl({ q: "" });
               }}
-              type="button"
+              size="icon-xs"
+              variant="ghost"
             >
-              <X className="size-3.5" />
-            </button>
+              <X />
+            </Button>
           )}
-        </div>
-        <p className="mt-3 px-1 text-xs text-fg-subtle">
+        </search>
+        <p className="mt-3 px-1 text-xs text-subtle-foreground">
           {normalizedQuery
             ? `${visibleCards.length} of ${cards.length} cards`
             : `${cards.length} cards`}
         </p>
-        <ol className="mt-2 lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto lg:pr-1">
+        <ol className="mt-2">
           {visibleCards.map((item, index) => (
             <li key={item.id}>
               <button
@@ -124,14 +210,14 @@ export function CardBrowser({ cards }: CardBrowserProps) {
                 className={cn(
                   "flex w-full gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors",
                   index === selectedIndex
-                    ? "bg-surface-subtle text-fg"
-                    : "text-fg-muted hover:bg-surface-hover hover:text-fg"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
                 id={`card-${item.id}`}
                 onClick={() => select(index)}
                 type="button"
               >
-                <span className="w-6 shrink-0 pt-px text-right text-xs text-fg-subtle tabular-nums">
+                <span className="w-6 shrink-0 pt-px text-right text-xs text-subtle-foreground tabular-nums">
                   {item.order + 1}
                 </span>
                 <span className="line-clamp-2">
@@ -142,78 +228,6 @@ export function CardBrowser({ cards }: CardBrowserProps) {
           ))}
         </ol>
       </aside>
-
-      <section
-        aria-label="Card viewer"
-        className="order-1 min-w-0 scroll-mt-20 lg:order-2"
-        ref={viewerRef}
-      >
-        {card ? (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between text-sm text-fg-subtle">
-              <span className="tabular-nums">
-                Card {selectedIndex + 1} of {visibleCards.length}
-              </span>
-              <span className="hidden items-center gap-1.5 text-xs md:flex">
-                <Kbd>←</Kbd>
-                <Kbd>→</Kbd> move
-                <Kbd className="ml-2">Space</Kbd> reveal
-              </span>
-            </div>
-            <article className="flex min-h-[15rem] flex-col rounded-xl border border-line bg-surface shadow-sm sm:min-h-[22rem]">
-              <div className="flex-1 p-6 sm:p-10">
-                <p className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                  Question
-                </p>
-                <h2 className="mt-3 text-2xl leading-snug font-semibold tracking-tight sm:text-3xl">
-                  <FlashcardText text={card.question} />
-                </h2>
-                {revealed && (
-                  <div className="mt-8 border-t border-line pt-6">
-                    <p className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                      Answer
-                    </p>
-                    <p className="mt-3 text-lg leading-8 whitespace-pre-wrap text-fg sm:text-xl sm:leading-9">
-                      <FlashcardText text={card.answer} />
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-6">
-                <Button
-                  aria-label="Previous card"
-                  disabled={selectedIndex === 0}
-                  onClick={() => select(selectedIndex - 1)}
-                  size="icon"
-                  variant="ghost"
-                >
-                  <ChevronLeft />
-                </Button>
-                <Button
-                  onClick={() => setRevealed((value) => !value)}
-                  variant={revealed ? "secondary" : "primary"}
-                >
-                  {revealed ? <EyeOff /> : <Eye />}
-                  {revealed ? "Hide answer" : "Show answer"}
-                </Button>
-                <Button
-                  aria-label="Next card"
-                  disabled={selectedIndex >= visibleCards.length - 1}
-                  onClick={() => select(selectedIndex + 1)}
-                  size="icon"
-                  variant="ghost"
-                >
-                  <ChevronRight />
-                </Button>
-              </div>
-            </article>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-line-strong px-6 py-16 text-center text-sm text-fg-muted">
-            No cards match &quot;{query.trim()}&quot;.
-          </div>
-        )}
-      </section>
     </div>
   );
 }

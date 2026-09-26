@@ -1,4 +1,4 @@
-import { BookOpen, Download, Layers, Volume2 } from "lucide-react";
+import { BookOpen, Download, Layers, Smartphone, Volume2 } from "lucide-react";
 import Link from "next/link";
 
 import type { DeckSummary } from "@/server/decks";
@@ -12,7 +12,7 @@ type DeckCardProps = Readonly<{ deck: DeckSummary }>;
 
 export function DeckCard({ deck }: DeckCardProps) {
   return (
-    <article className="group relative flex min-h-56 flex-col rounded-xl border border-line bg-surface p-5 transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-md">
+    <article className="group relative flex flex-col rounded-xl border border-border bg-card p-5 transition-[border-color,box-shadow] hover:border-input hover:shadow-md">
       <div className="flex items-start gap-3">
         <DeckMonogram title={deck.title} />
         <div className="min-w-0">
@@ -25,14 +25,17 @@ export function DeckCard({ deck }: DeckCardProps) {
               {deck.title}
             </Link>
           </h2>
-          <p className="mt-0.5 text-xs text-fg-subtle">
+          <p className="mt-0.5 text-xs text-subtle-foreground">
             Version {deck.version} · {formatBytes(deck.sizeBytes)}
           </p>
         </div>
       </div>
-      <p className="mt-4 line-clamp-3 text-sm leading-6 text-fg-muted">{deck.description}</p>
-      <div className="mt-auto flex items-end justify-between gap-3 pt-5">
-        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-fg-subtle [&_svg]:size-3.5">
+      <p className="mt-4 line-clamp-3 text-sm leading-6 text-muted-foreground">
+        {deck.description}
+      </p>
+      {/* The negative margins cancel the icon buttons' inner space, so the icons line up with the text. */}
+      <div className="-mr-2 -mb-2 mt-auto flex items-center justify-between gap-3 pt-4">
+        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-subtle-foreground [&_svg]:size-3.5">
           <li className="flex items-center gap-1">
             <Layers aria-hidden />
             {pluralize(deck.cardCount, "card")}
@@ -51,16 +54,30 @@ export function DeckCard({ deck }: DeckCardProps) {
           )}
         </ul>
         <div className="relative z-10 flex items-center gap-0.5">
-          <SendToPhoneDialog deckId={deck.id} deckTitle={deck.title} trigger="icon" />
-          <Button asChild size="icon" variant="ghost">
-            <a
-              aria-label={`Download ${deck.title}`}
-              download
-              href={`/decks/${deck.id}/download`}
-              title="Download .fcrdeck"
+          <SendToPhoneDialog deckId={deck.id} deckTitle={deck.title}>
+            <Button
+              aria-label={`Send ${deck.title} to phone`}
+              size="icon"
+              title="Send to phone"
+              variant="ghost"
             >
-              <Download />
-            </a>
+              <Smartphone />
+            </Button>
+          </SendToPhoneDialog>
+          <Button
+            size="icon"
+            variant="ghost"
+            nativeButton={false}
+            render={
+              <a
+                aria-label={`Download ${deck.title}`}
+                download
+                href={`/decks/${deck.id}/download`}
+                title="Download .fcrdeck"
+              />
+            }
+          >
+            <Download />
           </Button>
         </div>
       </div>

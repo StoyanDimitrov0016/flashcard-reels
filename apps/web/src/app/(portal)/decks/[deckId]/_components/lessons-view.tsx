@@ -7,6 +7,7 @@ import { withoutRepeatedTitle } from "@/lib/lesson-text";
 import { cn } from "@/lib/utils";
 
 import { LessonList } from "./lesson-list";
+import { LessonPager } from "./lesson-pager";
 
 type LessonsViewProps = Readonly<{
   deckId: string;
@@ -19,7 +20,7 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
   if (!lesson) {
     return null;
   }
-  const nextLesson = lessons[lessons.indexOf(lesson) + 1];
+  const lessonIndex = lessons.indexOf(lesson);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
@@ -32,13 +33,13 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
                 className={cn(
                   "flex gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
                   item.id === lesson.id
-                    ? "bg-surface-subtle font-medium text-fg"
-                    : "text-fg-muted hover:bg-surface-hover hover:text-fg"
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
                 href={`/decks/${deckId}?view=lessons&lesson=${item.id}`}
                 scroll={false}
               >
-                <span className="w-4 shrink-0 text-right text-xs leading-5 text-fg-subtle tabular-nums">
+                <span className="w-4 shrink-0 text-right text-xs leading-5 text-subtle-foreground tabular-nums">
                   {item.order + 1}
                 </span>
                 {item.title}
@@ -49,27 +50,18 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
       </nav>
 
       <article className="max-w-[68ch] min-w-0">
-        <p className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
+        <p className="text-xs font-medium tracking-wide text-subtle-foreground uppercase">
           Lesson {lesson.order + 1} of {lessons.length}
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">{lesson.title}</h2>
         <div className="mt-6">
           <LessonMarkdown markdown={withoutRepeatedTitle(lesson.markdown, lesson.title)} />
         </div>
-        {nextLesson && (
-          <Link
-            className="mt-12 flex items-center justify-between rounded-xl border border-line p-4 transition-colors hover:bg-surface-hover"
-            href={`/decks/${deckId}?view=lessons&lesson=${nextLesson.id}`}
-          >
-            <span>
-              <span className="block text-xs text-fg-subtle">Next lesson</span>
-              <span className="mt-0.5 block font-medium">{nextLesson.title}</span>
-            </span>
-            <span aria-hidden className="text-fg-subtle">
-              →
-            </span>
-          </Link>
-        )}
+        <LessonPager
+          deckId={deckId}
+          next={lessons[lessonIndex + 1]}
+          previous={lessons[lessonIndex - 1]}
+        />
       </article>
     </div>
   );

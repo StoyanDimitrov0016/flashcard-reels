@@ -1,12 +1,18 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
+import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
+import {
+  ReadingProgressBar,
+  useReadingProgress,
+} from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
+import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
-import { ScreenBackButton } from "@/shared/presentation/components/screen-back-button";
-import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -15,38 +21,48 @@ import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presen
 const readingColumnMaxWidth = sizes.sheet.maxWidthWide;
 
 export default function LessonScreen() {
-  const { colors } = useAppTheme();
+  const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
+  const { appearances } = useDeckAppearances(lesson ? [lesson.deckId] : []);
+  const appearance = lesson ? appearances.get(lesson.deckId) : undefined;
+  const accent = appearance
+    ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+    : colors.textSecondary;
+  const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <ScreenHeader>
-        <ScreenBackButton accessibilityLabel="Back to Reading" onPress={() => router.back()} />
-      </ScreenHeader>
+      <SubScreenHeader backLabel="Back to lessons" onBack={() => router.back()} />
       {loading && <LoadingState />}
       {!loading && !lesson && (
         <View style={styles.missing}>
-          <Text accessibilityRole="header" style={styles.missingTitle}>
-            This lesson is no longer available
-          </Text>
-          <Text style={styles.missingMessage}>
-            Its deck was removed or updated without it. Go back to see the lessons you have.
-          </Text>
+          <EmptyState
+            action={{ label: "Back to lessons", onPress: () => router.back() }}
+            icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
+            message="Its deck was removed or updated without it."
+            title="This lesson is no longer available"
+          />
         </View>
       )}
       {!loading && lesson && (
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.column}>
-            <Text style={styles.eyebrow}>Lesson {lesson.order + 1}</Text>
-            <Text accessibilityRole="header" style={styles.title}>
-              {lesson.title}
-            </Text>
-            <LessonMarkdownView blocks={blocks} />
-          </View>
-        </ScrollView>
+        <>
+          <ReadingProgressBar
+            color={accent}
+            scrollableHeight={scrollableHeight}
+            scrollY={scrollY}
+          />
+          <Animated.ScrollView contentContainerStyle={styles.content} {...scrollViewProps}>
+            <View style={styles.column}>
+              <Text accessibilityRole="header" style={styles.title}>
+                {lesson.title}
+              </Text>
+              <LessonMarkdownView blocks={blocks} />
+            </View>
+          </Animated.ScrollView>
+        </>
       )}
     </SafeAreaView>
   );
@@ -65,31 +81,7 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: screenLayout.horizontalPadding,
       paddingTop: sizes.spacing.spacious,
     },
-    eyebrow: {
-      color: colors.textTertiary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.bold,
-      letterSpacing: letterSpacing.eyebrow,
-      textTransform: "uppercase",
-    },
-    missing: {
-      flex: 1,
-      gap: sizes.spacing.medium,
-      justifyContent: "center",
-      paddingHorizontal: sizes.spacing.wide,
-    },
-    missingMessage: {
-      color: colors.textSecondary,
-      fontSize: fontSize.body,
-      lineHeight: lineHeight.body,
-      textAlign: "center",
-    },
-    missingTitle: {
-      color: colors.textPrimary,
-      fontSize: fontSize.title3,
-      fontWeight: fontWeight.bold,
-      textAlign: "center",
-    },
+    missing: { flex: 1, justifyContent: "center" },
     screen: { backgroundColor: colors.canvas, flex: 1 },
     title: {
       color: colors.textPrimary,

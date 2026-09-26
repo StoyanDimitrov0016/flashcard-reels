@@ -42,15 +42,20 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   }
 
   async exportProgress(): Promise<void> {
+    let stage = "settle-reviews";
     try {
       await this.studyService.settleForProgressBackup();
-      const document = ProgressBackupDocumentSchema.parse(await this.query.read(this.clock.now()));
+      stage = "read-progress";
+      const snapshot = await this.query.read(this.clock.now());
+      stage = "validate-progress";
+      const document = ProgressBackupDocumentSchema.parse(snapshot);
+      stage = "share-file";
       await this.files.share(document);
     } catch (cause) {
       throw toOperationError(cause, {
         code: "PROGRESS_BACKUP_EXPORT_FAILED",
         message: "Could not export learning progress",
-        context: { operation: "progress-backup.export" },
+        context: { operation: "progress-backup.export", stage },
       });
     }
   }

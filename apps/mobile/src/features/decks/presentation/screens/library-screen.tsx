@@ -1,15 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type ListRenderItem,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
@@ -42,11 +34,15 @@ import {
 } from "@/features/reels/presentation/hold-to-focus";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
+import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SearchField } from "@/shared/presentation/components/search-field";
+import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
+  showErrorToast,
   showSuccessToast,
 } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -204,30 +200,29 @@ function LibrarySkeleton() {
 }
 
 function EmptyLibrarySearch() {
-  const styles = createStyles(useAppTheme().colors);
-
   return (
-    <View style={styles.empty}>
-      <Text style={styles.emptyTitle}>No decks found</Text>
-      <Text style={styles.emptyCopy}>Try another title or description.</Text>
-    </View>
+    <EmptyState
+      icon={{ android: "search_off", ios: "magnifyingglass", web: "search_off" }}
+      message="Try another title or description."
+      title="No decks found"
+    />
   );
 }
 
 function EmptyLibrary() {
-  const styles = createStyles(useAppTheme().colors);
-
   return (
-    <View style={styles.empty}>
-      <Text style={styles.emptyTitle}>Your library is empty</Text>
-      <Text style={styles.emptyCopy}>Import a local .fcrdeck file to add a deck.</Text>
-    </View>
+    <EmptyState
+      icon={{ android: "library_books", ios: "books.vertical", web: "library_books" }}
+      message="Import a deck from Flashcard Reels on the web or a .fcrdeck file."
+      title="Your library is empty"
+    />
   );
 }
 
 export default function LibraryScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
@@ -240,6 +235,7 @@ export default function LibraryScreen() {
     downloading,
     error: importError,
     importFromDevice,
+    downloadProgress,
     importFromUrl,
     importing,
   } = useImportDeckPackage();
@@ -294,6 +290,16 @@ export default function LibraryScreen() {
       },
       [refreshPendingProgress]
     )
+  );
+
+  useEffect(
+    function announceProgressFailure() {
+      // Inside the sheet the error shows next to its buttons.
+      if (progressError && !selectedPending) {
+        showErrorToast(progressError);
+      }
+    },
+    [progressError, selectedPending]
   );
 
   useEffect(
@@ -408,11 +414,6 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
-        {progressError && !selectedPending && (
-          <Text accessibilityRole="alert" style={styles.pendingError}>
-            {progressError}
-          </Text>
-        )}
         {pendingProgress.map((progress) => (
           <Pressable
             key={progress.deckId}
@@ -427,42 +428,21 @@ export default function LibraryScreen() {
             <Text style={styles.pendingCopy}>This deck is paused until you decide.</Text>
           </Pressable>
         ))}
-        <View style={styles.searchShell}>
-          <SymbolView
-            name={{ android: "search", ios: "magnifyingglass", web: "search" }}
-            size={sizes.icon.small}
-            tintColor={colors.textTertiary}
-          />
-          <TextInput
-            accessibilityLabel="Search deck library"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setQuery}
-            placeholder="Search decks…"
-            placeholderTextColor={colors.textTertiary}
-            style={styles.searchInput}
-            value={query}
-          />
-          {!!query && (
-            <Pressable
-              accessibilityLabel="Clear deck search"
-              accessibilityRole="button"
-              onPress={() => setQuery("")}
-              style={styles.clearButton}
-            >
-              <SymbolView
-                name={{ android: "cancel", ios: "xmark.circle.fill", web: "cancel" }}
-                size={sizes.icon.small}
-                tintColor={colors.textTertiary}
-              />
-            </Pressable>
-          )}
-        </View>
+        <SearchField
+          accessibilityLabel="Search deck library"
+          clearLabel="Clear deck search"
+          onChangeText={setQuery}
+          placeholder="Search decks…"
+          value={query}
+        />
         {loading ? (
           <LibrarySkeleton />
         ) : (
           <FlatList
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[
+              styles.list,
+              { paddingBottom: sizes.spacing.content + tabBarInset },
+            ]}
             data={visibleEntries}
             keyboardShouldPersistTaps="handled"
             keyExtractor={({ deck }) => deck.id}
@@ -474,6 +454,7 @@ export default function LibraryScreen() {
       </View>
       <DeckAppearanceSheet
         appearance={sheetAppearance}
+        deck={selectedEntry?.deck ?? null}
         error={saveError}
         isPresented={selectedEntry !== null}
         onDismiss={() => {
@@ -485,6 +466,7 @@ export default function LibraryScreen() {
         pendingPreset={pendingPreset}
       />
       <ImportDeckSheet
+        downloadProgress={downloadProgress}
         downloading={downloading}
         errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}
         importing={importing}
@@ -539,12 +521,6 @@ function createStyles(colors: AppColors) {
       color: colors.textTertiary,
       fontSize: fontSize.caption,
     },
-    clearButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
     deck: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
@@ -582,13 +558,6 @@ function createStyles(colors: AppColors) {
       fontSize: fontSize.caption,
       lineHeight: lineHeight.footnote,
     },
-    empty: { alignItems: "center", gap: sizes.spacing.medium, padding: sizes.spacing.wide },
-    emptyCopy: { color: colors.textSecondary, fontSize: fontSize.body },
-    emptyTitle: {
-      color: colors.textPrimary,
-      fontSize: fontSize.title2,
-      fontWeight: fontWeight.bold,
-    },
     body: {
       flex: 1,
       gap: sizes.spacing.section,
@@ -615,7 +584,6 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.bold,
     },
     pendingCopy: { color: colors.textSecondary, fontSize: fontSize.caption },
-    pendingError: { color: colors.error, fontSize: fontSize.caption },
     iconButton: {
       alignItems: "center",
       borderColor: colors.borderSubtle,
@@ -635,21 +603,6 @@ function createStyles(colors: AppColors) {
       fontWeight: fontWeight.heavy,
     },
     screen: { backgroundColor: colors.canvas, flex: 1 },
-    searchInput: {
-      color: colors.textPrimary,
-      flex: 1,
-      fontSize: fontSize.callout,
-      height: sizes.input.standard,
-    },
-    searchShell: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.row,
-      borderWidth: sizes.border,
-      flexDirection: "row",
-      paddingLeft: sizes.spacing.section,
-    },
     skeletonAccent: { backgroundColor: colors.borderStrong, height: 72, width: 6 },
     skeletonCopy: { flex: 1, gap: sizes.spacing.large, padding: sizes.spacing.content },
     skeletonDeck: { paddingHorizontal: sizes.spacing.content },
