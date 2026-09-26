@@ -28,7 +28,7 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 
 import appIcon from "../../../../../assets/images/app-icon.png";
 
-export default function YouScreen() {
+export default function ControlsScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();

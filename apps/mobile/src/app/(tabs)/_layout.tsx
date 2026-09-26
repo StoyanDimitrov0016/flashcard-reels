@@ -35,7 +35,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 // Swipe order follows the screen order below. For you and Focus share the Study item.
 const forYouRoute = "(discover)";
 const focusRoute = "focus";
-const destinationRoutes = [forYouRoute, focusRoute, "reading", "library", "progress", "you"];
+const destinationRoutes = [forYouRoute, focusRoute, "reading", "library", "progress", "controls"];
 
 const tabItems: readonly AppTabItem[] = [
   {
@@ -63,10 +63,10 @@ const tabItems: readonly AppTabItem[] = [
     routeNames: ["progress"],
   },
   {
-    accessibilityLabel: "You tab",
-    icon: { android: "person", ios: "person.fill", web: "person" },
-    key: "you",
-    routeNames: ["you"],
+    accessibilityLabel: "Controls tab",
+    icon: { android: "settings", ios: "gearshape.fill", web: "settings" },
+    key: "controls",
+    routeNames: ["controls"],
   },
 ];
 
