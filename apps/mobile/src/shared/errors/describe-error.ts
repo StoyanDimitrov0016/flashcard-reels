@@ -3,8 +3,15 @@ import { AppError } from "@/shared/errors/app-error";
 const MAX_CAUSE_DEPTH = 8;
 const MAX_OUTPUT_LENGTH = 16 * 1024;
 
+type DescribeErrorOptions = Readonly<{
+  includeStack?: boolean;
+}>;
+
 /** Include causal errors, which Error.stack does not consistently contain on Hermes. */
-export function describeError(error: unknown): string {
+export function describeError(
+  error: unknown,
+  { includeStack = true }: DescribeErrorOptions = {}
+): string {
   const seen = new Set<unknown>();
   const details: string[] = [];
   let current: unknown = error;
@@ -22,7 +29,7 @@ export function describeError(error: unknown): string {
     seen.add(current);
 
     if (current instanceof Error) {
-      details.push(describeException(current));
+      details.push(describeException(current, includeStack));
       current = current.cause;
       continue;
     }
@@ -38,13 +45,17 @@ export function describeError(error: unknown): string {
   return truncate(details.join("\n\nCaused by:\n"));
 }
 
-function describeException(error: Error): string {
+function describeException(error: Error, includeStack: boolean): string {
   const identity = `${error.name}: ${error.message}`;
   if (error instanceof AppError) {
     const context = error.context ? `\nContext: ${safeSerialize(error.context)}` : "";
-    return `${identity}\nCode: ${error.code}${context}\n${error.stack ?? ""}`.trim();
+    const stack = includeStack && error.stack ? `\n${error.stack}` : "";
+    return `${identity}\nCode: ${error.code}${context}${stack}`;
   }
-  return error.stack ?? identity;
+  if (!includeStack || !error.stack) {
+    return identity;
+  }
+  return error.stack.startsWith(identity) ? error.stack : `${identity}\n${error.stack}`;
 }
 
 function describeUnknown(value: unknown): string {

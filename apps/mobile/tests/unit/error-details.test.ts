@@ -1,9 +1,36 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "@/shared/errors/app-error";
 import { describeError } from "@/shared/errors/describe-error";
+import { reportError } from "@/shared/errors/report-error";
 
 describe("error diagnostics", () => {
+  it("keeps the export stage and native cause visible when Expo replaces stack arguments", () => {
+    const cause = new Error("Cannot write the backup file");
+    cause.stack = "    at write (http://localhost:8081/index.bundle?platform=android:10:2)";
+    const error = new AppError({
+      name: "OperationError",
+      code: "PROGRESS_BACKUP_EXPORT_FAILED",
+      message: "Could not export learning progress",
+      context: { operation: "progress-backup.export", stage: "share-file" },
+      cause,
+    });
+    error.stack =
+      "    at exportProgress (http://localhost:8081/index.bundle?platform=android:20:3)";
+    const logger = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      reportError(error, "Progress export failure");
+      // Expo preserves the plain message argument but replaces stack-bearing arguments.
+      const visibleMessage: unknown = logger.mock.calls[0]?.[0];
+      expect(visibleMessage).toContain("Could not export learning progress");
+      expect(visibleMessage).toContain("share-file");
+      expect(visibleMessage).toContain("Cannot write the backup file");
+      expect(visibleMessage).not.toContain("index.bundle");
+    } finally {
+      logger.mockRestore();
+    }
+  });
+
   it("preserves the startup stage and the underlying native exception", () => {
     const cause = new Error("SQLite disk is full");
     const error = new Error("Startup failed while applying database migrations", { cause });
