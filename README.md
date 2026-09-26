@@ -11,7 +11,7 @@ The mobile app includes a bundled demo deck, mixed and deck-focused study modes,
 
 ## Try the current builds
 
-[Install the latest Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/7ead0247-4974-48b9-abe3-9784b4fab465)
+[Install the latest Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/29fcdb77-61dc-48f6-9d36-a2d4503de931)
 
 [Open the internal web deck portal](https://flashcard-reels.vercel.app/)
 
