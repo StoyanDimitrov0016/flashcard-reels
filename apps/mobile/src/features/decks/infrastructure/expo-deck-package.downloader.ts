@@ -9,7 +9,7 @@ import type { DeckPackageSelection } from "@/features/decks/application/deck-pac
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
-export const DECK_DOWNLOAD_TIMEOUT_MS = 60_000;
+export const DECK_DOWNLOAD_IDLE_TIMEOUT_MS = 60_000;
 
 export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
   async download(
@@ -25,17 +25,23 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
       controller.abort();
     }
     let timedOut = false;
-    const timeout = setTimeout(() => {
+    const abortStalledDownload = () => {
       timedOut = true;
       controller.abort();
-    }, DECK_DOWNLOAD_TIMEOUT_MS);
+    };
+    let timeout = setTimeout(abortStalledDownload, DECK_DOWNLOAD_IDLE_TIMEOUT_MS);
+    let receivedBytes = 0;
     let task: DownloadTask | undefined;
     try {
       task = new DownloadTask(url, destination, {
-        onProgress: onProgress
-          ? ({ bytesWritten, totalBytes }) =>
-              onProgress({ bytesWritten, totalBytes: totalBytes > 0 ? totalBytes : null })
-          : undefined,
+        onProgress: ({ bytesWritten, totalBytes }) => {
+          if (bytesWritten > receivedBytes && !controller.signal.aborted) {
+            receivedBytes = bytesWritten;
+            clearTimeout(timeout);
+            timeout = setTimeout(abortStalledDownload, DECK_DOWNLOAD_IDLE_TIMEOUT_MS);
+          }
+          onProgress?.({ bytesWritten, totalBytes: totalBytes > 0 ? totalBytes : null });
+        },
         signal: controller.signal,
       });
       const file = await task.downloadAsync();

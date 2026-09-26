@@ -40,16 +40,21 @@ R2_BUCKET_NAME
 
 Leave `DECK_TRANSFER_ORIGIN` unset on Vercel. The app derives the origin from the incoming HTTPS request, which keeps production and custom-domain links correct. Set it only when a deliberate fixed origin is needed, such as a private development host; public plain HTTP is rejected.
 
-For local phone testing on the same Wi-Fi, set `DECK_TRANSFER_ORIGIN` in
-`apps/web/.env.local` to the computer's LAN address, for example
-`http://192.168.1.20:3000`, and restart the web dev server. The phone must be able to
-reach that address. Do not use `localhost`, which points to the phone itself when
-scanned. This enables the same compact `/t/<token>` links used in production.
-Without a reachable portal origin, local R2-backed transfers use longer signed
-download URLs; their QR codes contain more modules and need more careful scanning.
-For phones on another network, use a reachable HTTPS tunnel for the web server or
-test transfers through the deployed portal. The Expo tunnel only serves the mobile
-development bundle.
+For local R2-backed phone testing, leave `DECK_TRANSFER_ORIGIN` unset in
+`apps/web/.env.local`. The QR code then points directly to HTTPS storage, so the
+phone does not need access to the laptop. These longer signed download URLs make
+denser QR codes than the compact links used in production.
+
+To use compact links locally, configure a reachable HTTPS tunnel for the web
+server, or use the computer's LAN address, for example `http://192.168.1.20:3000`.
+Check that the phone can open that address in its browser before setting
+`DECK_TRANSFER_ORIGIN`, and restart the web dev server after changing it. A phone
+hotspot or firewall can prevent access even when the laptop is connected to the
+phone. Do not use `localhost`, which points to the phone itself when scanned. The
+Expo tunnel serves the mobile development bundle and does not expose the web server.
+
+The mobile downloader cancels a transfer after 60 seconds without receiving more
+bytes. Downloads that continue receiving data can take longer than one minute.
 
 Do not set `LOCAL_DECKS_DIR` on Vercel. It points development servers at a local folder of packages and is ignored in production.
 
