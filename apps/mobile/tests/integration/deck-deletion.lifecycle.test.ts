@@ -18,19 +18,21 @@ import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
   DeckContentProvider,
   useDeckContentRevision,
 } from "@/features/decks/presentation/context/deck-content-context";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import {
   LearningProgressResetProvider,
   useLearningProgressReset,
-} from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
+} from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import {
   FeedScopeProvider,
   useFeedScope,
@@ -130,11 +132,15 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     await seedDeck(database, TEST_DECK_ID, [makeFlashcard(1).id, makeFlashcard(2).id]);
     await seedDeck(database, OTHER_DECK_ID, [makeFlashcard(3, OTHER_DECK_ID).id]);
     graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
-    flashcardService = new FlashcardServiceImpl(new SQLiteFlashcardRepository(database.drizzle));
+    flashcardService = new FlashcardServiceImpl(
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+    );
     harness.services = {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),
         new SQLiteDeckAppearanceRepository(database.drizzle),
+        new SQLiteDeckRemovalTransaction(database.drizzle),
         null,
         graph.study
       ),

@@ -1,0 +1,10 @@
+appId: com.flashcardreels.app
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/import-versioned-deck.yaml
+- runFlow: subflows/study-and-archive.yaml
+- tapOn: Delete saved progress
+- assertVisible: "Delete Versioned Test Deck progress?"
+- tapOn: Delete saved progress
+- assertVisible: No archived progress yet.

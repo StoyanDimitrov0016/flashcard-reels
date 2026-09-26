@@ -1,1 +1,1 @@
-export { default } from "@/features/learner-profile/presentation/screens/progress-screen";
+export { default } from "@/features/flashcard-progress/presentation/screens/progress-screen";

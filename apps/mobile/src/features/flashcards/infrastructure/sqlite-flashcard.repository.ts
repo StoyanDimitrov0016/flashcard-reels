@@ -43,24 +43,6 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
     return row ? this.toModel(row) : null;
   }
 
-  async list(): Promise<Flashcard[]> {
-    const rows = await this.database
-      .select()
-      .from(flashcards)
-      .where(eq(flashcards.active, true))
-      .orderBy(asc(flashcards.createdAt), asc(flashcards.id));
-    return rows.map((row) => this.toModel(row));
-  }
-
-  async listByDeckId(deckId: DeckId): Promise<Flashcard[]> {
-    const rows = await this.database
-      .select()
-      .from(flashcards)
-      .where(and(eq(flashcards.deckId, deckId), eq(flashcards.active, true)))
-      .orderBy(asc(flashcards.order), asc(flashcards.id));
-    return rows.map((row) => this.toModel(row));
-  }
-
   async save(flashcard: Flashcard): Promise<void> {
     await this.database
       .insert(flashcards)

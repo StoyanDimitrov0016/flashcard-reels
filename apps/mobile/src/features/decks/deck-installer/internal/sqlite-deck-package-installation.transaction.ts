@@ -10,7 +10,11 @@ import { DeckPackageVersionError, type DeckInstallResult } from "@/features/deck
 import {
   decks,
   deckAppearances,
+  deckProgress,
+  flashcardMemoryStates,
   flashcards,
+  flashcardProgress,
+  reviewEvents,
   removedDecks,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -47,6 +51,12 @@ export class SQLiteDeckPackageInstallationTransaction<
       }
 
       transaction.delete(removedDecks).where(eq(removedDecks.id, deckPackage.id)).run();
+      const savedProgress = transaction
+        .select()
+        .from(deckProgress)
+        .where(eq(deckProgress.deckId, deckPackage.id))
+        .limit(1)
+        .all()[0];
 
       const incomingIds = deckPackage.cards.map((card) => card.id);
       const cardsWithMatchingIds =
@@ -56,6 +66,28 @@ export class SQLiteDeckPackageInstallationTransaction<
       for (const card of cardsWithMatchingIds) {
         if (card.deckId !== deckPackage.id) {
           throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
+        }
+      }
+      if (incomingIds.length > 0) {
+        const progressOwners = transaction
+          .select({ deckId: flashcardProgress.deckId, id: flashcardProgress.flashcardId })
+          .from(flashcardProgress)
+          .where(inArray(flashcardProgress.flashcardId, incomingIds))
+          .all();
+        const memoryOwners = transaction
+          .select({ deckId: flashcardMemoryStates.deckId, id: flashcardMemoryStates.flashcardId })
+          .from(flashcardMemoryStates)
+          .where(inArray(flashcardMemoryStates.flashcardId, incomingIds))
+          .all();
+        const eventOwners = transaction
+          .select({ deckId: reviewEvents.deckId, id: reviewEvents.flashcardId })
+          .from(reviewEvents)
+          .where(inArray(reviewEvents.flashcardId, incomingIds))
+          .all();
+        for (const card of [...progressOwners, ...memoryOwners, ...eventOwners]) {
+          if (card.deckId !== deckPackage.id) {
+            throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
+          }
         }
       }
 
@@ -153,6 +185,20 @@ export class SQLiteDeckPackageInstallationTransaction<
           .update(flashcards)
           .set({ active: false })
           .where(and(eq(flashcards.deckId, deckPackage.id), notInArray(flashcards.id, incomingIds)))
+          .run();
+      }
+
+      if (savedProgress?.resolution === "archived") {
+        transaction
+          .update(deckProgress)
+          .set({ title: deckPackage.title, version: deckPackage.version, resolution: "pending" })
+          .where(eq(deckProgress.deckId, deckPackage.id))
+          .run();
+      } else if (savedProgress) {
+        transaction
+          .update(deckProgress)
+          .set({ title: deckPackage.title, version: deckPackage.version })
+          .where(eq(deckProgress.deckId, deckPackage.id))
           .run();
       }
 

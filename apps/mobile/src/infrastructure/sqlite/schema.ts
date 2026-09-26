@@ -53,13 +53,11 @@ export const flashcards = sqliteTable(
   ]
 );
 
-export const learnerProfiles = sqliteTable(
-  "learner_profiles",
+export const flashcardProgress = sqliteTable(
+  "flashcard_progress",
   {
-    flashcardId: text("flashcard_id")
-      .primaryKey()
-      .notNull()
-      .references(() => flashcards.id, { onDelete: "cascade" }),
+    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    deckId: text("deck_id").notNull(),
     reviewCount: integer("review_count").notNull().default(0),
     againCount: integer("again_count").notNull().default(0),
     hardCount: integer("hard_count").notNull().default(0),
@@ -72,34 +70,33 @@ export const learnerProfiles = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    check("learner_profiles_review_count_check", sql`${table.reviewCount} >= 0`),
-    check("learner_profiles_again_count_check", sql`${table.againCount} >= 0`),
-    check("learner_profiles_hard_count_check", sql`${table.hardCount} >= 0`),
-    check("learner_profiles_good_count_check", sql`${table.goodCount} >= 0`),
-    check("learner_profiles_easy_count_check", sql`${table.easyCount} >= 0`),
+    check("flashcard_progress_review_count_check", sql`${table.reviewCount} >= 0`),
+    check("flashcard_progress_again_count_check", sql`${table.againCount} >= 0`),
+    check("flashcard_progress_hard_count_check", sql`${table.hardCount} >= 0`),
+    check("flashcard_progress_good_count_check", sql`${table.goodCount} >= 0`),
+    check("flashcard_progress_easy_count_check", sql`${table.easyCount} >= 0`),
     check(
-      "learner_profiles_counter_sum_check",
+      "flashcard_progress_counter_sum_check",
       sql`${table.reviewCount} = ${table.againCount} + ${table.hardCount} + ${table.goodCount} + ${table.easyCount}`
     ),
     check(
-      "learner_profiles_reviewed_at_presence_check",
+      "flashcard_progress_reviewed_at_presence_check",
       sql`(${table.reviewCount} = 0 AND ${table.firstReviewedAt} IS NULL AND ${table.lastReviewedAt} IS NULL) OR (${table.reviewCount} > 0 AND ${table.firstReviewedAt} IS NOT NULL AND ${table.lastReviewedAt} IS NOT NULL)`
     ),
     check(
-      "learner_profiles_reviewed_at_order_check",
+      "flashcard_progress_reviewed_at_order_check",
       sql`${table.firstReviewedAt} IS NULL OR ${table.lastReviewedAt} IS NULL OR ${table.firstReviewedAt} <= ${table.lastReviewedAt}`
     ),
-    index("learner_profiles_reset_at_idx").on(table.resetAt),
+    index("flashcard_progress_deck_id_idx").on(table.deckId),
+    index("flashcard_progress_reset_at_idx").on(table.resetAt),
   ]
 );
 
 export const flashcardMemoryStates = sqliteTable(
   "flashcard_memory_states",
   {
-    flashcardId: text("flashcard_id")
-      .primaryKey()
-      .notNull()
-      .references(() => flashcards.id, { onDelete: "cascade" }),
+    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    deckId: text("deck_id").notNull(),
     state: text("state", { enum: ["new", "learning", "review", "relearning"] }).notNull(),
     dueAt: text("due_at").notNull(),
     stability: real("stability").notNull(),
@@ -119,8 +116,33 @@ export const flashcardMemoryStates = sqliteTable(
     check("flashcard_memory_states_reps_check", sql`${table.reps} >= 0`),
     check("flashcard_memory_states_lapses_check", sql`${table.lapses} >= 0`),
     check("flashcard_memory_states_learning_steps_check", sql`${table.learningSteps} >= 0`),
+    index("flashcard_memory_states_deck_id_idx").on(table.deckId),
   ]
 );
+
+export const reviewEvents = sqliteTable(
+  "review_events",
+  {
+    id: text("id").primaryKey().notNull(),
+    deckId: text("deck_id").notNull(),
+    flashcardId: text("flashcard_id").notNull(),
+    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }).notNull(),
+    reviewedAt: text("reviewed_at").notNull(),
+    finalizedAt: text("finalized_at").notNull(),
+  },
+  (table) => [
+    index("review_events_deck_id_idx").on(table.deckId),
+    index("review_events_flashcard_id_idx").on(table.flashcardId),
+  ]
+);
+
+export const deckProgress = sqliteTable("deck_progress", {
+  deckId: text("deck_id").primaryKey().notNull(),
+  title: text("title").notNull(),
+  version: integer("version").notNull(),
+  lastReviewedAt: text("last_reviewed_at").notNull(),
+  resolution: text("resolution", { enum: ["active", "archived", "pending"] }).notNull(),
+});
 
 export const studySessions = sqliteTable(
   "study_sessions",
@@ -278,8 +300,10 @@ export const databaseSchema = {
   removedDecks,
   deckAppearances,
   flashcards,
-  learnerProfiles,
+  flashcardProgress,
   flashcardMemoryStates,
+  reviewEvents,
+  deckProgress,
   studySessions,
   studySessionItems,
   flashcardReviewAttempts,

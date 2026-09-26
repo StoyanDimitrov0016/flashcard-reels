@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { FeedCandidate } from "@/features/learning-engine/domain/feed-composer";
-import type { LearnerMemoryState } from "@/features/learning-engine/domain/memory-state";
+import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import {
@@ -192,8 +192,8 @@ function candidate(id: string, overrides: Partial<FeedCandidate> = {}): FeedCand
 }
 
 function withPersistence(
-  state: Omit<LearnerMemoryState, "createdAt" | "updatedAt"> | LearnerMemoryState
-): LearnerMemoryState {
+  state: Omit<FlashcardMemoryState, "createdAt" | "updatedAt"> | FlashcardMemoryState
+): FlashcardMemoryState {
   return {
     ...state,
     createdAt: REVIEWED_AT,

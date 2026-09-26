@@ -1,4 +1,4 @@
-import type { LearnerMemoryState, SchedulerMemoryState } from "./memory-state";
+import type { FlashcardMemoryState, SchedulerMemoryState } from "./flashcard-memory-state";
 
 export type LearningRating = "again" | "hard" | "good" | "easy";
 
@@ -9,9 +9,9 @@ export type SchedulerReviewResult = Readonly<{
 export interface LearningScheduler {
   review(
     flashcardId: string,
-    currentState: LearnerMemoryState | null,
+    currentState: FlashcardMemoryState | null,
     rating: LearningRating,
     reviewedAt: string
   ): SchedulerReviewResult;
-  retrievability(state: LearnerMemoryState, now: string): number | null;
+  retrievability(state: FlashcardMemoryState, now: string): number | null;
 }

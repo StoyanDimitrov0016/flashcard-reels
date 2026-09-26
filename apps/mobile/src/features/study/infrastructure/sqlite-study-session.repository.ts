@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 import type {
   StudySessionPosition,
@@ -9,7 +9,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
-import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
+import { studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRepository<TRunResult = unknown> implements StudySessionRepository {
   private readonly database: DrizzleDatabase<TRunResult>;
@@ -74,28 +74,6 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       .limit(1);
     const row = rows[0];
     return row ? this.toModel(row) : null;
-  }
-
-  async findCompletedSessionsPendingAggregation(limit: number): Promise<StudySession[]> {
-    if (limit <= 0) {
-      return [];
-    }
-    const rows = await this.database
-      .selectDistinct({ session: studySessions })
-      .from(studySessions)
-      .innerJoin(
-        flashcardReviewAttempts,
-        and(
-          eq(flashcardReviewAttempts.studySessionId, studySessions.id),
-          gt(flashcardReviewAttempts.reelPosition, studySessions.aggregatedThroughReelPosition),
-          isNotNull(flashcardReviewAttempts.rating),
-          isNotNull(flashcardReviewAttempts.ratedAt)
-        )
-      )
-      .where(isNotNull(studySessions.completedAt))
-      .orderBy(asc(studySessions.completedAt), asc(studySessions.id))
-      .limit(limit);
-    return rows.map((row) => this.toModel(row.session));
   }
 
   async updateCurrentReelPosition(

@@ -1,3 +1,4 @@
+import type { DeckRemovalTransaction } from "@/features/decks/application/deck-removal.transaction";
 import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
@@ -7,6 +8,7 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 
 export class DeckServiceImpl implements DeckService {
   private readonly deckRepository: DeckRepository;
+  private readonly deckRemovalTransaction: DeckRemovalTransaction;
   private readonly deckAppearanceRepository: DeckAppearanceRepository;
   private readonly deckAudioRemover: DeckAudioRemover | null;
   private readonly sessionSettlement: StudySessionSettlement | null;
@@ -14,10 +16,12 @@ export class DeckServiceImpl implements DeckService {
   constructor(
     deckRepository: DeckRepository,
     deckAppearanceRepository: DeckAppearanceRepository,
+    deckRemovalTransaction: DeckRemovalTransaction,
     deckAudioRemover: DeckAudioRemover | null = null,
     sessionSettlement: StudySessionSettlement | null = null
   ) {
     this.deckRepository = deckRepository;
+    this.deckRemovalTransaction = deckRemovalTransaction;
     this.deckAppearanceRepository = deckAppearanceRepository;
     this.deckAudioRemover = deckAudioRemover;
     this.sessionSettlement = sessionSettlement;
@@ -48,8 +52,11 @@ export class DeckServiceImpl implements DeckService {
   }
 
   async remove(id: DeckId): Promise<void> {
-    await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(id, true);
-    await this.deckRepository.remove(id);
+    if (!this.sessionSettlement) {
+      throw new Error("Study session settlement is required before removing a deck");
+    }
+    await this.sessionSettlement.settleBeforeDeckRemoval(id);
+    await this.deckRemovalTransaction.remove(id);
     try {
       await this.deckAudioRemover?.removeDeck(id);
     } catch {

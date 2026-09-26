@@ -3,7 +3,8 @@ import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "rea
 
 import { toError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
-import { ErrorDetails } from "@/shared/presentation/components/error-details";
+import { AppResetScheduledSheet } from "@/shared/presentation/components/app-reset-scheduled-sheet";
+import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
 import { useAppRecovery } from "@/shared/presentation/context/app-recovery-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { sizes } from "@/shared/presentation/sizes";
@@ -14,7 +15,8 @@ export function AppResetAction() {
   const { requestAppDataReset } = useAppRecovery();
   const colors = getAppColors(useColorScheme() === "dark" ? "dark" : "light");
   const styles = createStyles(colors);
-  const [confirming, setConfirming] = useState(false);
+  const [confirmationPresented, setConfirmationPresented] = useState(false);
+  const [scheduledPresented, setScheduledPresented] = useState(false);
   const [requested, setRequested] = useState(false);
   const [failure, setFailure] = useState<Error | null>(null);
 
@@ -27,67 +29,56 @@ export function AppResetAction() {
   }
 
   return (
-    <View style={styles.container}>
-      {requested ? (
-        <Text accessibilityRole="alert" selectable style={styles.text}>
-          Reset scheduled.{" "}
-          {Platform.OS === "android"
-            ? "Force stop the app in Android Settings, then reopen it."
-            : "Remove the app from recent apps, then reopen it."}{" "}
-          Local data will be erased and bundled decks restored.
-        </Text>
-      ) : (
-        <>
-          {confirming && (
-            <Text style={styles.text}>
-              Erase decks, audio, progress and settings on the next launch? Bundled decks will
-              return. This cannot be undone.
-            </Text>
-          )}
+    <>
+      {!requested && (
+        <View style={styles.container}>
           <Pressable
             accessibilityRole="button"
             onPress={() => {
-              if (!confirming) {
-                setConfirming(true);
-                return;
-              }
-              try {
-                requestAppDataReset();
-                setRequested(true);
-                setFailure(null);
-              } catch (error) {
-                const normalized = toError(error, "The app-data reset could not be scheduled");
-                reportError(normalized, "App reset request failure");
-                setFailure(normalized);
-              }
+              setFailure(null);
+              setConfirmationPresented(true);
             }}
             style={styles.button}
           >
-            <Text style={styles.label}>
-              {confirming ? "Confirm full reset" : "Reset all app data"}
-            </Text>
+            <Text style={styles.label}>Reset all app data</Text>
           </Pressable>
-          {confirming && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setConfirming(false)}
-              style={styles.button}
-            >
-              <Text style={styles.text}>Cancel</Text>
-            </Pressable>
-          )}
-        </>
+        </View>
       )}
-      {!!failure && (
-        <>
-          <Text accessibilityRole="alert" style={styles.text}>
-            {getErrorFeedback(failure).message} You can clear app storage in device settings
-            instead.
-          </Text>
-          <ErrorDetails error={failure} />
-        </>
-      )}
-    </View>
+      <DestructiveConfirmationSheet
+        actionLabel="Reset app data"
+        busy={false}
+        error={
+          failure
+            ? `${getErrorFeedback(failure).message} You can clear app storage in device settings instead.`
+            : null
+        }
+        icon="trash"
+        message="Erase decks, audio, progress and settings on the next launch? Bundled decks will return. This cannot be undone."
+        onCancel={() => {
+          setConfirmationPresented(false);
+          setFailure(null);
+        }}
+        onConfirm={() => {
+          try {
+            requestAppDataReset();
+            setRequested(true);
+            setFailure(null);
+            setConfirmationPresented(false);
+            setScheduledPresented(true);
+          } catch (error) {
+            const normalized = toError(error, "The app-data reset could not be scheduled");
+            reportError(normalized, "App reset request failure");
+            setFailure(normalized);
+          }
+        }}
+        title="Reset all app data?"
+        visible={confirmationPresented}
+      />
+      <AppResetScheduledSheet
+        onClose={() => setScheduledPresented(false)}
+        visible={scheduledPresented}
+      />
+    </>
   );
 }
 

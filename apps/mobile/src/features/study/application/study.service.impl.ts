@@ -1,6 +1,6 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { LearnerProfileAggregationTransaction } from "@/features/learner-profile/application/learner-profile-aggregation-transaction";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
@@ -11,6 +11,7 @@ import type {
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
+import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
 import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
@@ -44,6 +45,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
   private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
   private readonly studySessionRepository: StudySessionRepository;
+  private readonly studySessionAggregationQuery: StudySessionAggregationQuery;
   private readonly studySessionItemRepository: StudySessionItemRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
@@ -52,7 +54,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
-  private readonly learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null;
+  private readonly flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly finalizationQueues = new Map<string, Promise<void>>();
   private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
@@ -60,6 +62,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   constructor(
     reviewAttemptRepository: ReviewAttemptRepository,
     studySessionRepository: StudySessionRepository,
+    studySessionAggregationQuery: StudySessionAggregationQuery,
     studySessionItemRepository: StudySessionItemRepository,
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
@@ -69,12 +72,13 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
     random: RandomSource = Math.random,
-    learnerProfileAggregationTransaction: LearnerProfileAggregationTransaction | null = null,
+    flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null = null,
     studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
     this.studySessionRepository = studySessionRepository;
+    this.studySessionAggregationQuery = studySessionAggregationQuery;
     this.studySessionItemRepository = studySessionItemRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
@@ -83,7 +87,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
-    this.learnerProfileAggregationTransaction = learnerProfileAggregationTransaction;
+    this.flashcardProgressAggregationTransaction = flashcardProgressAggregationTransaction;
     this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
   }
 
@@ -164,6 +168,35 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     }
   }
 
+  async settleBeforeDeckRemoval(deckId: DeckId): Promise<void> {
+    await this.settleActiveSessionsAffectedByDeck(deckId, true);
+
+    // Removing cards also removes their session attempts. Finish completed
+    // sessions with pending reviews for this deck before removing its content.
+    // oxlint-disable no-await-in-loop -- The next batch depends on the committed aggregation checkpoints.
+    while (true) {
+      const pending =
+        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
+          deckId,
+          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+        );
+      if (pending.length === 0) {
+        return;
+      }
+      for (const session of pending) {
+        await this.finalizeAndAggregateCompletedSession(session.id);
+        const updated = await this.studySessionRepository.findById(session.id);
+        if (
+          !updated ||
+          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
+        ) {
+          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
+        }
+      }
+    }
+    // oxlint-enable no-await-in-loop
+  }
+
   async compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void> {
     const maintenance = this.studySessionMaintenanceTransaction;
     if (!maintenance) {
@@ -186,11 +219,11 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   async recoverPendingCompletedSessionAggregation(
     limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
   ): Promise<void> {
-    if (!this.learnerProfileAggregationTransaction) {
+    if (!this.flashcardProgressAggregationTransaction) {
       return;
     }
     const pending =
-      await this.studySessionRepository.findCompletedSessionsPendingAggregation(limit);
+      await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(limit);
     const recoverNext = async (index: number): Promise<void> => {
       const session = pending[index];
       if (!session) {
@@ -352,7 +385,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       studySessionId,
       updatedAt: createdAt,
     });
-    await this.reviewAttemptRepository.create(attempt);
+    await this.reviewAttemptTransaction.createAttempt(attempt);
     return attempt.id;
   }
 
@@ -528,14 +561,14 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
-    if (!this.learnerProfileAggregationTransaction) {
+    if (!this.flashcardProgressAggregationTransaction) {
       return;
     }
     const eligibility = await this.getAggregationEligibility(studySessionId);
     if (!eligibility?.shouldCheck) {
       return;
     }
-    await this.learnerProfileAggregationTransaction.aggregate(
+    await this.flashcardProgressAggregationTransaction.aggregate(
       studySessionId,
       eligibility.safeThroughReelPosition,
       this.clock.now()
@@ -543,7 +576,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   private async aggregateCompletedSession(studySessionId: string): Promise<void> {
-    const aggregation = this.learnerProfileAggregationTransaction;
+    const aggregation = this.flashcardProgressAggregationTransaction;
     if (!aggregation) {
       return;
     }

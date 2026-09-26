@@ -11,7 +11,7 @@ import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { LearningProgressResetProvider } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
+import { LearningProgressResetProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
 import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
@@ -86,6 +86,7 @@ function AppNavigation() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="archived-progress" />
           <Stack.Screen
             name="decks/[deckId]"
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}

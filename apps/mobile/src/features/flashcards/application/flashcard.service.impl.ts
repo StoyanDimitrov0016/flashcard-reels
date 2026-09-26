@@ -1,13 +1,19 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { FlashcardAvailabilityQuery } from "@/features/flashcards/domain/flashcard-availability.query";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { FlashcardRepository } from "@/features/flashcards/domain/flashcard.repository";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 
 export class FlashcardServiceImpl implements FlashcardService {
   private readonly flashcardRepository: FlashcardRepository;
+  private readonly availabilityQuery: FlashcardAvailabilityQuery;
 
-  constructor(flashcardRepository: FlashcardRepository) {
+  constructor(
+    flashcardRepository: FlashcardRepository,
+    availabilityQuery: FlashcardAvailabilityQuery
+  ) {
     this.flashcardRepository = flashcardRepository;
+    this.availabilityQuery = availabilityQuery;
   }
 
   async countFlashcardsByDeckIds(deckIds: readonly DeckId[]): Promise<ReadonlyMap<DeckId, number>> {
@@ -19,10 +25,10 @@ export class FlashcardServiceImpl implements FlashcardService {
   }
 
   async list(): Promise<Flashcard[]> {
-    return this.flashcardRepository.list();
+    return this.availabilityQuery.listAvailableFlashcards();
   }
 
   async listByDeckId(deckId: DeckId): Promise<Flashcard[]> {
-    return this.flashcardRepository.listByDeckId(deckId);
+    return this.availabilityQuery.listAvailableFlashcardsByDeckId(deckId);
   }
 }

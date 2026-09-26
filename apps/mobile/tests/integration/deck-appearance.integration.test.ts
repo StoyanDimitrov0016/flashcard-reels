@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { decks } from "@/infrastructure/sqlite/schema";
 
@@ -28,7 +29,8 @@ describe("deck appearance persistence", () => {
   it("updates and reloads appearance without changing deck content", async () => {
     const service = new DeckServiceImpl(
       new SQLiteDeckRepository(database.drizzle),
-      new SQLiteDeckAppearanceRepository(database.drizzle)
+      new SQLiteDeckAppearanceRepository(database.drizzle),
+      new SQLiteDeckRemovalTransaction(database.drizzle)
     );
     const appearance = new DeckAppearance({
       deckId: TEST_DECK_ID,

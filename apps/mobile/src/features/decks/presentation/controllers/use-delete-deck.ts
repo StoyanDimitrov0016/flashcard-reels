@@ -4,7 +4,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/learner-profile/presentation/context/learning-progress-reset-context";
+import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 

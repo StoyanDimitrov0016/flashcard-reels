@@ -112,6 +112,20 @@ Share the resulting Expo build page with testers. Internal build URLs are access
 
 The current preview is available from the [latest APK build page](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/7ead0247-4974-48b9-abe3-9784b4fab465).
 
+## Android UI scenarios with Maestro
+
+The Maestro flows in `apps/mobile/.maestro` cover archived learning progress: continue after reinstall, start fresh after reinstall, and delete archived progress. A separate flow checks the full app data reset confirmation sheet and cancels it without resetting data. The archive flows use the versioned test deck, including its checked-in audio fixture, so no audio generation is needed.
+
+Install the [Maestro CLI](https://github.com/mobile-dev-inc/maestro-docs/blob/main/maestro-cli/how-to-install-maestro-cli/README.md) and make `maestro` available on PATH. Build a current APK with embedded JavaScript (such as a local release APK or an EAS preview APK), then run from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File apps/mobile/scripts/run-maestro.ps1 -ApkPath C:\path\to\flashcard-reels.apk
+```
+
+The runner starts this machine's known-working Android emulator through `android-machine.ps1 -Action Ready`, installs the APK, generates the fixture package, copies it to Android Downloads, and runs each flow with cleared app state. If the current APK is already installed, omit `-ApkPath`. The runner leaves the emulator running; use `npm run android:machine:stop -w @flashcard-reels/mobile` when finished. A Maestro flow requires an installed APK; the JavaScript-only Android export check does not create one.
+
+These scenarios complement the SQLite integration tests. Device picker labels and native gestures should be checked on the target emulator before making this suite a required CI gate.
+
 ## Android production builds
 
 The `production` profile produces the Android release artifact and increments the remote build version. Start it manually from EAS:
