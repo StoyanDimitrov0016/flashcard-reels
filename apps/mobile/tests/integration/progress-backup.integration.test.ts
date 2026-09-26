@@ -18,6 +18,8 @@ import { SQLiteProgressBackupRestoreTransaction } from "@/features/progress-back
 import { SQLiteProgressBackupQuery } from "@/features/progress-backup/infrastructure/sqlite-progress-backup.query";
 import {
   flashcardReviewAttempts,
+  flashcards,
+  flashcardProgress,
   reviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -104,6 +106,110 @@ describe("progress backup", () => {
   it("keeps the device import fixture compatible with the backup format", () => {
     const document = loadDeviceFixture();
     expect(document.reviewEvents).toHaveLength(1);
+  });
+
+  it.each([
+    ["2026-09-06T13:26:00Z", "2026-09-06T13:26:00.000Z"],
+    ["2026-09-06T16:26:00+03:00", "2026-09-06T13:26:00.000Z"],
+  ])(
+    "exports package timestamps %s in the canonical backup format",
+    async (createdAt, expected) => {
+      const database = createDatabase();
+      const flashcardId = testId(1);
+      await seedDeck(database, TEST_DECK_ID, [flashcardId]);
+      await database.drizzle.update(flashcards).set({ createdAt });
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const { session } = await graph.study.openSession("mixed", null, false);
+      const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
+      await graph.study.rateAttempt(attemptId, "good");
+      const files = new MemoryBackupFiles();
+      const backup = new ProgressBackupServiceImpl(
+        graph.study,
+        new SQLiteProgressBackupQuery(database.drizzle),
+        new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+        files,
+        clock
+      );
+
+      await backup.exportProgress();
+
+      expect(files.shared?.flashcardProgress[0]?.createdAt).toBe(expected);
+      expect(files.shared?.reviewEvents).toHaveLength(1);
+      const stored = await database.drizzle.select().from(flashcardProgress);
+      expect(stored[0]?.createdAt).toBe(createdAt);
+      files.picked = JSON.stringify(files.shared);
+      const prepared = await backup.prepareRestore();
+      if (!prepared) {
+        throw new Error("Expected an exported backup to be readable");
+      }
+      expect(await backup.restore(prepared)).toBe(false);
+    }
+  );
+
+  it("exports progress after rating cards through the study service", async () => {
+    const database = createDatabase();
+    const cardIds = [testId(1), testId(2), testId(3), testId(4)];
+    await seedDeck(database, TEST_DECK_ID, cardIds);
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("mixed", null, false);
+    const ratings = ["again", "hard", "good", "easy"] as const;
+    // oxlint-disable no-await-in-loop -- Rate each card in the order a learner studies it.
+    for (const [position, rating] of ratings.entries()) {
+      const attemptId = await graph.study.startAttempt(testId(position + 1), position, session.id);
+      await graph.study.rateAttempt(attemptId, rating);
+      await graph.study.updateSessionReelPosition(session.id, position + 1);
+    }
+    // oxlint-enable no-await-in-loop
+    const files = new MemoryBackupFiles();
+    const backup = new ProgressBackupServiceImpl(
+      graph.study,
+      new SQLiteProgressBackupQuery(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      files,
+      clock
+    );
+
+    await backup.exportProgress();
+
+    expect(files.shared?.reviewEvents.map((event) => event.rating)).toEqual(ratings);
+    expect(files.shared?.flashcardProgress).toHaveLength(4);
+    expect(files.shared?.flashcardMemoryStates).toHaveLength(4);
+  });
+
+  it("preserves finalized progress and the native cause when sharing an export fails", async () => {
+    const database = createDatabase();
+    const flashcardId = testId(1);
+    await seedDeck(database, TEST_DECK_ID, [flashcardId]);
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("mixed", null, false);
+    const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
+    await graph.study.rateAttempt(attemptId, "good");
+    const cause = new Error("File sharing is unavailable on this device");
+    const files = new MemoryBackupFiles();
+    files.share = async () => {
+      throw cause;
+    };
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const backup = new ProgressBackupServiceImpl(
+      graph.study,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      files,
+      clock
+    );
+
+    await expect(backup.exportProgress()).rejects.toMatchObject({
+      code: "PROGRESS_BACKUP_EXPORT_FAILED",
+      context: { stage: "share-file" },
+      cause,
+    });
+
+    const retained = await query.read(clock.now());
+    expect(retained.reviewEvents).toHaveLength(1);
+    expect(retained.flashcardProgress[0]?.reviewCount).toBe(1);
   });
 
   it("transfers an exported JSON document to another installed deck without changing it on retry", async () => {
