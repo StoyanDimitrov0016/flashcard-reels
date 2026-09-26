@@ -8,6 +8,7 @@ import { DestructiveConfirmationSheet } from "@/shared/presentation/components/d
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
+import { formatBytes } from "@/shared/presentation/format/format-bytes";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -103,16 +104,6 @@ export default function ArchivedProgressScreen() {
       />
     </SafeAreaView>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${Math.max(0, Math.round(bytes))} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function createStyles(colors: AppColors) {

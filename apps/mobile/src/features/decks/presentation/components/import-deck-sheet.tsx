@@ -13,6 +13,9 @@ import {
 } from "react-native";
 import * as z from "zod";
 
+import type { DeckDownloadProgress } from "@/features/decks/presentation/controllers/use-import-deck-package";
+
+import { DeckImportProgress } from "@/features/decks/presentation/components/deck-import-progress";
 import { reportError } from "@/shared/errors/report-error";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
@@ -32,6 +35,7 @@ const RemoteDeckUrlSchema = z.compile(
 );
 
 type ImportDeckSheetProps = Readonly<{
+  downloadProgress: DeckDownloadProgress | null;
   errorMessage: string | null;
   importing: boolean;
   downloading: boolean;
@@ -43,6 +47,7 @@ type ImportDeckSheetProps = Readonly<{
 }>;
 
 export function ImportDeckSheet({
+  downloadProgress,
   errorMessage,
   importing,
   downloading,
@@ -219,6 +224,7 @@ export function ImportDeckSheet({
             <ScannerContent
               cameraActive={cameraActive}
               cameraAccessError={cameraAccessError}
+              downloadProgress={downloadProgress}
               downloading={downloading}
               errorMessage={errorMessage}
               importing={importing}
@@ -270,7 +276,9 @@ export function ImportDeckSheet({
                 label="Browse device"
                 onPress={() => void handleBrowse()}
               />
-              {importing && <ImportProgress message="Importing deck…" />}
+              {importing && (
+                <DeckImportProgress phase="installing" progress={null} showSteps={false} />
+              )}
               {!!errorMessage && (
                 <Text accessibilityLiveRegion="polite" style={styles.error}>
                   {errorMessage}
@@ -287,6 +295,7 @@ export function ImportDeckSheet({
 type ScannerContentProps = Readonly<{
   cameraActive: boolean;
   cameraAccessError: string | null;
+  downloadProgress: DeckDownloadProgress | null;
   downloading: boolean;
   onSettings: () => void;
   onBrowse: () => void;
@@ -306,6 +315,7 @@ type ScannerContentProps = Readonly<{
 function ScannerContent({
   cameraActive,
   cameraAccessError,
+  downloadProgress,
   downloading,
   onSettings,
   onBrowse,
@@ -324,7 +334,7 @@ function ScannerContent({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   if (!permission) {
-    return <ActivityIndicator color={colors.interactive} size="large" />;
+    return <ActivityIndicator color={colors.textSecondary} size="large" />;
   }
   if (!permission.granted) {
     return (
@@ -354,18 +364,12 @@ function ScannerContent({
 
   if (processing || importing) {
     return (
-      <View accessibilityLiveRegion="polite" style={styles.centered}>
-        <ImportProgress message={downloading ? "Downloading deck…" : "Installing deck…"} />
-        {downloading && (
-          <Pressable
-            accessibilityRole="button"
-            onPress={onCancelDownload}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.message}>Cancel download</Text>
-          </Pressable>
-        )}
-      </View>
+      <DeckImportProgress
+        onCancel={onCancelDownload}
+        phase={downloading || processing ? "downloading" : "installing"}
+        progress={downloadProgress}
+        showSteps
+      />
     );
   }
 
@@ -409,20 +413,6 @@ function ScannerContent({
   );
 }
 
-type ImportProgressProps = Readonly<{ message: string }>;
-
-function ImportProgress({ message }: ImportProgressProps) {
-  const { colors } = useAppTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <View style={styles.progress}>
-      <ActivityIndicator color={colors.interactive} />
-      <Text style={styles.message}>{message}</Text>
-    </View>
-  );
-}
-
 type ImportChoiceProps = Readonly<{
   description: string;
   disabled?: boolean;
@@ -443,7 +433,7 @@ function ImportChoice({ description, disabled, icon, label, onPress }: ImportCho
       onPress={onPress}
       style={styles.choice}
     >
-      <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.interactive} />
+      <SymbolView name={icon} size={sizes.icon.medium} tintColor={colors.textPrimary} />
       <View style={styles.choiceCopy}>
         <Text style={styles.choiceLabel}>{label}</Text>
         <Text style={styles.choiceDescription}>{description}</Text>
@@ -522,12 +512,6 @@ function createStyles(colors: AppColors) {
       color: colors.actionPrimaryText,
       fontSize: fontSize.body,
       fontWeight: fontWeight.bold,
-    },
-    progress: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      justifyContent: "center",
     },
     scannerShell: { gap: sizes.spacing.section },
     statusIcon: {

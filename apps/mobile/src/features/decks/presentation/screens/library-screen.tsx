@@ -235,6 +235,7 @@ export default function LibraryScreen() {
     downloading,
     error: importError,
     importFromDevice,
+    downloadProgress,
     importFromUrl,
     importing,
   } = useImportDeckPackage();
@@ -465,6 +466,7 @@ export default function LibraryScreen() {
         pendingPreset={pendingPreset}
       />
       <ImportDeckSheet
+        downloadProgress={downloadProgress}
         downloading={downloading}
         errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}
         importing={importing}
