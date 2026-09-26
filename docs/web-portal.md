@@ -40,6 +40,17 @@ R2_BUCKET_NAME
 
 Leave `DECK_TRANSFER_ORIGIN` unset on Vercel. The app derives the origin from the incoming HTTPS request, which keeps production and custom-domain links correct. Set it only when a deliberate fixed origin is needed, such as a private development host; public plain HTTP is rejected.
 
+For local phone testing on the same Wi-Fi, set `DECK_TRANSFER_ORIGIN` in
+`apps/web/.env.local` to the computer's LAN address, for example
+`http://192.168.1.20:3000`, and restart the web dev server. The phone must be able to
+reach that address. Do not use `localhost`, which points to the phone itself when
+scanned. This enables the same compact `/t/<token>` links used in production.
+Without a reachable portal origin, local R2-backed transfers use longer signed
+download URLs; their QR codes contain more modules and need more careful scanning.
+For phones on another network, use a reachable HTTPS tunnel for the web server or
+test transfers through the deployed portal. The Expo tunnel only serves the mobile
+development bundle.
+
 Do not set `LOCAL_DECKS_DIR` on Vercel. It points development servers at a local folder of packages and is ignored in production.
 
 Configure the Vercel project root as `apps/web`. Never expose passwords, session secrets, or R2 credentials with a `NEXT_PUBLIC_` prefix.

@@ -17,8 +17,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useSecondsRemaining } from "@/hooks/use-seconds-remaining";
 import { transferLinkMutationOptions } from "@/lib/transfer-link";
+import { cn } from "@/lib/utils";
 
-const qrSize = 208;
+const qrSize = 288;
 
 type SendToPhoneDialogProps = Readonly<{
   deckId: string;
@@ -63,7 +64,7 @@ export function SendToPhoneDialog({ children, deckId, deckTitle }: SendToPhoneDi
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative mx-auto flex size-[248px] items-center justify-center rounded-xl border border-border bg-white p-5">
+        <div className="relative mx-auto flex aspect-square w-full max-w-[320px] items-center justify-center rounded-xl border border-border bg-white p-3">
           {transferLink.isPending && (
             <Spinner className="size-5 text-neutral-400" aria-label="Creating code" />
           )}
@@ -76,9 +77,9 @@ export function SendToPhoneDialog({ children, deckId, deckTitle }: SendToPhoneDi
           {transferLink.data && (
             <QRCodeSVG
               aria-label={`QR code that installs ${deckTitle}`}
-              className={expired ? "opacity-15 blur-[2px]" : undefined}
+              className={cn("h-auto max-w-full shrink-0", expired && "opacity-15 blur-[2px]")}
               level="L"
-              marginSize={0}
+              marginSize={4}
               size={qrSize}
               value={transferLink.data.url}
             />
