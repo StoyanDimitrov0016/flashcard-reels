@@ -14,6 +14,7 @@ import {
   flashcardMemoryStates,
   flashcards,
   flashcardProgress,
+  lessons,
   reviewEvents,
   removedDecks,
   studySessions,
@@ -185,6 +186,35 @@ export class SQLiteDeckPackageInstallationTransaction<
           .update(flashcards)
           .set({ active: false })
           .where(and(eq(flashcards.deckId, deckPackage.id), notInArray(flashcards.id, incomingIds)))
+          .run();
+      }
+
+      // Lessons are content with no learner state, so each version replaces the previous set.
+      const incomingLessonIds = (deckPackage.lessons ?? []).map((lesson) => lesson.id);
+      const lessonOwners =
+        incomingLessonIds.length === 0
+          ? []
+          : transaction
+              .select({ deckId: lessons.deckId, id: lessons.id })
+              .from(lessons)
+              .where(inArray(lessons.id, incomingLessonIds))
+              .all();
+      for (const lesson of lessonOwners) {
+        if (lesson.deckId !== deckPackage.id) {
+          throw new Error(`Lesson ${lesson.id} already belongs to deck ${lesson.deckId}`);
+        }
+      }
+      transaction.delete(lessons).where(eq(lessons.deckId, deckPackage.id)).run();
+      for (const lesson of deckPackage.lessons ?? []) {
+        transaction
+          .insert(lessons)
+          .values({
+            content: deckPackage.lessonFiles.get(lesson.id) ?? "",
+            deckId: deckPackage.id,
+            id: lesson.id,
+            order: lesson.order,
+            title: lesson.title,
+          })
           .run();
       }
 

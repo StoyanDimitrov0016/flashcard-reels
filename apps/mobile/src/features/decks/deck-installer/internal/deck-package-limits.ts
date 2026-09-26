@@ -3,6 +3,8 @@ export const DECK_PACKAGE_LIMITS = Object.freeze({
   maximumAudioFileCount: 2_000,
   maximumCardCount: 1_000,
   maximumCompressedBytes: 64 * 1024 * 1024,
+  maximumLessonCount: 200,
+  maximumLessonFileBytes: 256 * 1024,
   maximumUncompressedBytes: 128 * 1024 * 1024,
 });
 
@@ -44,6 +46,21 @@ export function validateAudioResources(count: number, individualSizes: Iterable<
     if (size > DECK_PACKAGE_LIMITS.maximumAudioFileBytes) {
       throw new DeckPackageValidationError(
         `Audio file size ${size} exceeds limit ${DECK_PACKAGE_LIMITS.maximumAudioFileBytes}`
+      );
+    }
+  }
+}
+
+export function validateLessonResources(count: number, individualSizes: Iterable<number>): void {
+  if (count > DECK_PACKAGE_LIMITS.maximumLessonCount) {
+    throw new DeckPackageValidationError(
+      `Lesson count ${count} exceeds limit ${DECK_PACKAGE_LIMITS.maximumLessonCount}`
+    );
+  }
+  for (const size of individualSizes) {
+    if (size > DECK_PACKAGE_LIMITS.maximumLessonFileBytes) {
+      throw new DeckPackageValidationError(
+        `Lesson file size ${size} exceeds limit ${DECK_PACKAGE_LIMITS.maximumLessonFileBytes}`
       );
     }
   }

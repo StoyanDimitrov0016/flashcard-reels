@@ -17,6 +17,8 @@ import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type ReelFeedProps = Readonly<{
+  /** Space at the top of each card that overlaid chrome, such as the study feed header, uses. */
+  contentInsetTop?: number;
   preparedFeed: PreparedReelFeed;
   showMainFeedLink?: boolean;
   sourceCards: Flashcard[];
@@ -24,6 +26,7 @@ type ReelFeedProps = Readonly<{
 }>;
 
 export function ReelFeed({
+  contentInsetTop = 0,
   initialCardState,
   preparedFeed,
   showMainFeedLink = false,
@@ -107,6 +110,7 @@ export function ReelFeed({
           "answer"
         )}
         card={item.card}
+        contentInsetTop={contentInsetTop}
         deck={deck}
         deckCardCount={cardCountsByDeckId.get(item.card.deckId) ?? 1}
         height={height}

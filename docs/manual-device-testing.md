@@ -65,6 +65,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 - [ ] Launch in both dark and light/device theme.
 - [ ] Vertically page cards and horizontally page all five primary tabs; confirm the gestures do not conflict.
 - [ ] Hold a Discover card to enter Focus and confirm the revealed side and selected rating carry over once.
+- [ ] Swipe from For you to Focus to Reading. Confirm the header underline follows the swipe, the header is not tappable, and it is gone on Reading. Confirm the Study icon stays active on both feeds.
 - [ ] Background Focus past its inactivity timeout, resume, and confirm it opens the replacement session without replaying handoff state.
 - [ ] Verify the Study Island in left, right, and bottom layouts.
 - [ ] Open deck details, appearance, preferences, and reset flows and confirm their native bottom sheets present and dismiss correctly.

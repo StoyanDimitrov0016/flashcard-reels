@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
 
+import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
+import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -72,7 +74,7 @@ export function AnswerCopy({
   return (
     <Pressable
       accessibilityHint="Double tap to return to the question"
-      accessibilityLabel={"Flashcard answer: " + answer}
+      accessibilityLabel={"Flashcard answer: " + toSpokenFlashcardText(answer)}
       accessibilityRole="button"
       delayLongPress={longPressDuration}
       onLongPress={onLongPress}
@@ -82,8 +84,8 @@ export function AnswerCopy({
       style={styles.copyRegion}
     >
       <View style={styles.copy}>
-        <Text style={styles.answerPrompt}>{question}</Text>
-        <Text style={styles.answer}>{answer}</Text>
+        <FlashcardText style={styles.answerPrompt} text={question} />
+        <FlashcardText style={styles.answer} text={answer} />
       </View>
     </Pressable>
   );

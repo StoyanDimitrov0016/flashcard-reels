@@ -12,6 +12,7 @@ import {
   flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
+  lessons,
   removedDecks,
   studySessionItems,
   studySessionRecurrences,
@@ -64,6 +65,7 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
           .run();
       }
       transaction.delete(flashcards).where(eq(flashcards.deckId, id)).run();
+      transaction.delete(lessons).where(eq(lessons.deckId, id)).run();
       transaction.delete(deckAppearances).where(eq(deckAppearances.deckId, id)).run();
       transaction.delete(decks).where(eq(decks.id, id)).run();
     });

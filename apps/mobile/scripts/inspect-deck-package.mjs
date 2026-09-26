@@ -30,6 +30,7 @@ try {
   console.log(`Cards: ${deck.cards.length}`);
   console.log(`Answer audio: ${answerAudioCount}`);
   console.log(`Question audio: ${questionAudioCount}`);
+  console.log(`Lessons: ${deck.lessons?.length ?? 0}`);
   console.log(`Package size: ${bytes.byteLength} bytes`);
   console.log("Validation: passed");
 } catch (error) {

@@ -7,11 +7,13 @@ import {
   validateAudioResources,
   validateCardCount,
   validateCompressedPackageSize,
+  validateLessonResources,
   validateUncompressedPackageSize,
 } from "./deck-package-limits.ts";
 import { DeckPackageSchema, isSafeDeckPackagePath } from "./deck-package.schema.ts";
 
 const AudioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
+const LessonPathPattern = /^lessons\/([^/]+)\.md$/;
 const endOfCentralDirectorySignature = 0x06054b50;
 const centralDirectoryEntrySignature = 0x02014b50;
 const localFileHeaderSignature = 0x04034b50;
@@ -163,11 +165,16 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       audioEntries.length,
       audioEntries.map(([, content]) => content.byteLength)
     );
+    const lessonEntries = entries.filter(([path]) => path.startsWith("lessons/"));
+    validateLessonResources(
+      lessonEntries.length,
+      lessonEntries.map(([, content]) => content.byteLength)
+    );
     for (const [path, content] of entries) {
       if (!isSafeDeckPackagePath(path) || path.endsWith("/")) {
         throw new DeckPackageValidationError(`Unsafe archive path: ${path}`);
       }
-      if (path !== "deck.json" && !path.startsWith("audio/")) {
+      if (path !== "deck.json" && !path.startsWith("audio/") && !path.startsWith("lessons/")) {
         throw new DeckPackageValidationError(`Unexpected archive path: ${path}`);
       }
       if (path === "deck.json" && content.length === 0) {
@@ -175,6 +182,9 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       }
       if (path.startsWith("audio/") && !AudioPathPattern.test(path)) {
         throw new DeckPackageValidationError(`Unexpected audio filename: ${path}`);
+      }
+      if (path.startsWith("lessons/") && !LessonPathPattern.test(path)) {
+        throw new DeckPackageValidationError(`Unexpected lesson filename: ${path}`);
       }
     }
 
@@ -196,7 +206,29 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       }
       audioFiles.set(path, content);
     }
-    return { ...deck, audioFiles };
+    const lessonIds = new Set((deck.lessons ?? []).map((lesson) => lesson.id));
+    const lessonFiles = new Map<string, string>();
+    for (const [path, content] of lessonEntries) {
+      const lessonId = LessonPathPattern.exec(path)?.[1] ?? "";
+      if (!lessonIds.has(lessonId)) {
+        throw new DeckPackageValidationError(`Lesson file references an unknown lesson: ${path}`);
+      }
+      lessonFiles.set(lessonId, this.decodeLesson(path, content));
+    }
+    for (const lessonId of lessonIds) {
+      if (!lessonFiles.has(lessonId)) {
+        throw new DeckPackageValidationError(`Missing lesson file: lessons/${lessonId}.md`);
+      }
+    }
+    return { ...deck, audioFiles, lessonFiles };
+  }
+
+  private decodeLesson(path: string, bytes: Uint8Array): string {
+    const markdown = strFromU8(bytes);
+    if (markdown.trim().length === 0) {
+      throw new DeckPackageValidationError(`Empty lesson file: ${path}`);
+    }
+    return markdown;
   }
 
   private parseJson(bytes: Uint8Array | undefined): unknown {

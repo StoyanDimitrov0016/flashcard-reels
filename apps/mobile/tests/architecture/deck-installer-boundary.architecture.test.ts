@@ -46,6 +46,13 @@ describe("deck-installer module boundary", () => {
         ["../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts"],
       ],
       [
+        "generate-deck-package.mjs",
+        [
+          "../src/features/decks/deck-installer/internal/deck-package.schema.ts",
+          "../src/features/decks/deck-installer/internal/deck-package-writer.ts",
+        ],
+      ],
+      [
         "generate-demo-deck-package.mjs",
         [
           "../src/features/decks/deck-installer/internal/deck-package.schema.ts",

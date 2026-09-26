@@ -53,6 +53,25 @@ export const flashcards = sqliteTable(
   ]
 );
 
+// Lessons are package content: they install, update, and uninstall with their deck.
+export const lessons = sqliteTable(
+  "lessons",
+  {
+    id: text("id").primaryKey().notNull(),
+    deckId: text("deck_id")
+      .notNull()
+      .references(() => decks.id, { onDelete: "cascade" }),
+    order: integer("order").notNull(),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+  },
+  (table) => [
+    check("lessons_order_check", sql`${table.order} >= 0`),
+    index("lessons_deck_id_idx").on(table.deckId),
+    unique("lessons_order_unique").on(table.deckId, table.order),
+  ]
+);
+
 export const flashcardProgress = sqliteTable(
   "flashcard_progress",
   {
@@ -305,6 +324,7 @@ export const databaseSchema = {
   removedDecks,
   deckAppearances,
   flashcards,
+  lessons,
   flashcardProgress,
   flashcardMemoryStates,
   reviewEvents,

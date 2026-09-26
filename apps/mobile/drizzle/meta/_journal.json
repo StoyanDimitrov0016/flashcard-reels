@@ -15,6 +15,13 @@
       "when": 1790284408965,
       "tag": "0001_military_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790352599233,
+      "tag": "0002_lessons",
+      "breakpoints": true
     }
   ]
 }

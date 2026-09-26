@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
+import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
@@ -29,7 +31,7 @@ export function QuestionFaceContent({
   return (
     <Pressable
       accessibilityHint="Double tap to reveal the answer"
-      accessibilityLabel={"Flashcard question: " + cardQuestion}
+      accessibilityLabel={"Flashcard question: " + toSpokenFlashcardText(cardQuestion)}
       accessibilityRole="button"
       delayLongPress={longPressDuration}
       onLongPress={onLongPress}
@@ -39,7 +41,7 @@ export function QuestionFaceContent({
       style={styles.content}
     >
       <View style={styles.copy}>
-        <Text style={styles.prompt}>{cardQuestion}</Text>
+        <FlashcardText style={styles.prompt} text={cardQuestion} />
         <Text style={styles.revealInstruction}>Double tap to reveal the answer</Text>
       </View>
     </Pressable>
