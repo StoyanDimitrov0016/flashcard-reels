@@ -103,6 +103,10 @@ function AppNavigation() {
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
           />
           <Stack.Screen
+            name="reading/[deckId]"
+            options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
+          />
+          <Stack.Screen
             name="lessons/[lessonId]"
             options={{ animation: "none", contentStyle: { backgroundColor: colors.canvas } }}
           />

@@ -35,12 +35,12 @@ export default function LessonScreen() {
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
-      <SubScreenHeader backLabel="Back to Reading" onBack={() => router.back()} />
+      <SubScreenHeader backLabel="Back to lessons" onBack={() => router.back()} />
       {loading && <LoadingState />}
       {!loading && !lesson && (
         <View style={styles.missing}>
           <EmptyState
-            action={{ label: "Back to Reading", onPress: () => router.back() }}
+            action={{ label: "Back to lessons", onPress: () => router.back() }}
             icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
             message="Its deck was removed or updated without it."
             title="This lesson is no longer available"

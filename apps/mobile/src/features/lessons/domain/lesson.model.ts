@@ -1,4 +1,4 @@
-import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { DeckCoverAsset, DeckId } from "@/features/decks/domain/deck.model";
 import type { Uuid } from "@/shared/domain/uuid";
 
 export type LessonId = Uuid;
@@ -36,6 +36,7 @@ export type LessonSummary = Readonly<{
 
 /** One installed deck and its lessons in reading order. */
 export type DeckReadingList = Readonly<{
+  deckCoverAsset: DeckCoverAsset;
   deckId: DeckId;
   deckTitle: string;
   lessons: readonly LessonSummary[];

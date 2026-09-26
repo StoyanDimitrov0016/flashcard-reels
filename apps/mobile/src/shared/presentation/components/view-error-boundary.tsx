@@ -22,6 +22,9 @@ function resolveViewTitle(pathname: string): string | undefined {
   if (pathname.startsWith("/lessons/")) {
     return "Couldn’t load this lesson";
   }
+  if (pathname.startsWith("/reading/")) {
+    return "Couldn’t load these lessons";
+  }
   return viewTitles[pathname];
 }
 
