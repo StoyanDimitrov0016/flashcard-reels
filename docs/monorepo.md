@@ -54,7 +54,7 @@ That boundary allows a future StyleX package without migrating the source palett
 
 ## R2 download boundary
 
-The authenticated `GET /api/decks/<deck-id>/download` route creates a compact,
+The authenticated `POST /api/decks/<deck-id>/transfer-link` route creates a compact,
 short-lived `/t/<token>` URL for QR transfer. The public transfer route verifies the
 signed token and redirects the mobile client to a short-lived R2 presigned URL, so R2
 credentials and the verbose signature never appear in the QR code. The mobile app then

@@ -12,6 +12,10 @@ node_modules/
 # Expo
 .expo/
 dist/
+# Generated deck packages
+/apps/mobile/build/
+# Deck audio is generated and published with the package, not versioned
+/apps/mobile/data/decks/*/audio/
 web-build/
 expo-env.d.ts
 

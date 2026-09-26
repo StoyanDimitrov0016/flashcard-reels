@@ -1,13 +1,14 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 
 import { cn } from "@/lib/utils";
 
-type SkeletonProps = Readonly<HTMLAttributes<HTMLDivElement>>;
+type SkeletonProps = Readonly<ComponentPropsWithoutRef<"div">>;
 
 function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-[var(--surface-subtle)]", className)}
+      aria-hidden
+      className={cn("animate-pulse rounded-md bg-surface-subtle", className)}
       {...props}
     />
   );
