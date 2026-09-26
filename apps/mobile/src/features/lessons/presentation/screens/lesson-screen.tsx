@@ -1,12 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
-import { ReadingProgressBar } from "@/features/lessons/presentation/components/reading-progress-bar";
+import {
+  ReadingProgressBar,
+  useReadingProgress,
+} from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
@@ -29,9 +31,7 @@ export default function LessonScreen() {
   const accent = appearance
     ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
     : colors.textSecondary;
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [viewportHeight, setViewportHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
+  const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -51,18 +51,10 @@ export default function LessonScreen() {
         <>
           <ReadingProgressBar
             color={accent}
-            scrollableHeight={Math.max(contentHeight - viewportHeight, 0)}
+            scrollableHeight={scrollableHeight}
             scrollY={scrollY}
           />
-          <Animated.ScrollView
-            contentContainerStyle={styles.content}
-            onContentSizeChange={(_width, height) => setContentHeight(height)}
-            onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
-            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-              useNativeDriver: true,
-            })}
-            scrollEventThrottle={16}
-          >
+          <Animated.ScrollView contentContainerStyle={styles.content} {...scrollViewProps}>
             <View style={styles.column}>
               <Text accessibilityRole="header" style={styles.title}>
                 {lesson.title}

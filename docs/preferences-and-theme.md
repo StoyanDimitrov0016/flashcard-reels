@@ -18,6 +18,6 @@ The application theme controls navigation, sheets, settings, controls, overlays,
 
 The Study Island can sit on the left, right, or bottom of a card. Rating direction changes visual order without changing the meaning of the recall labels. Audio and Reading buttons each follow their own primary/opposite placement; when one side is empty, a matching space keeps the ratings centered on the card.
 
-The Reading button appears on answers from decks that have lessons. It opens a sheet with the deck's lessons; opening one pushes it over the feed, so Back returns to the same card.
+The Reading button appears on answers from decks that have lessons. It opens a short sheet with the deck's lessons, and a lesson opened from it is read in the same sheet with a link to the next one, so closing it returns to the same card.
 
 Haptics are limited to meaningful study events such as rating, successful Hold-to-Focus, and successful learning reset.

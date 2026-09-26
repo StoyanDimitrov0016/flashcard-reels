@@ -1,6 +1,31 @@
+import { useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 import { useAppTheme } from "@/shared/presentation/theme";
+
+/**
+ * Tracks how far a lesson's ScrollView has been read. Spread `scrollViewProps` on an
+ * `Animated.ScrollView` and pass the rest to `ReadingProgressBar`.
+ */
+export function useReadingProgress() {
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  return {
+    scrollableHeight: Math.max(contentHeight - viewportHeight, 0),
+    scrollViewProps: {
+      onContentSizeChange: (_width: number, height: number) => setContentHeight(height),
+      onLayout: (event: { nativeEvent: { layout: { height: number } } }) =>
+        setViewportHeight(event.nativeEvent.layout.height),
+      onScroll: Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+      }),
+      scrollEventThrottle: 16,
+    },
+    scrollY,
+  };
+}
 
 type ReadingProgressBarProps = Readonly<{
   color: string;

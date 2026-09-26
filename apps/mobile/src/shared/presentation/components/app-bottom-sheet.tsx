@@ -8,6 +8,11 @@ import { useAppTheme } from "@/shared/presentation/theme";
 // A sliver of the screen behind stays visible, so a sheet never reads as a new screen.
 const MAX_HEIGHT_RATIO = 0.88;
 
+/** The tallest a sheet grows, for content such as a lesson that should fill it from the start. */
+export function useSheetMaxHeight(): number {
+  return useWindowDimensions().height * MAX_HEIGHT_RATIO;
+}
+
 type AppBottomSheetProps = Readonly<{
   children: ReactNode;
   dismissible?: boolean;
@@ -26,8 +31,7 @@ export function AppBottomSheet({
   visible,
 }: AppBottomSheetProps) {
   const { colors } = useAppTheme();
-  const { height: windowHeight } = useWindowDimensions();
-  const styles = createStyles(colors.surfaceRaised, windowHeight * MAX_HEIGHT_RATIO);
+  const styles = createStyles(colors.surfaceRaised, useSheetMaxHeight());
 
   return (
     <BottomSheet

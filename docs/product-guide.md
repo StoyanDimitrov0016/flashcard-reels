@@ -10,7 +10,7 @@ Ratings influence what appears later, while Progress summarizes review history a
 
 ## Reading
 
-**Reading** lists the lessons that come with installed decks, grouped by deck in their suggested order. A lesson is one or two pages of text to read before or alongside studying. Reading is optional: it never gates the feeds and records no progress.
+**Reading** shows a card for each installed deck that has lessons, with its first few lesson titles; tapping a card lists that deck's lessons in their suggested order. A lesson is one or two pages of text to read before or alongside studying. Reading is optional: it never gates the feeds and records no progress.
 
 ## Deck library
 
