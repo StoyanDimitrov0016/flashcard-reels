@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
@@ -10,6 +10,7 @@ import { StudySessionRecurrence } from "@/features/study/domain/study-session-re
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -33,8 +34,8 @@ describe("SQLite study persistence", () => {
   let sessions: SQLiteStudySessionRepository;
   let items: SQLiteStudySessionItemRepository;
   let attempts: SQLiteReviewAttemptRepository;
+  let attemptTransaction: SQLiteReviewAttemptTransaction;
   let recurrences: SQLiteStudySessionRecurrenceRepository;
-  let flashcards: SQLiteFlashcardRepository;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
@@ -73,8 +74,8 @@ describe("SQLite study persistence", () => {
     sessions = new SQLiteStudySessionRepository(database.drizzle);
     items = new SQLiteStudySessionItemRepository(database.drizzle);
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
+    attemptTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
     recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
-    flashcards = new SQLiteFlashcardRepository(database.drizzle);
   });
 
   afterEach(() => {
@@ -101,7 +102,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(makeSession(testId(201), "focused", TEST_DECK_ID));
 
     await expect(
-      new SQLiteDeckRepository(database.drizzle).remove(TEST_DECK_ID)
+      new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID)
     ).resolves.toBeUndefined();
     await expect(database.getAllAsync("PRAGMA foreign_key_check")).resolves.toEqual([]);
     await expect(
@@ -123,6 +124,7 @@ describe("SQLite study persistence", () => {
     const service = new StudyServiceImpl(
       attempts,
       sessions,
+      new SQLiteStudySessionAggregationQuery(database.drizzle),
       items,
       recurrences,
       clock,
@@ -152,6 +154,7 @@ describe("SQLite study persistence", () => {
     const service = new StudyServiceImpl(
       attempts,
       sessions,
+      new SQLiteStudySessionAggregationQuery(database.drizzle),
       items,
       recurrences,
       clock,
@@ -176,7 +179,9 @@ describe("SQLite study persistence", () => {
   });
 
   it("reads Focus cards by explicit deck order and enforces deck-order uniqueness", async () => {
-    const cards = await flashcards.listByDeckId(TEST_DECK_ID);
+    const cards = await new SQLiteFlashcardAvailabilityQuery(
+      database.drizzle
+    ).listAvailableFlashcardsByDeckId(TEST_DECK_ID);
     expect(cards.map((card) => [card.id, card.order])).toEqual([
       [makeFlashcard(2).id, 0],
       [makeFlashcard(1).id, 1],
@@ -274,7 +279,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     await Promise.all(
       [10, 11, 12].map((reelPosition) =>
-        attempts.create(
+        attemptTransaction.createAttempt(
           new FlashcardReviewAttempt({
             createdAt: "2026-01-01T00:00:00.000Z",
             finalizedAt: null,
@@ -359,9 +364,9 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     await expect(
-      attempts.create(
+      attemptTransaction.createAttempt(
         new FlashcardReviewAttempt({
           createdAt: attempt.createdAt,
           finalizedAt: null,
@@ -374,7 +379,7 @@ describe("SQLite study persistence", () => {
         })
       )
     ).rejects.toThrow();
-    await attempts.create(
+    await attemptTransaction.createAttempt(
       new FlashcardReviewAttempt({
         createdAt: attempt.createdAt,
         finalizedAt: null,
@@ -399,7 +404,28 @@ describe("SQLite study persistence", () => {
     expect(finalizedAttempt?.rating).toBeNull();
   });
 
-  it("rejects incoherent rating and learner-profile timestamp states", async () => {
+  it("does not create review attempts for completed sessions", async () => {
+    const session = makeSession(testId(232), "mixed");
+    await sessions.create(session);
+    await sessions.complete(session.id, "2026-01-01T00:01:00.000Z");
+    const attempt = new FlashcardReviewAttempt({
+      createdAt: "2026-01-01T00:00:00.000Z",
+      finalizedAt: null,
+      flashcardId: makeFlashcard(1).id,
+      id: testId(233),
+      rating: null,
+      reelPosition: 0,
+      studySessionId: session.id,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+
+    await expect(attemptTransaction.createAttempt(attempt)).rejects.toThrow(
+      `Cannot create a review attempt for inactive session ${session.id}`
+    );
+    await expect(attempts.findById(attempt.id)).resolves.toBeNull();
+  });
+
+  it("rejects incoherent rating and flashcard-progress timestamp states", async () => {
     const session = makeSession(testId(274), "mixed");
     await sessions.create(session);
     await expect(
@@ -417,8 +443,9 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
     await expect(
       database.runAsync(
-        "INSERT INTO learner_profiles (flashcard_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO flashcard_progress (flashcard_id, deck_id, review_count, again_count, hard_count, good_count, easy_count, first_reviewed_at, last_reviewed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         makeFlashcard(1).id,
+        TEST_DECK_ID,
         0,
         0,
         0,
@@ -445,7 +472,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
 
     await expect(
@@ -496,7 +523,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const recurrence = new StudySessionRecurrence({
       consumedAt: null,
       createdAt: "2026-01-01T00:01:00.000Z",
@@ -531,7 +558,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     const secondAttempt = new FlashcardReviewAttempt({
       createdAt: attempt.createdAt,
       finalizedAt: attempt.finalizedAt,
@@ -543,7 +570,7 @@ describe("SQLite study persistence", () => {
       studySessionId: attempt.studySessionId,
       updatedAt: attempt.updatedAt,
     });
-    await attempts.create(secondAttempt);
+    await attemptTransaction.createAttempt(secondAttempt);
     const recurrence = new StudySessionRecurrence({
       consumedAt: null,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -627,8 +654,8 @@ describe("SQLite study persistence", () => {
       studySessionId: firstAttempt.studySessionId,
       updatedAt: firstAttempt.updatedAt,
     });
-    await attempts.create(firstAttempt);
-    await attempts.create(secondAttempt);
+    await attemptTransaction.createAttempt(firstAttempt);
+    await attemptTransaction.createAttempt(secondAttempt);
 
     const firstRecurrence = new StudySessionRecurrence({
       consumedAt: null,
@@ -702,7 +729,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
-    await attempts.create(attempt);
+    await attemptTransaction.createAttempt(attempt);
     await items.createMany([
       new StudySessionItem({
         flashcardId: attempt.flashcardId,
@@ -738,12 +765,14 @@ describe("SQLite study persistence", () => {
 
     expect(tables).toEqual([
       { name: "deck_appearances" },
+      { name: "deck_progress" },
       { name: "decks" },
       { name: "flashcard_memory_states" },
+      { name: "flashcard_progress" },
       { name: "flashcard_review_attempts" },
       { name: "flashcards" },
-      { name: "learner_profiles" },
       { name: "removed_decks" },
+      { name: "review_events" },
       { name: "study_session_items" },
       { name: "study_session_recurrences" },
       { name: "study_sessions" },

@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet("Start", "Stop")]
+  [ValidateSet("Start", "Ready", "Stop")]
   [string]$Action
 )
 
@@ -96,6 +96,11 @@ if (-not $onlineEmulator) {
   if (-not $booted) {
     throw "The Android emulator connected but did not finish booting within two minutes."
   }
+}
+
+if ($Action -eq "Ready") {
+  Write-Host "Android is ready for a locally installed app and Maestro."
+  exit 0
 }
 
 Write-Host "Android is ready. Starting Expo; press Ctrl+C to stop Metro."

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import { FOCUS_SESSION_INACTIVITY_TIMEOUT_MS } from "@/features/study/domain/review-attempts";
-import { learnerProfiles } from "@/infrastructure/sqlite/schema";
+import { flashcardProgress } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
@@ -104,10 +104,10 @@ describe("SQLite study sessions", () => {
     await graph.study.updateSessionReelPosition(opened.studySessionId, 126);
     await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
 
-    const profileRows = await database.getAllAsync(
-      "SELECT review_count, again_count, good_count FROM learner_profiles ORDER BY flashcard_id"
+    const progressRows = await database.getAllAsync(
+      "SELECT review_count, again_count, good_count FROM flashcard_progress ORDER BY flashcard_id"
     );
-    expect(profileRows).toEqual([
+    expect(progressRows).toEqual([
       { again_count: 1, good_count: 0, review_count: 1 },
       { again_count: 0, good_count: 1, review_count: 1 },
     ]);
@@ -122,7 +122,7 @@ describe("SQLite study sessions", () => {
       await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_recurrences")
     ).toEqual({ count: 1 });
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM learner_profiles")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM flashcard_progress")
     ).toEqual({ count: 2 });
   });
 
@@ -180,13 +180,14 @@ describe("SQLite study sessions", () => {
     expect(resumed.loadedFromReelPosition).toBeGreaterThanOrEqual(900);
   });
 
-  it("keeps feed selection independent from learner-profile counters", async () => {
+  it("keeps feed selection independent from flashcard-progress counters", async () => {
     const initial = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
     const initialIds = initial.occurrences.map((occurrence) => occurrence.card.id);
-    await database.drizzle.insert(learnerProfiles).values(
+    await database.drizzle.insert(flashcardProgress).values(
       focusCards.map((card) => ({
         againCount: 1,
         createdAt: "2026-01-01T00:00:00.000Z",
+        deckId: card.deckId,
         easyCount: 0,
         firstReviewedAt: "2026-01-01T00:00:00.000Z",
         flashcardId: card.id,
@@ -198,15 +199,15 @@ describe("SQLite study sessions", () => {
       }))
     );
 
-    const changedProfile = createScenarioGraph(database, clock, ids);
-    const afterProfileChange = await changedProfile.feed.prepareFeed(
+    const changedProgress = createScenarioGraph(database, clock, ids);
+    const afterProgressChange = await changedProgress.feed.prepareFeed(
       focusCards,
       "focused",
       TEST_DECK_ID,
       true
     );
 
-    expect(afterProfileChange.occurrences.map((occurrence) => occurrence.card.id)).toEqual(
+    expect(afterProgressChange.occurrences.map((occurrence) => occurrence.card.id)).toEqual(
       initialIds
     );
   });
@@ -245,7 +246,7 @@ describe("SQLite study sessions", () => {
     await graph.study.recoverPendingCompletedSessionAggregation(1);
     expect(
       await database.getFirstAsync(
-        "SELECT review_count FROM learner_profiles WHERE flashcard_id = ?",
+        "SELECT review_count FROM flashcard_progress WHERE flashcard_id = ?",
         at(focusCards, 0).id
       )
     ).toEqual({ review_count: 1 });
@@ -304,7 +305,7 @@ describe("SQLite study sessions", () => {
     expect(activeDiscover?.completedAt).toBeNull();
     await graph.study.completeSession(discover.studySessionId);
     expect(
-      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM learner_profiles")
+      await database.getFirstAsync("SELECT SUM(review_count) AS count FROM flashcard_progress")
     ).toEqual({ count: 2 });
   });
 

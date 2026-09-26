@@ -37,6 +37,16 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 - [ ] Confirm the removed card no longer appears, existing history remains, and the new card is new.
 - [ ] Attempt v1 after v2; confirm lower-version rejection and no content change.
 
+## Archived deck progress
+
+- [ ] Study an imported deck, remove the deck, then open Controls → Archived progress. Confirm the deck and estimated storage size appear.
+- [ ] Restart the app and confirm the archived entry remains while the deck's cards stay out of study feeds.
+- [ ] Import the same deck again. Confirm its cards remain paused until choosing Continue or Start fresh, including when tapping or holding its Library row.
+- [ ] Choose Continue. Confirm the previous learning state returns and study resumes.
+- [ ] Remove and import the deck again, then choose Start fresh. Confirm the previous learning state and review history are cleared.
+- [ ] Remove the deck again and delete its entry from Archived progress. Confirm it disappears and a later import starts fresh.
+- [ ] Reset one card and then a whole deck from the learning controls. Confirm their archived progress reflects the remaining history or disappears when none remains.
+
 ## Invalid package
 
 - [ ] Try to import a deliberately invalid `.fcrdeck` file.

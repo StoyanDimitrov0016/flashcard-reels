@@ -1,8 +1,13 @@
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 
-import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
-import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
+import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
+import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
@@ -10,6 +15,7 @@ import { StudyServiceImpl } from "@/features/study/application/study.service.imp
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -34,12 +40,13 @@ export function createScenarioGraph(
   const sessions = new SQLiteStudySessionRepository(database.drizzle);
   const items = new SQLiteStudySessionItemRepository(database.drizzle);
   const recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
-  const profiles = new SQLiteLearnerProfileRepository(database.drizzle);
+  const progress = new SQLiteFlashcardProgressRepository(database.drizzle);
   const scheduler = createLearningScheduler();
   const memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
   const study = new StudyServiceImpl(
     attempts,
     sessions,
+    new SQLiteStudySessionAggregationQuery(database.drizzle),
     items,
     recurrences,
     clock,
@@ -50,7 +57,7 @@ export function createScenarioGraph(
     finalizationTransaction ??
       new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, scheduler),
     random,
-    new SQLiteLearnerProfileAggregationTransaction(database.drizzle),
+    new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
   return {
@@ -58,8 +65,17 @@ export function createScenarioGraph(
     feed: new ReelFeedServiceImpl(study, memoryStates, scheduler, clock, random),
     memoryStates,
     items,
-    learnerProfiles: new LearnerProfileServiceImpl(profiles, clock),
-    profiles,
+    flashcardProgress: new FlashcardProgressServiceImpl(
+      new SQLiteFlashcardProgressQuery(database.drizzle, progress),
+      clock,
+      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      study,
+      new FlashcardServiceImpl(
+        new SQLiteFlashcardRepository(database.drizzle),
+        new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+      )
+    ),
+    progress,
     recurrences,
     sessions,
     study,

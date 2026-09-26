@@ -1,9 +1,10 @@
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
+import type { SavedProgressService } from "@/features/decks/application/saved-progress.service";
 import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { DeckService } from "@/features/decks/domain/deck.service";
+import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
-import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 
 import { useAppServices } from "@/infrastructure/app-services";
 
@@ -12,8 +13,9 @@ export type DecksCapability = Readonly<{
   deckPackageDownloader: DeckPackageDownloader;
   deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
+  savedProgressService: SavedProgressService;
   flashcardService: FlashcardService;
-  learnerProfileService: LearnerProfileService;
+  flashcardProgressService: FlashcardProgressService;
 }>;
 
 export function useDecks(): DecksCapability {
@@ -22,8 +24,9 @@ export function useDecks(): DecksCapability {
     deckPackageDownloader,
     deckPackagePicker,
     deckService,
+    savedProgressService,
     flashcardService,
-    learnerProfileService,
+    flashcardProgressService,
   } = useAppServices();
 
   return {
@@ -31,7 +34,8 @@ export function useDecks(): DecksCapability {
     deckPackageDownloader,
     deckPackagePicker,
     deckService,
+    savedProgressService,
     flashcardService,
-    learnerProfileService,
+    flashcardProgressService,
   };
 }

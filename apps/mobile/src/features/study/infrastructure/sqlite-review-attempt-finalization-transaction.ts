@@ -1,10 +1,17 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { flashcardMemoryStates, flashcardReviewAttempts } from "@/infrastructure/sqlite/schema";
+import {
+  deckProgress,
+  decks,
+  flashcardMemoryStates,
+  flashcardReviewAttempts,
+  flashcards,
+  reviewEvents,
+} from "@/infrastructure/sqlite/schema";
 
 export class SQLiteReviewAttemptFinalizationTransaction<
   TRunResult = unknown,
@@ -40,6 +47,16 @@ export class SQLiteReviewAttemptFinalizationTransaction<
       }
 
       if (attempt.rating !== null && attempt.ratedAt !== null) {
+        const card = transaction
+          .select({ deckId: flashcards.deckId, title: decks.title, version: decks.version })
+          .from(flashcards)
+          .innerJoin(decks, eq(decks.id, flashcards.deckId))
+          .where(eq(flashcards.id, attempt.flashcardId))
+          .limit(1)
+          .all()[0];
+        if (!card) {
+          throw new Error(`Missing flashcard ${attempt.flashcardId} for review finalization`);
+        }
         const memoryRows = transaction
           .select()
           .from(flashcardMemoryStates)
@@ -58,6 +75,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           createdAt: current?.createdAt ?? finalizedAt,
           dueAt: nextState.dueAt,
           difficulty: nextState.difficulty,
+          deckId: card.deckId,
           elapsedDays: nextState.elapsedDays,
           flashcardId: nextState.flashcardId,
           lapses: nextState.lapses,
@@ -73,6 +91,36 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           .insert(flashcardMemoryStates)
           .values(values)
           .onConflictDoUpdate({ target: flashcardMemoryStates.flashcardId, set: values })
+          .run();
+        transaction
+          .insert(reviewEvents)
+          .values({
+            id: attempt.id,
+            deckId: card.deckId,
+            flashcardId: attempt.flashcardId,
+            rating: attempt.rating,
+            reviewedAt: attempt.ratedAt,
+            finalizedAt,
+          })
+          .onConflictDoNothing()
+          .run();
+        transaction
+          .insert(deckProgress)
+          .values({
+            deckId: card.deckId,
+            title: card.title,
+            version: card.version,
+            lastReviewedAt: attempt.ratedAt,
+            resolution: "active",
+          })
+          .onConflictDoUpdate({
+            target: deckProgress.deckId,
+            set: {
+              title: card.title,
+              version: card.version,
+              lastReviewedAt: sql`max(${deckProgress.lastReviewedAt}, ${attempt.ratedAt})`,
+            },
+          })
           .run();
       }
 

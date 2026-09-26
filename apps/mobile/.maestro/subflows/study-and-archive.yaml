@@ -1,0 +1,24 @@
+appId: com.flashcardreels.app
+---
+- longPressOn: Versioned Test Deck
+- assertVisible: "Flashcard question: .*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: "Recall level: Good"
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 650
+- waitForAnimationToEnd
+- assertNotVisible: "Flashcard answer: .*"
+- assertVisible: "Flashcard question: .*"
+- tapOn: Library tab
+- tapOn: Versioned Test Deck
+- tapOn: Delete Versioned Test Deck
+- assertVisible: "Delete Versioned Test Deck?"
+- tapOn: Delete deck
+- assertNotVisible: Versioned Test Deck
+- tapOn: You tab
+- tapOn: Archived deck progress
+- assertVisible: Archived progress
+- assertVisible: Versioned Test Deck
+- assertVisible: "1 reviews.*"

@@ -1,12 +1,12 @@
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import type { LearnerMemoryState } from "./memory-state";
+import type { FlashcardMemoryState } from "./flashcard-memory-state";
 
 export const FEED_RECENT_CARD_LIMIT = 3;
 
 export type FeedCandidate = Readonly<{
   card: Flashcard;
-  memoryState: LearnerMemoryState | null;
+  memoryState: FlashcardMemoryState | null;
   retrievability: number | null;
   dueAt: string | null;
   isDue: boolean;

@@ -5,26 +5,35 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
+import type { SavedProgressService } from "@/features/decks/application/saved-progress.service";
 import type { DeckInstaller } from "@/features/decks/deck-installer";
 import type { DeckService } from "@/features/decks/domain/deck.service";
+import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
-import type { LearnerProfileService } from "@/features/learner-profile/domain/learner-profile.service";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
+import { SavedProgressServiceImpl } from "@/features/decks/application/saved-progress.service.impl";
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
+import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
 import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
+import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
+import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
+import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
+import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { LearnerProfileServiceImpl } from "@/features/learner-profile/application/learner-profile.service.impl";
-import { SQLiteLearnerProfileAggregationTransaction } from "@/features/learner-profile/infrastructure/sqlite-learner-profile-aggregation-transaction";
-import { SQLiteLearnerProfileRepository } from "@/features/learner-profile/infrastructure/sqlite-learner-profile.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/learner-profile/infrastructure/sqlite-learning-progress-reset-transaction";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
@@ -32,6 +41,7 @@ import { StudyServiceImpl } from "@/features/study/application/study.service.imp
 import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
@@ -48,8 +58,9 @@ type AppServices = Readonly<{
   deckPackageDownloader: DeckPackageDownloader;
   deckPackagePicker: DeckPackagePicker;
   deckService: DeckService;
+  savedProgressService: SavedProgressService;
   flashcardService: FlashcardService;
-  learnerProfileService: LearnerProfileService;
+  flashcardProgressService: FlashcardProgressService;
   reelFeedService: ReelFeedService;
   studyService: StudyService;
 }>;
@@ -64,8 +75,20 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const drizzleDatabase = drizzle<DatabaseSchema>(database);
     const deckRepository = new SQLiteDeckRepository(drizzleDatabase);
     const deckAppearanceRepository = new SQLiteDeckAppearanceRepository(drizzleDatabase);
+    const deckProgressRepository = new SQLiteDeckProgressRepository(drizzleDatabase);
+    const deckRemovalTransaction = new SQLiteDeckRemovalTransaction(drizzleDatabase);
+    const archivedProgressQuery = new SQLiteArchivedProgressQuery(drizzleDatabase);
+    const savedProgressDeletionTransaction = new SQLiteSavedProgressDeletionTransaction(
+      drizzleDatabase
+    );
+    const savedProgressContinuationTransaction = new SQLiteSavedProgressContinuationTransaction(
+      drizzleDatabase
+    );
     const flashcardRepository = new SQLiteFlashcardRepository(drizzleDatabase);
-    const flashcardService = new FlashcardServiceImpl(flashcardRepository);
+    const flashcardService = new FlashcardServiceImpl(
+      flashcardRepository,
+      new SQLiteFlashcardAvailabilityQuery(drizzleDatabase)
+    );
     const reviewAttemptRepository = new SQLiteReviewAttemptRepository(drizzleDatabase);
     const reviewAttemptTransaction = new SQLiteReviewAttemptTransaction(drizzleDatabase);
     const learningScheduler = createLearningScheduler();
@@ -76,19 +99,23 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       drizzleDatabase,
       learningScheduler
     );
-    const learnerProfileRepository = new SQLiteLearnerProfileRepository(drizzleDatabase);
+    const flashcardProgressRepository = new SQLiteFlashcardProgressRepository(drizzleDatabase);
+    const flashcardProgressQuery = new SQLiteFlashcardProgressQuery(
+      drizzleDatabase,
+      flashcardProgressRepository
+    );
     const learningProgressResetTransaction = new SQLiteLearningProgressResetTransaction(
       drizzleDatabase
     );
-    const learnerProfileAggregationTransaction = new SQLiteLearnerProfileAggregationTransaction(
-      drizzleDatabase
-    );
+    const flashcardProgressAggregationTransaction =
+      new SQLiteFlashcardProgressAggregationTransaction(drizzleDatabase);
     const studySessionItemRepository = new SQLiteStudySessionItemRepository(drizzleDatabase);
     const studySessionFeedTransaction = new SQLiteStudySessionFeedTransaction(drizzleDatabase);
     const studySessionRecurrenceRepository = new SQLiteStudySessionRecurrenceRepository(
       drizzleDatabase
     );
     const studySessionRepository = new SQLiteStudySessionRepository(drizzleDatabase);
+    const studySessionAggregationQuery = new SQLiteStudySessionAggregationQuery(drizzleDatabase);
     const studySessionLifecycleTransaction = new SQLiteStudySessionLifecycleTransaction(
       drizzleDatabase
     );
@@ -100,6 +127,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
     const studyService = new StudyServiceImpl(
       reviewAttemptRepository,
       studySessionRepository,
+      studySessionAggregationQuery,
       studySessionItemRepository,
       studySessionRecurrenceRepository,
       clock,
@@ -109,7 +137,7 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       studySessionLifecycleTransaction,
       reviewAttemptFinalizationTransaction,
       Math.random,
-      learnerProfileAggregationTransaction,
+      flashcardProgressAggregationTransaction,
       studySessionMaintenanceTransaction
     );
     const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices(
@@ -127,12 +155,19 @@ export function AppServicesProvider({ children }: AppServicesProviderProps) {
       deckService: new DeckServiceImpl(
         deckRepository,
         deckAppearanceRepository,
+        deckRemovalTransaction,
         deckAudioRemover,
         studyService
       ),
+      savedProgressService: new SavedProgressServiceImpl(
+        archivedProgressQuery,
+        deckProgressRepository,
+        savedProgressDeletionTransaction,
+        savedProgressContinuationTransaction
+      ),
       flashcardService,
-      learnerProfileService: new LearnerProfileServiceImpl(
-        learnerProfileRepository,
+      flashcardProgressService: new FlashcardProgressServiceImpl(
+        flashcardProgressQuery,
         clock,
         learningProgressResetTransaction,
         studyService,

@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, isNull, ne } from "drizzle-orm";
 
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
+import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
@@ -20,6 +21,37 @@ export class SQLiteReviewAttemptTransaction<
 
   constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
+  }
+
+  async createAttempt(attempt: FlashcardReviewAttempt): Promise<void> {
+    this.database.transaction((transaction) => {
+      const activeSession = transaction
+        .select({ id: studySessions.id })
+        .from(studySessions)
+        .where(and(eq(studySessions.id, attempt.studySessionId), isNull(studySessions.completedAt)))
+        .limit(1)
+        .all()[0];
+      if (!activeSession) {
+        throw new Error(
+          `Cannot create a review attempt for inactive session ${attempt.studySessionId}`
+        );
+      }
+
+      transaction
+        .insert(flashcardReviewAttempts)
+        .values({
+          createdAt: attempt.createdAt,
+          finalizedAt: attempt.finalizedAt,
+          flashcardId: attempt.flashcardId,
+          id: attempt.id,
+          rating: attempt.rating,
+          ratedAt: attempt.ratedAt,
+          reelPosition: attempt.reelPosition,
+          studySessionId: attempt.studySessionId,
+          updatedAt: attempt.updatedAt,
+        })
+        .run();
+    });
   }
 
   async rateAttempt(

@@ -1,7 +1,6 @@
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 
 export interface ReviewAttemptRepository {
-  create(attempt: FlashcardReviewAttempt): Promise<void>;
   findById(attemptId: string): Promise<FlashcardReviewAttempt | null>;
   findBySessionAndReelPosition(
     studySessionId: string,
