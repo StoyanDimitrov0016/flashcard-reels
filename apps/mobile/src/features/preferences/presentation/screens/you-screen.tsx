@@ -87,6 +87,11 @@ export default function YouScreen() {
           </PreferenceSection>
           <PreferenceSection title="Data">
             <PreferenceRow
+              icon={{ android: "save", ios: "square.and.arrow.up", web: "save" }}
+              onPress={() => router.push("../progress-backup")}
+              title="Progress backup"
+            />
+            <PreferenceRow
               icon={{ android: "archive", ios: "archivebox", web: "archive" }}
               onPress={() => router.push("../archived-progress")}
               title="Archived deck progress"

@@ -9,16 +9,21 @@ import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck
 import { ExpoDeckPackageFileReader } from "@/features/decks/deck-installer/internal/expo-deck-package-file.reader";
 import { InstalledAudioStorage } from "@/features/decks/deck-installer/internal/installed-audio-storage";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
-import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 
-export function createDeckPackageServices(
-  database: DrizzleDatabase,
-  clock: Clock,
-  existingDeckRepository?: DeckRepository,
-  sessionSettlement: StudySessionSettlement | null = null
-) {
+type CreateDeckPackageServicesOptions = Readonly<{
+  database: DrizzleDatabase;
+  clock: Clock;
+  deckRepository: DeckRepository;
+  sessionSettlement: StudySessionSettlement | null;
+}>;
+
+export function createDeckPackageServices({
+  database,
+  clock,
+  deckRepository,
+  sessionSettlement,
+}: CreateDeckPackageServicesOptions) {
   const audioStorage = new InstalledAudioStorage();
-  const deckRepository = existingDeckRepository ?? new SQLiteDeckRepository(database);
   const installer = new DeckInstallerImpl(
     new ArchiveDeckPackageReader(),
     new SQLiteDeckPackageInstallationTransaction(database),

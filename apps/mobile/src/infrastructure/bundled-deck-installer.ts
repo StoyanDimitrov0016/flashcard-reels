@@ -22,7 +22,12 @@ import {
 export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);
   const removedDeckRepository = new SQLiteRemovedDeckRepository(database);
-  const { installBundledPackage } = createDeckPackageServices(database, clock, deckRepository);
+  const { installBundledPackage } = createDeckPackageServices({
+    database,
+    clock,
+    deckRepository,
+    sessionSettlement: null,
+  });
   const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
     if (await removedDeckRepository.wasRemoved(definition.id)) {

@@ -154,6 +154,39 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     await this.aggregateCompletedSession(sessionId);
   }
 
+  async settleForProgressBackup(): Promise<void> {
+    // oxlint-disable no-await-in-loop -- Each session must be finalized before its snapshot is read.
+    for (const scope of ["mixed", "focused"] as const) {
+      const active = await this.studySessionRepository.findActiveByScope(scope);
+      if (active) {
+        await this.completeSession(active.id);
+      }
+    }
+    // oxlint-enable no-await-in-loop
+    // A completed session may need more than the foreground aggregation limit.
+    // oxlint-disable no-await-in-loop -- Each pass advances durable aggregation checkpoints.
+    while (true) {
+      const pending =
+        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(
+          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+        );
+      if (pending.length === 0) {
+        return;
+      }
+      for (const session of pending) {
+        await this.finalizeAndAggregateCompletedSession(session.id);
+        const updated = await this.studySessionRepository.findById(session.id);
+        if (
+          !updated ||
+          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
+        ) {
+          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
+        }
+      }
+    }
+    // oxlint-enable no-await-in-loop
+  }
+
   async settleActiveSessionsAffectedByDeck(deckId: DeckId, includeFocused: boolean): Promise<void> {
     const mixed = await this.studySessionRepository.findActiveByScope("mixed");
     if (mixed) {

@@ -11,7 +11,7 @@ import {
 } from "./deck-package-limits.ts";
 import { DeckPackageSchema, isSafeDeckPackagePath } from "./deck-package.schema.ts";
 
-const audioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
+const AudioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
 const endOfCentralDirectorySignature = 0x06054b50;
 const centralDirectoryEntrySignature = 0x02014b50;
 const localFileHeaderSignature = 0x04034b50;
@@ -173,7 +173,7 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       if (path === "deck.json" && content.length === 0) {
         throw new DeckPackageValidationError("Empty deck.json");
       }
-      if (path.startsWith("audio/") && !audioPathPattern.test(path)) {
+      if (path.startsWith("audio/") && !AudioPathPattern.test(path)) {
         throw new DeckPackageValidationError(`Unexpected audio filename: ${path}`);
       }
     }
@@ -190,7 +190,7 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       if (!path.startsWith("audio/")) {
         continue;
       }
-      const match = audioPathPattern.exec(path);
+      const match = AudioPathPattern.exec(path);
       if (!match || !cardIds.has(match[1] ?? "")) {
         throw new DeckPackageValidationError(`Audio references an unknown card: ${path}`);
       }

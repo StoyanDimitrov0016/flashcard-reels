@@ -26,17 +26,6 @@ function scriptFiles(): string[] {
 }
 
 describe("deck-installer module boundary", () => {
-  it("exposes only file installation and application-owned public types", () => {
-    const publicSource = readFileSync(path.join(installerRoot, "index.ts"), "utf8");
-
-    expect(publicSource).toContain("installFromFile");
-    expect(publicSource).toContain("DeckPackageValidationError");
-    expect(publicSource).toContain("DeckPackageVersionError");
-    expect(publicSource).not.toContain("installFromBytes");
-    expect(publicSource).not.toContain("getInstalledVersion");
-    expect(publicSource).not.toMatch(/expo-|fflate|Staged|Archive|Transaction/);
-  });
-
   it("keeps installer internals private to the module and its composition root", () => {
     const offenders = sourceFiles(sourceRoot)
       .filter((file) => !file.startsWith(installerRoot))

@@ -21,4 +21,4 @@ appId: com.flashcardreels.app
 - tapOn: Archived deck progress
 - assertVisible: Archived progress
 - assertVisible: Versioned Test Deck
-- assertVisible: "1 reviews.*"
+- assertVisible: "1 review.*"

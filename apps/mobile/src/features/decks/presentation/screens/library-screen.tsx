@@ -34,7 +34,7 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressReset } from "@/features/flashcard-progress/presentation/context/learning-progress-reset-context";
+import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
@@ -233,7 +233,7 @@ export default function LibraryScreen() {
   const { entries, loading, refresh } = useDeckCatalog();
   const { savedProgressService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
-  const { invalidateLearningProgress } = useLearningProgressReset();
+  const { invalidateLearningProgress } = useLearningProgressRevision();
   const {
     cancelDownload,
     clearImportError,
@@ -285,12 +285,15 @@ export default function LibraryScreen() {
   }, [savedProgressService]);
 
   useFocusEffect(
-    useCallback(() => {
-      refreshPendingProgress();
-      return function cancelPendingProgressLoad() {
-        pendingLoadSequence.current += 1;
-      };
-    }, [refreshPendingProgress])
+    useCallback(
+      function refreshPendingProgressWhenFocused() {
+        refreshPendingProgress();
+        return function cancelPendingProgressLoad() {
+          pendingLoadSequence.current += 1;
+        };
+      },
+      [refreshPendingProgress]
+    )
   );
 
   useEffect(
@@ -326,6 +329,7 @@ export default function LibraryScreen() {
       setSelectedPending(null);
       setConfirmStartFresh(false);
       refreshPendingProgress();
+      showSuccessToast(startFresh ? "Starting fresh with this deck." : "Saved progress continued.");
     } catch {
       setProgressError("Could not update saved progress. Try again.");
       setConfirmStartFresh(false);
