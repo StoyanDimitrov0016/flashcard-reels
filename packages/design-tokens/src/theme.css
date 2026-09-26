@@ -16,6 +16,9 @@
   --error: #c4403b;
   --action-primary: #373530;
   --action-primary-text: #fff;
+  --overlay: rgba(15, 15, 15, 0.35);
+  --code-text: #c23a35;
+  --code-surface: rgba(135, 131, 120, 0.15);
 }
 .dark {
   --canvas: #191919;
@@ -35,4 +38,7 @@
   --error: #d6625b;
   --action-primary: #d4d4d4;
   --action-primary-text: #191919;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --code-text: #ff7369;
+  --code-surface: rgba(135, 131, 120, 0.15);
 }

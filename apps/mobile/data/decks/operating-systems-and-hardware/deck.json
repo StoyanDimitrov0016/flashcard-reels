@@ -1,0 +1,984 @@
+{
+  "id": "27962017-2742-4862-9520-08b0dc1c1c6b",
+  "version": 1,
+  "title": "Operating Systems and Hardware",
+  "description": "Processes, threads, memory, virtual memory, filesystems, scheduling, synchronization, CPU caches, storage, and I/O.",
+  "createdAt": "2026-09-06T13:26:00Z",
+  "updatedAt": "2026-09-26T07:31:45.150Z",
+  "lessons": [
+    {
+      "id": "ad18cea6-847e-4308-9d2d-aa34b7606777",
+      "order": 0,
+      "title": "The operating system kernel"
+    },
+    {
+      "id": "28a851b2-db51-4dec-8a35-7b0880ec29ff",
+      "order": 1,
+      "title": "Device I/O"
+    },
+    {
+      "id": "e2a47ec9-d23c-4dd5-96d0-6653d2d87bed",
+      "order": 2,
+      "title": "Inside a CPU core"
+    },
+    {
+      "id": "0002b341-1393-4307-8f65-431c5b24fff9",
+      "order": 3,
+      "title": "Main memory"
+    },
+    {
+      "id": "0654174b-6188-4374-a5ca-74920006d6db",
+      "order": 4,
+      "title": "CPU caches"
+    },
+    {
+      "id": "514fa613-61f4-4868-a972-cd0c60926b07",
+      "order": 5,
+      "title": "Processes and threads"
+    },
+    {
+      "id": "c5b43eaa-4a79-4716-85ce-4ac6ad08d619",
+      "order": 6,
+      "title": "CPU scheduling"
+    },
+    {
+      "id": "b598db2e-4645-47c2-8294-55dbbafe5bc5",
+      "order": 7,
+      "title": "Virtual memory"
+    },
+    {
+      "id": "379f9209-2371-47a8-8416-2aa81df87a47",
+      "order": 8,
+      "title": "Page faults"
+    },
+    {
+      "id": "4f6d4de2-87ba-4d23-904f-75581cbf0587",
+      "order": 9,
+      "title": "Paging to disk"
+    },
+    {
+      "id": "d5116747-7c1d-462f-a285-ba5237afb2eb",
+      "order": 10,
+      "title": "Stack and heap memory"
+    },
+    {
+      "id": "87c17e4d-2f9f-4998-b7f9-f41637848018",
+      "order": 11,
+      "title": "Synchronization primitives"
+    },
+    {
+      "id": "7b3113f8-8439-45a1-a0e4-f884d16afe0d",
+      "order": 12,
+      "title": "Deadlock and priority inversion"
+    },
+    {
+      "id": "e51f4af6-b001-43cf-b21e-0471195836b5",
+      "order": 13,
+      "title": "Atomics and memory ordering"
+    },
+    {
+      "id": "2a5261f5-7cc9-4d07-a9f0-c06cccf19329",
+      "order": 14,
+      "title": "Storage devices"
+    },
+    {
+      "id": "4a9a54d2-80bf-42d2-ac13-33fde0c461ec",
+      "order": 15,
+      "title": "Filesystems"
+    },
+    {
+      "id": "bb3b3904-593d-429a-bb09-b5d6629e9dc4",
+      "order": 16,
+      "title": "File descriptors"
+    },
+    {
+      "id": "ace1aaaa-3d7b-4038-904d-fc4ab55c3fa7",
+      "order": 17,
+      "title": "Buffered I/O"
+    },
+    {
+      "id": "6869bac1-1c72-494a-a02d-524c197362c1",
+      "order": 18,
+      "title": "Containers and virtual machines"
+    },
+    {
+      "id": "b8a8b201-fd1d-4ad4-843b-0b22f869f35b",
+      "order": 19,
+      "title": "Finding the bottleneck"
+    }
+  ],
+  "cards": [
+    {
+      "id": "69ed604e-8773-428c-a3f5-7e815cbc1f18",
+      "order": 0,
+      "question": "What is an operating system?",
+      "answer": "An operating system manages hardware resources and provides abstractions such as processes, virtual memory, files, sockets, and device access to programs.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e6b06eb9-79e2-46af-9a1b-426486d22b6c",
+      "order": 1,
+      "question": "What is the kernel?",
+      "answer": "The kernel is the privileged core of an operating system that manages CPU scheduling, memory, devices, protection, and system calls.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "84008516-a49f-41cc-b437-2e893bf8894d",
+      "order": 2,
+      "question": "What is user mode?",
+      "answer": "User mode is a restricted CPU execution mode where applications cannot directly execute privileged instructions or access protected kernel memory.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2f2c9f25-4211-4d95-ab7b-00931c2f5a36",
+      "order": 3,
+      "question": "What is kernel mode?",
+      "answer": "Kernel mode is a privileged CPU execution mode used by the operating system to manage hardware and protected resources.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "815fe3b7-d9c6-4d7b-8090-24c984bc5bd4",
+      "order": 4,
+      "question": "What is a system call?",
+      "answer": "A system call is a controlled transition from user code into the kernel to request an operating-system service such as reading a file or creating a process.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b84012ac-8650-4e1c-9e2a-fd3c3a68222b",
+      "order": 5,
+      "question": "Why are system calls more expensive than ordinary function calls?",
+      "answer": "They cross a protection boundary and may require privilege transitions, validation, scheduling interactions, or device work beyond a normal in-process call.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d698b820-3cc8-44f5-882b-08b93e60dacd",
+      "order": 6,
+      "question": "What is an interrupt?",
+      "answer": "An interrupt is a hardware or software signal that causes the CPU to transfer control to an operating-system handler for an event needing attention.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4898d770-4ee7-4c97-a0eb-db5ed4a6c18d",
+      "order": 7,
+      "question": "What is a hardware interrupt used for?",
+      "answer": "Devices use interrupts to notify the CPU about events such as completed I/O instead of requiring constant polling.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e88d1238-8a0a-4050-96f3-ae5d10fc10bc",
+      "order": 8,
+      "question": "What is polling?",
+      "answer": "Polling repeatedly checks a device or condition for changes. It can reduce reaction latency in some cases but consumes CPU while nothing changes.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8f4a70e5-b5ed-4abc-b965-4be5dbf8ab62",
+      "order": 9,
+      "question": "What is DMA?",
+      "answer": "Direct Memory Access lets a device transfer data to or from main memory with limited CPU involvement after the transfer is configured.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a138d44a-c005-4e16-952e-5b5c4630cfee",
+      "order": 10,
+      "question": "Why does DMA improve I/O efficiency?",
+      "answer": "The CPU does not need to copy every byte through instructions, leaving it free for other work while the device and memory controller transfer blocks.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "11349e8e-cd62-473a-a763-9f260145c31b",
+      "order": 11,
+      "question": "What is a device driver?",
+      "answer": "A driver is operating-system code that translates generic kernel operations into commands and data handling specific to a hardware device.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "03e5b762-b2ae-40b9-9496-8b83ad1ae6e9",
+      "order": 12,
+      "question": "What is a CPU core?",
+      "answer": "A core is an independent hardware execution engine capable of running an instruction stream, often with its own execution units and caches.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bbc0f319-95dd-4f9e-90dc-59edb995cdb9",
+      "order": 13,
+      "question": "What is an instruction pipeline?",
+      "answer": "A pipeline overlaps stages of multiple instructions, such as fetch, decode, execute, and retire, so several instructions are in progress at once.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ad2e2f27-713b-4acf-aade-83da6c2e98d2",
+      "order": 14,
+      "question": "What is an instruction-level dependency?",
+      "answer": "One instruction depends on another when it needs a value or resource produced or constrained by that instruction, limiting how much the CPU can reorder or parallelize.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e9f46322-6851-434c-80d0-7a40a050a760",
+      "order": 15,
+      "question": "What is out-of-order execution?",
+      "answer": "A CPU may execute independent instructions before older stalled instructions when dependencies allow, then retire results in an architecturally correct order.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "fd7b523d-d36a-42e4-a060-fba7b4d98167",
+      "order": 16,
+      "question": "What is branch prediction?",
+      "answer": "The CPU predicts the outcome and target of branches so it can keep fetching and executing speculatively instead of waiting for the branch to resolve.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4a41b406-6d1e-4add-a61c-4118ad8de099",
+      "order": 17,
+      "question": "What is a branch misprediction cost?",
+      "answer": "Speculative work on the wrong path must be discarded and the pipeline refilled from the correct path, wasting cycles.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "52248abd-2694-4486-985a-01ebece3506f",
+      "order": 18,
+      "question": "What is simultaneous multithreading?",
+      "answer": "SMT lets one physical core maintain multiple hardware thread contexts and issue instructions from them to use otherwise idle execution resources.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "54d614d5-0348-4875-94cb-d38afee19d8f",
+      "order": 19,
+      "question": "Why is two hardware threads not the same as two full cores?",
+      "answer": "SMT threads share many core resources such as execution units and caches, so throughput gain depends on whether their workloads contend for the same resources.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "296e384a-344a-4e11-bc1d-3a9199b6de66",
+      "order": 20,
+      "question": "What is main memory?",
+      "answer": "Main memory, usually DRAM, stores active program data and code with much higher capacity but higher latency than CPU caches.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "50eb29d8-2850-44c7-8f84-c0c7ec723c89",
+      "order": 21,
+      "question": "What is endianness?",
+      "answer": "Endianness defines the byte order used to represent multi-byte numeric values in memory or protocols.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "03a806f0-1026-41e1-9470-37ca8b571f38",
+      "order": 22,
+      "question": "What is memory alignment?",
+      "answer": "Alignment places data at addresses preferred or required by the CPU for its type or access width, affecting correctness on some architectures and performance on others.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cff5ade7-e718-4ce7-83b9-87c1c2e09463",
+      "order": 23,
+      "question": "What is NUMA?",
+      "answer": "Non-Uniform Memory Access systems have multiple memory regions where a CPU accesses its local memory faster than memory attached to another socket or node.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f290b35d-92dc-4a14-8bb4-6be4c15a5d7c",
+      "order": 24,
+      "question": "Why does NUMA locality matter?",
+      "answer": "Threads that frequently access remote memory pay higher latency and interconnect traffic, so placing threads near their working data can improve performance.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0c39a24d-3468-4dee-9ec7-1a1b91581dc0",
+      "order": 25,
+      "question": "What is a CPU cache?",
+      "answer": "A CPU cache is small fast memory near a processor that keeps recently or predictably used memory blocks to avoid slower main-memory accesses.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "aa76bb43-292a-4c36-899f-942f20e8e890",
+      "order": 26,
+      "question": "Why are there multiple cache levels?",
+      "answer": "Small caches can be very fast but hold little data, while larger caches are slower. A hierarchy balances latency, capacity, and hardware cost.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f022f5c6-15dc-4448-8320-8060c1be3b3a",
+      "order": 27,
+      "question": "What is cache locality?",
+      "answer": "Cache locality is the tendency to access data that was used recently or is near recently accessed addresses, allowing hardware caches to reuse loaded cache lines.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "a0ae7120-8732-4d2e-b359-1a88d84dd1df",
+      "order": 28,
+      "question": "What is temporal locality?",
+      "answer": "Temporal locality means data accessed recently is likely to be accessed again soon.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "427a880f-0e30-4f88-aab1-b10827090a18",
+      "order": 29,
+      "question": "What is spatial locality?",
+      "answer": "Spatial locality means memory near a recently accessed address is likely to be accessed soon.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ea5c8225-6885-4efe-885d-de5ab601802b",
+      "order": 30,
+      "question": "What is a cache line?",
+      "answer": "A cache line is the fixed-size block transferred between cache levels and memory, so accessing one byte typically brings nearby bytes into the cache too.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "67bf42c4-dfa5-41af-a01c-fd7bd9463409",
+      "order": 31,
+      "question": "What is cache coherence?",
+      "answer": "Cache-coherence protocols keep multiple CPU caches consistent enough that writes to a shared memory location become visible according to the architecture’s memory model.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "25faf041-026c-48e1-89da-6725a8d173be",
+      "order": 32,
+      "question": "What is false sharing?",
+      "answer": "Threads modify different variables that happen to share one cache line, causing the line to bounce between cores even though the threads are not logically sharing the same variable.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c7865bee-07b4-4b1e-9d99-3fe4187a3f41",
+      "order": 33,
+      "question": "What is a process?",
+      "answer": "A process is an executing program with its own virtual address space, resources, and operating-system bookkeeping.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5c6d807a-d920-41ba-9ac6-ed135a5015a6",
+      "order": 34,
+      "question": "What is a thread?",
+      "answer": "A thread is a schedulable execution path within a process. Threads in the same process usually share the process address space and many resources.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c2dd9ceb-8d42-4f0e-a910-733dbdb0f0d2",
+      "order": 35,
+      "question": "What is the main difference between processes and threads?",
+      "answer": "Processes have separate protected address spaces by default, while threads within one process share memory and therefore need synchronization around shared mutable state.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4bb1d32a-4086-43d8-9dd8-67496c9746cb",
+      "order": 36,
+      "question": "What is a context switch?",
+      "answer": "A context switch saves the execution state of one running thread or process and restores another so the CPU can run different work.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "15e2297f-ca28-43ad-a3fc-e94ca201ac85",
+      "order": 37,
+      "question": "Why are context switches not free?",
+      "answer": "They consume kernel work and can disrupt CPU caches, translation caches, and branch prediction state, reducing useful execution time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "38ea20ea-88a1-467e-b996-22f3982301b3",
+      "order": 38,
+      "question": "What is a scheduler?",
+      "answer": "The scheduler chooses which runnable thread or process receives CPU time on each processor.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5e706793-abd5-4b32-b0e6-5f6e6a5076a2",
+      "order": 39,
+      "question": "What is preemptive scheduling?",
+      "answer": "The OS can interrupt a running thread and schedule another, preventing one thread from keeping the CPU indefinitely.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3bcc3c40-606c-4c73-aede-24ba82bcf2b6",
+      "order": 40,
+      "question": "What is a time slice?",
+      "answer": "A time slice is a bounded interval for which a runnable task may execute before the scheduler can preempt it for another task.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "cad6a10b-1fb8-4216-b24b-89c1e668f930",
+      "order": 41,
+      "question": "What is CPU utilization?",
+      "answer": "CPU utilization is the fraction of processor time spent doing non-idle work over an interval.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "abd8f949-836b-4ca5-9834-1a0cde61bf34",
+      "order": 42,
+      "question": "What is load average conceptually?",
+      "answer": "It measures demand for CPU or certain uninterruptible resources by counting runnable or blocked tasks over time; exact definitions vary by operating system.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8cc6a120-1fcd-469a-b491-3a4d113bb00f",
+      "order": 43,
+      "question": "What is virtual memory?",
+      "answer": "Virtual memory gives each process a logical address space that the OS and hardware map to physical memory or other backing storage.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e35c438c-16af-4008-b76f-0f8abd3a53c9",
+      "order": 44,
+      "question": "What problem does virtual memory solve?",
+      "answer": "It isolates processes, lets programs use convenient contiguous address ranges, enables controlled sharing, and allows physical memory to be managed independently of virtual addresses.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "19b16abe-a54a-4342-bac8-43fbc41d285c",
+      "order": 45,
+      "question": "What is a page?",
+      "answer": "A page is a fixed-size block of virtual memory used as the unit for address translation and many memory-management operations.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9e522bf3-f000-49a3-8b6b-a981f09335eb",
+      "order": 46,
+      "question": "What is a page table?",
+      "answer": "A page table maps virtual page numbers to physical frames and stores permissions and status bits used by the memory-management unit.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3f9eb825-67ea-4780-8076-664001da564d",
+      "order": 47,
+      "question": "What is a TLB?",
+      "answer": "The translation lookaside buffer caches recent virtual-to-physical address translations so every memory access does not require a full page-table walk.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1cd64813-543e-41dc-8e0e-d74741cd98c4",
+      "order": 48,
+      "question": "What is a TLB miss?",
+      "answer": "The requested address translation is absent from the TLB, so hardware or the OS must walk page tables before the memory access can proceed.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2f5602f7-4b40-4392-9ffa-4c7a60cc361d",
+      "order": 49,
+      "question": "What is a page fault?",
+      "answer": "A page fault occurs when a virtual-memory access cannot proceed with the current page-table entry, causing the OS to handle the condition, such as loading a page or rejecting invalid access.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2e73cfe2-773c-4d45-a3a3-ef5940f653b5",
+      "order": 50,
+      "question": "What is demand paging?",
+      "answer": "Pages are loaded or physically allocated when first accessed instead of eagerly bringing an entire address space into memory.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d51a0866-4b76-463c-b2d0-04c7bd524b3a",
+      "order": 51,
+      "question": "What is copy-on-write?",
+      "answer": "Multiple users initially share the same read-only physical data; when one writes, the system creates a private copy of the affected page or object.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5d4fee49-b1b9-4343-aa70-f105a1226ba4",
+      "order": 52,
+      "question": "Why is copy-on-write useful when creating a process?",
+      "answer": "The child can initially share the parent’s memory pages instead of copying all memory immediately, paying copying cost only for pages that are later modified.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "46674e61-f4e5-41e5-95ec-c3c78252e525",
+      "order": 53,
+      "question": "What is memory mapping?",
+      "answer": "Memory mapping maps file contents or device regions into a process address space so ordinary memory loads and stores access them.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "762a3ed9-2a96-4561-92d2-0230cefabe7a",
+      "order": 54,
+      "question": "What is a memory-mapped file useful for?",
+      "answer": "It lets the OS page file regions on demand and allows applications to access file data through memory addresses instead of explicit read calls for each region.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "aac03083-5fa1-4e19-ae51-48646bee015f",
+      "order": 55,
+      "question": "What is swapping or paging to disk?",
+      "answer": "The OS moves inactive memory contents to secondary storage to free physical RAM, then reloads them if accessed again.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "12784255-6827-4009-a1f8-91283e4baf52",
+      "order": 56,
+      "question": "Why is heavy swapping slow?",
+      "answer": "Storage latency is far higher than RAM latency, so frequent page-in and page-out operations can dominate execution time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3563b28f-cf97-490b-b221-b252fe921a86",
+      "order": 57,
+      "question": "What is a working set?",
+      "answer": "A working set is the memory a workload actively uses during a time window. If it fits in RAM and caches, the workload avoids frequent costly misses.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d5a59dc3-00a3-4493-8d66-9b6133005ad6",
+      "order": 58,
+      "question": "What is thrashing?",
+      "answer": "Thrashing occurs when a system spends most of its time moving pages between RAM and storage because active working sets exceed available memory.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d726a311-0499-45ce-a2c3-7c4dac8c68b9",
+      "order": 59,
+      "question": "What is stack memory?",
+      "answer": "A thread stack stores call frames, return addresses, and many local values in last-in, first-out call order.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "570a3603-6f9c-4489-baa5-2b8c4e0a7811",
+      "order": 60,
+      "question": "What causes a stack overflow?",
+      "answer": "The thread consumes more stack space than its allocated limit, commonly through very deep recursion or unusually large stack allocations.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "bb85e4cb-463e-4e4f-99cd-9d2a4b539586",
+      "order": 61,
+      "question": "What is heap memory?",
+      "answer": "The heap is process memory used for dynamically allocated objects whose lifetime is not tied to one function call frame.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "5a10ffc7-951c-4e99-b72e-c4c33c0aedae",
+      "order": 62,
+      "question": "What is a memory allocator?",
+      "answer": "An allocator manages regions of process memory and returns blocks for dynamic allocation while tracking free space for later reuse.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2deb4957-942a-4485-a482-057cec5dbaaf",
+      "order": 63,
+      "question": "What is memory fragmentation?",
+      "answer": "Fragmentation leaves free memory divided into pieces or creates internal unused space, making allocation less efficient even when total free capacity seems sufficient.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "538d49fe-6469-408a-a630-b8b44a071731",
+      "order": 64,
+      "question": "What is a race condition at the OS/thread level?",
+      "answer": "A race condition occurs when program correctness depends on the timing or interleaving of concurrent accesses that are not properly synchronized.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "7b6bf729-8105-400e-b273-34f95d46bf38",
+      "order": 65,
+      "question": "What is a critical section?",
+      "answer": "A critical section is code that accesses shared state in a way that must not overlap with conflicting concurrent execution.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f2c9284a-64a0-49ef-a64a-7bfd5a947cfa",
+      "order": 66,
+      "question": "What is a mutex?",
+      "answer": "A mutex is a synchronization primitive that allows only one execution path at a time to enter a protected critical section.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "8fcbee73-7b50-4428-8da2-197039f39daa",
+      "order": 67,
+      "question": "What is a spinlock?",
+      "answer": "A spinlock repeatedly checks a lock in a tight loop instead of sleeping, which can be efficient only when waits are expected to be extremely short.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1e77f54e-f74e-49a7-83f6-aa1b8c7ce16e",
+      "order": 68,
+      "question": "When is a blocking mutex preferable to a spinlock?",
+      "answer": "When contention may last long enough that yielding the CPU costs less than burning cycles repeatedly checking the lock.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "33ac0308-78ae-4b91-857a-dbd1a1f700cc",
+      "order": 69,
+      "question": "What is a semaphore?",
+      "answer": "A semaphore maintains a permit count; acquiring consumes a permit or waits, and releasing returns a permit, allowing bounded concurrent access.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "050b004c-c48a-4acb-8684-6bac16090c71",
+      "order": 70,
+      "question": "What is a condition variable?",
+      "answer": "A condition variable lets threads sleep until shared state may satisfy a condition, used together with a lock and a loop that rechecks the predicate.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2ebb442c-5e10-45fe-a48f-db131a84e63f",
+      "order": 71,
+      "question": "Why must a condition-variable wait recheck the predicate?",
+      "answer": "Wakeups can be spurious or another thread can change the condition before the waiter reacquires the lock. Correct code treats notification as a reason to check again.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f7105f0d-7d6e-402d-a971-ca17d3800193",
+      "order": 72,
+      "question": "What is a reader-writer lock?",
+      "answer": "It allows multiple concurrent readers or one exclusive writer, useful when reads dominate and the implementation avoids starvation.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0361f686-c549-4071-873a-7c83bc8eb96b",
+      "order": 73,
+      "question": "What is deadlock?",
+      "answer": "Deadlock is a cycle of waiting where each participant needs a resource or event held by another participant in the cycle.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "08d4c1b8-b1c7-4639-aae9-df5f01d84c2f",
+      "order": 74,
+      "question": "What is lock ordering?",
+      "answer": "Lock ordering defines a global order for acquiring multiple locks so threads do not create circular wait dependencies.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "df05c0e4-d3a1-4e9b-af6a-ca81a1e47150",
+      "order": 75,
+      "question": "What is priority inversion?",
+      "answer": "A high-priority task is indirectly blocked by a low-priority task holding a needed resource while medium-priority work prevents the low-priority task from running.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1d65118d-093f-4f89-848b-a5d3324d28bc",
+      "order": 76,
+      "question": "What is priority inheritance?",
+      "answer": "The OS temporarily raises the priority of a lock holder to the waiting higher priority, helping it release the contested resource sooner.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "536287c2-706f-4910-b7af-ddaaac2817d5",
+      "order": 77,
+      "question": "What is an atomic operation?",
+      "answer": "An atomic operation appears indivisible with respect to relevant concurrent observers under the architecture’s memory model.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e5630bec-3427-4621-b45c-a53fc9574f04",
+      "order": 78,
+      "question": "What is compare-and-swap?",
+      "answer": "CAS atomically compares a memory location with an expected value and replaces it only if they match, returning whether the update succeeded.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ef09dbdd-5934-4133-9bd4-4c60207df843",
+      "order": 79,
+      "question": "What is lock-free progress?",
+      "answer": "In a lock-free algorithm, the system as a whole is guaranteed to make progress even if individual threads may repeatedly fail and retry.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "541463e1-8e99-4cb7-a578-e7d3c7d2a8f9",
+      "order": 80,
+      "question": "What is wait-free progress?",
+      "answer": "Each participating operation is guaranteed to complete within a bounded number of its own steps, regardless of other threads.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "ae98a513-922a-427a-8859-d2b2136e5d2f",
+      "order": 81,
+      "question": "Why can source-code order differ from observed memory order?",
+      "answer": "Compilers and CPUs may reorder independent operations for performance, while caches and store buffers delay visibility; memory-model rules define what other threads may observe.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d2e1797d-448e-4b10-97d0-869c91ac5a74",
+      "order": 82,
+      "question": "What is a memory barrier?",
+      "answer": "A memory barrier constrains how memory operations may be reordered or observed across threads, providing ordering needed by synchronization algorithms.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "49a89ddf-da03-4916-961f-4a0e82cfc298",
+      "order": 83,
+      "question": "Why are sequential disk accesses faster than random accesses on HDDs?",
+      "answer": "Mechanical disks must move a head and wait for platter rotation for random locations, while sequential blocks can be transferred with far less repositioning.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "776a47f1-2940-430b-829a-21e3f868b358",
+      "order": 84,
+      "question": "What is an SSD?",
+      "answer": "A solid-state drive stores persistent data in flash memory, providing much lower random-access latency than mechanical disks but with finite flash write endurance.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "01119a7f-ff2e-4737-a48f-02321563209a",
+      "order": 85,
+      "question": "Why does SSD performance still depend on access pattern?",
+      "answer": "Flash writes occur in pages but erasure happens in larger blocks, and controller garbage collection, queue depth, and write amplification affect latency and throughput.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4f9a64a1-169d-430d-bf9b-c99d6b9d68a7",
+      "order": 86,
+      "question": "What is write amplification?",
+      "answer": "The storage device writes more physical data than the application logically requested, often because existing flash blocks must be copied and erased during updates.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "0c7a978a-bab9-407e-a8ea-204928454bc5",
+      "order": 87,
+      "question": "What is a filesystem?",
+      "answer": "A filesystem organizes persistent data into named files and directories and tracks metadata needed to locate, protect, and update file contents.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "d4321c4d-f8f2-4770-a53c-1881c3b030b0",
+      "order": 88,
+      "question": "What is an inode conceptually?",
+      "answer": "In Unix-like filesystems, an inode stores file metadata and references to file data blocks; directory entries map names to inode-like identifiers.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "2cc3bc8d-1afc-4873-b82c-805803574aeb",
+      "order": 89,
+      "question": "What is a hard link?",
+      "answer": "A hard link is another directory entry referring to the same underlying file object, so deleting one name does not remove the file while other links remain.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "69f2c771-61d0-4bdb-91c2-1d0009bcc2ec",
+      "order": 90,
+      "question": "What is a symbolic link?",
+      "answer": "A symbolic link is a special file containing a path to another filesystem object; resolving it follows that path at access time.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "add6fe91-8e1a-4d70-b4ec-bdd66b4df583",
+      "order": 91,
+      "question": "What is journaling in a filesystem?",
+      "answer": "A journal records intended metadata or data updates in a recoverable log so the filesystem can restore a consistent state after a crash.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "f2969c8b-7fd9-421d-a741-50238552480e",
+      "order": 92,
+      "question": "What is a file descriptor?",
+      "answer": "A file descriptor is a small process-local integer handle referring to an open file, socket, pipe, or similar kernel-managed object.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "1a92a18d-1077-4e84-bd89-c087da663217",
+      "order": 93,
+      "question": "What does opening a file do conceptually?",
+      "answer": "The kernel resolves the path, checks permissions, creates or references open-file state, and returns a handle that later I/O calls use.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "e90ef7db-94ba-404b-87fc-044e5380e7f4",
+      "order": 94,
+      "question": "What is a pipe?",
+      "answer": "A pipe is a kernel buffer that lets one process or thread write a byte stream that another reads, commonly for local inter-process communication.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "822aad8f-432b-4eb8-a8d0-850b82eec3e5",
+      "order": 95,
+      "question": "What is a socket?",
+      "answer": "A socket is an endpoint abstraction for sending and receiving data through a communication protocol, locally or across a network.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "dd855c63-abf3-4762-8e1a-06879b11bb66",
+      "order": 96,
+      "question": "What is buffered I/O?",
+      "answer": "Data is temporarily stored in memory buffers so programs or the OS can combine small operations into larger transfers and decouple producers from devices.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b9c4be33-605b-4602-b15f-d954327a5e33",
+      "order": 97,
+      "question": "What is the page cache?",
+      "answer": "The OS keeps recently accessed file data in RAM so later reads can be served without storage I/O and writes can often be buffered before persistence.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "109fac37-0e4f-4bbd-9ac4-8db6f2642b42",
+      "order": 98,
+      "question": "What is zero-copy I/O conceptually?",
+      "answer": "It reduces redundant copying of data between kernel and user buffers, often by mapping, splicing, or letting devices transfer directly from kernel-managed pages.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "55994481-3af1-4ba6-9214-5d44f73a3104",
+      "order": 99,
+      "question": "Why does a successful file write not always mean data is on durable storage?",
+      "answer": "The kernel or device may have acknowledged data still held in volatile buffers. Explicit synchronization is needed when an application requires persistence before continuing.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "88c7db1b-52cb-4301-90cd-e91d45a02dd7",
+      "order": 100,
+      "question": "What does `fsync` conceptually request?",
+      "answer": "It asks the operating system to flush relevant buffered file data and metadata toward durable storage according to the platform’s guarantees.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "6e0ebe61-463f-4f80-be70-3edff460e361",
+      "order": 101,
+      "question": "What is a container from an OS perspective?",
+      "answer": "A container is one or more ordinary processes isolated and resource-controlled using operating-system features such as namespaces and control groups rather than a separate guest kernel.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "4c0d6a95-4b83-40fd-8230-b7304579e8e9",
+      "order": 102,
+      "question": "How does a virtual machine differ from a process container?",
+      "answer": "A VM presents virtual hardware and runs a guest operating-system kernel, while a container normally shares the host kernel and isolates processes within it.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "c8bfab23-08c0-4ae5-9327-9d6bc3d5426b",
+      "order": 103,
+      "question": "What is a hypervisor?",
+      "answer": "A hypervisor creates and manages virtual machines by multiplexing physical CPU, memory, and devices among guest operating systems.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "de8b1005-bd89-497b-aaed-c08aac331dc8",
+      "order": 104,
+      "question": "What is a CPU-bound workload?",
+      "answer": "A CPU-bound workload spends most of its time executing computations, so additional CPU capacity or more efficient algorithms can increase throughput.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "b3adf543-76d2-4f1f-92ab-f3b2e8b187f9",
+      "order": 105,
+      "question": "What is an I/O-bound workload?",
+      "answer": "An I/O-bound workload spends much of its elapsed time waiting for storage, network, or other devices rather than executing on the CPU.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "9bc742e1-e2be-46f4-bc59-f62eddf7271c",
+      "order": 106,
+      "question": "Why can concurrency help an I/O-bound program?",
+      "answer": "While one operation waits for I/O, another runnable task can use the CPU, increasing resource utilization and throughput.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "3ca3b909-cd59-4d13-a0d0-26a0f1860e48",
+      "order": 107,
+      "question": "Why can too many runnable threads hurt performance?",
+      "answer": "Excess threads increase scheduling, context switching, cache disruption, memory use, and contention without increasing available CPU cores.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    },
+    {
+      "id": "43180579-b72d-4152-8e65-9ab69feb5a2b",
+      "order": 108,
+      "question": "Why should low-level performance work be measurement-driven?",
+      "answer": "Modern CPUs, kernels, allocators, and storage stacks have complex interactions. Profiling and hardware or OS counters reveal the actual bottleneck better than assumptions.",
+      "createdAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-09-06T13:26:00Z"
+    }
+  ]
+}

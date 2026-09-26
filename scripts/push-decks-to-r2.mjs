@@ -17,7 +17,7 @@ import {
   publicationUploads,
   reviewDeckPublication,
 } from "../apps/mobile/src/features/decks/deck-installer/internal/deck-package-publication.ts";
-import { getR2Environment } from "../apps/web/src/config/server-environment.ts";
+import { getR2Environment } from "../apps/web/src/server/env.ts";
 
 const ConfirmationWord = "publish";
 const PublishedKeyPrefix = "decks/";

@@ -53,9 +53,10 @@ for (const fileName of audioFileNames.toSorted()) {
   );
 }
 
+// Not dist/, which expo export empties.
 const outputPath = outputArgument
   ? path.resolve(process.cwd(), outputArgument)
-  : path.join(process.cwd(), "dist", "decks", `${deckPackage.id}.fcrdeck`);
+  : path.join(process.cwd(), "build", "decks", `${deckPackage.id}.fcrdeck`);
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, createDeckPackageArchive(deckPackage, audioFiles, lessonFiles));
 console.log(

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { DeckTransferEnvironmentSchema } from "@/config/server-environment";
-import { resolveDeckTransferOrigin } from "@/lib/deck-transfer-origin";
+import { DeckTransferEnvironmentSchema } from "@/server/env";
+import { resolveDeckTransferOrigin } from "@/server/transfer/transfer-origin";
 
 const originalTransferOrigin = process.env.DECK_TRANSFER_ORIGIN;
 
