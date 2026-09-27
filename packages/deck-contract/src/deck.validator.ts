@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 import { DeckParseError, type DeckParseIssue } from "./deck.errors";
 import { DeckSchema, type Deck } from "./deck.schemas";
 
@@ -5,18 +7,17 @@ import { DeckSchema, type Deck } from "./deck.schemas";
 export function parseDeck(input: unknown): Deck {
   const result = DeckSchema.safeParse(input);
   if (!result.success) {
-    throw new DeckParseError(
-      result.error.issues.map((issue) => ({
-        message: issue.message,
-        path: issue.path.map((segment) =>
-          typeof segment === "symbol" ? String(segment) : segment
-        ),
-      })),
-      { cause: result.error }
-    );
+    throw new DeckParseError(toDeckParseIssues(result.error.issues), { cause: result.error });
   }
   validateRelationships(result.data);
   return result.data;
+}
+
+function toDeckParseIssues(issues: z.ZodError["issues"]): DeckParseIssue[] {
+  return issues.map((issue) => ({
+    message: issue.message,
+    path: issue.path.map((segment) => (typeof segment === "symbol" ? String(segment) : segment)),
+  }));
 }
 
 function validateRelationships(deck: Deck): void {
