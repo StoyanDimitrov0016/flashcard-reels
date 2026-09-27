@@ -183,6 +183,26 @@ describe("deck library", () => {
     expect(unreadable).toEqual(["decks/broken.fcrdeck"]);
   });
 
+  it("rejects an oversized declared manifest before decompressing it", async () => {
+    const storage = new MemoryStorage();
+    const bytes = deckPackage({ id: scalingId, title: "Scaling" });
+    const metadata = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let centralEntry = -1;
+    for (let offset = 0; offset <= bytes.byteLength - 46; offset += 1) {
+      if (metadata.getUint32(offset, true) === 0x02014b50) {
+        centralEntry = offset;
+        break;
+      }
+    }
+    if (centralEntry < 0) {
+      throw new Error("Fixture has no central directory entry");
+    }
+    metadata.setUint32(centralEntry + 24, 8 * 1024 * 1024 + 1, true);
+    storage.put("decks/scaling.fcrdeck", bytes);
+
+    expect(await createDeckLibrary({ storage }).listDecks()).toEqual([]);
+  });
+
   it("returns null for a deck that is not published", async () => {
     const library = createDeckLibrary({ storage: new MemoryStorage() });
 

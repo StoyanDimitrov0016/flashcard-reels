@@ -11,6 +11,7 @@ export const DECK_SCHEMA_CONSTRAINTS = {
 export const DECK_PACKAGE_LIMITS = {
   maxAudioFileBytes: 5 * 1024 * 1024,
   maxCompressedBytes: 64 * 1024 * 1024,
+  maxManifestFileBytes: 8 * 1024 * 1024,
   maxLessonFileBytes: 256 * 1024,
   maxUncompressedBytes: 128 * 1024 * 1024,
 } as const;
