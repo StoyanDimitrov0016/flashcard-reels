@@ -218,7 +218,7 @@ export function CardBrowser({ cards, details, header, sectionNav }: CardBrowserP
                 type="button"
               >
                 <span className="w-6 shrink-0 pt-px text-right text-xs text-subtle-foreground tabular-nums">
-                  {item.order + 1}
+                  {cards.indexOf(item) + 1}
                 </span>
                 <span className="line-clamp-2">
                   <FlashcardText text={item.question} />

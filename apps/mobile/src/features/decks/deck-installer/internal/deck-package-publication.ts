@@ -4,7 +4,6 @@ import type { DeckPackageReader } from "./deck-package.model.ts";
 
 type PublicationDeckPackage = Readonly<
   Omit<Deck, "cards" | "lessons"> & {
-    version: number;
     cards: readonly (Flashcard & { order: number })[];
     lessons: readonly (Lesson & { order: number })[];
     audioFiles: DeckPackage["audioFiles"];
@@ -16,7 +15,6 @@ function toPublicationDeckPackage(deckPackage: DeckPackage): PublicationDeckPack
   const { deck, audioFiles, lessonFiles } = deckPackage;
   return {
     ...deck,
-    version: deck.revision,
     cards: deck.cards.map((card, order) => ({
       id: card.id,
       question: card.question,
@@ -46,7 +44,7 @@ type PublishedDeckEntry = Readonly<{
   key: string;
   deckId: string;
   title: string;
-  version: number;
+  revision: number;
   sha256: string;
 }>;
 
@@ -73,8 +71,8 @@ type DeckPublicationChange = Readonly<{
   fileName: string;
   key: string;
   status: DeckPublicationStatus;
-  publishedVersion: number | null;
-  version: number;
+  publishedRevision: number | null;
+  revision: number;
   addedCards: readonly PublicationCard[];
   changedCards: readonly PublicationCard[];
   removedCards: readonly PublicationCard[];
@@ -100,14 +98,13 @@ export type DeckPublicationUpload = Readonly<{
   sha256: string;
   deckId: string;
   title: string;
-  version: number;
+  revision: number;
 }>;
 
 type ReviewOptions = Readonly<{
   candidates: readonly DeckPublicationCandidate[];
   store: PublishedDeckStore;
   reader: DeckPackageReader;
-  allowUnreleasedVersionOneReplace?: boolean;
 }>;
 
 type ReadCandidate = Readonly<{
@@ -140,7 +137,6 @@ export async function reviewDeckPublication({
   candidates,
   store,
   reader,
-  allowUnreleasedVersionOneReplace = false,
 }: ReviewOptions): Promise<DeckPublicationReview> {
   const readCandidates: ReadCandidate[] = candidates.map((candidate) => ({
     candidate,
@@ -183,7 +179,6 @@ export async function reviewDeckPublication({
       published: publishedByDeckId.get(deck.id) ?? null,
       publishedDeck: publishedDecks.get(deck.id) ?? null,
       publishedEntries,
-      allowUnreleasedVersionOneReplace,
     })
   );
 
@@ -220,7 +215,7 @@ export function publicationUploads(
         key: change.key,
         sha256: candidate.sha256,
         title: change.title,
-        version: change.version,
+        revision: change.revision,
       },
     ];
   });
@@ -232,7 +227,6 @@ type ReviewDeckOptions = Readonly<{
   published: PublishedDeckEntry | null;
   publishedDeck: PublicationDeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
-  allowUnreleasedVersionOneReplace: boolean;
 }>;
 
 function reviewDeck({
@@ -241,7 +235,6 @@ function reviewDeck({
   published,
   publishedDeck,
   publishedEntries,
-  allowUnreleasedVersionOneReplace,
 }: ReviewDeckOptions): DeckPublicationChange {
   const key = `${publishedKeyPrefix}${candidate.fileName}`;
   const base = {
@@ -249,7 +242,7 @@ function reviewDeck({
     fileName: candidate.fileName,
     key,
     title: deck.title,
-    version: deck.version,
+    revision: deck.revision,
   };
 
   if (!published) {
@@ -265,7 +258,7 @@ function reviewDeck({
       addedCards: deck.cards.map(toPublicationCard),
       addedLessons: (deck.lessons ?? []).map(toPublicationLesson),
       blocks: [],
-      publishedVersion: null,
+      publishedRevision: null,
       status: "new",
       warnings,
     };
@@ -291,36 +284,26 @@ function reviewDeck({
     comparison.metadataChanged ||
     comparison.audioChanged;
 
-  if (deck.version < published.version) {
+  if (deck.revision < published.revision) {
     blocks.push(
-      `Version ${deck.version} is lower than the published version ${published.version}.`
+      `Revision ${deck.revision} is lower than the published revision ${published.revision}.`
     );
-  } else if (
-    contentChanged &&
-    deck.version === published.version &&
-    !(allowUnreleasedVersionOneReplace && deck.version === 1)
-  ) {
+  } else if (contentChanged && deck.revision === published.revision) {
     blocks.push(
-      `Content changed but the version is still ${deck.version}. Installed apps would ignore this update; raise the version.`
+      `Content changed but the revision is still ${deck.revision}. Installed apps would ignore this update; raise the revision.`
     );
   }
 
   let status: DeckPublicationStatus;
   if (blocks.length > 0) {
     status = "blocked";
-  } else if (
-    contentChanged ||
-    deck.version !== published.version ||
-    (allowUnreleasedVersionOneReplace &&
-      deck.version === 1 &&
-      published.sha256 !== candidate.sha256)
-  ) {
+  } else if (contentChanged || deck.revision !== published.revision) {
     status = "updated";
   } else {
     status = "unchanged";
   }
 
-  return { ...base, ...comparison, blocks, publishedVersion: published.version, status };
+  return { ...base, ...comparison, blocks, publishedRevision: published.revision, status };
 }
 
 function unchangedComparison(): DeckComparison {

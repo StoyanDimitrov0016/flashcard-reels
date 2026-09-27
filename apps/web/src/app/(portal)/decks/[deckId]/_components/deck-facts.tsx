@@ -9,11 +9,11 @@ type DeckFactsProps = Readonly<{
   className?: string;
   deck: Pick<
     DeckSummary,
-    "audioCount" | "cardCount" | "lessonCount" | "sizeBytes" | "updatedAt" | "version"
+    "audioCount" | "cardCount" | "lessonCount" | "sizeBytes" | "updatedAt" | "revision"
   >;
 }>;
 
-/** What the deck contains and which package version is published, as one wrapping line. */
+/** What the deck contains and which revision is published, as one wrapping line. */
 export function DeckFacts({ className, deck }: DeckFactsProps) {
   return (
     <ul
@@ -41,7 +41,7 @@ export function DeckFacts({ className, deck }: DeckFactsProps) {
       )}
       <li>{formatBytes(deck.sizeBytes)}</li>
       <li>
-        Version {deck.version} · Updated{" "}
+        Revision {deck.revision} · Updated{" "}
         <time dateTime={deck.updatedAt}>{formatDate(deck.updatedAt)}</time>
       </li>
     </ul>

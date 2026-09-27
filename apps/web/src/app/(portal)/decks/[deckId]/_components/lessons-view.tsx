@@ -26,7 +26,7 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <nav aria-label="Lessons" className="min-w-0">
         <LessonList activeLessonId={lesson.id}>
-          {lessons.map((item) => (
+          {lessons.map((item, index) => (
             <li className="shrink-0" key={item.id}>
               <Link
                 aria-current={item.id === lesson.id ? "page" : undefined}
@@ -40,7 +40,7 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
                 scroll={false}
               >
                 <span className="w-4 shrink-0 text-right text-xs leading-5 text-subtle-foreground tabular-nums">
-                  {item.order + 1}
+                  {index + 1}
                 </span>
                 {item.title}
               </Link>
@@ -51,7 +51,7 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
 
       <article className="max-w-[68ch] min-w-0">
         <p className="text-xs font-medium tracking-wide text-subtle-foreground uppercase">
-          Lesson {lesson.order + 1} of {lessons.length}
+          Lesson {lessonIndex + 1} of {lessons.length}
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">{lesson.title}</h2>
         <div className="mt-6">

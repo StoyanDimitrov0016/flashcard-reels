@@ -1,3 +1,4 @@
+import { parseDeck } from "@flashcard-reels/deck-contract";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
@@ -10,12 +11,13 @@ const timestampMs = Date.parse(timestamp);
 const scalingId = "3f9c2d4e-8a61-4b7f-9c2e-1d5a6b7c8d90";
 const reactId = "7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
 const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
+const authorId = "a5f43c1e-7890-4abc-8def-1234567890ab";
 const cardIds = ["0b7e6f1a-2c3d-4e5f-8a9b-0c1d2e3f4a5b", "1c8f7a2b-3d4e-4f5a-9b0c-1d2e3f4a5b6c"];
 
 type PackageOptions = Readonly<{
   id: string;
   title: string;
-  version?: number;
+  revision?: number;
   withLesson?: boolean;
   audioBytes?: number;
 }>;
@@ -24,7 +26,7 @@ type PackageOptions = Readonly<{
 function deckPackage({
   id,
   title,
-  version = 1,
+  revision = 1,
   withLesson = false,
   audioBytes = 0,
 }: PackageOptions) {
@@ -32,26 +34,29 @@ function deckPackage({
     cards: [
       { answer: "More machines.", question: "What is horizontal scaling?" },
       { answer: "A bigger machine.", question: "What is vertical scaling?" },
-    ].map((card, order) => ({
+    ].map((card, index) => ({
       answer: card.answer,
+      audio: index === 0 && audioBytes > 0,
       createdAt: timestamp,
-      id: cardIds[order] ?? "",
-      order,
+      id: cardIds[index] ?? "",
+      lessonId: null,
       question: card.question,
       updatedAt: timestamp,
     })),
+    authorId,
     createdAt: timestamp,
     description: `${title} basics`,
     id,
-    ...(withLesson ? { lessons: [{ id: lessonId, order: 0, title: "Why scale" }] } : {}),
+    lessons: withLesson ? [{ id: lessonId, title: "Why scale" }] : [],
+    revision,
+    schema: 1,
     title,
     updatedAt: timestamp,
-    version,
   };
   const files: Record<string, Uint8Array> = { "deck.json": strToU8(JSON.stringify(document)) };
   if (audioBytes > 0) {
     // Random-looking bytes do not compress, like real MP3 audio.
-    files[`audio/${cardIds[0]}.answer.mp3`] = Uint8Array.from(
+    files[`audio/${cardIds[0]}.mp3`] = Uint8Array.from(
       { length: audioBytes },
       (_, index) => (index * 7919) % 251
     );
@@ -133,10 +138,34 @@ describe("deck library", () => {
       "What is vertical scaling?",
     ]);
     expect(deck?.lessons).toEqual([
-      { id: lessonId, markdown: "# Why scale\n\nLoad grows.", order: 0, title: "Why scale" },
+      { id: lessonId, markdown: "# Why scale\n\nLoad grows.", title: "Why scale" },
     ]);
     // The end-of-archive scan reads at most 64 KiB; everything else is small entries.
     expect(storage.bytesRead).toBeLessThan(80_000);
+  });
+
+  it("keeps manifest array order and rejects assets that disagree with audio flags", async () => {
+    const storage = new MemoryStorage();
+    const original = unzipSync(
+      deckPackage({ audioBytes: 100, id: scalingId, title: "Scaling", withLesson: true })
+    );
+    const manifest = parseDeck(JSON.parse(strFromU8(original["deck.json"] ?? new Uint8Array())));
+    manifest.cards.reverse();
+    original["deck.json"] = strToU8(JSON.stringify(manifest));
+    storage.put("decks/scaling.fcrdeck", zipSync(original));
+
+    const library = createDeckLibrary({ storage });
+    const content = await library.getDeckContent(scalingId);
+    expect(content?.cards.map((card) => card.id)).toEqual([cardIds[1], cardIds[0]]);
+
+    const audioCard = manifest.cards.find((card) => card.audio);
+    if (!audioCard) {
+      throw new Error("Expected an audio card");
+    }
+    audioCard.audio = false;
+    original["deck.json"] = strToU8(JSON.stringify(manifest));
+    storage.put("decks/scaling.fcrdeck", zipSync(original), "r2");
+    expect(await createDeckLibrary({ storage }).listDecks()).toEqual([]);
   });
 
   it("skips an unreadable upload instead of failing the whole catalog", async () => {
@@ -170,15 +199,15 @@ describe("deck library", () => {
 
     storage.put(
       "decks/scaling.fcrdeck",
-      deckPackage({ id: scalingId, title: "Scaling", version: 2 }),
+      deckPackage({ id: scalingId, title: "Scaling", revision: 2 }),
       "r2"
     );
     const cached = await library.findDeck(scalingId);
     now += 1001;
     const refreshed = await library.findDeck(scalingId);
 
-    expect(cached?.version).toBe(1);
-    expect(refreshed?.version).toBe(2);
+    expect(cached?.revision).toBe(1);
+    expect(refreshed?.revision).toBe(2);
   });
 
   it("reuses summaries and content until their absolute TTL expires", async () => {
@@ -268,10 +297,10 @@ describe("deck library", () => {
     let now = timestampMs;
     const library = createDeckLibrary({ storage, now: () => now, listingTtlMs: 10 });
     const first = await library.getDeckContent(scalingId);
-    storage.put(key, deckPackage({ id: scalingId, title: "Scaling", version: 2 }), "r2");
+    storage.put(key, deckPackage({ id: scalingId, title: "Scaling", revision: 2 }), "r2");
     now += 11;
     const updated = await library.getDeckContent(scalingId);
-    expect(updated?.version).toBe(2);
+    expect(updated?.revision).toBe(2);
 
     storage.put(key, originalBytes, "r1");
     now += 11;
