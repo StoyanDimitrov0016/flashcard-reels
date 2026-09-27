@@ -207,6 +207,7 @@ describe("deck contract", () => {
   it.each([
     ["audio", `audio/${cardId}.mp3`, 5 * 1024 * 1024 + 1],
     ["lesson", `lessons/${lessonId}.md`, 256 * 1024 + 1],
+    ["manifest", "deck.json", 8 * 1024 * 1024 + 1],
   ])("rejects an oversized %s before installing content", (_scenario, path, size) => {
     const archive = zipSync({ ...createPackageFiles(), [path]: new Uint8Array(size) });
 

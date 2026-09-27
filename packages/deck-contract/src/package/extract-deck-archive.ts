@@ -27,6 +27,9 @@ function checkExtractedSizes(files: Record<string, Uint8Array>): void {
     if (path.startsWith("audio/") && content.byteLength > LIMITS.maxAudioFileBytes) {
       rejectDeckPackage(`Audio file exceeds size limit: ${path}`, [path]);
     }
+    if (path === "deck.json" && content.byteLength > LIMITS.maxManifestFileBytes) {
+      rejectDeckPackage("Manifest file exceeds size limit", [path]);
+    }
     if (path.startsWith("lessons/") && content.byteLength > LIMITS.maxLessonFileBytes) {
       rejectDeckPackage(`Lesson file exceeds size limit: ${path}`, [path]);
     }
@@ -69,6 +72,9 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
     }
     if (name.startsWith("audio/") && originalSize > LIMITS.maxAudioFileBytes) {
       rejectDeckPackage(`Audio file exceeds size limit: ${name}`, [name]);
+    }
+    if (name === "deck.json" && originalSize > LIMITS.maxManifestFileBytes) {
+      rejectDeckPackage("Manifest file exceeds size limit", [name]);
     }
     if (name.startsWith("lessons/") && originalSize > LIMITS.maxLessonFileBytes) {
       rejectDeckPackage(`Lesson file exceeds size limit: ${name}`, [name]);
