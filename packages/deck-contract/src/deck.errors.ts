@@ -3,16 +3,17 @@ export type DeckParseIssue = Readonly<{
   message: string;
 }>;
 
+function formatDeckParseIssues(issues: readonly DeckParseIssue[]): string {
+  return issues
+    .map(({ path, message }) => `${path.length > 0 ? `${path.join(".")}: ` : ""}${message}`)
+    .join("\n");
+}
+
 export class DeckParseError extends Error {
   readonly issues: readonly DeckParseIssue[];
 
   constructor(issues: readonly DeckParseIssue[], options?: ErrorOptions) {
-    super(
-      issues
-        .map(({ path, message }) => `${path.length > 0 ? `${path.join(".")}: ` : ""}${message}`)
-        .join("\n"),
-      options
-    );
+    super(formatDeckParseIssues(issues), options);
     this.name = "DeckParseError";
     this.issues = issues;
   }
