@@ -37,7 +37,13 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
         version: 1 as const,
         exportedAt,
         deckProgress: transaction
-          .select()
+          .select({
+            deckId: deckProgress.deckId,
+            title: deckProgress.title,
+            version: deckProgress.revision,
+            lastReviewedAt: deckProgress.lastReviewedAt,
+            resolution: deckProgress.resolution,
+          })
           .from(deckProgress)
           .orderBy(asc(deckProgress.deckId))
           .all(),

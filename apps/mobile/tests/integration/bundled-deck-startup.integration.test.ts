@@ -49,7 +49,7 @@ describe("bundled deck startup", () => {
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
       title: "Demo",
       updatedAt: "2026-01-01T00:00:00.000Z",
-      version,
+      revision: version,
     });
 
     await installBundledDecks(database.drizzle, new TestClock());

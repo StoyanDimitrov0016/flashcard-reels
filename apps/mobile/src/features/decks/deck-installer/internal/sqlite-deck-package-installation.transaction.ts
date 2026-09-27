@@ -38,16 +38,16 @@ export class SQLiteDeckPackageInstallationTransaction<
         .limit(1)
         .all()[0];
 
-      if (existingDeck && existingDeck.version === deckPackage.version) {
+      if (existingDeck && existingDeck.revision === deckPackage.version) {
         return {
           deckId: deckPackage.id,
           status: "no-op",
-          version: existingDeck.version,
+          version: existingDeck.revision,
         };
       }
-      if (existingDeck && existingDeck.version > deckPackage.version) {
+      if (existingDeck && existingDeck.revision > deckPackage.version) {
         throw new DeckPackageVersionError(
-          `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${existingDeck.version}`
+          `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${existingDeck.revision}`
         );
       }
 
@@ -101,7 +101,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             id: deckPackage.id,
             title: deckPackage.title,
             updatedAt: deckPackage.updatedAt,
-            version: deckPackage.version,
+            revision: deckPackage.version,
           })
           .run();
         transaction
@@ -119,7 +119,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             description: deckPackage.description,
             title: deckPackage.title,
             updatedAt: deckPackage.updatedAt,
-            version: deckPackage.version,
+            revision: deckPackage.version,
           })
           .where(eq(decks.id, deckPackage.id))
           .run();
@@ -223,13 +223,13 @@ export class SQLiteDeckPackageInstallationTransaction<
       if (savedProgress?.resolution === "archived") {
         transaction
           .update(deckProgress)
-          .set({ title: deckPackage.title, version: deckPackage.version, resolution: "pending" })
+          .set({ title: deckPackage.title, revision: deckPackage.version, resolution: "pending" })
           .where(eq(deckProgress.deckId, deckPackage.id))
           .run();
       } else if (savedProgress) {
         transaction
           .update(deckProgress)
-          .set({ title: deckPackage.title, version: deckPackage.version })
+          .set({ title: deckPackage.title, revision: deckPackage.version })
           .where(eq(deckProgress.deckId, deckPackage.id))
           .run();
       }

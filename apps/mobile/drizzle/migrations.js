@@ -5,6 +5,7 @@ import m0000 from "./0000_cheerful_vengeance.sql";
 import m0001 from "./0001_military_roulette.sql";
 import m0002 from "./0002_lessons.sql";
 import m0003 from "./0003_wonderful_dagger.sql";
+import m0004 from "./0004_chief_chameleon.sql";
 
 export default {
   journal,
@@ -13,5 +14,6 @@ export default {
     m0001,
     m0002,
     m0003,
+    m0004,
   },
 };

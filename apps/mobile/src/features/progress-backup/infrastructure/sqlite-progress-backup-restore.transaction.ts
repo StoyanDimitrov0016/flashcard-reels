@@ -26,7 +26,7 @@ export class SQLiteProgressBackupRestoreTransaction<
   async restore(document: ProgressBackupDocument, safetyCopyFileName?: string): Promise<void> {
     this.database.transaction((transaction) => {
       const installedDecks = transaction
-        .select({ id: decks.id, title: decks.title, version: decks.version })
+        .select({ id: decks.id, title: decks.title, version: decks.revision })
         .from(decks)
         .all();
       const installedById = new Map(installedDecks.map((deck) => [deck.id, deck]));
@@ -45,7 +45,7 @@ export class SQLiteProgressBackupRestoreTransaction<
             deckId: row.deckId,
             lastReviewedAt: row.lastReviewedAt,
             title: installed?.title ?? row.title,
-            version: installed?.version ?? row.version,
+            revision: installed?.version ?? row.version,
             resolution: installed ? ("active" as const) : ("archived" as const),
           };
         });

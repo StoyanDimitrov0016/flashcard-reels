@@ -10,12 +10,16 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+import { SYSTEM_AUTHOR_ID } from "../../features/decks/domain/system-author";
+
 export const decks = sqliteTable("decks", {
   id: text("id").primaryKey().notNull(),
+  authorId: text("author_id").notNull().default(SYSTEM_AUTHOR_ID),
+  packageSchema: integer("package_schema").notNull().default(1),
   title: text("title").notNull(),
   description: text("description").notNull(),
   coverAsset: text("cover_asset").notNull().default("cards"),
-  version: integer("version").notNull().default(1),
+  revision: integer("revision").notNull().default(1),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -159,7 +163,7 @@ export const reviewEvents = sqliteTable(
 export const deckProgress = sqliteTable("deck_progress", {
   deckId: text("deck_id").primaryKey().notNull(),
   title: text("title").notNull(),
-  version: integer("version").notNull(),
+  revision: integer("revision").notNull(),
   lastReviewedAt: text("last_reviewed_at").notNull(),
   resolution: text("resolution", { enum: ["active", "archived", "pending"] }).notNull(),
 });

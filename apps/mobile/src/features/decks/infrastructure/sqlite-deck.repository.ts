@@ -46,7 +46,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         id: deck.id,
         coverAsset: deck.coverAsset,
         title: deck.title,
-        version: deck.version,
+        revision: deck.version,
         updatedAt: deck.updatedAt,
       })
       .onConflictDoUpdate({
@@ -55,7 +55,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
           description: deck.description,
           title: deck.title,
           coverAsset: deck.coverAsset,
-          version: deck.version,
+          revision: deck.version,
           updatedAt: deck.updatedAt,
         },
       });
@@ -63,11 +63,11 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
 
   async findVersion(id: DeckId): Promise<number | null> {
     const rows = await this.database
-      .select({ version: decks.version })
+      .select({ revision: decks.revision })
       .from(decks)
       .where(eq(decks.id, id))
       .limit(1);
-    return rows[0]?.version ?? null;
+    return rows[0]?.revision ?? null;
   }
 
   private toModel(row: typeof decks.$inferSelect): Deck {
@@ -76,7 +76,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       id: row.id,
       title: row.title,
       coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
-      version: row.version,
+      version: row.revision,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

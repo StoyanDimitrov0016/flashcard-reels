@@ -50,7 +50,7 @@ export class SQLiteArchivedProgressQuery<TRunResult = unknown> implements Archiv
         return {
           deckId: record.deckId,
           title: record.title,
-          version: record.version,
+          version: record.revision,
           lastReviewedAt: record.lastReviewedAt,
           reviewCount: progress[0]?.reviewCount ?? 0,
           reviewedCardCount: progress[0]?.reviewedCardCount ?? 0,
