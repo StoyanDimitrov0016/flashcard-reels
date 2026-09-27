@@ -5,7 +5,7 @@ import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./d
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });
 
-export const FlashcardSchema = z.compile(
+const FlashcardSchema = z.compile(
   z.strictObject({
     id: IdSchema,
     question: z.string().min(CONSTRAINTS.minTextLength),
@@ -17,7 +17,7 @@ export const FlashcardSchema = z.compile(
   })
 );
 
-export const LessonSchema = z.compile(
+const LessonSchema = z.compile(
   z.strictObject({
     id: IdSchema,
     title: z.string().min(CONSTRAINTS.minTextLength),
