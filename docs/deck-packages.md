@@ -47,6 +47,7 @@ From `apps/mobile`:
 ```powershell
 npm.cmd run decks:generate -- data/decks/system-design-foundations
 npm.cmd run decks:inspect -- build/decks/<deck-id>.fcrdeck
+npm.cmd run decks:curated:prepare
 npm.cmd run decks:packages
 npm.cmd run decks:check
 ```
@@ -54,3 +55,16 @@ npm.cmd run decks:check
 `decks:packages` regenerates the bundled demo; `decks:check` validates the runtime package
 against the bundled registry. The web portal reads the same schema 1 manifest and checks the
 archive's asset names with byte ranges, so listing and previewing decks do not download audio.
+
+`decks:curated:prepare` generates every source in `data/decks`, validates each package with the
+shared contract, checks that deck, card, and lesson IDs do not overlap across decks, and writes
+the individual packages to `apps/mobile/build/curated-decks` and `flashcard-reels-decks.zip` at
+the repository root. The ZIP currently contains seven `.fcrdeck` packages
+ready for publication review. Generated packages and the ZIP are ignored by Git; source manifests
+and lessons are versioned. From the repository root, run `npm run r2:push-decks -- --dry-run` to
+compare that ZIP with the R2 catalog before uploading. Uploading requires an interactive `publish`
+confirmation.
+
+The existing R2 catalog may still contain packages from the earlier format, stored under title
+based file names with `version` metadata. The publisher stops when it sees those objects. Review
+and remove that legacy catalog as a separate cutover step before using the revision based publisher.
