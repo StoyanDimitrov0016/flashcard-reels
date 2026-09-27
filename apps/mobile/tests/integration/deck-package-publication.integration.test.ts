@@ -192,6 +192,43 @@ describe("deck publication review", () => {
     expect(canPublish(result)).toBe(false);
   });
 
+  it("blocks card IDs reused from a published deck outside the candidate batch", async () => {
+    const existing = candidate(deckDocument(), "Scaling.fcrdeck");
+    const incoming = candidate(deckDocument({ id: otherDeckId, title: "Other" }), "Other.fcrdeck");
+
+    const result = await review(storeWith(existing), incoming);
+
+    expect(result.blocks).toHaveLength(cardIds.length);
+    expect(canPublish(result)).toBe(false);
+  });
+
+  it("blocks a revision that changes the author ID", async () => {
+    const changed = candidate(
+      deckDocument({
+        authorId: "a5f43c1e-7890-4abc-8def-1234567890ab",
+        revision: 2,
+      })
+    );
+
+    const result = await review(storeWith(candidate(deckDocument())), changed);
+
+    expect(result.decks[0]?.status).toBe("blocked");
+    expect(result.decks[0]?.blocks.join(" ")).toContain("cannot change author ID");
+  });
+
+  it("blocks two different decks that would publish to the same object key", async () => {
+    const first = candidate(deckDocument(), "Shared.fcrdeck");
+    const second = candidate(
+      deckDocument({ id: otherDeckId, cards: deckCards({ 0: { id: replacementCardId } }) }),
+      "Shared.fcrdeck"
+    );
+
+    const result = await review(storeWith(), first, second);
+
+    expect(result.blocks.join(" ")).toContain("File name Shared.fcrdeck");
+    expect(canPublish(result)).toBe(false);
+  });
+
   it("reports new decks and warns when their title matches another published deck", async () => {
     const renamedDeck = candidate(deckDocument({ id: otherDeckId }), "Scaling copy.fcrdeck");
 
