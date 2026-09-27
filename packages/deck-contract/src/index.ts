@@ -1,6 +1,13 @@
-export { DECK_CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
-export { DeckValidationError } from "./deck.errors";
-export type { DeckValidationIssue } from "./deck.errors";
-export { DeckSchema, FlashcardSchema, LessonSchema } from "./deck.schemas";
+import type { Deck } from "./deck.schemas";
+
+import { DeckValidator } from "./deck.validator";
+
+const deckValidator = new DeckValidator();
+
+export function parseDeck(input: unknown): Deck {
+  return deckValidator.parse(input);
+}
+
+export { DeckParseError } from "./deck.errors";
+export type { DeckParseIssue } from "./deck.errors";
 export type { Deck, Flashcard, Lesson } from "./deck.schemas";
-export { DeckValidator } from "./deck.validator";
