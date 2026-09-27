@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DECK_CONSTRAINTS } from "./deck.constants";
+import { DECK_CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
 
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });
@@ -27,7 +27,7 @@ export const LessonSchema = z.compile(
 /** Schema 1 describes a published deck manifest; draft validation can be less strict. */
 export const DeckSchema = z.compile(
   z.strictObject({
-    schema: z.literal(DECK_CONSTRAINTS.schema),
+    schema: z.literal(DECK_SCHEMA_VERSION),
     id: IdSchema,
     authorId: IdSchema,
     revision: z.number().int().min(DECK_CONSTRAINTS.minimumRevision),
