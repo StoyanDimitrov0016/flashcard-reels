@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DECK_CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
+import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
 
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });
@@ -8,8 +8,8 @@ const TimestampSchema = z.iso.datetime({ offset: true });
 export const FlashcardSchema = z.compile(
   z.strictObject({
     id: IdSchema,
-    question: z.string().min(DECK_CONSTRAINTS.minimumTextLength),
-    answer: z.string().min(DECK_CONSTRAINTS.minimumTextLength),
+    question: z.string().min(CONSTRAINTS.minTextLength),
+    answer: z.string().min(CONSTRAINTS.minTextLength),
     lessonId: IdSchema.nullable(),
     audio: z.boolean(),
     createdAt: TimestampSchema,
@@ -20,7 +20,7 @@ export const FlashcardSchema = z.compile(
 export const LessonSchema = z.compile(
   z.strictObject({
     id: IdSchema,
-    title: z.string().min(DECK_CONSTRAINTS.minimumTextLength),
+    title: z.string().min(CONSTRAINTS.minTextLength),
   })
 );
 
@@ -30,16 +30,13 @@ export const DeckSchema = z.compile(
     schema: z.literal(DECK_SCHEMA_VERSION),
     id: IdSchema,
     authorId: IdSchema,
-    revision: z.number().int().min(DECK_CONSTRAINTS.minimumRevision),
-    title: z.string().min(DECK_CONSTRAINTS.minimumTextLength),
+    revision: z.number().int().min(CONSTRAINTS.minRevision),
+    title: z.string().min(CONSTRAINTS.minTextLength),
     description: z.string(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
-    cards: z
-      .array(FlashcardSchema)
-      .min(DECK_CONSTRAINTS.minimumFlashcards)
-      .max(DECK_CONSTRAINTS.maximumFlashcards),
-    lessons: z.array(LessonSchema).max(DECK_CONSTRAINTS.maximumLessons),
+    cards: z.array(FlashcardSchema).min(CONSTRAINTS.minFlashcards).max(CONSTRAINTS.maxFlashcards),
+    lessons: z.array(LessonSchema).max(CONSTRAINTS.maxLessons),
   })
 );
 

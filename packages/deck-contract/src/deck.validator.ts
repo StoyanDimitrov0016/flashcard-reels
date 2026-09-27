@@ -1,16 +1,27 @@
-import { DeckValidationError, type DeckValidationIssue } from "./deck.errors";
+import { DeckParseError, type DeckParseIssue } from "./deck.errors";
 import { DeckSchema, type Deck } from "./deck.schemas";
 
 /** Parses the manifest format before checking relationships between its entries. */
 export class DeckValidator {
   parse(input: unknown): Deck {
-    const deck = DeckSchema.parse(input);
-    this.validateRelationships(deck);
-    return deck;
+    const result = DeckSchema.safeParse(input);
+    if (!result.success) {
+      throw new DeckParseError(
+        result.error.issues.map((issue) => ({
+          message: issue.message,
+          path: issue.path.map((segment) =>
+            typeof segment === "symbol" ? String(segment) : segment
+          ),
+        })),
+        { cause: result.error }
+      );
+    }
+    this.validateRelationships(result.data);
+    return result.data;
   }
 
   private validateRelationships(deck: Deck): void {
-    const issues: DeckValidationIssue[] = [];
+    const issues: DeckParseIssue[] = [];
     const flashcardIds = new Set<string>();
     for (const [index, flashcard] of deck.cards.entries()) {
       if (flashcardIds.has(flashcard.id)) {
@@ -43,7 +54,7 @@ export class DeckValidator {
     }
 
     if (issues.length > 0) {
-      throw new DeckValidationError(issues);
+      throw new DeckParseError(issues);
     }
   }
 }

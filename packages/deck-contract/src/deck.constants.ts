@@ -1,9 +1,9 @@
 export const DECK_SCHEMA_VERSION = 1;
 
-export const DECK_CONSTRAINTS = {
-  minimumRevision: 1,
-  minimumFlashcards: 1,
-  maximumFlashcards: 1_000,
-  maximumLessons: 200,
-  minimumTextLength: 1,
+export const DECK_SCHEMA_CONSTRAINTS = {
+  minRevision: 1,
+  minFlashcards: 1,
+  maxFlashcards: 1_000,
+  maxLessons: 200,
+  minTextLength: 1,
 } as const;
