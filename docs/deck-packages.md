@@ -23,12 +23,17 @@ the spoken question, a short pause, and the spoken answer; its playback control 
 Cards with `audio: false` have no audio file. Every listed lesson requires a nonempty
 `lessons/<lesson-id>.md` file. Extra files are rejected.
 
+Package limits are 64 MiB compressed and 128 MiB expanded. Within a package, `deck.json` may be
+at most 8 MiB, each audio file 5 MiB, and each lesson file 256 KiB. The mobile installer and web
+catalog enforce these shared limits before expanding entries.
+
 ## Updating a deck
 
 Raise `revision` whenever the content snapshot changes. Importing the installed revision is a
 no-op; importing an older revision is rejected. A higher revision replaces the content while
 keeping learning history for stable card IDs. Removed cards become inactive so their history is
-retained. Use a new card ID when the learning content changes substantially.
+retained. Keep the deck's `authorId` stable across revisions. Use a new card ID when the learning
+content changes substantially.
 
 Deleting a downloaded deck archives its learning data. Reinstalling the same deck ID pauses
 study until the learner chooses to continue with saved progress or start fresh.

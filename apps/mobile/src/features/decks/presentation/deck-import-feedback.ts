@@ -1,6 +1,10 @@
 import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
 
-import { DeckPackageRevisionError, type DeckInstallResult } from "@/features/decks/deck-installer";
+import {
+  DeckPackageAuthorError,
+  DeckPackageRevisionError,
+  type DeckInstallResult,
+} from "@/features/decks/deck-installer";
 import { AppError } from "@/shared/errors/app-error";
 
 export type DeckImportFeedback = Readonly<{
@@ -35,6 +39,12 @@ export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
   }
   if (error instanceof DeckPackageRevisionError) {
     return { message: "That deck package is older than the installed revision.", tone: "error" };
+  }
+  if (error instanceof DeckPackageAuthorError) {
+    return {
+      message: "That deck belongs to a different author than the installed deck.",
+      tone: "error",
+    };
   }
   return { message: "Could not import deck package. Try again.", tone: "error" };
 }

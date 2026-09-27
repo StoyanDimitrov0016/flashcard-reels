@@ -19,6 +19,17 @@ export class DeckPackageRevisionError extends AppError {
   }
 }
 
+export class DeckPackageAuthorError extends AppError {
+  constructor(message: string, options?: ErrorOptions) {
+    super({
+      name: "DeckPackageAuthorError",
+      code: "DECK_PACKAGE_AUTHOR_CONFLICT",
+      message,
+      cause: options?.cause,
+    });
+  }
+}
+
 /** The complete application-facing deck-installer surface. */
 export interface DeckInstaller {
   installFromFile(file: DeckPackageFile): Promise<DeckInstallResult>;

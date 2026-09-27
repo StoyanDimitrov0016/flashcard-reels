@@ -320,6 +320,31 @@ describe("deck package installation", () => {
     ]);
   });
 
+  it("preserves an installed deck when a higher revision changes its author ID", async () => {
+    database = new NodeSqliteDatabase();
+    const first = card(testId(31), 0);
+    const { importer, audio } = createImporter(database, new TestClock());
+    await importer.installFromBytes(validArchive(1, [first]));
+    const changedAuthor = {
+      ...deck(2, [first]),
+      authorId: "a5f43c1e-7890-4abc-8def-1234567890ab",
+    };
+
+    await expect(
+      importer.installFromBytes(
+        archive(changedAuthor, { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) })
+      )
+    ).rejects.toThrow("cannot change author ID");
+    expect(
+      await database.getFirstAsync(
+        "SELECT author_id, revision FROM decks WHERE id = ?",
+        TEST_DECK_ID
+      )
+    ).toEqual({ author_id: deck(1, [first]).authorId, revision: 1 });
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:1`)).toBe(true);
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:2`)).toBe(false);
+  });
+
   it("installs cards and audio, then updates content without losing learner history", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();

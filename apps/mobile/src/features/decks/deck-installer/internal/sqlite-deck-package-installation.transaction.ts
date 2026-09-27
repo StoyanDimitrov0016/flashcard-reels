@@ -6,7 +6,11 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { DeckPackageRevisionError, type DeckInstallResult } from "@/features/decks/deck-installer";
+import {
+  DeckPackageAuthorError,
+  DeckPackageRevisionError,
+  type DeckInstallResult,
+} from "@/features/decks/deck-installer";
 import {
   decks,
   deckAppearances,
@@ -49,6 +53,11 @@ export class SQLiteDeckPackageInstallationTransaction<
       if (existingDeck && existingDeck.revision > deck.revision) {
         throw new DeckPackageRevisionError(
           `Deck ${deck.id} revision ${deck.revision} is older than installed revision ${existingDeck.revision}`
+        );
+      }
+      if (existingDeck && existingDeck.authorId !== deck.authorId) {
+        throw new DeckPackageAuthorError(
+          `Deck ${deck.id} cannot change author ID across revisions`
         );
       }
 
