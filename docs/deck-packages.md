@@ -52,5 +52,5 @@ npm.cmd run decks:check
 ```
 
 `decks:packages` regenerates the bundled demo; `decks:check` validates the runtime package
-against the bundled registry. The web portal's package reader still needs its contract cutover
-before publishing these packages to R2.
+against the bundled registry. The web portal reads the same schema 1 manifest and checks the
+archive's asset names with byte ranges, so listing and previewing decks do not download audio.

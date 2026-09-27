@@ -89,7 +89,7 @@ function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore
             key,
             sha256: item.sha256,
             title: deck.title,
-            version: deck.revision,
+            revision: deck.revision,
           };
         })
       ),
@@ -119,18 +119,18 @@ describe("deck publication review", () => {
     expect(publicationUploads(result, [published])).toEqual([]);
   });
 
-  it("blocks changed content that keeps the published version", async () => {
+  it("blocks changed content that keeps the published revision", async () => {
     const edited = candidate(deckDocument({ cards: editedCards("Use a bigger server.") }));
 
     const result = await review(storeWith(candidate(deckDocument())), edited);
 
     expect(result.decks[0]?.status).toBe("blocked");
-    expect(result.decks[0]?.blocks.join(" ")).toContain("raise the version");
+    expect(result.decks[0]?.blocks.join(" ")).toContain("raise the revision");
     expect(canPublish(result)).toBe(false);
     expect(publicationUploads(result, [edited])).toEqual([]);
   });
 
-  it("lists changed cards and uploads an edited deck with a raised version", async () => {
+  it("lists changed cards and uploads an edited deck with a raised revision", async () => {
     const edited = candidate(
       deckDocument({ cards: editedCards("Use a bigger server."), revision: 2 })
     );
@@ -139,12 +139,12 @@ describe("deck publication review", () => {
 
     expect(result.decks[0]).toMatchObject({
       changedCards: [{ id: cardIds[0], question: "What is vertical scaling?" }],
-      publishedVersion: 1,
+      publishedRevision: 1,
       status: "updated",
-      version: 2,
+      revision: 2,
     });
     expect(publicationUploads(result, [edited])).toMatchObject([
-      { deckId, key: "decks/Scaling.fcrdeck", version: 2 },
+      { deckId, key: "decks/Scaling.fcrdeck", revision: 2 },
     ]);
   });
 
@@ -162,7 +162,7 @@ describe("deck publication review", () => {
     expect(result.decks[0]?.warnings[0]).toContain(replacementCardId);
   });
 
-  it("blocks a version lower than the published one", async () => {
+  it("blocks a revision lower than the published one", async () => {
     const result = await review(
       storeWith(candidate(deckDocument({ revision: 3 }))),
       candidate(deckDocument({ revision: 2 }))
@@ -172,7 +172,7 @@ describe("deck publication review", () => {
     expect(canPublish(result)).toBe(false);
   });
 
-  it("requires a version change when only audio changes", async () => {
+  it("requires a revision change when only audio changes", async () => {
     const audio = { [cardIds[0]]: new Uint8Array([1, 2, 3]) };
 
     const result = await review(
@@ -197,7 +197,7 @@ describe("deck publication review", () => {
 
     const result = await review(storeWith(candidate(deckDocument())), renamedDeck);
 
-    expect(result.decks[0]).toMatchObject({ publishedVersion: null, status: "new" });
+    expect(result.decks[0]).toMatchObject({ publishedRevision: null, status: "new" });
     expect(result.decks[0]?.addedCards).toHaveLength(cardIds.length);
     expect(result.decks[0]?.warnings[0]).toContain(deckId);
   });
@@ -226,20 +226,20 @@ describe("deck publication review", () => {
   describe("lessons", () => {
     const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
     const lessons = [{ id: lessonId, title: "Why scale" }];
-    const withLesson = (markdown: string, version = 1, id = deckId) =>
+    const withLesson = (markdown: string, revision = 1, id = deckId) =>
       candidate(
         deckDocument({
           id,
           lessons,
           title: id === deckId ? "Scaling" : "Other",
-          revision: version,
+          revision,
         }),
         id === deckId ? "Scaling.fcrdeck" : "Other.fcrdeck",
         {},
         { [lessonId]: markdown }
       );
 
-    it("blocks edited lesson content that keeps the published version", async () => {
+    it("blocks edited lesson content that keeps the published revision", async () => {
       const result = await review(storeWith(withLesson("Original")), withLesson("Edited"));
 
       expect(result.decks[0]).toMatchObject({
@@ -248,7 +248,7 @@ describe("deck publication review", () => {
       });
     });
 
-    it("lists added and changed lessons for a raised version", async () => {
+    it("lists added and changed lessons for a raised revision", async () => {
       const withoutLessons = candidate(deckDocument());
 
       const added = await review(storeWith(withoutLessons), withLesson("Original", 2));
