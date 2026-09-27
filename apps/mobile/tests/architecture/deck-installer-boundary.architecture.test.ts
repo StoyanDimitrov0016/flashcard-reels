@@ -42,40 +42,20 @@ describe("deck-installer module boundary", () => {
   it("keeps tooling reuse of installer internals explicit and narrow", () => {
     const expectedInternalImports = new Map([
       [
-        "assert-bundled-deck-packages.mjs",
-        ["../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts"],
-      ],
-      [
         "generate-deck-package.mjs",
-        [
-          "../src/features/decks/deck-installer/internal/deck-package.schema.ts",
-          "../src/features/decks/deck-installer/internal/deck-package-writer.ts",
-        ],
+        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
       ],
       [
         "generate-demo-deck-package.mjs",
-        [
-          "../src/features/decks/deck-installer/internal/deck-package.schema.ts",
-          "../src/features/decks/deck-installer/internal/deck-package-writer.ts",
-        ],
+        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
       ],
       [
         "generate-test-deck-package.mjs",
-        [
-          "../src/features/decks/deck-installer/internal/deck-package.schema.ts",
-          "../src/features/decks/deck-installer/internal/deck-package-writer.ts",
-        ],
+        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
       ],
       [
         "generate-technical-deck-packages.mjs",
-        [
-          "../src/features/decks/deck-installer/internal/deck-package.schema.ts",
-          "../src/features/decks/deck-installer/internal/deck-package-writer.ts",
-        ],
-      ],
-      [
-        "inspect-deck-package.mjs",
-        ["../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts"],
+        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
       ],
     ]);
     const violations = scriptFiles().flatMap((file) => {

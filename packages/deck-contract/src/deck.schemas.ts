@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
+import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants.ts";
 
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });

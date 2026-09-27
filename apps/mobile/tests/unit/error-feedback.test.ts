@@ -1,9 +1,18 @@
+import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
 import { describe, expect, it } from "vitest";
 
 import { AppError } from "@/shared/errors/app-error";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 describe("error feedback", () => {
+  it("offers another file when the shared parser rejects a package", () => {
+    expect(
+      getErrorFeedback(new DeckPackageParseError([{ path: ["deck.json"], message: "Invalid" }]))
+    ).toEqual({
+      message: "That deck package is invalid or damaged.",
+      recovery: "choose-file",
+    });
+  });
   it("maps only the outer AppError code", () => {
     const error = new AppError({
       name: "OperationError",

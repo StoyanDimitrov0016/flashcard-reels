@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  DeckPackageValidationError,
-  DeckPackageVersionError,
-} from "@/features/decks/deck-installer";
+import { DeckPackageRevisionError } from "@/features/decks/deck-installer";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 import { StartupError } from "@/infrastructure/errors/startup-error";
 import { AppError } from "@/shared/errors/app-error";
@@ -43,8 +40,7 @@ describe("application errors", () => {
         new RecoveryError({ code: "APP_RESET_APPLY_FAILED", message: "Reset failed" }),
         "RecoveryError",
       ],
-      [new DeckPackageValidationError("Invalid package"), "DeckPackageValidationError"],
-      [new DeckPackageVersionError("Version conflict"), "DeckPackageVersionError"],
+      [new DeckPackageRevisionError("Revision conflict"), "DeckPackageRevisionError"],
     ] as const;
 
     for (const [error, name] of cases) {

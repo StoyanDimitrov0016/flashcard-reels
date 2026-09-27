@@ -1,4 +1,41 @@
-import type { DeckPackage, DeckPackageReader } from "./deck-package.model.ts";
+import type { Deck, DeckPackage, Flashcard, Lesson } from "@flashcard-reels/deck-contract";
+
+import type { DeckPackageReader } from "./deck-package.model.ts";
+
+type PublicationDeckPackage = Readonly<
+  Omit<Deck, "cards" | "lessons"> & {
+    version: number;
+    cards: readonly (Flashcard & { order: number })[];
+    lessons: readonly (Lesson & { order: number })[];
+    audioFiles: DeckPackage["audioFiles"];
+    lessonFiles: DeckPackage["lessonFiles"];
+  }
+>;
+
+function toPublicationDeckPackage(deckPackage: DeckPackage): PublicationDeckPackage {
+  const { deck, audioFiles, lessonFiles } = deckPackage;
+  return {
+    ...deck,
+    version: deck.revision,
+    cards: deck.cards.map((card, order) => ({
+      id: card.id,
+      question: card.question,
+      answer: card.answer,
+      lessonId: card.lessonId,
+      audio: card.audio,
+      createdAt: card.createdAt,
+      updatedAt: card.updatedAt,
+      order,
+    })),
+    lessons: deck.lessons.map((lesson, order) => ({
+      id: lesson.id,
+      title: lesson.title,
+      order,
+    })),
+    audioFiles,
+    lessonFiles,
+  };
+}
 
 /**
  * Publication review for deck tooling. The app never publishes decks; the R2 upload script uses
@@ -73,7 +110,10 @@ type ReviewOptions = Readonly<{
   allowUnreleasedVersionOneReplace?: boolean;
 }>;
 
-type ReadCandidate = Readonly<{ candidate: DeckPublicationCandidate; deck: DeckPackage }>;
+type ReadCandidate = Readonly<{
+  candidate: DeckPublicationCandidate;
+  deck: PublicationDeckPackage;
+}>;
 
 type DeckComparison = Pick<
   DeckPublicationChange,
@@ -104,7 +144,7 @@ export async function reviewDeckPublication({
 }: ReviewOptions): Promise<DeckPublicationReview> {
   const readCandidates: ReadCandidate[] = candidates.map((candidate) => ({
     candidate,
-    deck: reader.read(candidate.bytes),
+    deck: toPublicationDeckPackage(reader.read(candidate.bytes)),
   }));
   const publishedEntries = await store.listPublishedDecks();
   const publishedByDeckId = new Map(publishedEntries.map((entry) => [entry.deckId, entry]));
@@ -128,7 +168,10 @@ export async function reviewDeckPublication({
     await Promise.all(
       changedPublications.map(
         async (published) =>
-          [published.deckId, reader.read(await store.readPublishedDeck(published.key))] as const
+          [
+            published.deckId,
+            toPublicationDeckPackage(reader.read(await store.readPublishedDeck(published.key))),
+          ] as const
       )
     )
   );
@@ -185,9 +228,9 @@ export function publicationUploads(
 
 type ReviewDeckOptions = Readonly<{
   candidate: DeckPublicationCandidate;
-  deck: DeckPackage;
+  deck: PublicationDeckPackage;
   published: PublishedDeckEntry | null;
-  publishedDeck: DeckPackage | null;
+  publishedDeck: PublicationDeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
   allowUnreleasedVersionOneReplace: boolean;
 }>;
@@ -296,7 +339,10 @@ function unchangedComparison(): DeckComparison {
   };
 }
 
-function compareDecks(published: DeckPackage, candidate: DeckPackage): DeckComparison {
+function compareDecks(
+  published: PublicationDeckPackage,
+  candidate: PublicationDeckPackage
+): DeckComparison {
   const publishedCards = new Map(published.cards.map((card) => [card.id, card]));
   const candidateCards = new Map(candidate.cards.map((card) => [card.id, card]));
   const addedCards = candidate.cards.filter((card) => !publishedCards.has(card.id));
@@ -334,6 +380,8 @@ function compareDecks(published: DeckPackage, candidate: DeckPackage): DeckCompa
     audioChanged: !sameAudio(published.audioFiles, candidate.audioFiles),
     changedCards: changedCards.map(toPublicationCard),
     metadataChanged:
+      published.authorId !== candidate.authorId ||
+      published.schema !== candidate.schema ||
       published.title !== candidate.title ||
       published.description !== candidate.description ||
       published.createdAt !== candidate.createdAt ||
@@ -350,8 +398,8 @@ function compareDecks(published: DeckPackage, candidate: DeckPackage): DeckCompa
 }
 
 function compareLessons(
-  published: DeckPackage,
-  candidate: DeckPackage
+  published: PublicationDeckPackage,
+  candidate: PublicationDeckPackage
 ): Pick<
   DeckComparison,
   "addedLessons" | "changedLessons" | "removedLessons" | "reorderedLessonCount"
@@ -383,7 +431,7 @@ function compareLessons(
   };
 }
 
-function findCrossDeckIds(decks: readonly DeckPackage[]): string[] {
+function findCrossDeckIds(decks: readonly PublicationDeckPackage[]): string[] {
   const owners = new Map<string, Readonly<{ kind: string; deckIds: Set<string> }>>();
   const addOwner = (id: string, kind: string, deckId: string) => {
     const owner = owners.get(id) ?? { deckIds: new Set<string>(), kind };

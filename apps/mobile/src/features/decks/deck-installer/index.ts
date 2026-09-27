@@ -3,27 +3,16 @@ export type DeckPackageFile = Readonly<{ uri: string }>;
 export type DeckInstallResult = Readonly<{
   status: "installed" | "updated" | "no-op";
   deckId: string;
-  version: number;
+  revision: number;
 }>;
 
 import { AppError } from "../../../shared/errors/app-error.ts";
 
-export class DeckPackageValidationError extends AppError {
+export class DeckPackageRevisionError extends AppError {
   constructor(message: string, options?: ErrorOptions) {
     super({
-      name: "DeckPackageValidationError",
-      code: "DECK_PACKAGE_INVALID",
-      message,
-      cause: options?.cause,
-    });
-  }
-}
-
-export class DeckPackageVersionError extends AppError {
-  constructor(message: string, options?: ErrorOptions) {
-    super({
-      name: "DeckPackageVersionError",
-      code: "DECK_PACKAGE_VERSION_CONFLICT",
+      name: "DeckPackageRevisionError",
+      code: "DECK_PACKAGE_REVISION_CONFLICT",
       message,
       cause: options?.cause,
     });

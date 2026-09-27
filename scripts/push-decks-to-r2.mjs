@@ -11,7 +11,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 
-import { ArchiveDeckPackageReader } from "../apps/mobile/src/features/decks/deck-installer/internal/archive-deck-package.reader.ts";
+import { ContractDeckPackageReader } from "../apps/mobile/src/features/decks/deck-installer/internal/contract-deck-package.reader.ts";
 import {
   canPublish,
   publicationUploads,
@@ -201,7 +201,7 @@ const client = new S3Client({
 const review = await reviewDeckPublication({
   allowUnreleasedVersionOneReplace: replaceUnreleasedVersionOne,
   candidates,
-  reader: new ArchiveDeckPackageReader(),
+  reader: new ContractDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),
 });
 printReview(review);

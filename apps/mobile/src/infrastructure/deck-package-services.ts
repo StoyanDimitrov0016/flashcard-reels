@@ -4,7 +4,7 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { ExpoDeckPackageFileReader } from "@/features/decks/deck-installer/internal/expo-deck-package-file.reader";
 import { InstalledAudioStorage } from "@/features/decks/deck-installer/internal/installed-audio-storage";
@@ -25,7 +25,7 @@ export function createDeckPackageServices({
 }: CreateDeckPackageServicesOptions) {
   const audioStorage = new InstalledAudioStorage();
   const installer = new DeckInstallerImpl(
-    new ArchiveDeckPackageReader(),
+    new ContractDeckPackageReader(),
     new SQLiteDeckPackageInstallationTransaction(database),
     audioStorage,
     clock,

@@ -1,8 +1,8 @@
 export function shouldInstallBundledDeck(
-  installedVersion: number | null,
-  bundledVersion: number
+  installedRevision: number | null,
+  bundledRevision: number
 ): boolean {
-  return installedVersion === null || installedVersion < bundledVersion;
+  return installedRevision === null || installedRevision < bundledRevision;
 }
 
 export function shouldApplyBundledAppearance(status: "installed" | "updated" | "no-op"): boolean {

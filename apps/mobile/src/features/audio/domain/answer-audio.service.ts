@@ -1,10 +1,5 @@
-import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
+import type { AudioReference } from "@/features/audio/domain/audio-reference";
 
 export interface AnswerAudioService {
-  findSourceForFlashcard(
-    deckId: string,
-    version: number,
-    flashcardId: string,
-    side: AudioSide
-  ): AudioReference;
+  findSourceForFlashcard(deckId: string, revision: number, flashcardId: string): AudioReference;
 }

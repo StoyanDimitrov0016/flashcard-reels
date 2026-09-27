@@ -1,4 +1,4 @@
-import type { DeckContractErrorCode, DeckContractErrorContext } from "./deck-error-types";
+import type { DeckContractErrorCode, DeckContractErrorContext } from "./deck-error-types.ts";
 
 type DeckContractErrorParams = Readonly<{
   name: string;

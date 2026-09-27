@@ -1,8 +1,6 @@
-import {
-  DeckPackageValidationError,
-  DeckPackageVersionError,
-  type DeckInstallResult,
-} from "@/features/decks/deck-installer";
+import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+
+import { DeckPackageRevisionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import { AppError } from "@/shared/errors/app-error";
 
 export type DeckImportFeedback = Readonly<{
@@ -32,11 +30,11 @@ export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
       tone: "error",
     };
   }
-  if (error instanceof DeckPackageValidationError) {
+  if (error instanceof DeckPackageParseError) {
     return { message: "That deck package is invalid or damaged.", tone: "error" };
   }
-  if (error instanceof DeckPackageVersionError) {
-    return { message: "That deck package is older than the installed version.", tone: "error" };
+  if (error instanceof DeckPackageRevisionError) {
+    return { message: "That deck package is older than the installed revision.", tone: "error" };
   }
   return { message: "Could not import deck package. Try again.", tone: "error" };
 }

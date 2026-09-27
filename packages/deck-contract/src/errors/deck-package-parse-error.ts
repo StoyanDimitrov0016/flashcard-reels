@@ -1,7 +1,7 @@
-import type { DeckContractErrorContext } from "./deck-error-types";
+import type { DeckContractErrorContext } from "./deck-error-types.ts";
 
-import { DeckContractError } from "./deck-contract-error";
-import { formatDeckParseIssues, type DeckPackageParseIssue } from "./deck-parse-issue";
+import { DeckContractError } from "./deck-contract-error.ts";
+import { formatDeckParseIssues, type DeckPackageParseIssue } from "./deck-parse-issue.ts";
 
 type ParseErrorOptions = ErrorOptions & { context?: DeckContractErrorContext };
 

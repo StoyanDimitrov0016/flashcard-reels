@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import type { DeckParseIssue } from "../errors/deck-parse-issue";
+import type { DeckParseIssue } from "../errors/deck-parse-issue.ts";
 
 export function toDeckParseIssues(issues: z.ZodError["issues"]): DeckParseIssue[] {
   return issues.map((issue) => ({

@@ -1,7 +1,7 @@
-import type { Deck } from "../deck.schemas";
-import type { DeckParseIssue } from "../errors/deck-parse-issue";
+import type { Deck } from "../deck.schemas.ts";
+import type { DeckParseIssue } from "../errors/deck-parse-issue.ts";
 
-import { DeckParseError } from "../errors/deck-parse-error";
+import { DeckParseError } from "../errors/deck-parse-error.ts";
 
 /** Checks invariants that depend on more than one manifest entry. */
 export function validateDeckRelationships(deck: Deck): void {

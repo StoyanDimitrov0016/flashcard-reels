@@ -40,7 +40,7 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
           .select({
             deckId: deckProgress.deckId,
             title: deckProgress.title,
-            version: deckProgress.revision,
+            revision: deckProgress.revision,
             lastReviewedAt: deckProgress.lastReviewedAt,
             resolution: deckProgress.resolution,
           })

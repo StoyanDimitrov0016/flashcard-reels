@@ -6,7 +6,7 @@
     {
       "deckId": "a1000000-0000-4000-8000-000000000001",
       "title": "Versioned Test Deck",
-      "version": 1,
+      "revision": 1,
       "lastReviewedAt": "2026-01-01T12:00:00.000Z",
       "resolution": "archived"
     }

@@ -22,15 +22,15 @@ export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) 
   const isDisabled = !status.isLoaded || Boolean(status.error) || Boolean(playbackError);
   const finished =
     status.didJustFinish || (status.duration > 0 && status.currentTime >= status.duration);
-  let accessibilityLabel = "Play answer audio";
+  let accessibilityLabel = "Play card audio";
   if (status.error || playbackError) {
-    accessibilityLabel = "Answer audio unavailable";
+    accessibilityLabel = "Card audio unavailable";
   } else if (isLoading) {
-    accessibilityLabel = "Preparing answer audio";
+    accessibilityLabel = "Preparing card audio";
   } else if (status.playing) {
-    accessibilityLabel = "Pause answer audio";
+    accessibilityLabel = "Pause card audio";
   } else if (finished) {
-    accessibilityLabel = "Replay answer audio";
+    accessibilityLabel = "Replay card audio";
   }
 
   return (

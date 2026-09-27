@@ -1,9 +1,10 @@
+import type { Deck } from "@flashcard-reels/deck-contract";
+
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
-import type { DeckPackageDocument } from "@/features/decks/deck-installer/internal/deck-package.schema";
-
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import {
   canPublish,
   publicationUploads,
@@ -11,7 +12,6 @@ import {
   type DeckPublicationCandidate,
   type PublishedDeckStore,
 } from "@/features/decks/deck-installer/internal/deck-package-publication";
-import { createDeckPackageArchive } from "@/features/decks/deck-installer/internal/deck-package-writer";
 
 const deckId = "3f9c2d4e-8a61-4b7f-9c2e-1d5a6b7c8d90";
 const otherDeckId = "7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
@@ -32,54 +32,64 @@ const cardTexts = [
 type CardEdit = Readonly<{ id?: string; answer?: string }>;
 
 function deckCards(edits: Readonly<Record<number, CardEdit>> = {}) {
-  return cardTexts.map(([question, answer], order) => ({
-    answer: edits[order]?.answer ?? answer,
+  return cardTexts.map(([question, answer], index) => ({
+    answer: edits[index]?.answer ?? answer,
     createdAt: timestamp,
-    id: edits[order]?.id ?? cardIds[order] ?? "",
+    id: edits[index]?.id ?? cardIds[index] ?? "",
     lessonId: null,
-    order,
+    audio: false,
     question,
     updatedAt: timestamp,
   }));
 }
 
-function deckDocument(overrides: Partial<DeckPackageDocument> = {}): DeckPackageDocument {
+function deckDocument(overrides: Partial<Deck> = {}): Deck {
   return {
     cards: deckCards(),
+    lessons: [],
+    schema: 1,
+    authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
     createdAt: timestamp,
     description: "Scaling basics",
     id: deckId,
     title: "Scaling",
     updatedAt: timestamp,
-    version: 1,
+    revision: 1,
     ...overrides,
   };
 }
 
 function candidate(
-  document: DeckPackageDocument,
+  document: Deck,
   fileName = "Scaling.fcrdeck",
   audioFiles: Record<string, Uint8Array> = {},
   lessonFiles: Record<string, string> = {}
 ): DeckPublicationCandidate {
-  const bytes = createDeckPackageArchive(document, audioFiles, lessonFiles);
+  const bytes = createContractDeckPackageArchive(
+    {
+      ...document,
+      cards: document.cards.map((card) => ({ ...card, audio: card.id in audioFiles })),
+    },
+    audioFiles,
+    lessonFiles
+  );
   return { bytes, fileName, sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 
 function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore {
-  const reader = new ArchiveDeckPackageReader();
+  const reader = new ContractDeckPackageReader();
   const objects = new Map(published.map((item) => [`decks/${item.fileName}`, item]));
   return {
     listPublishedDecks: () =>
       Promise.resolve(
         [...objects.entries()].map(([key, item]) => {
-          const deck = reader.read(item.bytes);
+          const deck = reader.read(item.bytes).deck;
           return {
             deckId: deck.id,
             key,
             sha256: item.sha256,
             title: deck.title,
-            version: deck.version,
+            version: deck.revision,
           };
         })
       ),
@@ -91,7 +101,7 @@ function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore
 }
 
 function review(store: PublishedDeckStore, ...candidates: DeckPublicationCandidate[]) {
-  return reviewDeckPublication({ candidates, reader: new ArchiveDeckPackageReader(), store });
+  return reviewDeckPublication({ candidates, reader: new ContractDeckPackageReader(), store });
 }
 
 function editedCards(answer: string) {
@@ -122,7 +132,7 @@ describe("deck publication review", () => {
 
   it("lists changed cards and uploads an edited deck with a raised version", async () => {
     const edited = candidate(
-      deckDocument({ cards: editedCards("Use a bigger server."), version: 2 })
+      deckDocument({ cards: editedCards("Use a bigger server."), revision: 2 })
     );
 
     const result = await review(storeWith(candidate(deckDocument())), edited);
@@ -143,7 +153,7 @@ describe("deck publication review", () => {
 
     const result = await review(
       storeWith(candidate(deckDocument())),
-      candidate(deckDocument({ cards, version: 2 }))
+      candidate(deckDocument({ cards, revision: 2 }))
     );
 
     expect(result.decks[0]?.status).toBe("updated");
@@ -154,8 +164,8 @@ describe("deck publication review", () => {
 
   it("blocks a version lower than the published one", async () => {
     const result = await review(
-      storeWith(candidate(deckDocument({ version: 3 }))),
-      candidate(deckDocument({ version: 2 }))
+      storeWith(candidate(deckDocument({ revision: 3 }))),
+      candidate(deckDocument({ revision: 2 }))
     );
 
     expect(result.decks[0]?.status).toBe("blocked");
@@ -163,7 +173,7 @@ describe("deck publication review", () => {
   });
 
   it("requires a version change when only audio changes", async () => {
-    const audio = { [`audio/${cardIds[0]}.answer.mp3`]: new Uint8Array([1, 2, 3]) };
+    const audio = { [cardIds[0]]: new Uint8Array([1, 2, 3]) };
 
     const result = await review(
       storeWith(candidate(deckDocument())),
@@ -195,7 +205,7 @@ describe("deck publication review", () => {
   it("blocks a published deck under a different file name", async () => {
     const result = await review(
       storeWith(candidate(deckDocument())),
-      candidate(deckDocument({ version: 2 }), "Renamed.fcrdeck")
+      candidate(deckDocument({ revision: 2 }), "Renamed.fcrdeck")
     );
 
     expect(result.decks[0]?.status).toBe("blocked");
@@ -208,17 +218,22 @@ describe("deck publication review", () => {
       readPublishedDeck: () => Promise.reject(new Error("R2 unreachable")),
     };
 
-    await expect(review(store, candidate(deckDocument({ version: 2 })))).rejects.toThrow(
+    await expect(review(store, candidate(deckDocument({ revision: 2 })))).rejects.toThrow(
       "R2 unreachable"
     );
   });
 
   describe("lessons", () => {
     const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
-    const lessons = [{ id: lessonId, order: 0, title: "Why scale" }];
+    const lessons = [{ id: lessonId, title: "Why scale" }];
     const withLesson = (markdown: string, version = 1, id = deckId) =>
       candidate(
-        deckDocument({ id, lessons, title: id === deckId ? "Scaling" : "Other", version }),
+        deckDocument({
+          id,
+          lessons,
+          title: id === deckId ? "Scaling" : "Other",
+          revision: version,
+        }),
         id === deckId ? "Scaling.fcrdeck" : "Other.fcrdeck",
         {},
         { [lessonId]: markdown }
