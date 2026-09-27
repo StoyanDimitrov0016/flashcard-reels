@@ -26,7 +26,7 @@ vi.mock("@/shared/errors/report-error", () => ({ reportError: services.report })
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 
 const downloadedFile = { uri: "file:///cache/deck.fcrdeck" };
-const installedDeck = { deckId: "deck", status: "installed", version: 1 };
+const installedDeck = { deckId: "deck", status: "installed", revision: 1 };
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

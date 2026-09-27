@@ -1,3 +1,4 @@
+import { parseDeck } from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,10 +12,8 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
-import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/deck-package-limits";
-import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
@@ -36,6 +35,9 @@ import {
 } from "../support/study-fixtures";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
+const maximumCardCount = 1_000;
+const maximumAudioFileBytes = 5 * 1024 * 1024;
+const maximumArchiveEntries = 1 + 1_000 + 200;
 
 class MemoryAudioStorage implements DeckAudioStorage {
   readonly staged: StagedDeckAudio[] = [];
@@ -47,9 +49,9 @@ class MemoryAudioStorage implements DeckAudioStorage {
 
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     const staged = {
-      deckId: deckPackage.id,
+      deckId: deckPackage.deck.id,
       token: `audio-${++this.nextToken}`,
-      version: deckPackage.version,
+      revision: deckPackage.deck.revision,
     };
     this.staged.push(staged);
     return staged;
@@ -57,15 +59,15 @@ class MemoryAudioStorage implements DeckAudioStorage {
 
   async activate(staged: StagedDeckAudio): Promise<void> {
     this.activated.push(staged);
-    this.activeVersions.add(`${staged.deckId}:${staged.version}`);
+    this.activeVersions.add(`${staged.deckId}:${staged.revision}`);
   }
 
-  async removeVersion(deckId: string, version: number): Promise<void> {
+  async removeRevision(deckId: string, version: number): Promise<void> {
     this.removedVersions.push(`${deckId}:${version}`);
     this.activeVersions.delete(`${deckId}:${version}`);
   }
 
-  async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+  async removeOtherRevisions(deckId: string, keepVersion: number): Promise<void> {
     this.removedOtherVersions.push(`${deckId}:${keepVersion}`);
     for (const activeVersion of this.activeVersions) {
       if (activeVersion.startsWith(`${deckId}:`) && activeVersion !== `${deckId}:${keepVersion}`) {
@@ -96,7 +98,7 @@ class CountingInstallation implements DeckPackageInstallationTransaction {
 }
 
 class CleanupFailingAudioStorage extends MemoryAudioStorage {
-  override async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+  override async removeOtherRevisions(deckId: string, keepVersion: number): Promise<void> {
     this.removedOtherVersions.push(`${deckId}:${keepVersion}`);
     throw new Error("obsolete audio cleanup failed");
   }
@@ -105,7 +107,7 @@ class CleanupFailingAudioStorage extends MemoryAudioStorage {
 class ActivatedCleanupFailingAudioStorage extends MemoryAudioStorage {
   failRemoval = true;
 
-  override async removeVersion(deckId: string, version: number): Promise<void> {
+  override async removeRevision(deckId: string, version: number): Promise<void> {
     this.removedVersions.push(`${deckId}:${version}`);
     if (this.failRemoval) {
       this.failRemoval = false;
@@ -135,7 +137,7 @@ class GatedInstallation implements DeckPackageInstallationTransaction {
   }
 
   async install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult> {
-    if (deckPackage.id === this.gatedDeckId) {
+    if (deckPackage.deck.id === this.gatedDeckId) {
       this.signalEntered();
       await this.gate;
     }
@@ -149,26 +151,36 @@ class GatedInstallation implements DeckPackageInstallationTransaction {
 
 function rawDeck(
   version: number,
-  cards: readonly DeckPackage["cards"][number][] = [],
+  cards: readonly ReturnType<typeof card>[] = [],
   id = TEST_DECK_ID
 ) {
   return {
-    cards,
+    cards: [...cards]
+      // oxlint-disable-next-line unicorn/no-array-sort -- Sort a copy for the manifest fixture.
+      .sort((a, b) => a.order - b.order)
+      .map((item) => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        lessonId: item.lessonId,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        audio: true,
+      })),
+    authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+    schema: 1,
+    lessons: [],
     createdAt: timestamp,
     description: "Scenario deck",
     id,
     title: "Scenario deck",
     updatedAt: new Date(Date.parse(timestamp) + version * 60_000).toISOString(),
-    version,
+    revision: version,
   };
 }
 
-function deck(
-  version: number,
-  cards: readonly DeckPackage["cards"][number][] = [],
-  id = TEST_DECK_ID
-) {
-  return DeckPackageSchema.parse(rawDeck(version, cards, id));
+function deck(version: number, cards: readonly ReturnType<typeof card>[] = [], id = TEST_DECK_ID) {
+  return parseDeck(rawDeck(version, cards, id));
 }
 
 function card(id: string, order: number, answer = `Answer ${id}`) {
@@ -188,27 +200,25 @@ function archive(
   audio: Readonly<Record<string, Uint8Array>> = {}
 ): Uint8Array {
   return zipSync({
-    "deck.json": strToU8(
-      JSON.stringify(packageDocument, (key, value) => (key === "lessonId" ? undefined : value))
-    ),
+    "deck.json": strToU8(JSON.stringify(packageDocument)),
     ...audio,
   });
 }
 
 function validArchive(
   version: number,
-  cards: readonly DeckPackage["cards"][number][],
+  cards: readonly ReturnType<typeof card>[],
   id = TEST_DECK_ID
 ) {
   const audio: Record<string, Uint8Array> = {};
   for (const candidate of cards) {
-    audio[`audio/${candidate.id}.answer.mp3`] = new Uint8Array([1, 2, 3]);
+    audio[`audio/${candidate.id}.mp3`] = new Uint8Array([1, 2, 3]);
   }
   return archive(deck(version, cards, id), audio);
 }
 
 function archiveWithTooManyCards(): Uint8Array {
-  const cards = Array.from({ length: DECK_PACKAGE_LIMITS.maximumCardCount + 1 }, (_, order) =>
+  const cards = Array.from({ length: maximumCardCount + 1 }, (_, order) =>
     card(`10000000-0000-4000-8000-${order.toString(16).padStart(12, "0")}`, order)
   );
   return archive(rawDeck(2, cards));
@@ -216,11 +226,11 @@ function archiveWithTooManyCards(): Uint8Array {
 
 function archiveWithTooManyAudioFiles(): Uint8Array {
   const entries: Record<string, Uint8Array> = {};
-  for (let index = 0; index <= DECK_PACKAGE_LIMITS.maximumAudioFileCount; index += 1) {
+  for (let index = 0; index <= maximumArchiveEntries; index += 1) {
     const id = `20000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
-    entries[`audio/${id}.answer.mp3`] = new Uint8Array([1]);
+    entries[`audio/${id}.mp3`] = new Uint8Array([1]);
   }
-  return archive(deck(2), entries);
+  return archive(deck(2, [card(testId(20), 0)]), entries);
 }
 
 function createImporter(
@@ -236,7 +246,7 @@ function createImporter(
   return {
     audio,
     importer: new DeckInstallerImpl(
-      new ArchiveDeckPackageReader(),
+      new ContractDeckPackageReader(),
       installation,
       audio,
       clock,
@@ -271,6 +281,44 @@ describe("deck package installation", () => {
   let database: NodeSqliteDatabase | null = null;
 
   afterEach(() => database?.close());
+
+  it("stores schema and author while deriving card order from the manifest array", async () => {
+    database = new NodeSqliteDatabase();
+    const first = card(testId(31), 0);
+    const second = card(testId(32), 1);
+    const manifest = deck(1, [first, second]);
+    const bytes = archive(
+      {
+        ...manifest,
+        cards: [
+          { ...manifest.cards[1], audio: false },
+          { ...manifest.cards[0], audio: true },
+        ],
+      },
+      { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) }
+    );
+    const { importer } = createImporter(database, new TestClock());
+
+    await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({
+      status: "installed",
+      revision: 1,
+    });
+    expect(
+      await database.getFirstAsync(
+        "SELECT author_id, package_schema, revision FROM decks WHERE id = ?",
+        TEST_DECK_ID
+      )
+    ).toEqual({ author_id: manifest.authorId, package_schema: 1, revision: 1 });
+    expect(
+      await database.getAllAsync(
+        'SELECT id, "order" AS card_order FROM flashcards WHERE deck_id = ? ORDER BY "order"',
+        TEST_DECK_ID
+      )
+    ).toEqual([
+      { id: second.id, card_order: 0 },
+      { id: first.id, card_order: 1 },
+    ]);
+  });
 
   it("installs cards and audio, then updates content without losing learner history", async () => {
     database = new NodeSqliteDatabase();
@@ -336,7 +384,7 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(1, [removedCard]));
     await reviewCard(graph, database, removedCard.id);
     await graph.study.recoverPendingCompletedSessionAggregation();
-    await importer.installFromBytes(validArchive(2, []));
+    await importer.installFromBytes(validArchive(2, [card(testId(22), 0)]));
     expect(
       await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)
     ).toEqual({ active: 0 });
@@ -401,7 +449,7 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(1, [existingCard]));
     await expect(
       importer.installFromBytes(validArchive(2, [card(existingCard.id, 0, "Still usable")]))
-    ).resolves.toMatchObject({ status: "updated", version: 2 });
+    ).resolves.toMatchObject({ status: "updated", revision: 2 });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${TEST_DECK_ID}:2`]));
     expect(
       await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
@@ -426,7 +474,7 @@ describe("deck package installation", () => {
     const retry = createImporter(database, clock, audio);
     await expect(retry.importer.installFromBytes(candidate)).resolves.toMatchObject({
       status: "installed",
-      version: 1,
+      revision: 1,
     });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]));
   });
@@ -495,7 +543,7 @@ describe("deck package installation", () => {
     await gate.entered;
     const second = importer.installFromBytes(update);
     await Promise.resolve();
-    expect(audio.staged.filter((entry) => entry.version === 2)).toHaveLength(1);
+    expect(audio.staged.filter((entry) => entry.revision === 2)).toHaveLength(1);
     gate.release();
 
     const importResults = await Promise.all([first, second]);
@@ -800,6 +848,15 @@ describe("deck package installation", () => {
   it.each([
     ["malformed deck.json", zipSync({ "deck.json": strToU8("{") })],
     ["invalid deck ID", archive({ ...rawDeck(1), id: "not-a-uuid" })],
+    [
+      "legacy manifest fields",
+      archive({
+        ...rawDeck(1, [card(testId(29), 0)]),
+        schema: undefined,
+        revision: undefined,
+        version: 1,
+      }),
+    ],
     ["invalid card ID", archive(rawDeck(1, [{ ...card(testId(5), 0), id: "bad" }]))],
     ["invalid deck version", archive({ ...rawDeck(1), version: 0 })],
     ["duplicate IDs", archive(rawDeck(1, [card(testId(5), 0), card(testId(5), 1)]))],
@@ -809,9 +866,15 @@ describe("deck package installation", () => {
       archive(deck(1, [card(testId(7), 0)]), { "audio/a.mp3": new Uint8Array([1]) }),
     ],
     [
+      "legacy side audio",
+      archive(deck(1, [card(testId(7), 0)]), {
+        [`audio/${testId(7)}.answer.mp3`]: new Uint8Array([1]),
+      }),
+    ],
+    [
       "unknown audio card",
       archive(deck(1, [card(testId(8), 0)]), {
-        [`audio/${testId(9)}.answer.mp3`]: new Uint8Array([1]),
+        [`audio/${testId(9)}.mp3`]: new Uint8Array([1]),
       }),
     ],
     [
@@ -824,15 +887,13 @@ describe("deck package installation", () => {
       "unsafe archive path",
       archive(deck(1, [card(testId(10), 0)]), { "../escape.mp3": new Uint8Array([1]) }),
     ],
-    ["missing required package file", zipSync({ "audio/orphan.answer.mp3": new Uint8Array([1]) })],
+    ["missing required package file", zipSync({ "audio/orphan.mp3": new Uint8Array([1]) })],
     ["card-count limit", archiveWithTooManyCards()],
     ["audio-count limit", archiveWithTooManyAudioFiles()],
     [
       "oversized audio resource",
       archive(deck(2, [card(testId(10), 0)]), {
-        [`audio/${testId(10)}.answer.mp3`]: new Uint8Array(
-          DECK_PACKAGE_LIMITS.maximumAudioFileBytes + 1
-        ),
+        [`audio/${testId(10)}.mp3`]: new Uint8Array(maximumAudioFileBytes + 1),
       }),
     ],
   ])("rejects %s before changing installed state", async (_name, bytes) => {

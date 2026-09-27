@@ -1,10 +1,10 @@
+import { parseDeck } from "@flashcard-reels/deck-contract";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { createDeckPackageArchive } from "../src/features/decks/deck-installer/internal/deck-package-writer.ts";
-import { DeckPackageSchema } from "../src/features/decks/deck-installer/internal/deck-package.schema.ts";
+import { createContractDeckPackageArchive } from "../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts";
 
-const AudioFilePattern = /^([^/]+)\.(answer|question)\.mp3$/;
+const AudioFilePattern = /^([^/]+)\.mp3$/;
 
 const [sourceArgument, outputArgument, ...extraArguments] = process.argv.slice(2);
 if (!sourceArgument || extraArguments.length > 0) {
@@ -30,12 +30,12 @@ const rootTechnicalAudioDirectory = path.join(
   "technical_flashcard_library",
   "audio"
 );
-const deckPackage = DeckPackageSchema.parse(
+const deckPackage = parseDeck(
   JSON.parse(await readFile(path.join(sourceDirectory, "deck.json"), "utf8"))
 );
 
 const lessonFiles = {};
-for (const lesson of deckPackage.lessons ?? []) {
+for (const lesson of deckPackage.lessons) {
   lessonFiles[lesson.id] = await readFile(
     path.join(sourceDirectory, "lessons", `${lesson.id}.md`),
     "utf8"
@@ -49,25 +49,21 @@ const audioFileNames = await readOptionalDirectory(audioDirectory);
 for (const fileName of audioFileNames.toSorted()) {
   const match = AudioFilePattern.exec(fileName);
   if (!match) {
-    throw new Error(`Unexpected audio file ${fileName}; use <card-id>.<answer|question>.mp3`);
+    throw new Error(`Unexpected audio file ${fileName}; use <card-id>.mp3`);
   }
   if (!cardIds.has(match[1])) {
     throw new Error(`Audio file ${fileName} does not match a card in deck.json`);
   }
-  audioFiles[`audio/${fileName}`] = new Uint8Array(
-    await readFile(path.join(audioDirectory, fileName))
-  );
+  audioFiles[match[1]] = new Uint8Array(await readFile(path.join(audioDirectory, fileName)));
 }
 
-// The technical library owns the existing answer audio for these stable card IDs. Include it
-// when a lesson source does not provide its own audio, so republishing keeps the spoken answers.
+// The technical library owns combined question/pause/answer audio for stable card IDs.
 for (const card of deckPackage.cards) {
-  const answerPath = `audio/${card.id}.answer.mp3`;
-  if (audioFiles[answerPath]) {
+  if (!card.audio || audioFiles[card.id]) {
     continue;
   }
   try {
-    audioFiles[answerPath] = new Uint8Array(
+    audioFiles[card.id] = new Uint8Array(
       await readFile(path.join(rootTechnicalAudioDirectory, `${card.id}.mp3`))
     );
   } catch (error) {
@@ -82,9 +78,9 @@ const outputPath = outputArgument
   ? path.resolve(process.cwd(), outputArgument)
   : path.join(process.cwd(), "build", "decks", `${deckPackage.id}.fcrdeck`);
 await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(outputPath, createDeckPackageArchive(deckPackage, audioFiles, lessonFiles));
+await writeFile(outputPath, createContractDeckPackageArchive(deckPackage, audioFiles, lessonFiles));
 console.log(
-  `Generated ${path.relative(process.cwd(), outputPath)}: ${deckPackage.title} v${deckPackage.version}, ` +
+  `Generated ${path.relative(process.cwd(), outputPath)}: ${deckPackage.title} revision ${deckPackage.revision}, ` +
     `${deckPackage.cards.length} cards, ${Object.keys(lessonFiles).length} lessons, ` +
     `${Object.keys(audioFiles).length} audio files.`
 );

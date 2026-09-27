@@ -14,7 +14,7 @@ export type DeckFields = Readonly<{
   title: string;
   description: string;
   coverAsset: DeckCoverAsset;
-  version: number;
+  revision: number;
   createdAt: string;
   updatedAt: string;
 }>;
@@ -24,7 +24,7 @@ export class Deck {
   public readonly title: string;
   public readonly description: string;
   public readonly coverAsset: DeckCoverAsset;
-  public readonly version: number;
+  public readonly revision: number;
   public readonly createdAt: string;
   public readonly updatedAt: string;
 
@@ -33,7 +33,7 @@ export class Deck {
     this.title = fields.title;
     this.description = fields.description;
     this.coverAsset = fields.coverAsset;
-    this.version = fields.version;
+    this.revision = fields.revision;
     this.createdAt = fields.createdAt;
     this.updatedAt = fields.updatedAt;
   }

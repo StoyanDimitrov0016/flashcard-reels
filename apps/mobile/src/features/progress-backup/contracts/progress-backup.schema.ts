@@ -14,7 +14,7 @@ const DeckProgressSchema = z
   .object({
     deckId: ProgressBackupIdSchema,
     title: z.string().min(1),
-    version: z.number().int().positive(),
+    revision: z.number().int().positive(),
     lastReviewedAt: ProgressBackupTimestampSchema,
     resolution: z.enum(["active", "archived", "pending"]),
   })

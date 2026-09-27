@@ -6,7 +6,7 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { DeckPackageVersionError, type DeckInstallResult } from "@/features/decks/deck-installer";
+import { DeckPackageRevisionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import {
   decks,
   deckAppearances,
@@ -30,42 +30,43 @@ export class SQLiteDeckPackageInstallationTransaction<
   }
 
   async install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult> {
+    const deck = deckPackage.deck;
     return this.database.transaction((transaction) => {
       const existingDeck = transaction
         .select()
         .from(decks)
-        .where(eq(decks.id, deckPackage.id))
+        .where(eq(decks.id, deck.id))
         .limit(1)
         .all()[0];
 
-      if (existingDeck && existingDeck.revision === deckPackage.version) {
+      if (existingDeck && existingDeck.revision === deck.revision) {
         return {
-          deckId: deckPackage.id,
+          deckId: deck.id,
           status: "no-op",
-          version: existingDeck.revision,
+          revision: existingDeck.revision,
         };
       }
-      if (existingDeck && existingDeck.revision > deckPackage.version) {
-        throw new DeckPackageVersionError(
-          `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${existingDeck.revision}`
+      if (existingDeck && existingDeck.revision > deck.revision) {
+        throw new DeckPackageRevisionError(
+          `Deck ${deck.id} revision ${deck.revision} is older than installed revision ${existingDeck.revision}`
         );
       }
 
-      transaction.delete(removedDecks).where(eq(removedDecks.id, deckPackage.id)).run();
+      transaction.delete(removedDecks).where(eq(removedDecks.id, deck.id)).run();
       const savedProgress = transaction
         .select()
         .from(deckProgress)
-        .where(eq(deckProgress.deckId, deckPackage.id))
+        .where(eq(deckProgress.deckId, deck.id))
         .limit(1)
         .all()[0];
 
-      const incomingIds = deckPackage.cards.map((card) => card.id);
+      const incomingIds = deck.cards.map((card) => card.id);
       const cardsWithMatchingIds =
         incomingIds.length === 0
           ? []
           : transaction.select().from(flashcards).where(inArray(flashcards.id, incomingIds)).all();
       for (const card of cardsWithMatchingIds) {
-        if (card.deckId !== deckPackage.id) {
+        if (card.deckId !== deck.id) {
           throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
         }
       }
@@ -86,7 +87,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .where(inArray(reviewEvents.flashcardId, incomingIds))
           .all();
         for (const card of [...progressOwners, ...memoryOwners, ...eventOwners]) {
-          if (card.deckId !== deckPackage.id) {
+          if (card.deckId !== deck.id) {
             throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
           }
         }
@@ -96,18 +97,20 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .insert(decks)
           .values({
-            createdAt: deckPackage.createdAt,
-            description: deckPackage.description,
-            id: deckPackage.id,
-            title: deckPackage.title,
-            updatedAt: deckPackage.updatedAt,
-            revision: deckPackage.version,
+            createdAt: deck.createdAt,
+            description: deck.description,
+            id: deck.id,
+            authorId: deck.authorId,
+            packageSchema: deck.schema,
+            title: deck.title,
+            updatedAt: deck.updatedAt,
+            revision: deck.revision,
           })
           .run();
         transaction
           .insert(deckAppearances)
           .values({
-            deckId: deckPackage.id,
+            deckId: deck.id,
             presetId: "graphite",
           })
           .onConflictDoNothing()
@@ -116,35 +119,37 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .update(decks)
           .set({
-            description: deckPackage.description,
-            title: deckPackage.title,
-            updatedAt: deckPackage.updatedAt,
-            revision: deckPackage.version,
+            description: deck.description,
+            authorId: deck.authorId,
+            packageSchema: deck.schema,
+            title: deck.title,
+            updatedAt: deck.updatedAt,
+            revision: deck.revision,
           })
-          .where(eq(decks.id, deckPackage.id))
+          .where(eq(decks.id, deck.id))
           .run();
       }
 
       const existingCards = transaction
         .select()
         .from(flashcards)
-        .where(eq(flashcards.deckId, deckPackage.id))
+        .where(eq(flashcards.deckId, deck.id))
         .all();
       const existingCardsById = new Map(existingCards.map((card) => [card.id, card]));
       const maximumExistingOrder = existingCards.reduce(
         (maximum, card) => Math.max(maximum, card.order),
         -1
       );
-      const offset = maximumExistingOrder + deckPackage.cards.length + 1;
+      const offset = maximumExistingOrder + deck.cards.length + 1;
       if (existingCards.length > 0) {
         transaction
           .update(flashcards)
           .set({ order: sql`${flashcards.order} + ${offset}` })
-          .where(eq(flashcards.deckId, deckPackage.id))
+          .where(eq(flashcards.deckId, deck.id))
           .run();
       }
 
-      for (const card of deckPackage.cards) {
+      for (const [order, card] of deck.cards.entries()) {
         const existingCard = existingCardsById.get(card.id);
         if (existingCard) {
           transaction
@@ -153,7 +158,7 @@ export class SQLiteDeckPackageInstallationTransaction<
               active: true,
               answer: card.answer,
               lessonId: card.lessonId,
-              order: card.order,
+              order,
               question: card.question,
               updatedAt: card.updatedAt,
             })
@@ -167,9 +172,9 @@ export class SQLiteDeckPackageInstallationTransaction<
               answer: card.answer,
               lessonId: card.lessonId,
               createdAt: card.createdAt,
-              deckId: deckPackage.id,
+              deckId: deck.id,
               id: card.id,
-              order: card.order,
+              order,
               question: card.question,
               updatedAt: card.updatedAt,
             })
@@ -181,18 +186,18 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .update(flashcards)
           .set({ active: false })
-          .where(eq(flashcards.deckId, deckPackage.id))
+          .where(eq(flashcards.deckId, deck.id))
           .run();
       } else {
         transaction
           .update(flashcards)
           .set({ active: false })
-          .where(and(eq(flashcards.deckId, deckPackage.id), notInArray(flashcards.id, incomingIds)))
+          .where(and(eq(flashcards.deckId, deck.id), notInArray(flashcards.id, incomingIds)))
           .run();
       }
 
-      // Lessons are content with no learner state, so each version replaces the previous set.
-      const incomingLessonIds = (deckPackage.lessons ?? []).map((lesson) => lesson.id);
+      // Lessons are content with no learner state, so each revision replaces the previous set.
+      const incomingLessonIds = deck.lessons.map((lesson) => lesson.id);
       const lessonOwners =
         incomingLessonIds.length === 0
           ? []
@@ -202,19 +207,19 @@ export class SQLiteDeckPackageInstallationTransaction<
               .where(inArray(lessons.id, incomingLessonIds))
               .all();
       for (const lesson of lessonOwners) {
-        if (lesson.deckId !== deckPackage.id) {
+        if (lesson.deckId !== deck.id) {
           throw new Error(`Lesson ${lesson.id} already belongs to deck ${lesson.deckId}`);
         }
       }
-      transaction.delete(lessons).where(eq(lessons.deckId, deckPackage.id)).run();
-      for (const lesson of deckPackage.lessons ?? []) {
+      transaction.delete(lessons).where(eq(lessons.deckId, deck.id)).run();
+      for (const [order, lesson] of deck.lessons.entries()) {
         transaction
           .insert(lessons)
           .values({
             content: deckPackage.lessonFiles.get(lesson.id) ?? "",
-            deckId: deckPackage.id,
+            deckId: deck.id,
             id: lesson.id,
-            order: lesson.order,
+            order,
             title: lesson.title,
           })
           .run();
@@ -223,14 +228,14 @@ export class SQLiteDeckPackageInstallationTransaction<
       if (savedProgress?.resolution === "archived") {
         transaction
           .update(deckProgress)
-          .set({ title: deckPackage.title, revision: deckPackage.version, resolution: "pending" })
-          .where(eq(deckProgress.deckId, deckPackage.id))
+          .set({ title: deck.title, revision: deck.revision, resolution: "pending" })
+          .where(eq(deckProgress.deckId, deck.id))
           .run();
       } else if (savedProgress) {
         transaction
           .update(deckProgress)
-          .set({ title: deckPackage.title, revision: deckPackage.version })
-          .where(eq(deckProgress.deckId, deckPackage.id))
+          .set({ title: deck.title, revision: deck.revision })
+          .where(eq(deckProgress.deckId, deck.id))
           .run();
       }
 
@@ -243,7 +248,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             existingDeck
               ? or(
                   eq(studySessions.scope, "mixed"),
-                  and(eq(studySessions.scope, "focused"), eq(studySessions.deckId, deckPackage.id))
+                  and(eq(studySessions.scope, "focused"), eq(studySessions.deckId, deck.id))
                 )
               : eq(studySessions.scope, "mixed")
           )
@@ -258,9 +263,9 @@ export class SQLiteDeckPackageInstallationTransaction<
       }
 
       return {
-        deckId: deckPackage.id,
+        deckId: deck.id,
         status: existingDeck ? "updated" : "installed",
-        version: deckPackage.version,
+        revision: deck.revision,
       };
     });
   }

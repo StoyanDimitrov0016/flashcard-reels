@@ -8,7 +8,7 @@ import type {
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
@@ -24,23 +24,23 @@ class ResolvingAudioStorage implements DeckAudioStorage {
 
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     this.staged = deckPackage;
-    return { deckId: deckPackage.id, token: "demo", version: deckPackage.version };
+    return { deckId: deckPackage.deck.id, token: "demo", revision: deckPackage.deck.revision };
   }
 
   async activate(staged: StagedDeckAudio): Promise<void> {
     if (!this.staged) {
       throw new Error("Missing staged demo");
     }
-    for (const archivePath of this.staged.audioFiles.keys()) {
-      this.files.add([staged.deckId, staged.version, archivePath.slice("audio/".length)].join("/"));
+    for (const cardId of this.staged.audioFiles.keys()) {
+      this.files.add([staged.deckId, staged.revision, `${cardId}.mp3`].join("/"));
     }
   }
 
-  async removeVersion(): Promise<void> {}
-  async removeOtherVersions(): Promise<void> {}
+  async removeRevision(): Promise<void> {}
+  async removeOtherRevisions(): Promise<void> {}
 
   find(deckId: string, version: number, cardId: string): string | null {
-    const installedPath = [deckId, version, cardId + ".answer.mp3"].join("/");
+    const installedPath = [deckId, version, cardId + ".mp3"].join("/");
     return this.files.has(installedPath) ? installedPath : null;
   }
 }
@@ -54,7 +54,7 @@ describe("built-in demo package", () => {
     const bytes = new Uint8Array(
       await readFile(path.join(process.cwd(), "assets", "decks", demoId + ".fcrdeck"))
     );
-    const reader = new ArchiveDeckPackageReader();
+    const reader = new ContractDeckPackageReader();
     const parsed = reader.read(bytes);
     const audio = new ResolvingAudioStorage();
     const installer = new DeckInstallerImpl(
@@ -66,19 +66,19 @@ describe("built-in demo package", () => {
       new SQLiteDeckRepository(database.drizzle)
     );
 
-    expect(parsed.cards).toHaveLength(6);
-    expect(parsed.audioFiles.size).toBe(2);
+    expect(parsed.deck.cards).toHaveLength(6);
+    expect(parsed.audioFiles.size).toBe(6);
     expect(parsed.lessonFiles.size).toBe(2);
     await expect(installer.installFromFile({ uri: "bundled-demo" })).resolves.toMatchObject({
       deckId: demoId,
       status: "installed",
-      version: 2,
+      revision: 1,
     });
-    expect(await new SQLiteDeckRepository(database.drizzle).findVersion(demoId)).toBe(2);
-    const audioCard = parsed.cards[0];
+    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(1);
+    const audioCard = parsed.deck.cards[0];
     if (!audioCard) {
       throw new Error("Demo package has no cards");
     }
-    expect(audio.find(demoId, 2, audioCard.id)).not.toBeNull();
+    expect(audio.find(demoId, 1, audioCard.id)).not.toBeNull();
   });
 });

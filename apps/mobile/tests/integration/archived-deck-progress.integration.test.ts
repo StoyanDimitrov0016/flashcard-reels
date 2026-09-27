@@ -79,23 +79,28 @@ describe("archived deck progress", () => {
 
   function packageForReinstall() {
     return {
-      id: TEST_DECK_ID,
-      title: "Reinstalled deck",
-      description: "",
-      version: 2,
-      createdAt: reviewedAt,
-      updatedAt: reviewedAt,
-      cards: [
-        {
-          id: cardId,
-          order: 0,
-          question: "Question",
-          answer: "Answer",
-          lessonId: null,
-          createdAt: reviewedAt,
-          updatedAt: reviewedAt,
-        },
-      ],
+      deck: {
+        schema: 1 as const,
+        id: TEST_DECK_ID,
+        authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+        title: "Reinstalled deck",
+        description: "",
+        revision: 2,
+        createdAt: reviewedAt,
+        updatedAt: reviewedAt,
+        cards: [
+          {
+            id: cardId,
+            question: "Question",
+            answer: "Answer",
+            lessonId: null,
+            audio: false,
+            createdAt: reviewedAt,
+            updatedAt: reviewedAt,
+          },
+        ],
+        lessons: [],
+      },
       audioFiles: new Map<string, Uint8Array>(),
       lessonFiles: new Map<string, string>(),
     };
@@ -302,17 +307,20 @@ describe("archived deck progress", () => {
     await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
       {
         ...replacement,
-        cards: [
-          {
-            id: testId(705),
-            order: 0,
-            question: "Replacement question",
-            answer: "Replacement answer",
-            lessonId: null,
-            createdAt: reviewedAt,
-            updatedAt: reviewedAt,
-          },
-        ],
+        deck: {
+          ...replacement.deck,
+          cards: [
+            {
+              id: testId(705),
+              question: "Replacement question",
+              answer: "Replacement answer",
+              lessonId: null,
+              audio: false,
+              createdAt: reviewedAt,
+              updatedAt: reviewedAt,
+            },
+          ],
+        },
       },
       reviewedAt
     );

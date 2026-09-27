@@ -1,8 +1,8 @@
-import type { Deck } from "../deck.schemas";
+import type { Deck } from "../deck.schemas.ts";
 
-import { extractDeckArchive } from "./extract-deck-archive";
-import { readDeckAssets, type DeckAssets } from "./read-deck-assets";
-import { readDeckManifest } from "./read-deck-manifest";
+import { extractDeckArchive } from "./extract-deck-archive.ts";
+import { readDeckAssets, type DeckAssets } from "./read-deck-assets.ts";
+import { readDeckManifest } from "./read-deck-manifest.ts";
 
 export type DeckPackage = Readonly<{ deck: Deck }> & DeckAssets;
 

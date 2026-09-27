@@ -4,13 +4,13 @@ import type {
   DeckPackageFileReader,
   DeckPackageInstallationTransaction,
   DeckPackageReader,
-  InstalledDeckVersionRepository,
+  InstalledDeckRevisionRepository,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
 import {
-  DeckPackageVersionError,
+  DeckPackageRevisionError,
   type DeckInstallResult,
   type DeckInstaller,
   type DeckPackageFile,
@@ -24,7 +24,7 @@ export class DeckInstallerImpl implements DeckInstaller {
   private readonly audioStorage: DeckAudioStorage;
   private readonly clock: Clock;
   private readonly fileReader: DeckPackageFileReader;
-  private readonly versionRepository: InstalledDeckVersionRepository;
+  private readonly revisionRepository: InstalledDeckRevisionRepository;
   private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
@@ -33,7 +33,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     audioStorage: DeckAudioStorage,
     clock: Clock,
     fileReader: DeckPackageFileReader,
-    versionRepository: InstalledDeckVersionRepository,
+    revisionRepository: InstalledDeckRevisionRepository,
     sessionSettlement: StudySessionSettlement | null = null
   ) {
     this.reader = reader;
@@ -41,7 +41,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     this.audioStorage = audioStorage;
     this.clock = clock;
     this.fileReader = fileReader;
-    this.versionRepository = versionRepository;
+    this.revisionRepository = revisionRepository;
     this.sessionSettlement = sessionSettlement;
   }
 
@@ -51,38 +51,39 @@ export class DeckInstallerImpl implements DeckInstaller {
 
   async installFromBytes(bytes: Uint8Array): Promise<DeckInstallResult> {
     const deckPackage = this.reader.read(bytes);
-    return this.withDeckGuard(deckPackage.id, () => this.install(deckPackage));
+    return this.withDeckGuard(deckPackage.deck.id, () => this.install(deckPackage));
   }
 
   private async install(deckPackage: DeckPackage): Promise<DeckInstallResult> {
-    const installedVersion = await this.versionRepository.findVersion(deckPackage.id);
-    if (installedVersion === deckPackage.version) {
-      return { deckId: deckPackage.id, status: "no-op", version: installedVersion };
+    const deck = deckPackage.deck;
+    const installedRevision = await this.revisionRepository.findRevision(deck.id);
+    if (installedRevision === deck.revision) {
+      return { deckId: deck.id, status: "no-op", revision: installedRevision };
     }
-    if (installedVersion !== null && installedVersion > deckPackage.version) {
-      throw new DeckPackageVersionError(
-        `Deck ${deckPackage.id} version ${deckPackage.version} is older than installed version ${installedVersion}`
+    if (installedRevision !== null && installedRevision > deck.revision) {
+      throw new DeckPackageRevisionError(
+        `Deck ${deck.id} revision ${deck.revision} is older than installed revision ${installedRevision}`
       );
     }
 
     await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(
-      deckPackage.id,
-      installedVersion !== null
+      deck.id,
+      installedRevision !== null
     );
 
     const stagedAudio = await this.audioStorage.stage(deckPackage);
     let audioActivated = false;
     try {
-      // The guard and version check prove a same-version directory cannot be active database state.
+      // The guard and revision check prove a same-revision directory cannot be active database state.
       // The storage adapter may therefore replace it as residue from an earlier failed install.
       await this.audioStorage.activate(stagedAudio);
       audioActivated = true;
       const result = await this.installation.install(deckPackage, this.clock.now());
       if (result.status === "no-op") {
-        await this.audioStorage.removeVersion(deckPackage.id, deckPackage.version);
+        await this.audioStorage.removeRevision(deck.id, deck.revision);
       } else {
         try {
-          await this.audioStorage.removeOtherVersions(deckPackage.id, deckPackage.version);
+          await this.audioStorage.removeOtherRevisions(deck.id, deck.revision);
         } catch {
           // Obsolete files are safe to leave behind after a successful installation.
         }
@@ -91,9 +92,9 @@ export class DeckInstallerImpl implements DeckInstaller {
     } catch (error) {
       if (audioActivated) {
         try {
-          await this.audioStorage.removeVersion(deckPackage.id, deckPackage.version);
+          await this.audioStorage.removeRevision(deck.id, deck.revision);
         } catch {
-          // SQLite still identifies the previous version; residue is replaceable on retry.
+          // SQLite still identifies the previous revision; residue is replaceable on retry.
         }
       }
       throw error;

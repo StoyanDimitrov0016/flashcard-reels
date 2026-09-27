@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from "expo-file-system";
 
 import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
-import type { AudioReference, AudioSide } from "@/features/audio/domain/audio-reference";
+import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type {
   DeckAudioStorage,
   DeckPackage,
@@ -19,13 +19,12 @@ export class InstalledAudioStorage
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     const root = this.audioRoot();
     root.create({ idempotent: true, intermediates: true });
-    const token = `${deckPackage.id}-${deckPackage.version}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const token = `${deckPackage.deck.id}-${deckPackage.deck.revision}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const temporary = new Directory(root, `.tmp-${token}`);
     temporary.create({ intermediates: true });
     try {
-      for (const [path, bytes] of deckPackage.audioFiles) {
-        const fileName = path.slice("audio/".length);
-        new File(temporary, fileName).write(bytes);
+      for (const [cardId, bytes] of deckPackage.audioFiles) {
+        new File(temporary, `${cardId}.mp3`).write(bytes);
       }
     } catch (error) {
       if (temporary.exists) {
@@ -34,19 +33,19 @@ export class InstalledAudioStorage
       throw error;
     }
     this.stagedDirectories.set(token, temporary);
-    return { deckId: deckPackage.id, token, version: deckPackage.version };
+    return { deckId: deckPackage.deck.id, token, revision: deckPackage.deck.revision };
   }
 
   async activate(staged: StagedDeckAudio): Promise<void> {
     const temporary = this.takeStaged(staged);
     const deckDirectory = new Directory(this.audioRoot(), staged.deckId);
     deckDirectory.create({ idempotent: true, intermediates: true });
-    const versionDirectory = new Directory(deckDirectory, String(staged.version));
+    const revisionDirectory = new Directory(deckDirectory, String(staged.revision));
     try {
-      if (versionDirectory.exists) {
-        versionDirectory.delete();
+      if (revisionDirectory.exists) {
+        revisionDirectory.delete();
       }
-      await temporary.move(versionDirectory);
+      await temporary.move(revisionDirectory);
     } catch (error) {
       if (temporary.exists) {
         temporary.delete();
@@ -55,8 +54,8 @@ export class InstalledAudioStorage
     }
   }
 
-  async removeVersion(deckId: string, version: number): Promise<void> {
-    const directory = new Directory(this.audioRoot(), deckId, String(version));
+  async removeRevision(deckId: string, revision: number): Promise<void> {
+    const directory = new Directory(this.audioRoot(), deckId, String(revision));
     if (directory.exists) {
       directory.delete();
     }
@@ -69,7 +68,7 @@ export class InstalledAudioStorage
     }
   }
 
-  async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+  async removeOtherRevisions(deckId: string, keepRevision: number): Promise<void> {
     const deckDirectory = new Directory(this.audioRoot(), deckId);
     if (!deckDirectory.exists) {
       return;
@@ -77,7 +76,7 @@ export class InstalledAudioStorage
     for (const entry of deckDirectory.list()) {
       if (
         entry instanceof Directory &&
-        entry.name !== String(keepVersion) &&
+        entry.name !== String(keepRevision) &&
         !entry.name.startsWith(".tmp-")
       ) {
         entry.delete();
@@ -85,13 +84,8 @@ export class InstalledAudioStorage
     }
   }
 
-  findSourceForFlashcard(
-    deckId: string,
-    version: number,
-    flashcardId: string,
-    side: AudioSide
-  ): AudioReference {
-    const file = new File(this.audioRoot(), deckId, String(version), `${flashcardId}.${side}.mp3`);
+  findSourceForFlashcard(deckId: string, revision: number, flashcardId: string): AudioReference {
+    const file = new File(this.audioRoot(), deckId, String(revision), `${flashcardId}.mp3`);
     return file.exists ? { uri: file.uri } : null;
   }
 

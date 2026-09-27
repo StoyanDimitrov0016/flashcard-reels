@@ -3,10 +3,10 @@ import { unzipSync, type UnzipFileInfo } from "fflate";
 import {
   DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS,
   DECK_PACKAGE_LIMITS as LIMITS,
-} from "../deck.constants";
-import { DeckPackageParseError } from "../errors/deck-package-parse-error";
-import { rejectDeckPackage } from "./reject-deck-package";
-import { validateZipMetadata } from "./validate-zip-metadata";
+} from "../deck.constants.ts";
+import { DeckPackageParseError } from "../errors/deck-package-parse-error.ts";
+import { rejectDeckPackage } from "./reject-deck-package.ts";
+import { validateZipMetadata } from "./validate-zip-metadata.ts";
 
 const AudioPathPattern = /^audio\/[0-9a-f-]{36}\.mp3$/i;
 const LessonPathPattern = /^lessons\/[0-9a-f-]{36}\.md$/i;

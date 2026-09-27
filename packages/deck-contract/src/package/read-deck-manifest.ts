@@ -1,11 +1,11 @@
 import { strFromU8 } from "fflate";
 
-import type { Deck } from "../deck.schemas";
+import type { Deck } from "../deck.schemas.ts";
 
-import { DeckPackageParseError } from "../errors/deck-package-parse-error";
-import { DeckParseError } from "../errors/deck-parse-error";
-import { parseDeck } from "../validation/parse-deck";
-import { rejectDeckPackage } from "./reject-deck-package";
+import { DeckPackageParseError } from "../errors/deck-package-parse-error.ts";
+import { DeckParseError } from "../errors/deck-parse-error.ts";
+import { parseDeck } from "../validation/parse-deck.ts";
+import { rejectDeckPackage } from "./reject-deck-package.ts";
 
 export function readDeckManifest(files: Record<string, Uint8Array>): Deck {
   const bytes = files["deck.json"];

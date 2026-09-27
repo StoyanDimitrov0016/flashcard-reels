@@ -1,7 +1,6 @@
+import { parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-
-import { ArchiveDeckPackageReader } from "../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts";
 
 const [inputPath, ...extraArguments] = process.argv.slice(2);
 if (!inputPath || extraArguments.length > 0) {
@@ -12,25 +11,16 @@ if (!inputPath || extraArguments.length > 0) {
 const resolvedPath = path.resolve(process.cwd(), inputPath);
 try {
   const bytes = new Uint8Array(await readFile(resolvedPath));
-  const deck = new ArchiveDeckPackageReader().read(bytes);
-  let answerAudioCount = 0;
-  let questionAudioCount = 0;
-  for (const audioPath of deck.audioFiles.keys()) {
-    if (audioPath.endsWith(".answer.mp3")) {
-      answerAudioCount += 1;
-    } else if (audioPath.endsWith(".question.mp3")) {
-      questionAudioCount += 1;
-    }
-  }
+  const { deck, audioFiles } = parseDeckPackage(bytes);
 
   console.log(`File: ${resolvedPath}`);
   console.log(`Deck ID: ${deck.id}`);
   console.log(`Title: ${deck.title}`);
-  console.log(`Version: ${deck.version}`);
+  console.log(`Schema: ${deck.schema}`);
+  console.log(`Revision: ${deck.revision}`);
   console.log(`Cards: ${deck.cards.length}`);
-  console.log(`Answer audio: ${answerAudioCount}`);
-  console.log(`Question audio: ${questionAudioCount}`);
-  console.log(`Lessons: ${deck.lessons?.length ?? 0}`);
+  console.log(`Combined audio: ${audioFiles.size}`);
+  console.log(`Lessons: ${deck.lessons.length}`);
   console.log(`Package size: ${bytes.byteLength} bytes`);
   console.log("Validation: passed");
 } catch (error) {

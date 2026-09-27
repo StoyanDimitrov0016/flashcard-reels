@@ -1,8 +1,8 @@
 import { strFromU8 } from "fflate";
 
-import type { Deck } from "../deck.schemas";
+import type { Deck } from "../deck.schemas.ts";
 
-import { rejectDeckPackage } from "./reject-deck-package";
+import { rejectDeckPackage } from "./reject-deck-package.ts";
 
 export type DeckAssets = Readonly<{
   /** Audio bytes keyed by flashcard ID. */

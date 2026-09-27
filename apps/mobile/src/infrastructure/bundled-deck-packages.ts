@@ -15,7 +15,7 @@ import demoPackage from "../../assets/decks/7f6f98a7-a84d-4cc8-b744-3d0b53e3c873
 
 export type BundledDeckDefinition = Readonly<{
   id: DeckId;
-  version: number;
+  revision: number;
   asset: number;
   appearance: Readonly<{
     presetId: DeckAppearancePresetId;
@@ -59,7 +59,7 @@ export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>
         },
         asset,
         id: metadata.id,
-        version: metadata.version,
+        revision: metadata.revision,
       };
       return [definition.id, definition];
     })

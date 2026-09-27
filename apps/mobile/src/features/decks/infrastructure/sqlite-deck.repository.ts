@@ -46,7 +46,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
         id: deck.id,
         coverAsset: deck.coverAsset,
         title: deck.title,
-        revision: deck.version,
+        revision: deck.revision,
         updatedAt: deck.updatedAt,
       })
       .onConflictDoUpdate({
@@ -55,13 +55,13 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
           description: deck.description,
           title: deck.title,
           coverAsset: deck.coverAsset,
-          revision: deck.version,
+          revision: deck.revision,
           updatedAt: deck.updatedAt,
         },
       });
   }
 
-  async findVersion(id: DeckId): Promise<number | null> {
+  async findRevision(id: DeckId): Promise<number | null> {
     const rows = await this.database
       .select({ revision: decks.revision })
       .from(decks)
@@ -76,7 +76,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       id: row.id,
       title: row.title,
       coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
-      version: row.revision,
+      revision: row.revision,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

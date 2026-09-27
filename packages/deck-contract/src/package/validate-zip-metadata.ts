@@ -1,4 +1,4 @@
-import { rejectDeckPackage } from "./reject-deck-package";
+import { rejectDeckPackage } from "./reject-deck-package.ts";
 
 const EndRecordSignature = 0x06054b50;
 const CentralEntrySignature = 0x02014b50;

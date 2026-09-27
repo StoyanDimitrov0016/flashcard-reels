@@ -8,6 +8,6 @@ export function useCardAnswerAudioSource(deck: Deck | null, card: Flashcard | nu
   const { answerAudioService } = useAudio();
   const { preferences } = usePreferences();
   return preferences.audioEnabled && deck && card
-    ? answerAudioService.findSourceForFlashcard(deck.id, deck.version, card.id, "answer")
+    ? answerAudioService.findSourceForFlashcard(deck.id, deck.revision, card.id)
     : null;
 }

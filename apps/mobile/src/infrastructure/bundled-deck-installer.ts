@@ -13,7 +13,7 @@ import {
 import {
   shouldApplyBundledAppearance,
   shouldInstallBundledDeck,
-} from "@/infrastructure/bundled-deck-version";
+} from "@/infrastructure/bundled-deck-revision";
 import {
   createDeckPackageServices,
   type AppDatabase,
@@ -33,8 +33,8 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
     if (await removedDeckRepository.wasRemoved(definition.id)) {
       continue;
     }
-    const installedVersion = await deckRepository.findVersion(definition.id);
-    if (!shouldInstallBundledDeck(installedVersion, definition.version)) {
+    const installedRevision = await deckRepository.findRevision(definition.id);
+    if (!shouldInstallBundledDeck(installedRevision, definition.revision)) {
       continue;
     }
     const result = await installBundledPackage(await readBundledDeckPackage(definition));
@@ -57,7 +57,7 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
           id: deck.id,
           title: deck.title,
           updatedAt: deck.updatedAt,
-          version: deck.version,
+          revision: deck.revision,
         })
       );
     }

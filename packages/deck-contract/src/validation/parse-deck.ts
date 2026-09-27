@@ -1,7 +1,7 @@
-import { DeckSchema, type Deck } from "../deck.schemas";
-import { DeckParseError } from "../errors/deck-parse-error";
-import { validateDeckRelationships } from "./validate-deck-relationships";
-import { toDeckParseIssues } from "./zod-issues";
+import { DeckSchema, type Deck } from "../deck.schemas.ts";
+import { DeckParseError } from "../errors/deck-parse-error.ts";
+import { validateDeckRelationships } from "./validate-deck-relationships.ts";
+import { toDeckParseIssues } from "./zod-issues.ts";
 
 /** Parses the manifest format before checking relationships between its entries. */
 export function parseDeck(input: unknown): Deck {

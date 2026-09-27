@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@expo/ui": "~57.0.20",
+    "@flashcard-reels/deck-contract": "*",
     "@flashcard-reels/design-tokens": "*",
     "@shopify/flash-list": "2.0.2",
     "drizzle-orm": "^0.45.2",

@@ -1,3 +1,5 @@
+import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+
 import { AppError } from "@/shared/errors/app-error";
 
 export type ErrorFeedback = Readonly<{
@@ -6,6 +8,9 @@ export type ErrorFeedback = Readonly<{
 }>;
 
 export function getErrorFeedback(error: unknown): ErrorFeedback {
+  if (error instanceof DeckPackageParseError) {
+    return { message: "That deck package is invalid or damaged.", recovery: "choose-file" };
+  }
   if (!(error instanceof AppError)) {
     return {
       message: "Something went wrong while loading this part of the app.",
@@ -32,11 +37,9 @@ export function getErrorFeedback(error: unknown): ErrorFeedback {
         message: "Full reset must be completed from the app's storage settings.",
         recovery: "none",
       };
-    case "DECK_PACKAGE_INVALID":
-      return { message: "That deck package is invalid or damaged.", recovery: "choose-file" };
-    case "DECK_PACKAGE_VERSION_CONFLICT":
+    case "DECK_PACKAGE_REVISION_CONFLICT":
       return {
-        message: "That deck package conflicts with the installed deck version.",
+        message: "That deck package conflicts with the installed deck revision.",
         recovery: "choose-file",
       };
     case "DECK_NOT_FOUND":
