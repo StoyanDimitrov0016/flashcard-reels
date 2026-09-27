@@ -8,10 +8,13 @@ const DeckPackageCardSchema = z
     order: z.number().int().nonnegative(),
     question: z.string().min(1),
     answer: z.string().min(1),
+    lessonId: UuidSchema.nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   })
   .strict();
+
+const DeckArchiveCardSchema = DeckPackageCardSchema.omit({ lessonId: true });
 
 // Lesson Markdown lives in lessons/<lesson-id>.md; deck.json lists identity, title, and order.
 const DeckPackageLessonSchema = z
@@ -22,17 +25,26 @@ const DeckPackageLessonSchema = z
   })
   .strict();
 
+const DeckDocumentFields = {
+  id: UuidSchema,
+  version: z.number().int().positive(),
+  title: z.string().min(1),
+  description: z.string(),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+  lessons: z.array(DeckPackageLessonSchema).optional(),
+};
+
+/** The ZIP manifest keeps card lesson links in card-lessons.json. */
+export const DeckArchiveDocumentSchema = z.compile(
+  z.object({ ...DeckDocumentFields, cards: z.array(DeckArchiveCardSchema) }).strict()
+);
+
 export const DeckPackageSchema = z.compile(
   z
     .object({
-      id: UuidSchema,
-      version: z.number().int().positive(),
-      title: z.string().min(1),
-      description: z.string(),
-      createdAt: z.iso.datetime({ offset: true }),
-      updatedAt: z.iso.datetime({ offset: true }),
+      ...DeckDocumentFields,
       cards: z.array(DeckPackageCardSchema),
-      lessons: z.array(DeckPackageLessonSchema).optional(),
     })
     .strict()
     .superRefine((deck, context) => {
@@ -40,6 +52,15 @@ export const DeckPackageSchema = z.compile(
       const lessonIds = new Set<string>();
       const lessonOrders = new Set<number>();
       const cardIds = new Set(deck.cards.map((card) => card.id));
+      for (const [index, card] of deck.cards.entries()) {
+        if (card.lessonId && !lessons.some((lesson) => lesson.id === card.lessonId)) {
+          context.addIssue({
+            code: "custom",
+            message: `Flashcard ${card.id} references a lesson outside this deck: ${card.lessonId}`,
+            path: ["cards", index, "lessonId"],
+          });
+        }
+      }
       for (const [index, lesson] of lessons.entries()) {
         if (lessonIds.has(lesson.id) || cardIds.has(lesson.id)) {
           context.addIssue({

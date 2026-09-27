@@ -22,6 +22,7 @@ export function makeFlashcard(
     createdAt: "2026-01-01T00:00:00.000Z",
     deckId,
     id: testId(index),
+    lessonId: null,
     order,
     question: `Question ${index}`,
     updatedAt: "2026-01-01T00:00:00.000Z",

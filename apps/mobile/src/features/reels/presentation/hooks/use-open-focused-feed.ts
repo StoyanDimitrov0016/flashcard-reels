@@ -12,7 +12,7 @@ export function useOpenFocusedFeed() {
   const router = useRouter();
   const { startFocusedFeed } = useFeedScope();
 
-  return (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
+  return (deckId: DeckId, anchorFlashcardId: string | null, options?: FocusedFeedOptions) => {
     openFocusedFeed(deckId, startFocusedFeed, router.navigate, anchorFlashcardId, options);
   };
 }

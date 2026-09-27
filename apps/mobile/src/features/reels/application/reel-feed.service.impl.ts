@@ -52,7 +52,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExistingSession: boolean,
-    anchorFlashcardId: string | null = null
+    anchorFlashcardId: string | null
   ): Promise<PreparedReelFeed> {
     const openedSession = await this.studyService.openSession(
       scope,

@@ -169,6 +169,7 @@ function candidate(id: string, overrides: Partial<FeedCandidate> = {}): FeedCand
     createdAt: REVIEWED_AT,
     deckId: "deck-1",
     id,
+    lessonId: null,
     order: 0,
     question: `Question ${id}`,
     updatedAt: REVIEWED_AT,

@@ -48,6 +48,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       .insert(flashcards)
       .values({
         answer: flashcard.answer,
+        lessonId: flashcard.lessonId,
         createdAt: flashcard.createdAt,
         deckId: flashcard.deckId,
         order: flashcard.order,
@@ -60,6 +61,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         target: flashcards.id,
         set: {
           answer: flashcard.answer,
+          lessonId: flashcard.lessonId,
           deckId: flashcard.deckId,
           order: flashcard.order,
           active: flashcard.active,
@@ -72,6 +74,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
   private toModel(row: typeof flashcards.$inferSelect): Flashcard {
     return new Flashcard({
       answer: row.answer,
+      lessonId: row.lessonId,
       createdAt: row.createdAt,
       deckId: row.deckId,
       order: row.order,

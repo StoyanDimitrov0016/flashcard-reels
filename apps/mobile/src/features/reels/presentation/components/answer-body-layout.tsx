@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 
 import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
@@ -56,12 +56,14 @@ type AnswerCopyProps = Readonly<{
   onPressIn: () => void;
   onPressOut: () => void;
   longPressDuration: number;
+  hasLinkedLesson: boolean;
 }>;
 
 export function AnswerCopy({
   answer,
   answerColor,
   longPressDuration,
+  hasLinkedLesson,
   onLongPress,
   onPress,
   onPressIn,
@@ -73,7 +75,11 @@ export function AnswerCopy({
 
   return (
     <Pressable
-      accessibilityHint="Double tap to return to the question"
+      accessibilityHint={
+        hasLinkedLesson
+          ? "Tap to read the connected lesson. Double tap to return to the question"
+          : "Double tap to return to the question"
+      }
       accessibilityLabel={"Flashcard answer: " + toSpokenFlashcardText(answer)}
       accessibilityRole="button"
       delayLongPress={longPressDuration}
@@ -86,6 +92,7 @@ export function AnswerCopy({
       <View style={styles.copy}>
         <FlashcardText style={styles.answerPrompt} text={question} />
         <FlashcardText style={styles.answer} text={answer} />
+        {hasLinkedLesson && <Text style={styles.lessonHint}>Tap to read lesson</Text>}
       </View>
     </Pressable>
   );
@@ -110,6 +117,11 @@ function createStyles(
       fontSize: fontSize.title3,
       fontWeight: fontWeight.semibold,
       lineHeight: lineHeight.title3,
+    },
+    lessonHint: {
+      color: promptColor,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.semibold,
     },
     body: { flex: 1 },
     bodyBottom: { flexDirection: "column" },

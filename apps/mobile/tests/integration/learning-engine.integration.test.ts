@@ -339,7 +339,7 @@ describe("SQLite learning-engine finalization", () => {
       new TestClock(),
       () => 0
     );
-    const prepared = await feed.prepareFeed([card], "mixed", null, false);
+    const prepared = await feed.prepareFeed([card], "mixed", null, false, null);
     const attemptId = await graph.study.startAttempt(card.id, 0, prepared.studySessionId);
     await graph.study.rateAttempt(attemptId, "good");
 

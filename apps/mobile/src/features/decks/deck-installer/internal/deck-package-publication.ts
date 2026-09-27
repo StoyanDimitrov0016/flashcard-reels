@@ -70,6 +70,7 @@ type ReviewOptions = Readonly<{
   candidates: readonly DeckPublicationCandidate[];
   store: PublishedDeckStore;
   reader: DeckPackageReader;
+  allowUnreleasedVersionOneReplace?: boolean;
 }>;
 
 type ReadCandidate = Readonly<{ candidate: DeckPublicationCandidate; deck: DeckPackage }>;
@@ -99,6 +100,7 @@ export async function reviewDeckPublication({
   candidates,
   store,
   reader,
+  allowUnreleasedVersionOneReplace = false,
 }: ReviewOptions): Promise<DeckPublicationReview> {
   const readCandidates: ReadCandidate[] = candidates.map((candidate) => ({
     candidate,
@@ -138,6 +140,7 @@ export async function reviewDeckPublication({
       published: publishedByDeckId.get(deck.id) ?? null,
       publishedDeck: publishedDecks.get(deck.id) ?? null,
       publishedEntries,
+      allowUnreleasedVersionOneReplace,
     })
   );
 
@@ -186,6 +189,7 @@ type ReviewDeckOptions = Readonly<{
   published: PublishedDeckEntry | null;
   publishedDeck: DeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
+  allowUnreleasedVersionOneReplace: boolean;
 }>;
 
 function reviewDeck({
@@ -194,6 +198,7 @@ function reviewDeck({
   published,
   publishedDeck,
   publishedEntries,
+  allowUnreleasedVersionOneReplace,
 }: ReviewDeckOptions): DeckPublicationChange {
   const key = `${publishedKeyPrefix}${candidate.fileName}`;
   const base = {
@@ -247,7 +252,11 @@ function reviewDeck({
     blocks.push(
       `Version ${deck.version} is lower than the published version ${published.version}.`
     );
-  } else if (contentChanged && deck.version === published.version) {
+  } else if (
+    contentChanged &&
+    deck.version === published.version &&
+    !(allowUnreleasedVersionOneReplace && deck.version === 1)
+  ) {
     blocks.push(
       `Content changed but the version is still ${deck.version}. Installed apps would ignore this update; raise the version.`
     );
@@ -256,7 +265,13 @@ function reviewDeck({
   let status: DeckPublicationStatus;
   if (blocks.length > 0) {
     status = "blocked";
-  } else if (contentChanged || deck.version !== published.version) {
+  } else if (
+    contentChanged ||
+    deck.version !== published.version ||
+    (allowUnreleasedVersionOneReplace &&
+      deck.version === 1 &&
+      published.sha256 !== candidate.sha256)
+  ) {
     status = "updated";
   } else {
     status = "unchanged";
@@ -293,7 +308,9 @@ function compareDecks(published: DeckPackage, candidate: DeckPackage): DeckCompa
   const changedCards = keptCards
     .filter(
       ({ card, publishedCard }) =>
-        card.question !== publishedCard.question || card.answer !== publishedCard.answer
+        card.question !== publishedCard.question ||
+        card.answer !== publishedCard.answer ||
+        card.lessonId !== publishedCard.lessonId
     )
     .map(({ card }) => card);
   const reorderedCardCount = keptCards.filter(

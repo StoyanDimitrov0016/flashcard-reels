@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { LessonId } from "@/features/lessons/domain/lesson.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
@@ -17,6 +18,7 @@ import { sizes } from "@/shared/presentation/sizes";
 type StudyControlClusterProps = Readonly<{
   audioSource: AudioReference;
   deckId: DeckId;
+  lessonId: LessonId | null;
   isActive: boolean;
   onRate: (level: RecallLevel) => void;
   ratingEnabled: boolean;
@@ -27,6 +29,7 @@ type StudyControlClusterProps = Readonly<{
 export function StudyControlCluster({
   audioSource,
   deckId,
+  lessonId,
   isActive,
   onRate,
   ratingEnabled,
@@ -34,7 +37,7 @@ export function StudyControlCluster({
 }: StudyControlClusterProps) {
   const { audioEnabled, audioPosition, orientation, readingEnabled, readingPosition } =
     useStudyControlLayout();
-  const { hasLessons } = useDeckLessons();
+  const { hasLesson } = useDeckLessons();
   const styles = createStyles(orientation);
   const before: ReactElement[] = [];
   const after: ReactElement[] = [];
@@ -43,9 +46,9 @@ export function StudyControlCluster({
       <AnswerAudioPlayer isActive={isActive} key="audio" source={audioSource} />
     );
   }
-  if (readingEnabled && hasLessons(deckId)) {
+  if (readingEnabled && lessonId && hasLesson(deckId, lessonId)) {
     // Reading sits outside audio when both share a side, so audio stays next to the ratings.
-    const reading = <ReadingButton deckId={deckId} key="reading" />;
+    const reading = <ReadingButton deckId={deckId} key="reading" lessonId={lessonId} />;
     if (isBeforeRatings(readingPosition)) {
       before.unshift(reading);
     } else {

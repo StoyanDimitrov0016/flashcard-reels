@@ -24,6 +24,7 @@ const PublishedKeyPrefix = "decks/";
 
 const argumentsList = process.argv.slice(2);
 const dryRun = argumentsList.includes("--dry-run");
+const replaceUnreleasedVersionOne = argumentsList.includes("--replace-unreleased-v1");
 const sourcePaths = argumentsList.filter((argument) => !argument.startsWith("--"));
 if (sourcePaths.length === 0) {
   sourcePaths.push("flashcard-reels-decks.zip");
@@ -198,6 +199,7 @@ const client = new S3Client({
   },
 });
 const review = await reviewDeckPublication({
+  allowUnreleasedVersionOneReplace: replaceUnreleasedVersionOne,
   candidates,
   reader: new ArchiveDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),

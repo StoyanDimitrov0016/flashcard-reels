@@ -3,7 +3,11 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from "
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { DeckReadingList, LessonSummary } from "@/features/lessons/domain/lesson.model";
+import type {
+  DeckReadingList,
+  LessonId,
+  LessonSummary,
+} from "@/features/lessons/domain/lesson.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
@@ -16,8 +20,8 @@ import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type DeckLessonsContextValue = Readonly<{
-  hasLessons: (deckId: DeckId) => boolean;
-  openLessons: (deckId: DeckId) => void;
+  hasLesson: (deckId: DeckId, lessonId: LessonId) => boolean;
+  openLesson: (deckId: DeckId, lessonId: LessonId) => void;
 }>;
 
 // The list stays short over the card being studied; a lesson opened from it fills the sheet.
@@ -62,10 +66,15 @@ export function DeckLessonsProvider({ children }: DeckLessonsProviderProps) {
   );
 
   const value: DeckLessonsContextValue = {
-    hasLessons: (deckId) => (readingLists.get(deckId)?.lessons.length ?? 0) > 0,
-    openLessons: (deckId) => {
-      setOpenLesson(null);
+    hasLesson: (deckId, lessonId) =>
+      readingLists.get(deckId)?.lessons.some((lesson) => lesson.id === lessonId) ?? false,
+    openLesson: (deckId, lessonId) => {
+      const lesson = readingLists.get(deckId)?.lessons.find((item) => item.id === lessonId);
+      if (!lesson) {
+        return;
+      }
       setOpenDeckId(deckId);
+      setOpenLesson(lesson);
     },
   };
   const openList = openDeckId ? (readingLists.get(openDeckId) ?? null) : null;

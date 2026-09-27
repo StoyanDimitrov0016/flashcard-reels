@@ -9,7 +9,7 @@ export type FocusedCardState = Readonly<{
 export type FocusedFeedOptions = Readonly<{ cardState?: FocusedCardState }>;
 type StartFocusedFeed = (
   deckId: DeckId,
-  anchorFlashcardId?: string,
+  anchorFlashcardId: string | null,
   options?: FocusedFeedOptions
 ) => void;
 
@@ -17,15 +17,9 @@ export function openFocusedFeed(
   deckId: DeckId,
   startFocusedFeed: StartFocusedFeed,
   navigate: (href: "/(tabs)/focus") => void,
-  anchorFlashcardId?: string,
+  anchorFlashcardId: string | null,
   options?: FocusedFeedOptions
 ): void {
-  if (anchorFlashcardId === undefined && options === undefined) {
-    startFocusedFeed(deckId);
-  } else if (options === undefined) {
-    startFocusedFeed(deckId, anchorFlashcardId);
-  } else {
-    startFocusedFeed(deckId, anchorFlashcardId, options);
-  }
+  startFocusedFeed(deckId, anchorFlashcardId, options);
   navigate("/(tabs)/focus");
 }

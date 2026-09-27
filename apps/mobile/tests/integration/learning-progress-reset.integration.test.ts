@@ -174,7 +174,13 @@ describe("SQLite learning progress reset transaction", () => {
     if (!deckCard || !otherDeckCard) {
       throw new Error("Missing reset scenario cards");
     }
-    const feed = await graph.feed.prepareFeed([deckCard, otherDeckCard], "mixed", null, false);
+    const feed = await graph.feed.prepareFeed(
+      [deckCard, otherDeckCard],
+      "mixed",
+      null,
+      false,
+      null
+    );
     const deckOccurrence = feed.occurrences.find(({ card }) => card.id === deckCard.id);
     const otherOccurrence = feed.occurrences.find(({ card }) => card.id === otherDeckCard.id);
     if (!deckOccurrence || !otherOccurrence) {

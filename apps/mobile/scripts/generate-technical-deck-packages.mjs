@@ -22,6 +22,7 @@ for (const deck of decks) {
         answer: card.answer,
         createdAt: card.createdAt,
         id: card.id,
+        lessonId: null,
         order: card.order,
         question: card.question,
         updatedAt: card.updatedAt,

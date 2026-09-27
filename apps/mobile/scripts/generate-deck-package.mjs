@@ -24,6 +24,12 @@ async function readOptionalDirectory(directory) {
 }
 
 const sourceDirectory = path.resolve(process.cwd(), sourceArgument);
+const rootTechnicalAudioDirectory = path.join(
+  process.cwd(),
+  "data",
+  "technical_flashcard_library",
+  "audio"
+);
 const deckPackage = DeckPackageSchema.parse(
   JSON.parse(await readFile(path.join(sourceDirectory, "deck.json"), "utf8"))
 );
@@ -51,6 +57,24 @@ for (const fileName of audioFileNames.toSorted()) {
   audioFiles[`audio/${fileName}`] = new Uint8Array(
     await readFile(path.join(audioDirectory, fileName))
   );
+}
+
+// The technical library owns the existing answer audio for these stable card IDs. Include it
+// when a lesson source does not provide its own audio, so republishing keeps the spoken answers.
+for (const card of deckPackage.cards) {
+  const answerPath = `audio/${card.id}.answer.mp3`;
+  if (audioFiles[answerPath]) {
+    continue;
+  }
+  try {
+    audioFiles[answerPath] = new Uint8Array(
+      await readFile(path.join(rootTechnicalAudioDirectory, `${card.id}.mp3`))
+    );
+  } catch (error) {
+    if (error?.code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 // Not dist/, which expo export empties.

@@ -12,9 +12,19 @@ export function createDeckPackageArchive(
   lessonFiles: Readonly<Record<string, string>> = {}
 ): Uint8Array {
   const deck = DeckPackageSchema.parse(document);
-  const archive: Record<string, Uint8Array> = {
-    "deck.json": strToU8(JSON.stringify(deck, null, 2)),
+  const linkedCards = deck.cards.filter((card) => card.lessonId);
+  const packageDocument = {
+    ...deck,
+    cards: deck.cards.map(({ lessonId: _lessonId, ...card }) => card),
   };
+  const archive: Record<string, Uint8Array> = {
+    "deck.json": strToU8(JSON.stringify(packageDocument, null, 2)),
+  };
+  if (linkedCards.length > 0) {
+    archive["card-lessons.json"] = strToU8(
+      JSON.stringify(Object.fromEntries(linkedCards.map((card) => [card.id, card.lessonId])))
+    );
+  }
   // oxlint-disable-next-line unicorn/no-array-sort -- Object.entries creates the array being sorted.
   const sortedAudioFiles = Object.entries(audioFiles).sort(([leftPath], [rightPath]) =>
     leftPath.localeCompare(rightPath)

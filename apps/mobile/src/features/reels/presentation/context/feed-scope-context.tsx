@@ -29,7 +29,7 @@ type FeedScopeContextValue = Readonly<{
   retryFocusedFeedRestoration: () => void;
   startFocusedFeed: (
     deckId: DeckId,
-    anchorFlashcardId?: string,
+    anchorFlashcardId: string | null,
     options?: FocusedFeedOptions
   ) => void;
   confirmFocusedFeedSession: (sessionId: string, expectedRevision: number) => void;
@@ -51,7 +51,7 @@ type FeedScopeEvent =
   | Readonly<{ error: Error; type: "lifecycle-failed" }>
   | Readonly<{ type: "retry-lifecycle" }>
   | Readonly<{
-      anchorFlashcardId?: string;
+      anchorFlashcardId: string | null;
       deckId: DeckId;
       options?: FocusedFeedOptions;
       type: "start";
@@ -147,7 +147,7 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   );
 
   const startFocusedFeed = useCallback(
-    (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
+    (deckId: DeckId, anchorFlashcardId: string | null, options?: FocusedFeedOptions) => {
       dispatch({ anchorFlashcardId, deckId, options, type: "start" });
     },
     []

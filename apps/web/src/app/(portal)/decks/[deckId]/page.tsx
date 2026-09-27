@@ -47,7 +47,11 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
           </div>
           <div className="mt-5">{sectionNav}</div>
           <div className="mt-6">
-            <LessonsView deckId={deck.id} lessons={deck.lessons} selectedLessonId={lesson} />
+            <LessonsView
+              deckId={deck.id}
+              lessons={deck.lessons}
+              selectedLessonId={lesson ?? null}
+            />
           </div>
         </>
       ) : (

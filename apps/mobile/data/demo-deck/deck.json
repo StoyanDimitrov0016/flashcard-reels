@@ -12,7 +12,8 @@
       "question": "What is a JavaScript value?",
       "answer": "A value is a piece of data manipulated by a program, such as a number, string, object, function, null, or undefined.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3"
     },
     {
       "id": "93d9ae79-4430-41b8-8887-2fad13106621",
@@ -20,7 +21,8 @@
       "question": "What is the difference between a primitive and an object in JavaScript?",
       "answer": "Primitives are immutable values such as strings and numbers. Objects are mutable collections with identity, so two separate objects can contain the same data but still not be equal by reference.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3"
     },
     {
       "id": "6aa00cb7-32ec-49bf-a3df-5a5ae74bdbec",
@@ -28,7 +30,8 @@
       "question": "What does `undefined` mean in JavaScript?",
       "answer": "`undefined` is the primitive value commonly produced when a variable or property has no assigned value, or when a function returns nothing explicitly.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a"
     },
     {
       "id": "c6d9a71b-4762-47a9-b6f6-5b1ca651b93f",
@@ -36,7 +39,8 @@
       "question": "What is `null` used for?",
       "answer": "`null` is an explicit primitive value typically used to represent an intentional absence of an object or value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a"
     },
     {
       "id": "d3c1d193-002c-4563-9645-329a117ceb7c",
@@ -44,7 +48,8 @@
       "question": "What is the practical difference between `null` and `undefined`?",
       "answer": "Both represent missing values, but `undefined` often means no value was supplied or produced, while `null` is usually assigned deliberately to mean no value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a"
     },
     {
       "id": "2cd1e4af-2da3-4c58-a174-039e9c29fe9b",
@@ -52,7 +57,8 @@
       "question": "What does `typeof` report for `null`?",
       "answer": "It reports `\"object\"`. This is a long-standing language quirk, so `value === null` is the reliable null check.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z"
+      "updatedAt": "2026-09-06T13:26:00Z",
+      "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a"
     }
   ],
   "lessons": [
