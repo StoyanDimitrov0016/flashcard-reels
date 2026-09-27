@@ -1,4 +1,4 @@
-export { DECK_CONSTRAINTS } from "./deck.constants";
+export { DECK_CONSTRAINTS, DECK_SCHEMA_VERSION } from "./deck.constants";
 export { DeckValidationError } from "./deck.errors";
 export type { DeckValidationIssue } from "./deck.errors";
 export { DeckSchema, FlashcardSchema, LessonSchema } from "./deck.schemas";
