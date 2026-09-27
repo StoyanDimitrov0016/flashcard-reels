@@ -183,7 +183,7 @@ describe("deck lessons", () => {
       lastReviewedAt: timestamp,
       resolution: "pending",
       title: "Scaling",
-      version: 1,
+      revision: 1,
     });
 
     expect(await graph.lessons.listReadingLists()).toHaveLength(1);

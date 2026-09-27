@@ -48,7 +48,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
 
       if (attempt.rating !== null && attempt.ratedAt !== null) {
         const card = transaction
-          .select({ deckId: flashcards.deckId, title: decks.title, version: decks.version })
+          .select({ deckId: flashcards.deckId, title: decks.title, version: decks.revision })
           .from(flashcards)
           .innerJoin(decks, eq(decks.id, flashcards.deckId))
           .where(eq(flashcards.id, attempt.flashcardId))
@@ -109,7 +109,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           .values({
             deckId: card.deckId,
             title: card.title,
-            version: card.version,
+            revision: card.version,
             lastReviewedAt: attempt.ratedAt,
             resolution: "active",
           })
@@ -117,7 +117,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
             target: deckProgress.deckId,
             set: {
               title: card.title,
-              version: card.version,
+              revision: card.version,
               lastReviewedAt: sql`max(${deckProgress.lastReviewedAt}, ${attempt.ratedAt})`,
             },
           })

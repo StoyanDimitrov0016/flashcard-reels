@@ -387,8 +387,8 @@ describe("deck package installation", () => {
     ).rejects.toThrow("database installation failed");
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]));
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 1 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 1 });
   });
 
   it("keeps a successful install when obsolete-audio cleanup fails", async () => {
@@ -404,8 +404,8 @@ describe("deck package installation", () => {
     ).resolves.toMatchObject({ status: "updated", version: 2 });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${TEST_DECK_ID}:2`]));
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 2 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 2 });
   });
 
   it("retries after database and activated-audio cleanup both fail", async () => {
@@ -420,7 +420,7 @@ describe("deck package installation", () => {
     );
     expect(audio.activeVersions).toContain(`${TEST_DECK_ID}:1`);
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
     ).toBeNull();
 
     const retry = createImporter(database, clock, audio);
@@ -847,8 +847,8 @@ describe("deck package installation", () => {
     };
     await expect(importer.installFromBytes(bytes)).rejects.toThrow();
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 1 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 1 });
     expect(audio.activeVersions).toEqual(audioBefore.activeVersions);
     expect(audio.activated).toHaveLength(audioBefore.activated);
     expect(audio.staged).toHaveLength(audioBefore.staged);
