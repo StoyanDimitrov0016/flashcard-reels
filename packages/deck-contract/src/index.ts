@@ -1,5 +1,6 @@
-export { DECK_CONSTRAINTS } from "./constraints";
-export { DeckSchema, FlashcardSchema, LessonSchema } from "./schema";
-export type { Deck, Flashcard, Lesson } from "./schema";
-export { DeckValidator, DeckValidationError } from "./deck-validator";
-export type { DeckValidationIssue } from "./deck-validator";
+export { DECK_CONSTRAINTS } from "./deck.constants";
+export { DeckValidationError } from "./deck.errors";
+export type { DeckValidationIssue } from "./deck.errors";
+export { DeckSchema, FlashcardSchema, LessonSchema } from "./deck.schemas";
+export type { Deck, Flashcard, Lesson } from "./deck.schemas";
+export { DeckValidator } from "./deck.validator";
