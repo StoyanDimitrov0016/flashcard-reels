@@ -12,7 +12,7 @@ import { LessonPager } from "./lesson-pager";
 type LessonsViewProps = Readonly<{
   deckId: string;
   lessons: readonly DeckLesson[];
-  selectedLessonId: string | undefined;
+  selectedLessonId: string | null;
 }>;
 
 export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewProps) {

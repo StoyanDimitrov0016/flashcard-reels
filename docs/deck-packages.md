@@ -5,6 +5,7 @@
 ```text
 <deck-id>.fcrdeck
 ├── deck.json
+├── card-lessons.json       # optional card ID to lesson ID map
 ├── audio/
 │   └── <card-id>.<side>.mp3
 └── lessons/
@@ -19,7 +20,14 @@ The document contains stable deck/card IDs, a positive package version, metadata
   "version": 1,
   "title": "Deck title",
   "description": "Deck description",
-  "cards": [{ "id": "stable-card-uuid", "order": 0, "question": "Question", "answer": "Answer" }],
+  "cards": [
+    {
+      "id": "stable-card-uuid",
+      "order": 0,
+      "question": "Question",
+      "answer": "Answer"
+    }
+  ],
   "lessons": [{ "id": "stable-lesson-uuid", "order": 0, "title": "Lesson title" }]
 }
 ```
@@ -39,9 +47,20 @@ lists, inline code, and fenced code blocks. Other syntax is shown as plain text,
 keep only their visible text, and nothing is loaded from the network. Packages with lessons need an
 app version that supports them; packages without lessons are unchanged.
 
+Every card in a source `deck.json` must set `lessonId` to a lesson UUID or `null`. The package
+generator writes the linked cards to `card-lessons.json` as a map from card ID to lesson ID; cards
+with `null` have no entry. The archive's `deck.json` omits `lessonId` because the web catalog reads
+that manifest. Every link must name a card and lesson in the same deck.
+The revealed card and its Reading control open that lesson directly.
+
 ## Updates
 
 Increment the deck version whenever the complete content snapshot changes. Re-importing the current version is a no-op; older versions are rejected. New versions update content while preserving stable-card learning history, and removed cards become inactive rather than losing their historical records. Assign a new card ID when a revision changes what the card teaches substantially.
+
+For the unreleased version-1 catalog, the R2 publisher accepts an explicit
+`--replace-unreleased-v1` flag. This replaces the published package at the same key while keeping
+version 1. Apps that already installed version 1 still treat an import of version 1 as a no-op;
+clear development app data before importing the replacement package.
 
 Deleting a downloaded deck archives its learning data separately. Reinstalling the same deck ID pauses it until the learner chooses to continue with saved progress or permanently delete that progress and start fresh.
 

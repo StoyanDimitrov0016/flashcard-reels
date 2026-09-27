@@ -43,6 +43,7 @@ export const flashcards = sqliteTable(
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
+    lessonId: text("lesson_id"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },

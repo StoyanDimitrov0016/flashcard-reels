@@ -28,19 +28,20 @@ export type PersistedFocusedSession = Readonly<{
 export function createFocusedFeedState(
   current: FocusedFeedState,
   deckId: DeckId,
-  anchorFlashcardId?: string,
+  anchorFlashcardId: string | null,
   options?: FocusedFeedOptions
 ): Extract<FocusedFeedState, { status: "ready" }> {
-  const transition = anchorFlashcardId
-    ? {
-        anchorFlashcardId,
-        cardState: options?.cardState ?? {
-          cardId: anchorFlashcardId,
-          recallLevel: null,
-          revealed: false,
-        },
-      }
-    : null;
+  const transition =
+    anchorFlashcardId !== null
+      ? {
+          anchorFlashcardId,
+          cardState: options?.cardState ?? {
+            cardId: anchorFlashcardId,
+            recallLevel: null,
+            revealed: false,
+          },
+        }
+      : null;
 
   return {
     deckId,

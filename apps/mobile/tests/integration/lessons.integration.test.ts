@@ -48,6 +48,7 @@ function packageWithLessons(
         answer: "Add resources to one machine.",
         createdAt: timestamp,
         id: deckId === TEST_DECK_ID ? testId(1) : testId(2),
+        lessonId: null,
         order: 0,
         question: "What is vertical scaling?",
         updatedAt: timestamp,

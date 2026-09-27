@@ -152,6 +152,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             .set({
               active: true,
               answer: card.answer,
+              lessonId: card.lessonId,
               order: card.order,
               question: card.question,
               updatedAt: card.updatedAt,
@@ -164,6 +165,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             .values({
               active: true,
               answer: card.answer,
+              lessonId: card.lessonId,
               createdAt: card.createdAt,
               deckId: deckPackage.id,
               id: card.id,

@@ -9,7 +9,7 @@ export interface ReelFeedService {
     scope: StudySessionScope,
     deckId: DeckId | null,
     replaceExistingSession: boolean,
-    anchorFlashcardId?: string | null
+    anchorFlashcardId: string | null
   ): Promise<PreparedReelFeed>;
   extendFeed(cards: readonly Flashcard[], studySessionId: string): Promise<PreparedReelFeed>;
   recordVisibleCard(studySessionId: string, flashcardId: string): Promise<void>;

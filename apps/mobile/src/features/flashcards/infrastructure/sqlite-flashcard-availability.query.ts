@@ -51,6 +51,7 @@ export class SQLiteFlashcardAvailabilityQuery<
 function toModel(row: typeof flashcards.$inferSelect): Flashcard {
   return new Flashcard({
     answer: row.answer,
+    lessonId: row.lessonId,
     createdAt: row.createdAt,
     deckId: row.deckId,
     order: row.order,

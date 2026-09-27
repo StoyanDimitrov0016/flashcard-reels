@@ -176,6 +176,7 @@ function card(id: string, order: number, answer = `Answer ${id}`) {
     answer,
     createdAt: timestamp,
     id,
+    lessonId: null,
     order,
     question: `Question ${id}`,
     updatedAt: timestamp,
@@ -186,7 +187,12 @@ function archive(
   packageDocument: unknown,
   audio: Readonly<Record<string, Uint8Array>> = {}
 ): Uint8Array {
-  return zipSync({ "deck.json": strToU8(JSON.stringify(packageDocument)), ...audio });
+  return zipSync({
+    "deck.json": strToU8(
+      JSON.stringify(packageDocument, (key, value) => (key === "lessonId" ? undefined : value))
+    ),
+    ...audio,
+  });
 }
 
 function validArchive(
@@ -252,7 +258,7 @@ async function reviewCard(
   if (!flashcard) {
     throw new Error(`Missing scenario card ${cardId}`);
   }
-  const feed = await graph.feed.prepareFeed([flashcard], "focused", TEST_DECK_ID, false);
+  const feed = await graph.feed.prepareFeed([flashcard], "focused", TEST_DECK_ID, false, null);
   const attemptId = await graph.study.startAttempt(cardId, 0, feed.studySessionId);
   await graph.study.rateAttempt(attemptId, "good");
   if (complete) {
@@ -442,7 +448,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
     const countsBefore = {
       activated: audio.activated.length,
       installation: installation.calls,
@@ -542,8 +554,14 @@ describe("deck package installation", () => {
       "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
       historicalSessionId
     );
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
+    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
 
     await importer.installFromBytes(validArchive(2, [card(existingCard.id, 0, "Updated")]));
     const completedFocusedSession = await graph.sessions.findById(focused.studySessionId);
@@ -584,7 +602,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -625,7 +649,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -679,7 +709,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
+    const feed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -723,7 +753,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
 
     await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({ status: "no-op" });
 
@@ -745,8 +781,14 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focused",
+      TEST_DECK_ID,
+      false,
+      null
+    );
 
     await importer.installFromBytes(validArchive(1, [card(testId(15), 0)], OTHER_DECK_ID));
     const completedMixedSession = await graph.sessions.findById(mixed.studySessionId);

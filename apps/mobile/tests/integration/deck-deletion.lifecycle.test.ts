@@ -186,7 +186,8 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       await flashcardService.listByDeckId(TEST_DECK_ID),
       "focused",
       TEST_DECK_ID,
-      true
+      true,
+      null
     );
     const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
@@ -212,7 +213,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
-    act(() => result.current.startFocusedFeed(TEST_DECK_ID));
+    act(() => result.current.startFocusedFeed(TEST_DECK_ID, null));
     await waitFor(() => {
       expect(result.current.focusRestoring).toBe(false);
       expect(result.current.focusedFeed.status).toBe("ready");
@@ -229,7 +230,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
-    act(() => result.current.startFocusedFeed(OTHER_DECK_ID));
+    act(() => result.current.startFocusedFeed(OTHER_DECK_ID, null));
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
     await act(async () => {
       await result.current.deleteDeck(TEST_DECK_ID);
@@ -253,7 +254,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     act(() => result.current.invalidateLearningProgress());
     expect(result.current.feed).toBeNull();
     await act(async () =>
-      preparation.resolve(await graph.feed.prepareFeed(cards, "mixed", null, false))
+      preparation.resolve(await graph.feed.prepareFeed(cards, "mixed", null, false, null))
     );
     await waitFor(() => expect(result.current.feed).not.toBeNull());
   });

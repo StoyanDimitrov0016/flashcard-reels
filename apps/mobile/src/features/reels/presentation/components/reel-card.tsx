@@ -9,6 +9,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   AnswerBodyLayout,
@@ -116,6 +117,8 @@ export function ReelCard({
   const styles = createStyles();
   const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
   const openFocusedFeed = useOpenFocusedFeed();
+  const { hasLesson, openLesson } = useDeckLessons();
+  const hasLinkedLesson = card.lessonId !== null && hasLesson(card.deckId, card.lessonId);
   const focusedCardState = { cardId: card.id, recallLevel, revealed } as const;
   const openFocusWithCurrentCardState = () => {
     openFocusedFeed(card.deckId, card.id, { cardState: focusedCardState });
@@ -129,6 +132,7 @@ export function ReelCard({
   const holdCompleted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
+  const openLessonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [flipCount, setFlipCount] = useRecyclingState(
     getReelRotationValue(revealed),
     [occurrenceKey, reelPosition],
@@ -144,6 +148,10 @@ export function ReelCard({
       holdState.current = "idle";
       holdCompleted.current = false;
       lastTapAt.current = 0;
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+        openLessonTimer.current = null;
+      }
       if (holdFeedbackTimer.current !== null) {
         clearTimeout(holdFeedbackTimer.current);
         holdFeedbackTimer.current = null;
@@ -191,6 +199,9 @@ export function ReelCard({
   useEffect(function cleanUpHoldFeedback() {
     return function cancelHoldFeedbackOnUnmount() {
       clearHoldFeedbackTimer();
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+      }
       if (holdState.current === "feedback") {
         hideFlashcardToast();
       }
@@ -206,6 +217,10 @@ export function ReelCard({
     const now = Date.now();
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+        openLessonTimer.current = null;
+      }
       const nextFlipCount = flipCount === 0 ? 1 : 0;
       animationTarget.current = nextFlipCount === 1;
       setFlipCount(nextFlipCount);
@@ -219,6 +234,14 @@ export function ReelCard({
       return;
     }
     lastTapAt.current = now;
+    if (revealed && card.lessonId && hasLinkedLesson) {
+      const lessonId = card.lessonId;
+      openLessonTimer.current = setTimeout(() => {
+        openLessonTimer.current = null;
+        lastTapAt.current = 0;
+        openLesson(card.deckId, lessonId);
+      }, DOUBLE_TAP_WINDOW_MS);
+    }
   };
 
   const startFocusHold = () => {
@@ -343,6 +366,7 @@ export function ReelCard({
             <AnswerBodyLayout>
               <AnswerCopy
                 answer={card.answer}
+                hasLinkedLesson={hasLinkedLesson}
                 answerColor={reelAppearance.textPrimary}
                 promptColor={reelAppearance.textSecondary}
                 question={card.question}
@@ -352,6 +376,7 @@ export function ReelCard({
                 <StudyControlCluster
                   audioSource={audioSource}
                   deckId={card.deckId}
+                  lessonId={card.lessonId}
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}

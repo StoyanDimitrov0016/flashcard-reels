@@ -21,6 +21,7 @@ try {
       answer: card.answer,
       createdAt: card.createdAt ?? createdAt,
       id: card.id,
+      lessonId: null,
       order,
       question: card.question,
       updatedAt: card.updatedAt ?? updatedAt,

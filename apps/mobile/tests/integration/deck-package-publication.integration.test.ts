@@ -36,6 +36,7 @@ function deckCards(edits: Readonly<Record<number, CardEdit>> = {}) {
     answer: edits[order]?.answer ?? answer,
     createdAt: timestamp,
     id: edits[order]?.id ?? cardIds[order] ?? "",
+    lessonId: null,
     order,
     question,
     updatedAt: timestamp,

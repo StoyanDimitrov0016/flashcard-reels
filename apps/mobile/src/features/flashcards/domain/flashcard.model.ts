@@ -8,6 +8,7 @@ export type FlashcardFields = Readonly<{
   active: boolean;
   question: string;
   answer: string;
+  lessonId: Uuid | null;
   createdAt: string;
   updatedAt: string;
 }>;
@@ -21,6 +22,7 @@ export class Flashcard {
   public readonly active: boolean;
   public readonly question: string;
   public readonly answer: string;
+  public readonly lessonId: Uuid | null;
   public readonly createdAt: string;
   public readonly updatedAt: string;
 
@@ -31,6 +33,7 @@ export class Flashcard {
     this.active = fields.active;
     this.question = fields.question;
     this.answer = fields.answer;
+    this.lessonId = fields.lessonId;
     this.createdAt = fields.createdAt;
     this.updatedAt = fields.updatedAt;
   }

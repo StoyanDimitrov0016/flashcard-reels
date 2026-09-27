@@ -28,6 +28,7 @@ function cards(deckId: string, count: number, firstId: number): Flashcard[] {
         deckId,
         order: position,
         id: testId(firstId + position),
+        lessonId: null,
         question: `Question ${position}`,
         active: true,
         updatedAt: "2026-01-01T00:00:00.000Z",
@@ -71,7 +72,7 @@ describe("SQLite study sessions", () => {
   afterEach(() => database.close());
 
   it("preserves a Focus journey through recurrence, aggregation, and restart", async () => {
-    const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     expect(opened.occurrences.map((item) => item.reelPosition)).toEqual([0, 1, 2, 3, 4, 5]);
     const originalHistory = opened.occurrences.map((item) => item.card.id);
     const again = await graph.study.startAttempt(
@@ -113,7 +114,7 @@ describe("SQLite study sessions", () => {
     ]);
     const storedItems = await graph.items.listBySessionId(opened.studySessionId);
     graph = createScenarioGraph(database, clock, ids);
-    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     expect(resumed.studySessionId).toBe(opened.studySessionId);
     expect(resumed.currentReelPosition).toBe(126);
     const resumedItems = await graph.items.listBySessionId(opened.studySessionId);
@@ -127,7 +128,7 @@ describe("SQLite study sessions", () => {
   });
 
   it("keeps a 1,000-position SQLite session bounded, durable, and resumable", async () => {
-    const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const opened = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     const firstCard = at(focusCards, 0);
     const pendingCard = at(focusCards, 1);
     const firstAttempt = await graph.study.startAttempt(firstCard.id, 0, opened.studySessionId);
@@ -149,7 +150,7 @@ describe("SQLite study sessions", () => {
     );
 
     await graph.study.updateSessionReelPosition(opened.studySessionId, 1_000);
-    await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
     await graph.study.compactSessionRuntimeData(opened.studySessionId, 1_000);
     await graph.study.updateSessionReelPosition(opened.studySessionId, 950);
@@ -171,7 +172,7 @@ describe("SQLite study sessions", () => {
     const persisted = await graph.sessions.findById(opened.studySessionId);
     expect(persisted).toMatchObject({ currentReelPosition: 950, furthestReelPosition: 1_000 });
     graph = createScenarioGraph(database, clock, ids);
-    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     expect(resumed).toMatchObject({
       currentReelPosition: 950,
       furthestReelPosition: 1_000,
@@ -181,7 +182,7 @@ describe("SQLite study sessions", () => {
   });
 
   it("keeps feed selection independent from flashcard-progress counters", async () => {
-    const initial = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const initial = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     const initialIds = initial.occurrences.map((occurrence) => occurrence.card.id);
     await database.drizzle.insert(flashcardProgress).values(
       focusCards.map((card) => ({
@@ -204,7 +205,8 @@ describe("SQLite study sessions", () => {
       focusCards,
       "focused",
       TEST_DECK_ID,
-      true
+      true,
+      null
     );
 
     expect(afterProgressChange.occurrences.map((occurrence) => occurrence.card.id)).toEqual(
@@ -213,13 +215,13 @@ describe("SQLite study sessions", () => {
   });
 
   it("preserves Focus expiry, replacement, and bounded completed recovery", async () => {
-    const first = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const first = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     expect(first.occurrences).toHaveLength(6);
     await graph.study.updateSessionReelPosition(first.studySessionId, 7);
     await graph.feed.extendFeed(focusCards, first.studySessionId);
     await graph.feed.refreshFeed(focusCards, first.studySessionId);
     graph = createScenarioGraph(database, clock, ids);
-    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const resumed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     expect(resumed.studySessionId).toBe(first.studySessionId);
 
     const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, first.studySessionId);
@@ -231,12 +233,13 @@ describe("SQLite study sessions", () => {
       focusCards,
       "focused",
       TEST_DECK_ID,
-      false
+      false,
+      null
     );
     expect(expiredReplacement.studySessionId).toBe(resumedAfterExpiry?.id);
     const expiredSession = await graph.sessions.findById(first.studySessionId);
     expect(expiredSession?.completedAt).not.toBeNull();
-    const other = await graph.feed.prepareFeed(otherCards, "focused", OTHER_DECK_ID, false);
+    const other = await graph.feed.prepareFeed(otherCards, "focused", OTHER_DECK_ID, false, null);
     expect(other.studySessionId).not.toBe(expiredReplacement.studySessionId);
     expect(
       await database.getFirstAsync(
@@ -277,7 +280,7 @@ describe("SQLite study sessions", () => {
 
   it("keeps Discover persistent across reconstruction and independent Focus lifecycle", async () => {
     const allCards = [...focusCards, ...otherCards];
-    const discover = await graph.feed.prepareFeed(allCards, "mixed", null, false);
+    const discover = await graph.feed.prepareFeed(allCards, "mixed", null, false, null);
     await Promise.all(
       [0, 1].map(async (position) => {
         const occurrence = at(discover.occurrences, position);
@@ -294,11 +297,11 @@ describe("SQLite study sessions", () => {
     const positions = materializedItems.map((item) => item.reelPosition);
     expect(positions).toEqual([0, 1, 2, 3, 4, 5]);
     graph = createScenarioGraph(database, clock, ids);
-    const resumed = await graph.feed.prepareFeed(allCards, "mixed", null, false);
+    const resumed = await graph.feed.prepareFeed(allCards, "mixed", null, false, null);
     expect(resumed.studySessionId).toBe(discover.studySessionId);
     expect(resumed.currentReelPosition).toBe(4);
-    const focus = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
-    await graph.feed.prepareFeed(otherCards, "focused", OTHER_DECK_ID, false);
+    const focus = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
+    await graph.feed.prepareFeed(otherCards, "focused", OTHER_DECK_ID, false, null);
     const completedFocus = await graph.sessions.findById(focus.studySessionId);
     const activeDiscover = await graph.sessions.findById(discover.studySessionId);
     expect(completedFocus?.completedAt).not.toBeNull();
@@ -310,7 +313,7 @@ describe("SQLite study sessions", () => {
   });
 
   it("rejects review attempts after a session completes", async () => {
-    const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
     const cardId = at(feed.occurrences, 0).card.id;
 
     await graph.study.completeSession(feed.studySessionId);

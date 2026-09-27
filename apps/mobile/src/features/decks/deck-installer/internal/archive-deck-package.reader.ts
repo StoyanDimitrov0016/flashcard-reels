@@ -1,4 +1,5 @@
 import { strFromU8, unzipSync } from "fflate";
+import { z } from "zod";
 
 import type { DeckPackage, DeckPackageReader } from "./deck-package.model.ts";
 
@@ -10,10 +11,15 @@ import {
   validateLessonResources,
   validateUncompressedPackageSize,
 } from "./deck-package-limits.ts";
-import { DeckPackageSchema, isSafeDeckPackagePath } from "./deck-package.schema.ts";
+import {
+  DeckArchiveDocumentSchema,
+  DeckPackageSchema,
+  isSafeDeckPackagePath,
+} from "./deck-package.schema.ts";
 
 const AudioPathPattern = /^audio\/([^/]+)\.(answer|question)\.mp3$/;
 const LessonPathPattern = /^lessons\/([^/]+)\.md$/;
+const CardLessonLinksSchema = z.record(z.uuid(), z.uuid());
 const endOfCentralDirectorySignature = 0x06054b50;
 const centralDirectoryEntrySignature = 0x02014b50;
 const localFileHeaderSignature = 0x04034b50;
@@ -174,7 +180,12 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       if (!isSafeDeckPackagePath(path) || path.endsWith("/")) {
         throw new DeckPackageValidationError(`Unsafe archive path: ${path}`);
       }
-      if (path !== "deck.json" && !path.startsWith("audio/") && !path.startsWith("lessons/")) {
+      if (
+        path !== "deck.json" &&
+        path !== "card-lessons.json" &&
+        !path.startsWith("audio/") &&
+        !path.startsWith("lessons/")
+      ) {
         throw new DeckPackageValidationError(`Unexpected archive path: ${path}`);
       }
       if (path === "deck.json" && content.length === 0) {
@@ -188,9 +199,39 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
       }
     }
 
-    const parsedDeck = DeckPackageSchema.safeParse(this.parseJson(files["deck.json"]));
+    const parsedManifest = DeckArchiveDocumentSchema.safeParse(this.parseJson(files["deck.json"]));
+    if (!parsedManifest.success) {
+      throw new DeckPackageValidationError(`Invalid deck.json: ${parsedManifest.error.message}`);
+    }
+    const manifest = parsedManifest.data;
+    let links: Record<string, string> = {};
+    if (files["card-lessons.json"]) {
+      const parsedLinks = CardLessonLinksSchema.safeParse(
+        this.parseJson(files["card-lessons.json"], "card-lessons.json")
+      );
+      if (!parsedLinks.success) {
+        throw new DeckPackageValidationError(
+          `Invalid card-lessons.json: ${parsedLinks.error.message}`
+        );
+      }
+      const cardIds = new Set(manifest.cards.map((card) => card.id));
+      for (const cardId of Object.keys(parsedLinks.data)) {
+        if (!cardIds.has(cardId)) {
+          throw new DeckPackageValidationError(`Lesson link references an unknown card: ${cardId}`);
+        }
+      }
+      links = parsedLinks.data;
+    }
+    const parsedDeck = DeckPackageSchema.safeParse({
+      ...manifest,
+      cards: manifest.cards.map((card) =>
+        Object.assign(card, { lessonId: links[card.id] ?? null })
+      ),
+    });
     if (!parsedDeck.success) {
-      throw new DeckPackageValidationError(`Invalid deck.json: ${parsedDeck.error.message}`);
+      throw new DeckPackageValidationError(
+        `Invalid card-lessons.json: ${parsedDeck.error.message}`
+      );
     }
     const deck = parsedDeck.data;
     validateCardCount(deck.cards.length);
@@ -231,15 +272,15 @@ export class ArchiveDeckPackageReader implements DeckPackageReader {
     return markdown;
   }
 
-  private parseJson(bytes: Uint8Array | undefined): unknown {
+  private parseJson(bytes: Uint8Array | undefined, fileName = "deck.json"): unknown {
     if (!bytes) {
-      throw new DeckPackageValidationError("Missing deck.json");
+      throw new DeckPackageValidationError(`Missing ${fileName}`);
     }
     try {
       return JSON.parse(strFromU8(bytes)) as unknown;
     } catch (error) {
       throw new DeckPackageValidationError(
-        `Malformed deck.json: ${error instanceof Error ? error.message : "invalid JSON"}`,
+        `Malformed ${fileName}: ${error instanceof Error ? error.message : "invalid JSON"}`,
         { cause: error }
       );
     }

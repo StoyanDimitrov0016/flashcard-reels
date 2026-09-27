@@ -90,12 +90,12 @@ describe("focus state handoff", () => {
   });
 
   it("does not reuse a preparation revision after Focus becomes empty", () => {
-    const first = createFocusedFeedState({ revision: 0, status: "empty" }, "deck-1");
+    const first = createFocusedFeedState({ revision: 0, status: "empty" }, "deck-1", null);
     const emptied = reconcileFocusedFeedState(
       confirmFocusedFeedSession(first, "session-a", first.revision),
       null
     );
-    const second = createFocusedFeedState(emptied, "deck-2");
+    const second = createFocusedFeedState(emptied, "deck-2", null);
 
     expect(second.revision).toBe(first.revision + 1);
     expect(confirmFocusedFeedSession(second, "session-a", first.revision)).toBe(second);

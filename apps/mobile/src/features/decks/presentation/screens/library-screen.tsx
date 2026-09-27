@@ -384,7 +384,7 @@ export default function LibraryScreen() {
           setSelectedPending(progress);
         }
       }}
-      onFocus={() => openFocusedFeed(item.deck.id)}
+      onFocus={() => openFocusedFeed(item.deck.id, null)}
       onViewCards={() => router.push(getDeckDetailsHref(item.deck.id, "library"))}
     />
   );
