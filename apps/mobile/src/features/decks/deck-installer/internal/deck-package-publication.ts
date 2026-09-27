@@ -112,6 +112,12 @@ type ReadCandidate = Readonly<{
   deck: PublicationDeckPackage;
 }>;
 
+type DeckIdInventory = Readonly<{
+  id: string;
+  cards: readonly Readonly<{ id: string }>[];
+  lessons: readonly Readonly<{ id: string }>[];
+}>;
+
 type DeckComparison = Pick<
   DeckPublicationChange,
   | "addedCards"
@@ -147,43 +153,62 @@ export async function reviewDeckPublication({
   const catalogBlocks: string[] = [];
 
   const candidateCounts = new Map<string, number>();
-  for (const { deck } of readCandidates) {
+  const fileNameCounts = new Map<string, number>();
+  for (const { candidate, deck } of readCandidates) {
     candidateCounts.set(deck.id, (candidateCounts.get(deck.id) ?? 0) + 1);
+    fileNameCounts.set(candidate.fileName, (fileNameCounts.get(candidate.fileName) ?? 0) + 1);
   }
   for (const [deckId, count] of candidateCounts) {
     if (count > 1) {
       catalogBlocks.push(`Deck ${deckId} appears in ${count} candidate packages.`);
     }
   }
+  for (const [fileName, count] of fileNameCounts) {
+    if (count > 1) {
+      catalogBlocks.push(`File name ${fileName} appears in ${count} candidate packages.`);
+    }
+  }
 
-  const changedPublications = readCandidates.flatMap(({ candidate, deck }) => {
-    const published = publishedByDeckId.get(deck.id);
-    return published && published.sha256 !== candidate.sha256 ? [published] : [];
-  });
-  const publishedDecks = new Map(
-    await Promise.all(
-      changedPublications.map(
-        async (published) =>
-          [
-            published.deckId,
-            toPublicationDeckPackage(reader.read(await store.readPublishedDeck(published.key))),
-          ] as const
-      )
-    )
-  );
+  const publishedDecks = new Map<string, PublicationDeckPackage>();
+  const publishedIds: DeckIdInventory[] = [];
+  for (const published of publishedEntries) {
+    // Read one package at a time so the review does not retain every published audio file.
+    // oxlint-disable-next-line no-await-in-loop
+    const bytes = await store.readPublishedDeck(published.key);
+    const deck = toPublicationDeckPackage(reader.read(bytes));
+    if (deck.id !== published.deckId || deck.revision !== published.revision) {
+      throw new Error(`Published metadata disagrees with package ${published.key}`);
+    }
+    publishedIds.push({
+      id: deck.id,
+      cards: deck.cards.map(({ id }) => ({ id })),
+      lessons: deck.lessons.map(({ id }) => ({ id })),
+    });
+    const candidate = readCandidates.find(({ deck: item }) => item.id === deck.id);
+    if (candidate && candidate.candidate.sha256 !== published.sha256) {
+      publishedDecks.set(deck.id, deck);
+    }
+  }
+  if (publishedByDeckId.size !== publishedEntries.length) {
+    catalogBlocks.push("The published catalog contains duplicate deck IDs.");
+  }
 
-  const changes = readCandidates.map(({ candidate, deck }) =>
-    reviewDeck({
+  const changes = readCandidates.map(({ candidate, deck }) => {
+    const published = publishedByDeckId.get(deck.id) ?? null;
+    return reviewDeck({
       candidate,
       deck,
-      published: publishedByDeckId.get(deck.id) ?? null,
-      publishedDeck: publishedDecks.get(deck.id) ?? null,
+      published,
+      publishedDeck:
+        published && published.sha256 !== candidate.sha256
+          ? (publishedDecks.get(deck.id) ?? null)
+          : null,
       publishedEntries,
-    })
-  );
+    });
+  });
 
   catalogBlocks.push(
-    ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck), ...publishedDecks.values()])
+    ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck), ...publishedIds])
   );
 
   return { blocks: catalogBlocks, decks: changes };
@@ -269,6 +294,9 @@ function reviewDeck({
     blocks.push(
       `Deck ${deck.id} is already published as ${published.key}. Publish it with that file name.`
     );
+  }
+  if (publishedDeck && publishedDeck.authorId !== deck.authorId) {
+    blocks.push(`Deck ${deck.id} cannot change author ID across revisions.`);
   }
 
   const comparison = publishedDeck ? compareDecks(publishedDeck, deck) : unchangedComparison();
@@ -414,7 +442,7 @@ function compareLessons(
   };
 }
 
-function findCrossDeckIds(decks: readonly PublicationDeckPackage[]): string[] {
+function findCrossDeckIds(decks: readonly DeckIdInventory[]): string[] {
   const owners = new Map<string, Readonly<{ kind: string; deckIds: Set<string> }>>();
   const addOwner = (id: string, kind: string, deckId: string) => {
     const owner = owners.get(id) ?? { deckIds: new Set<string>(), kind };
