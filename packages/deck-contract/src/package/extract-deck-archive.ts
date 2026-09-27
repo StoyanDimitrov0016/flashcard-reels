@@ -1,10 +1,12 @@
 import { unzipSync, type UnzipFileInfo } from "fflate";
 
 import {
-  DECK_PACKAGE_LIMITS as LIMITS,
   DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS,
-} from "./deck.constants";
-import { DeckPackageParseError, rejectDeckPackage } from "./deck.errors";
+  DECK_PACKAGE_LIMITS as LIMITS,
+} from "../deck.constants";
+import { DeckPackageParseError } from "../errors/deck-package-parse-error";
+import { rejectDeckPackage } from "./reject-deck-package";
+import { validateZipMetadata } from "./validate-zip-metadata";
 
 const AudioPathPattern = /^audio\/[0-9a-f-]{36}\.mp3$/i;
 const LessonPathPattern = /^lessons\/[0-9a-f-]{36}\.md$/i;
@@ -36,6 +38,7 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
   if (bytes.byteLength > LIMITS.maxCompressedBytes) {
     rejectDeckPackage("Compressed package exceeds size limit");
   }
+  validateZipMetadata(bytes);
 
   const paths = new Set<string>();
   let declaredBytes = 0;
@@ -43,10 +46,13 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
 
   function inspectEntry({ name, size, originalSize, compression }: UnzipFileInfo): boolean {
     checkEntryPath(name);
+
     if (paths.has(name)) {
       rejectDeckPackage(`Duplicate archive path: ${name}`, [name]);
     }
+
     paths.add(name);
+
     if (paths.size > maximumFiles) {
       rejectDeckPackage("Package contains too many files");
     }
@@ -56,6 +62,7 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
     if (size > bytes.byteLength) {
       rejectDeckPackage(`Invalid compressed size for ${name}`, [name]);
     }
+
     declaredBytes += originalSize;
     if (declaredBytes > LIMITS.maxUncompressedBytes) {
       rejectDeckPackage("Expanded package exceeds size limit");
@@ -66,6 +73,7 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
     if (name.startsWith("lessons/") && originalSize > LIMITS.maxLessonFileBytes) {
       rejectDeckPackage(`Lesson file exceeds size limit: ${name}`, [name]);
     }
+
     return true;
   }
 

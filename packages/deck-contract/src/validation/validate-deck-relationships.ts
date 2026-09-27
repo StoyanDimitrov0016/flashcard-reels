@@ -1,26 +1,10 @@
-import type { z } from "zod";
+import type { Deck } from "../deck.schemas";
+import type { DeckParseIssue } from "../errors/deck-parse-issue";
 
-import { DeckParseError, type DeckParseIssue } from "./deck.errors";
-import { DeckSchema, type Deck } from "./deck.schemas";
+import { DeckParseError } from "../errors/deck-parse-error";
 
-/** Parses the manifest format before checking relationships between its entries. */
-export function parseDeck(input: unknown): Deck {
-  const result = DeckSchema.safeParse(input);
-  if (!result.success) {
-    throw new DeckParseError(toDeckParseIssues(result.error.issues), { cause: result.error });
-  }
-  validateRelationships(result.data);
-  return result.data;
-}
-
-function toDeckParseIssues(issues: z.ZodError["issues"]): DeckParseIssue[] {
-  return issues.map((issue) => ({
-    message: issue.message,
-    path: issue.path.map((segment) => (typeof segment === "symbol" ? String(segment) : segment)),
-  }));
-}
-
-function validateRelationships(deck: Deck): void {
+/** Checks invariants that depend on more than one manifest entry. */
+export function validateDeckRelationships(deck: Deck): void {
   const issues: DeckParseIssue[] = [];
   const flashcardIds = new Set<string>();
   for (const [index, flashcard] of deck.cards.entries()) {
