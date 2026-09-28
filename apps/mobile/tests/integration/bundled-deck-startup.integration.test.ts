@@ -9,7 +9,7 @@ const { readBundledDeckPackage } = vi.hoisted(() => ({
 vi.mock("@/infrastructure/bundled-deck-packages", () => ({
   bundledDeckRegistry: {
     "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873": {
-      appearance: { presetId: "gold", coverAsset: "javascript" },
+      appearance: { theme: "gold", coverAsset: "javascript" },
       asset: 1,
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
       version: 2,
@@ -29,7 +29,7 @@ import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import { decks } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { TestClock } from "../support/study-fixtures";
+import { SequenceIdGenerator, TestClock } from "../support/study-fixtures";
 
 describe("bundled deck startup", () => {
   let database: NodeSqliteDatabase | null = null;
@@ -52,7 +52,7 @@ describe("bundled deck startup", () => {
       version,
     });
 
-    await installBundledDecks(database.drizzle, new TestClock());
+    await installBundledDecks(database.drizzle, new TestClock(), new SequenceIdGenerator());
 
     expect(readBundledDeckPackage).not.toHaveBeenCalled();
   });

@@ -1,9 +1,3 @@
-CREATE TABLE `deck_appearances` (
-	`deck_id` text PRIMARY KEY NOT NULL,
-	`preset_id` text NOT NULL,
-	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade
-);
---> statement-breakpoint
 CREATE TABLE `deck_progress` (
 	`deck_id` text PRIMARY KEY NOT NULL,
 	`title` text NOT NULL,
@@ -12,6 +6,14 @@ CREATE TABLE `deck_progress` (
 	`resolution` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `deck_theme_selections` (
+	`id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
+	`theme` text NOT NULL,
+	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `deck_theme_selections_deck_id_unique` ON `deck_theme_selections` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `decks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`title` text NOT NULL,
@@ -45,6 +47,31 @@ CREATE TABLE `flashcard_memory_states` (
 );
 --> statement-breakpoint
 CREATE INDEX `flashcard_memory_states_deck_id_idx` ON `flashcard_memory_states` (`deck_id`);--> statement-breakpoint
+CREATE TABLE `flashcard_progress` (
+	`flashcard_id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
+	`review_count` integer DEFAULT 0 NOT NULL,
+	`again_count` integer DEFAULT 0 NOT NULL,
+	`hard_count` integer DEFAULT 0 NOT NULL,
+	`good_count` integer DEFAULT 0 NOT NULL,
+	`easy_count` integer DEFAULT 0 NOT NULL,
+	`first_reviewed_at` text,
+	`last_reviewed_at` text,
+	`reset_at` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	CONSTRAINT "flashcard_progress_review_count_check" CHECK("flashcard_progress"."review_count" >= 0),
+	CONSTRAINT "flashcard_progress_again_count_check" CHECK("flashcard_progress"."again_count" >= 0),
+	CONSTRAINT "flashcard_progress_hard_count_check" CHECK("flashcard_progress"."hard_count" >= 0),
+	CONSTRAINT "flashcard_progress_good_count_check" CHECK("flashcard_progress"."good_count" >= 0),
+	CONSTRAINT "flashcard_progress_easy_count_check" CHECK("flashcard_progress"."easy_count" >= 0),
+	CONSTRAINT "flashcard_progress_counter_sum_check" CHECK("flashcard_progress"."review_count" = "flashcard_progress"."again_count" + "flashcard_progress"."hard_count" + "flashcard_progress"."good_count" + "flashcard_progress"."easy_count"),
+	CONSTRAINT "flashcard_progress_reviewed_at_presence_check" CHECK(("flashcard_progress"."review_count" = 0 AND "flashcard_progress"."first_reviewed_at" IS NULL AND "flashcard_progress"."last_reviewed_at" IS NULL) OR ("flashcard_progress"."review_count" > 0 AND "flashcard_progress"."first_reviewed_at" IS NOT NULL AND "flashcard_progress"."last_reviewed_at" IS NOT NULL)),
+	CONSTRAINT "flashcard_progress_reviewed_at_order_check" CHECK("flashcard_progress"."first_reviewed_at" IS NULL OR "flashcard_progress"."last_reviewed_at" IS NULL OR "flashcard_progress"."first_reviewed_at" <= "flashcard_progress"."last_reviewed_at")
+);
+--> statement-breakpoint
+CREATE INDEX `flashcard_progress_deck_id_idx` ON `flashcard_progress` (`deck_id`);--> statement-breakpoint
+CREATE INDEX `flashcard_progress_reset_at_idx` ON `flashcard_progress` (`reset_at`);--> statement-breakpoint
 CREATE TABLE `flashcard_review_attempts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,
@@ -80,31 +107,23 @@ CREATE TABLE `flashcards` (
 --> statement-breakpoint
 CREATE INDEX `flashcards_deck_id_idx` ON `flashcards` (`deck_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `flashcards_order_unique` ON `flashcards` (`deck_id`,`order`);--> statement-breakpoint
-CREATE TABLE `flashcard_progress` (
-	`flashcard_id` text PRIMARY KEY NOT NULL,
+CREATE TABLE `lessons` (
+	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
-	`review_count` integer DEFAULT 0 NOT NULL,
-	`again_count` integer DEFAULT 0 NOT NULL,
-	`hard_count` integer DEFAULT 0 NOT NULL,
-	`good_count` integer DEFAULT 0 NOT NULL,
-	`easy_count` integer DEFAULT 0 NOT NULL,
-	`first_reviewed_at` text,
-	`last_reviewed_at` text,
-	`reset_at` text,
-	`created_at` text NOT NULL,
-	`updated_at` text NOT NULL,
-	CONSTRAINT "flashcard_progress_review_count_check" CHECK("flashcard_progress"."review_count" >= 0),
-	CONSTRAINT "flashcard_progress_again_count_check" CHECK("flashcard_progress"."again_count" >= 0),
-	CONSTRAINT "flashcard_progress_hard_count_check" CHECK("flashcard_progress"."hard_count" >= 0),
-	CONSTRAINT "flashcard_progress_good_count_check" CHECK("flashcard_progress"."good_count" >= 0),
-	CONSTRAINT "flashcard_progress_easy_count_check" CHECK("flashcard_progress"."easy_count" >= 0),
-	CONSTRAINT "flashcard_progress_counter_sum_check" CHECK("flashcard_progress"."review_count" = "flashcard_progress"."again_count" + "flashcard_progress"."hard_count" + "flashcard_progress"."good_count" + "flashcard_progress"."easy_count"),
-	CONSTRAINT "flashcard_progress_reviewed_at_presence_check" CHECK(("flashcard_progress"."review_count" = 0 AND "flashcard_progress"."first_reviewed_at" IS NULL AND "flashcard_progress"."last_reviewed_at" IS NULL) OR ("flashcard_progress"."review_count" > 0 AND "flashcard_progress"."first_reviewed_at" IS NOT NULL AND "flashcard_progress"."last_reviewed_at" IS NOT NULL)),
-	CONSTRAINT "flashcard_progress_reviewed_at_order_check" CHECK("flashcard_progress"."first_reviewed_at" IS NULL OR "flashcard_progress"."last_reviewed_at" IS NULL OR "flashcard_progress"."first_reviewed_at" <= "flashcard_progress"."last_reviewed_at")
+	`order` integer NOT NULL,
+	`title` text NOT NULL,
+	`content` text NOT NULL,
+	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "lessons_order_check" CHECK("lessons"."order" >= 0)
 );
 --> statement-breakpoint
-CREATE INDEX `flashcard_progress_deck_id_idx` ON `flashcard_progress` (`deck_id`);--> statement-breakpoint
-CREATE INDEX `flashcard_progress_reset_at_idx` ON `flashcard_progress` (`reset_at`);--> statement-breakpoint
+CREATE INDEX `lessons_deck_id_idx` ON `lessons` (`deck_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `lessons_order_unique` ON `lessons` (`deck_id`,`order`);--> statement-breakpoint
+CREATE TABLE `progress_backup_state` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`safety_copy_file_name` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `removed_decks` (
 	`id` text PRIMARY KEY NOT NULL
 );

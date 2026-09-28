@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -12,7 +12,7 @@ import { toOperationError } from "@/shared/errors/normalize-error";
 
 type DeckDetailsState = Readonly<{
   cards: Flashcard[];
-  appearance: DeckAppearance | null;
+  themeSelection: DeckThemeSelection | null;
   deck: Deck | null;
   error: Error | null;
   loading: boolean;
@@ -24,7 +24,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
   const { revision } = useDeckContentRevision();
   const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<DeckDetailsState>({
-    appearance: null,
+    themeSelection: null,
     cards: [],
     deck: null,
     error: null,
@@ -41,13 +41,13 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
       void Promise.all([
         deckService.findById(deckId),
         flashcardService.listByDeckId(deckId),
-        deckService.getAppearance(deckId),
+        deckService.getThemeSelection(deckId),
       ])
-        .then(async ([deck, cards, appearance]) => {
+        .then(async ([deck, cards, themeSelection]) => {
           if (!deck) {
             if (active) {
               setState({
-                appearance: null,
+                themeSelection: null,
                 cards: [],
                 deck: null,
                 error: null,
@@ -62,14 +62,14 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
               cards.map((card) => card.id)
             );
             if (active) {
-              setState({ appearance, cards, deck, error: null, loading: false, progress });
+              setState({ themeSelection, cards, deck, error: null, loading: false, progress });
             }
           }
         })
         .catch((error: unknown) => {
           if (active) {
             setState({
-              appearance: null,
+              themeSelection: null,
               cards: [],
               deck: null,
               error: toOperationError(error, {

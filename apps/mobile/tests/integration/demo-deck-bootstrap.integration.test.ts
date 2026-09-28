@@ -14,7 +14,7 @@ import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { TestClock } from "../support/study-fixtures";
+import { SequenceIdGenerator, TestClock } from "../support/study-fixtures";
 
 const demoId = "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873";
 
@@ -59,7 +59,7 @@ describe("built-in demo package", () => {
     const audio = new ResolvingAudioStorage();
     const installer = new DeckInstallerImpl(
       reader,
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle),
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       audio,
       new TestClock(),
       { read: async () => bytes },

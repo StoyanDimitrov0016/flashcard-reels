@@ -764,8 +764,8 @@ describe("SQLite study persistence", () => {
     );
 
     expect(tables).toEqual([
-      { name: "deck_appearances" },
       { name: "deck_progress" },
+      { name: "deck_theme_selections" },
       { name: "decks" },
       { name: "flashcard_memory_states" },
       { name: "flashcard_progress" },

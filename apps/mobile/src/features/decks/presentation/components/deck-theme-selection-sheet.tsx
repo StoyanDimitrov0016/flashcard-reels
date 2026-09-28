@@ -1,16 +1,16 @@
 import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import {
-  deckAppearancePresets,
+  deckThemes,
   isCurrentPreset,
-  resolveDeckAppearance,
-  type DeckAppearancePreset,
-} from "@/features/decks/presentation/deck-appearance-presets";
+  resolveDeckTheme,
+  type DeckTheme,
+} from "@/features/decks/presentation/deck-theme-presets";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
@@ -24,17 +24,17 @@ const SWATCH_RING_GAP = 3;
 
 type PreviewDeck = Readonly<{ coverAsset: DeckCoverAsset; title: string }>;
 
-type PalettePreviewProps = Readonly<{ deck: PreviewDeck | null; preset: DeckAppearancePreset }>;
+type PalettePreviewProps = Readonly<{ deck: PreviewDeck | null; preset: DeckTheme }>;
 
 /** A small reel card in the chosen palette, since reels are where deck colors show most. */
 function PalettePreview({ deck, preset }: PalettePreviewProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
-  const palette = resolveDeckAppearance(preset.id, resolvedScheme);
+  const palette = resolveDeckTheme(preset.id, resolvedScheme);
 
   return (
     <View
-      accessibilityLabel={`Preview of the ${preset.name} palette`}
+      accessibilityLabel={`Preview of the ${preset.name} theme`}
       style={[styles.preview, { backgroundColor: palette.background }]}
     >
       <View style={styles.previewDeck}>
@@ -63,21 +63,21 @@ function PalettePreview({ deck, preset }: PalettePreviewProps) {
 
 type PaletteSwatchProps = Readonly<{
   disabled: boolean;
-  onSelect: (preset: DeckAppearancePreset) => void;
+  onSelect: (preset: DeckTheme) => void;
   pending: boolean;
-  preset: DeckAppearancePreset;
+  preset: DeckTheme;
   selected: boolean;
 }>;
 
 function PaletteSwatch({ disabled, onSelect, pending, preset, selected }: PaletteSwatchProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
-  const palette = resolveDeckAppearance(preset.id, resolvedScheme);
+  const palette = resolveDeckTheme(preset.id, resolvedScheme);
 
   return (
     <Pressable
-      accessibilityHint="Applies this palette immediately"
-      accessibilityLabel={preset.name + " palette"}
+      accessibilityHint="Applies this theme immediately"
+      accessibilityLabel={preset.name + " theme"}
       accessibilityRole="radio"
       accessibilityState={{ busy: pending, checked: selected, disabled }}
       disabled={disabled}
@@ -111,45 +111,41 @@ function PaletteSwatch({ disabled, onSelect, pending, preset, selected }: Palett
   );
 }
 
-type DeckAppearanceSheetProps = Readonly<{
-  appearance: DeckAppearance | null;
+type DeckThemeSelectionSheetProps = Readonly<{
+  themeSelection: DeckThemeSelection | null;
   /** The deck being themed, shown in the preview. */
   deck: PreviewDeck | null;
   error: string | null;
   isPresented: boolean;
   onDismiss: () => void;
-  onSelect: (preset: DeckAppearancePreset) => void;
-  pendingPreset: DeckAppearancePreset | null;
+  onSelect: (preset: DeckTheme) => void;
+  pendingPreset: DeckTheme | null;
 }>;
 
-export function DeckAppearanceSheet({
-  appearance,
+export function DeckThemeSelectionSheet({
+  themeSelection,
   deck,
   error,
   isPresented,
   onDismiss,
   onSelect,
   pendingPreset,
-}: DeckAppearanceSheetProps) {
+}: DeckThemeSelectionSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const currentPreset = appearance
-    ? deckAppearancePresets.find((preset) => isCurrentPreset(preset, appearance))
+  const currentPreset = themeSelection
+    ? deckThemes.find((preset) => isCurrentPreset(preset, themeSelection))
     : undefined;
-  const previewPreset = pendingPreset ?? currentPreset ?? deckAppearancePresets[0];
+  const previewPreset = pendingPreset ?? currentPreset ?? deckThemes[0];
 
   return (
     <AppBottomSheet onClose={onDismiss} visible={isPresented}>
       <View accessibilityViewIsModal style={styles.sheet}>
-        <SheetHeader
-          closeLabel="Close deck appearance"
-          onClose={onDismiss}
-          title="Deck appearance"
-        />
+        <SheetHeader closeLabel="Close deck theme" onClose={onDismiss} title="Deck theme" />
         <View style={styles.body}>
           {!!previewPreset && <PalettePreview deck={deck} preset={previewPreset} />}
           <View accessibilityRole="radiogroup" style={styles.swatches}>
-            {deckAppearancePresets.map((preset) => (
+            {deckThemes.map((preset) => (
               <PaletteSwatch
                 disabled={pendingPreset !== null}
                 key={preset.id}

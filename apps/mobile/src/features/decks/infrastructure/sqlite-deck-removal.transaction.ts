@@ -6,7 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
   flashcardProgress,
-  deckAppearances,
+  deckThemeSelections,
   deckProgress,
   decks,
   flashcardMemoryStates,
@@ -66,7 +66,7 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
       }
       transaction.delete(flashcards).where(eq(flashcards.deckId, id)).run();
       transaction.delete(lessons).where(eq(lessons.deckId, id)).run();
-      transaction.delete(deckAppearances).where(eq(deckAppearances.deckId, id)).run();
+      transaction.delete(deckThemeSelections).where(eq(deckThemeSelections.deckId, id)).run();
       transaction.delete(decks).where(eq(decks.id, id)).run();
     });
   }

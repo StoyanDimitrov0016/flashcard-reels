@@ -5,26 +5,23 @@ import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 
-import { DeckAppearanceSheet } from "@/features/decks/presentation/components/deck-appearance-sheet";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { DeckThemeSelectionSheet } from "@/features/decks/presentation/components/deck-theme-selection-sheet";
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
 import { SavedProgressChoiceSheet } from "@/features/decks/presentation/components/saved-progress-choice-sheet";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
-import { useSaveDeckAppearance } from "@/features/decks/presentation/controllers/use-save-deck-appearance";
-import {
-  resolveDeckAppearance,
-  type DeckAppearancePreset,
-} from "@/features/decks/presentation/deck-appearance-presets";
+import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
+import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
@@ -54,7 +51,7 @@ type CatalogEntry = ReturnType<typeof useDeckCatalog>["entries"][number];
 type DeckRowProps = Readonly<{
   entry: CatalogEntry;
   paused: boolean;
-  onAppearance: () => void;
+  onThemeSelection: () => void;
   onChooseProgress: () => void;
   onFocus: () => void;
   onViewCards: () => void;
@@ -63,15 +60,15 @@ type DeckRowProps = Readonly<{
 function DeckRow({
   entry,
   paused,
-  onAppearance,
+  onThemeSelection,
   onChooseProgress,
   onFocus,
   onViewCards,
 }: DeckRowProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
-  const { appearance, cardCount, deck } = entry;
-  const deckColors = resolveDeckAppearance(appearance.presetId, resolvedScheme);
+  const { themeSelection, cardCount, deck } = entry;
+  const deckColors = resolveDeckTheme(themeSelection.theme, resolvedScheme);
   const longPressHandled = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const haptics = useHaptics();
@@ -163,10 +160,10 @@ function DeckRow({
       </Pressable>
       <View style={styles.actions}>
         <Pressable
-          accessibilityLabel={`Change ${deck.title} appearance`}
+          accessibilityLabel={`Change ${deck.title} theme`}
           accessibilityRole="button"
           hitSlop={4}
-          onPress={onAppearance}
+          onPress={onThemeSelection}
           style={styles.iconButton}
         >
           <SymbolView
@@ -239,7 +236,7 @@ export default function LibraryScreen() {
     importFromUrl,
     importing,
   } = useImportDeckPackage();
-  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckAppearance();
+  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckThemeSelection();
   const [query, setQuery] = useState("");
   const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
@@ -250,18 +247,18 @@ export default function LibraryScreen() {
   const [confirmStartFresh, setConfirmStartFresh] = useState(false);
   const [progressBusy, setProgressBusy] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
-  const [appearanceOverrides, setAppearanceOverrides] = useState(
-    () => new Map<string, DeckAppearance>()
+  const [themeSelectionOverrides, setThemeSelectionOverrides] = useState(
+    () => new Map<string, DeckThemeSelection>()
   );
   const visibleEntries = entries
     .filter(({ deck }) => matchesDeckSearch(deck, query))
     .map((entry) => ({
-      appearance: appearanceOverrides.get(entry.deck.id) ?? entry.appearance,
+      themeSelection: themeSelectionOverrides.get(entry.deck.id) ?? entry.themeSelection,
       cardCount: entry.cardCount,
       deck: entry.deck,
     }));
-  const sheetAppearance = selectedEntry
-    ? (appearanceOverrides.get(selectedEntry.deck.id) ?? selectedEntry.appearance)
+  const sheetThemeSelection = selectedEntry
+    ? (themeSelectionOverrides.get(selectedEntry.deck.id) ?? selectedEntry.themeSelection)
     : null;
 
   const refreshPendingProgress = useCallback(() => {
@@ -357,14 +354,14 @@ export default function LibraryScreen() {
     return false;
   };
 
-  const selectPreset = (preset: DeckAppearancePreset) => {
+  const selectPreset = (preset: DeckTheme) => {
     if (!selectedEntry) {
       return;
     }
     const deckId = selectedEntry.deck.id;
-    void savePreset(deckId, preset).then((appearance) => {
-      if (appearance) {
-        setAppearanceOverrides((current) => new Map(current).set(deckId, appearance));
+    void savePreset(deckId, preset).then((themeSelection) => {
+      if (themeSelection) {
+        setThemeSelectionOverrides((current) => new Map(current).set(deckId, themeSelection));
       }
     });
   };
@@ -373,7 +370,7 @@ export default function LibraryScreen() {
     <DeckRow
       entry={item}
       paused={pendingProgress.some((progress) => progress.deckId === item.deck.id)}
-      onAppearance={() => {
+      onThemeSelection={() => {
         clearSaveError();
         setSelectedEntry(item);
       }}
@@ -452,8 +449,8 @@ export default function LibraryScreen() {
           />
         )}
       </View>
-      <DeckAppearanceSheet
-        appearance={sheetAppearance}
+      <DeckThemeSelectionSheet
+        themeSelection={sheetThemeSelection}
         deck={selectedEntry?.deck ?? null}
         error={saveError}
         isPresented={selectedEntry !== null}
