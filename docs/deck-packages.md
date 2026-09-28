@@ -70,6 +70,16 @@ and lessons are versioned. From the repository root, run `npm run r2:push-decks 
 compare that ZIP with the R2 catalog before uploading. Uploading requires an interactive `publish`
 confirmation.
 
-The existing R2 catalog may still contain packages from the earlier format, stored under title
-based file names with `version` metadata. The publisher stops when it sees those objects. Review
-and remove that legacy catalog as a separate cutover step before using the revision based publisher.
+Publication matches existing decks by their stable IDs and reuses their current R2 object keys,
+even when a source filename changes. New decks use the candidate filename. A candidate cannot
+overwrite an object key owned by another deck.
+
+An old-format R2 catalog requires a format cutover before the revision-based publisher can compare
+it. Back up the original packages, preserve deck/card/lesson IDs and content order, raise the
+revision, and validate the converted packages before replacing the objects at their existing keys.
+Keep the backup until device testing passes. Older app and portal builds need updating to read the
+schema 1 catalog.
+
+The combined theme and package schema uses the fresh `flashcard-reels-v4.db` development database
+and one generated migration baseline. Existing development databases are left separate; the
+new app starts with fresh local study state.

@@ -2,11 +2,11 @@
   "schema": 1,
   "id": "b66fad55-88ba-4047-986b-15e4ff7a3053",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 1,
+  "revision": 2,
   "title": "Databases",
   "description": "Relational modeling, SQL, indexes, transactions, isolation, query planning, replication, partitioning, and distributed data.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-26T07:31:45.150Z",
+  "updatedAt": "2026-09-30T17:34:00.809Z",
   "cards": [
     {
       "id": "cafb8b3b-510f-4261-92ac-10bed227e6cb",

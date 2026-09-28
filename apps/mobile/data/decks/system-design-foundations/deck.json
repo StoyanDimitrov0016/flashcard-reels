@@ -2,11 +2,11 @@
   "schema": 1,
   "id": "b0612d11-1111-4f6a-b69b-70d76fd95b30",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 1,
+  "revision": 2,
   "title": "System Design Foundations",
   "description": "Measurement, scaling, caching, queues, and failure handling, with a short lesson for each topic.",
   "createdAt": "2026-09-25T00:00:00.000Z",
-  "updatedAt": "2026-09-25T00:00:00.000Z",
+  "updatedAt": "2026-09-30T17:34:00.809Z",
   "cards": [
     {
       "id": "919c713a-4aef-4c96-a107-7cab7134dfbe",

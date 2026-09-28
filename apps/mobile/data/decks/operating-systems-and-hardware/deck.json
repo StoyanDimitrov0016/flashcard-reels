@@ -2,11 +2,11 @@
   "schema": 1,
   "id": "27962017-2742-4862-9520-08b0dc1c1c6b",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 1,
+  "revision": 2,
   "title": "Operating Systems and Hardware",
   "description": "Processes, threads, memory, virtual memory, filesystems, scheduling, synchronization, CPU caches, storage, and I/O.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-26T07:31:45.150Z",
+  "updatedAt": "2026-09-30T17:34:00.809Z",
   "cards": [
     {
       "id": "69ed604e-8773-428c-a3f5-7e815cbc1f18",

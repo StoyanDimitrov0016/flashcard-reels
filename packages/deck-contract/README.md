@@ -1,6 +1,6 @@
 # Deck contract
 
-This package owns the published deck manifest and package validation shared by future mobile and web consumers. Import only from `@flashcard-reels/deck-contract`; the `src` submodules are implementation details and are not package exports.
+This package owns the published deck manifest and package validation shared by the mobile and web consumers. Import only from `@flashcard-reels/deck-contract`; the `src` submodules are implementation details and are not package exports.
 
 The public surface is `parseDeck`, `parseDeckPackage`, the parsed data types, and the contract error classes and issue types. `parseDeck` checks the manifest schema and cross-entry relationships. `parseDeckPackage` also checks the ZIP archive and every referenced asset.
 
