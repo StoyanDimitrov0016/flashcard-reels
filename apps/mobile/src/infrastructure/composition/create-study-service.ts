@@ -5,7 +5,7 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
@@ -40,7 +40,7 @@ export function createStudyService({
     new SQLiteReviewAttemptTransaction(database),
     new SQLiteStudySessionFeedTransaction(database),
     new SQLiteStudySessionLifecycleTransaction(database),
-    new SQLiteReviewAttemptFinalizationTransaction(database, learningScheduler),
+    new SQLiteReviewAttemptCommitTransaction(database, learningScheduler),
     Math.random,
     new SQLiteFlashcardProgressAggregationTransaction(database),
     new SQLiteStudySessionMaintenanceTransaction(database)

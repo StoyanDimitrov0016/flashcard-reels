@@ -68,6 +68,6 @@ export interface StudyService {
   ): Promise<FlashcardReviewAttempt[]>;
   rateAttempt(attemptId: string, rating: Rating): Promise<boolean>;
   consumeRecurrence(recurrenceId: string): Promise<boolean>;
-  finalizeAttempt(attemptId: string): Promise<void>;
-  finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void>;
+  commitAttempt(attemptId: string): Promise<void>;
+  commitAttemptsOutsideEditableWindow(studySessionId: string): Promise<void>;
 }

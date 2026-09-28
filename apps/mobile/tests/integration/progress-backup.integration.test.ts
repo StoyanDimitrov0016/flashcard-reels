@@ -178,7 +178,7 @@ describe("progress backup", () => {
     expect(files.shared?.flashcardMemoryStates).toHaveLength(4);
   });
 
-  it("preserves finalized progress and the native cause when sharing an export fails", async () => {
+  it("preserves committed progress and the native cause when sharing an export fails", async () => {
     const database = createDatabase();
     const flashcardId = testId(1);
     await seedDeck(database, TEST_DECK_ID, [flashcardId]);
@@ -713,7 +713,7 @@ describe("progress backup", () => {
       flashcardId: testId(1),
       rating: "good",
       reviewedAt: timestamp,
-      finalizedAt: timestamp,
+      committedAt: timestamp,
     });
     const invalid: ProgressBackupDocument = {
       format: "flashcard-reels-progress",

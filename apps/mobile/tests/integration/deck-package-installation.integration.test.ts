@@ -627,10 +627,11 @@ describe("deck package installation", () => {
       "SELECT completed_at FROM study_sessions WHERE id = ?",
       historicalSessionId
     );
-    const finalizedAttemptBefore = await database.getFirstAsync(
-      "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
-      historicalSessionId
-    );
+    const committedAttemptBefore = database.drizzle
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.studySessionId, historicalSessionId))
+      .get();
     const focused = await graph.feed.prepareFeed(
       [installedCard],
       "focused",
@@ -652,11 +653,12 @@ describe("deck package installation", () => {
       )
     ).toEqual(historicalBefore);
     expect(
-      await database.getFirstAsync(
-        "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
-        historicalSessionId
-      )
-    ).toEqual(finalizedAttemptBefore);
+      database.drizzle
+        .select({ committedAt: flashcardReviewAttempts.committedAt })
+        .from(flashcardReviewAttempts)
+        .where(eq(flashcardReviewAttempts.studySessionId, historicalSessionId))
+        .get()
+    ).toEqual(committedAttemptBefore);
   });
 
   it("settles recent ratings through FSRS before an installed deck changes", async () => {
@@ -700,11 +702,11 @@ describe("deck package installation", () => {
 
     const completedSession = await graph.sessions.findById(feed.studySessionId);
     expect(completedSession?.completedAt).not.toBeNull();
-    const finalizedRows = await database.drizzle
-      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+    const committedRows = await database.drizzle
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, attemptId));
-    expect(finalizedRows[0]?.finalizedAt).not.toBeNull();
+    expect(committedRows[0]?.committedAt).not.toBeNull();
     expect(
       await database.drizzle
         .select({ flashcardId: flashcardMemoryStates.flashcardId })
@@ -716,7 +718,7 @@ describe("deck package installation", () => {
     });
   });
 
-  it("recovers and finalizes a completed import-invalidated session after interruption", async () => {
+  it("recovers and commits a completed import-invalidated session after interruption", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
@@ -746,18 +748,18 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(2, [card(sourceCard.id, 0, "Updated")]));
     expect(
       await database.drizzle
-        .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+        .select({ committedAt: flashcardReviewAttempts.committedAt })
         .from(flashcardReviewAttempts)
         .where(eq(flashcardReviewAttempts.id, attemptId))
-    ).toEqual([{ finalizedAt: null }]);
+    ).toEqual([{ committedAt: null }]);
 
     await graph.study.recoverPendingCompletedSessionAggregation();
 
     const recoveredRows = await database.drizzle
-      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, attemptId));
-    expect(recoveredRows[0]?.finalizedAt).not.toBeNull();
+    expect(recoveredRows[0]?.committedAt).not.toBeNull();
     expect(await graph.progress.findByFlashcardId(installedCard.id)).toMatchObject({
       reviewCount: 1,
     });

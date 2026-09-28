@@ -41,7 +41,7 @@ export class SQLiteReviewAttemptTransaction<
         .insert(flashcardReviewAttempts)
         .values({
           createdAt: attempt.createdAt,
-          finalizedAt: attempt.finalizedAt,
+          committedAt: attempt.committedAt,
           flashcardId: attempt.flashcardId,
           id: attempt.id,
           rating: attempt.rating,
@@ -68,7 +68,7 @@ export class SQLiteReviewAttemptTransaction<
         .where(
           and(
             eq(flashcardReviewAttempts.id, attemptId),
-            isNull(flashcardReviewAttempts.finalizedAt)
+            isNull(flashcardReviewAttempts.committedAt)
           )
         )
         .returning({ id: flashcardReviewAttempts.id })

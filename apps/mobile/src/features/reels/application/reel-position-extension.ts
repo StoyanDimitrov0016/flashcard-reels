@@ -15,7 +15,7 @@ export async function completeReelActivation(
   persistPosition: () => Promise<boolean>,
   consumeRecurrence: () => Promise<void>,
   recordVisibleCard: () => Promise<void>,
-  finalizeAttempts: () => Promise<void>,
+  commitAttempts: () => Promise<void>,
   compactSession: () => Promise<void>,
   extendFeed: () => Promise<void>,
   awaitPendingRatings: () => Promise<void> = async () => undefined
@@ -26,7 +26,7 @@ export async function completeReelActivation(
   await consumeRecurrence();
   await recordVisibleCard();
   await awaitPendingRatings();
-  await finalizeAttempts();
+  await commitAttempts();
   await compactSession();
   await extendFeed();
   return true;

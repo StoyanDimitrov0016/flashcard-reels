@@ -1,7 +1,7 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
 import type {
@@ -24,8 +24,8 @@ import { type Rating } from "@/features/learning-engine/domain/rating";
 import {
   compareRatedAttempts,
   isRatedReviewAttempt,
-  orderReviewAttemptsForFinalization,
-} from "@/features/study/application/review-attempt-finalization-order";
+  orderReviewAttemptsForCommit,
+} from "@/features/study/application/review-attempt-commit-order";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import {
@@ -51,12 +51,12 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly idGenerator: IdGenerator;
   private readonly random: RandomSource;
   private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
-  private readonly reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction;
+  private readonly reviewAttemptCommitTransaction: ReviewAttemptCommitTransaction;
   private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
   private readonly flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
-  private readonly finalizationQueues = new Map<string, Promise<void>>();
+  private readonly commitQueues = new Map<string, Promise<void>>();
   private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
 
   constructor(
@@ -70,7 +70,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     reviewAttemptTransaction: ReviewAttemptTransaction,
     studySessionFeedTransaction: StudySessionFeedTransaction,
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
-    reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
+    reviewAttemptCommitTransaction: ReviewAttemptCommitTransaction,
     random: RandomSource = Math.random,
     flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null = null,
     studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
@@ -83,7 +83,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.clock = clock;
     this.idGenerator = idGenerator;
     this.reviewAttemptTransaction = reviewAttemptTransaction;
-    this.reviewAttemptFinalizationTransaction = reviewAttemptFinalizationTransaction;
+    this.reviewAttemptCommitTransaction = reviewAttemptCommitTransaction;
     this.studySessionFeedTransaction = studySessionFeedTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
@@ -133,7 +133,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       this.idGenerator.generate()
     );
     if (opened.replacedSessionId !== null) {
-      await this.finalizeAndAggregateCompletedSession(opened.replacedSessionId);
+      await this.commitAndAggregateCompletedSession(opened.replacedSessionId);
     }
     await this.aggregateActiveSessionIfEligible(opened.session.id);
     return opened;
@@ -149,13 +149,13 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   async completeSession(sessionId: string): Promise<void> {
-    await this.finalizeAllAttempts(sessionId);
+    await this.commitAllAttempts(sessionId);
     await this.studySessionRepository.complete(sessionId, this.clock.now());
     await this.aggregateCompletedSession(sessionId);
   }
 
   async settleForProgressBackup(): Promise<void> {
-    // oxlint-disable no-await-in-loop -- Each session must be finalized before its snapshot is read.
+    // oxlint-disable no-await-in-loop -- Each session must be committed before its snapshot is read.
     for (const scope of ["mixed", "focused"] as const) {
       const active = await this.studySessionRepository.findActiveByScope(scope);
       if (active) {
@@ -174,7 +174,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
         return;
       }
       for (const session of pending) {
-        await this.finalizeAndAggregateCompletedSession(session.id);
+        await this.commitAndAggregateCompletedSession(session.id);
         const updated = await this.studySessionRepository.findById(session.id);
         if (
           !updated ||
@@ -217,7 +217,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
         return;
       }
       for (const session of pending) {
-        await this.finalizeAndAggregateCompletedSession(session.id);
+        await this.commitAndAggregateCompletedSession(session.id);
         const updated = await this.studySessionRepository.findById(session.id);
         if (
           !updated ||
@@ -262,7 +262,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       if (!session) {
         return;
       }
-      await this.finalizeAndAggregateCompletedSession(session.id);
+      await this.commitAndAggregateCompletedSession(session.id);
       await recoverNext(index + 1);
     };
     await recoverNext(0);
@@ -286,7 +286,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       };
     }
 
-    const unfinished = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
+    const unfinished = await this.reviewAttemptRepository.listUncommittedBeforeReelPosition(
       sessionId,
       candidate + 1
     );
@@ -410,7 +410,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     const attempt = new FlashcardReviewAttempt({
       createdAt,
       flashcardId,
-      finalizedAt: null,
+      committedAt: null,
       id: this.idGenerator.generate(),
       reelPosition,
       rating: null,
@@ -436,7 +436,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
 
   async rateAttempt(attemptId: string, rating: Rating): Promise<boolean> {
     const attempt = await this.reviewAttemptRepository.findById(attemptId);
-    if (!attempt || attempt.finalizedAt !== null) {
+    if (!attempt || attempt.committedAt !== null) {
       return false;
     }
 
@@ -472,29 +472,29 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     return this.studySessionRecurrenceRepository.markConsumed(recurrenceId, this.clock.now());
   }
 
-  async finalizeAttempt(attemptId: string): Promise<void> {
+  async commitAttempt(attemptId: string): Promise<void> {
     const attempt = await this.reviewAttemptRepository.findById(attemptId);
     if (!attempt) {
       return;
     }
-    await this.serializeFinalization(attempt.studySessionId, async () => {
+    await this.serializeCommit(attempt.studySessionId, async () => {
       const currentAttempt = await this.reviewAttemptRepository.findById(attemptId);
-      if (!currentAttempt || currentAttempt.finalizedAt !== null) {
+      if (!currentAttempt || currentAttempt.committedAt !== null) {
         return;
       }
-      const allUnfinalized = await this.reviewAttemptRepository.listUnfinalizedBySessionId(
+      const allUncommitted = await this.reviewAttemptRepository.listUncommittedBySessionId(
         currentAttempt.studySessionId
       );
-      const remainingIds = new Set(allUnfinalized.map((candidate) => candidate.id));
-      if (this.isBlockedByEarlierReview(currentAttempt, allUnfinalized, remainingIds)) {
+      const remainingIds = new Set(allUncommitted.map((candidate) => candidate.id));
+      if (this.isBlockedByEarlierReview(currentAttempt, allUncommitted, remainingIds)) {
         return;
       }
-      await this.finalizeAttemptNow(currentAttempt.id);
+      await this.commitAttemptNow(currentAttempt.id);
     });
   }
 
-  async finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void> {
-    await this.serializeFinalization(studySessionId, async () => {
+  async commitAttemptsOutsideEditableWindow(studySessionId: string): Promise<void> {
+    await this.serializeCommit(studySessionId, async () => {
       const session = await this.studySessionRepository.findById(studySessionId);
       if (!session) {
         return;
@@ -502,45 +502,45 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       const firstEditablePosition =
         session.furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
       if (firstEditablePosition > 0) {
-        const attempts = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
+        const attempts = await this.reviewAttemptRepository.listUncommittedBeforeReelPosition(
           studySessionId,
           firstEditablePosition
         );
-        await this.finalizeAttemptsInOrder(studySessionId, attempts);
+        await this.commitAttemptsInOrder(studySessionId, attempts);
       }
       await this.aggregateActiveSessionIfEligible(studySessionId);
     });
   }
 
-  private async finalizeAndAggregateCompletedSession(sessionId: string): Promise<void> {
-    await this.finalizeAllAttempts(sessionId);
+  private async commitAndAggregateCompletedSession(sessionId: string): Promise<void> {
+    await this.commitAllAttempts(sessionId);
     await this.aggregateCompletedSession(sessionId);
   }
 
-  private async finalizeAllAttempts(studySessionId: string): Promise<void> {
-    await this.serializeFinalization(studySessionId, async () => {
+  private async commitAllAttempts(studySessionId: string): Promise<void> {
+    await this.serializeCommit(studySessionId, async () => {
       const attempts =
-        await this.reviewAttemptRepository.listUnfinalizedBySessionId(studySessionId);
-      await this.finalizeAttemptsInOrder(studySessionId, attempts);
+        await this.reviewAttemptRepository.listUncommittedBySessionId(studySessionId);
+      await this.commitAttemptsInOrder(studySessionId, attempts);
     });
   }
 
-  private async finalizeAttemptsInOrder(
+  private async commitAttemptsInOrder(
     studySessionId: string,
     attempts: readonly FlashcardReviewAttempt[]
   ): Promise<void> {
-    const allUnfinalized =
-      await this.reviewAttemptRepository.listUnfinalizedBySessionId(studySessionId);
-    const remainingIds = new Set(allUnfinalized.map((attempt) => attempt.id));
-    const orderedAttempts = orderReviewAttemptsForFinalization(attempts);
+    const allUncommitted =
+      await this.reviewAttemptRepository.listUncommittedBySessionId(studySessionId);
+    const remainingIds = new Set(allUncommitted.map((attempt) => attempt.id));
+    const orderedAttempts = orderReviewAttemptsForCommit(attempts);
     for (const attempt of orderedAttempts) {
-      if (this.isBlockedByEarlierReview(attempt, allUnfinalized, remainingIds)) {
+      if (this.isBlockedByEarlierReview(attempt, allUncommitted, remainingIds)) {
         continue;
       }
 
       // oxlint-disable-next-line no-await-in-loop -- Each transition must observe the state committed by the previous review.
-      const finalized = await this.finalizeAttemptNow(attempt.id);
-      if (finalized) {
+      const committed = await this.commitAttemptNow(attempt.id);
+      if (committed) {
         remainingIds.delete(attempt.id);
       }
     }
@@ -564,32 +564,28 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     );
   }
 
-  private async finalizeAttemptNow(attemptId: string): Promise<boolean> {
-    const finalizedAt = this.clock.now();
-    return this.reviewAttemptFinalizationTransaction.finalizeAttempt(
-      attemptId,
-      finalizedAt,
-      finalizedAt
-    );
+  private async commitAttemptNow(attemptId: string): Promise<boolean> {
+    const committedAt = this.clock.now();
+    return this.reviewAttemptCommitTransaction.commitAttempt(attemptId, committedAt, committedAt);
   }
 
-  private async serializeFinalization(
+  private async serializeCommit(
     studySessionId: string,
     operation: () => Promise<void>
   ): Promise<void> {
-    const previous = this.finalizationQueues.get(studySessionId) ?? Promise.resolve();
+    const previous = this.commitQueues.get(studySessionId) ?? Promise.resolve();
     const next = previous.catch(() => undefined).then(operation);
-    this.finalizationQueues.set(studySessionId, next);
+    this.commitQueues.set(studySessionId, next);
     void next.then(
-      () => this.clearFinalizationQueue(studySessionId, next),
-      () => this.clearFinalizationQueue(studySessionId, next)
+      () => this.clearCommitQueue(studySessionId, next),
+      () => this.clearCommitQueue(studySessionId, next)
     );
     await next;
   }
 
-  private clearFinalizationQueue(studySessionId: string, completed: Promise<void>): void {
-    if (this.finalizationQueues.get(studySessionId) === completed) {
-      this.finalizationQueues.delete(studySessionId);
+  private clearCommitQueue(studySessionId: string, completed: Promise<void>): void {
+    if (this.commitQueues.get(studySessionId) === completed) {
+      this.commitQueues.delete(studySessionId);
     }
   }
 

@@ -256,7 +256,7 @@ export function useReelController({
             }
           },
           () => reelFeedService.recordVisibleCard(initialFeed.studySessionId, occurrence.card.id),
-          () => studyService.finalizeAttemptsOutsideEditableWindow(initialFeed.studySessionId),
+          () => studyService.commitAttemptsOutsideEditableWindow(initialFeed.studySessionId),
           () =>
             compactionPosition === null
               ? Promise.resolve()

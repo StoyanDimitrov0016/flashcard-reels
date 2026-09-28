@@ -211,10 +211,10 @@ describe("SQLite learning progress reset transaction", () => {
     expect(await memoryRow(1)).toBeNull();
     expect(await memoryRow(3)).not.toBeNull();
     const preservedAttempt = await database.drizzle
-      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, otherAttempt));
-    expect(preservedAttempt[0]?.finalizedAt).not.toBeNull();
+    expect(preservedAttempt[0]?.committedAt).not.toBeNull();
   });
 
   async function insertDeck(id: string, title: string): Promise<void> {

@@ -16,7 +16,7 @@ export function explainFlashcardProgress(
     return {
       averageRecallScore: null,
       historyBand: "New",
-      reason: "This card has no finalized reviews yet.",
+      reason: "This card has no committed reviews yet.",
       reviewCount: 0,
     };
   }

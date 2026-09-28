@@ -1,6 +1,6 @@
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 
-export function orderReviewAttemptsForFinalization(
+export function orderReviewAttemptsForCommit(
   attempts: readonly FlashcardReviewAttempt[]
 ): FlashcardReviewAttempt[] {
   const ratedAttempts = attempts.filter(isRatedReviewAttempt).reduce(insertRatedAttempt, []);

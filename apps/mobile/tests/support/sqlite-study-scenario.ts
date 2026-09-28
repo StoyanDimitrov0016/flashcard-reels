@@ -1,4 +1,4 @@
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
@@ -12,7 +12,7 @@ import { createLearningScheduler } from "@/features/learning-engine/application/
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
@@ -34,7 +34,7 @@ export function createScenarioGraph(
   clock: TestClock,
   ids: SequenceIdGenerator,
   random: () => number = () => 0,
-  finalizationTransaction?: ReviewAttemptFinalizationTransaction
+  commitTransaction?: ReviewAttemptCommitTransaction
 ) {
   const attempts = new SQLiteReviewAttemptRepository(database.drizzle);
   const sessions = new SQLiteStudySessionRepository(database.drizzle);
@@ -54,8 +54,7 @@ export function createScenarioGraph(
     new SQLiteReviewAttemptTransaction(database.drizzle),
     new SQLiteStudySessionFeedTransaction(database.drizzle),
     new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-    finalizationTransaction ??
-      new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, scheduler),
+    commitTransaction ?? new SQLiteReviewAttemptCommitTransaction(database.drizzle, scheduler),
     random,
     new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)

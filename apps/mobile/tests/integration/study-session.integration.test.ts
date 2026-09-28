@@ -103,7 +103,7 @@ describe("SQLite study sessions", () => {
     });
     await graph.study.consumeRecurrence(recurrence.id);
     await graph.study.updateSessionReelPosition(opened.studySessionId, 126);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
+    await graph.study.commitAttemptsOutsideEditableWindow(opened.studySessionId);
 
     const progressRows = await database.getAllAsync(
       "SELECT review_count, again_count, good_count FROM flashcard_progress ORDER BY flashcard_id"
@@ -151,7 +151,7 @@ describe("SQLite study sessions", () => {
 
     await graph.study.updateSessionReelPosition(opened.studySessionId, 1_000);
     await graph.feed.prepareFeed(focusCards, "focused", TEST_DECK_ID, false, null);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(opened.studySessionId);
+    await graph.study.commitAttemptsOutsideEditableWindow(opened.studySessionId);
     await graph.study.compactSessionRuntimeData(opened.studySessionId, 1_000);
     await graph.study.updateSessionReelPosition(opened.studySessionId, 950);
 

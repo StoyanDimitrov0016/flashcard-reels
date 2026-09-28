@@ -28,7 +28,7 @@ export class SQLiteArchivedProgressQuery<TRunResult = unknown> implements Archiv
         const [events, progress, memory] = await Promise.all([
           this.database
             .select({
-              bytes: sql<number>`coalesce(sum(length(${reviewEvents.id}) + length(${reviewEvents.deckId}) + length(${reviewEvents.flashcardId}) + length(${reviewEvents.rating}) + length(${reviewEvents.reviewedAt}) + length(${reviewEvents.finalizedAt}) + 64), 0)`,
+              bytes: sql<number>`coalesce(sum(length(${reviewEvents.id}) + length(${reviewEvents.deckId}) + length(${reviewEvents.flashcardId}) + length(${reviewEvents.rating}) + length(${reviewEvents.reviewedAt}) + length(${reviewEvents.committedAt}) + 64), 0)`,
             })
             .from(reviewEvents)
             .where(eq(reviewEvents.deckId, record.deckId)),

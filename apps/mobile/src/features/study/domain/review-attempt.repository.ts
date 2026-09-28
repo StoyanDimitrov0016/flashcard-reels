@@ -12,8 +12,8 @@ export interface ReviewAttemptRepository {
     throughReelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;
   findMaxReelPosition(studySessionId: string): Promise<number | null>;
-  listUnfinalizedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]>;
-  listUnfinalizedBeforeReelPosition(
+  listUncommittedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]>;
+  listUncommittedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;

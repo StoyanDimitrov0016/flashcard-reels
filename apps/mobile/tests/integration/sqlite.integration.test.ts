@@ -7,7 +7,7 @@ import { StudyServiceImpl } from "@/features/study/application/study.service.imp
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
@@ -132,7 +132,7 @@ describe("SQLite study persistence", () => {
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, createLearningScheduler())
+      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
     );
     const mixed = await service.openSession("mixed", null, false);
     const firstFocus = await service.openSession("focused", TEST_DECK_ID, false);
@@ -162,7 +162,7 @@ describe("SQLite study persistence", () => {
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, createLearningScheduler())
+      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
     );
 
     await Promise.all([
@@ -282,7 +282,7 @@ describe("SQLite study persistence", () => {
         attemptTransaction.createAttempt(
           new FlashcardReviewAttempt({
             createdAt: "2026-01-01T00:00:00.000Z",
-            finalizedAt: null,
+            committedAt: null,
             flashcardId: makeFlashcard(1).id,
             id: testId(230 + reelPosition),
             rating: reelPosition === 11 ? "hard" : null,
@@ -351,12 +351,12 @@ describe("SQLite study persistence", () => {
     expect(await items.listBySessionId(session.id)).toEqual([]);
   });
 
-  it("protects finalized attempts from later rating updates", async () => {
+  it("protects committed attempts from later rating updates", async () => {
     const session = makeSession(testId(230), "mixed");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(231),
       rating: null,
@@ -369,7 +369,7 @@ describe("SQLite study persistence", () => {
       attemptTransaction.createAttempt(
         new FlashcardReviewAttempt({
           createdAt: attempt.createdAt,
-          finalizedAt: null,
+          committedAt: null,
           flashcardId: attempt.flashcardId,
           id: testId(232),
           rating: null,
@@ -382,7 +382,7 @@ describe("SQLite study persistence", () => {
     await attemptTransaction.createAttempt(
       new FlashcardReviewAttempt({
         createdAt: attempt.createdAt,
-        finalizedAt: null,
+        committedAt: null,
         flashcardId: attempt.flashcardId,
         id: testId(233),
         rating: null,
@@ -391,17 +391,17 @@ describe("SQLite study persistence", () => {
         updatedAt: attempt.updatedAt,
       })
     );
-    await new SQLiteReviewAttemptFinalizationTransaction(
+    await new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
       createLearningScheduler()
-    ).finalizeAttempt(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
+    ).commitAttempt(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
 
     const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
     expect(
       await transaction.rateAttempt(attempt.id, "good", "2026-01-01T00:02:00.000Z", null, null)
     ).toBe(false);
-    const finalizedAttempt = await attempts.findById(attempt.id);
-    expect(finalizedAttempt?.rating).toBeNull();
+    const committedAttempt = await attempts.findById(attempt.id);
+    expect(committedAttempt?.rating).toBeNull();
   });
 
   it("does not create review attempts for completed sessions", async () => {
@@ -410,7 +410,7 @@ describe("SQLite study persistence", () => {
     await sessions.complete(session.id, "2026-01-01T00:01:00.000Z");
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(233),
       rating: null,
@@ -464,7 +464,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(236),
       rating: null,
@@ -515,7 +515,7 @@ describe("SQLite study persistence", () => {
     await items.createMany(baseItems);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(352),
       rating: null,
@@ -549,7 +549,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(241),
       rating: "again",
@@ -561,7 +561,7 @@ describe("SQLite study persistence", () => {
     await attemptTransaction.createAttempt(attempt);
     const secondAttempt = new FlashcardReviewAttempt({
       createdAt: attempt.createdAt,
-      finalizedAt: attempt.finalizedAt,
+      committedAt: attempt.committedAt,
       flashcardId: makeFlashcard(2).id,
       id: testId(245),
       rating: attempt.rating,
@@ -634,7 +634,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     const firstAttempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(248),
       rating: "again",
@@ -645,7 +645,7 @@ describe("SQLite study persistence", () => {
     });
     const secondAttempt = new FlashcardReviewAttempt({
       createdAt: firstAttempt.createdAt,
-      finalizedAt: firstAttempt.finalizedAt,
+      committedAt: firstAttempt.committedAt,
       flashcardId: makeFlashcard(2).id,
       id: testId(249),
       rating: firstAttempt.rating,
@@ -720,7 +720,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(261),
       rating: "again",

@@ -9,7 +9,7 @@ export type FlashcardReviewAttemptFields = Readonly<{
   createdAt: string;
   ratedAt?: string | null;
   updatedAt: string;
-  finalizedAt: string | null;
+  committedAt: string | null;
 }>;
 
 export class FlashcardReviewAttempt {
@@ -21,7 +21,7 @@ export class FlashcardReviewAttempt {
   public readonly createdAt: string;
   public readonly ratedAt: string | null;
   public readonly updatedAt: string;
-  public readonly finalizedAt: string | null;
+  public readonly committedAt: string | null;
 
   constructor(fields: FlashcardReviewAttemptFields) {
     this.id = fields.id;
@@ -32,6 +32,6 @@ export class FlashcardReviewAttempt {
     this.createdAt = fields.createdAt;
     this.ratedAt = fields.ratedAt ?? null;
     this.updatedAt = fields.updatedAt;
-    this.finalizedAt = fields.finalizedAt;
+    this.committedAt = fields.committedAt;
   }
 }

@@ -153,7 +153,7 @@ export const reviewEvents = sqliteTable(
     flashcardId: text("flashcard_id").notNull(),
     rating: text("rating", { enum: ["again", "hard", "good", "easy"] }).notNull(),
     reviewedAt: text("reviewed_at").notNull(),
-    finalizedAt: text("finalized_at").notNull(),
+    committedAt: text("finalized_at").notNull(),
   },
   (table) => [
     index("review_events_deck_id_idx").on(table.deckId),
@@ -260,7 +260,7 @@ export const flashcardReviewAttempts = sqliteTable(
     createdAt: text("created_at").notNull(),
     ratedAt: text("rated_at"),
     updatedAt: text("updated_at").notNull(),
-    finalizedAt: text("finalized_at"),
+    committedAt: text("finalized_at"),
   },
   (table) => [
     check("flashcard_review_attempts_reel_position_check", sql`${table.reelPosition} >= 0`),
@@ -280,7 +280,7 @@ export const flashcardReviewAttempts = sqliteTable(
     index("review_attempts_session_position_aggregation_idx").on(
       table.studySessionId,
       table.reelPosition,
-      table.finalizedAt,
+      table.committedAt,
       table.rating,
       table.ratedAt
     ),

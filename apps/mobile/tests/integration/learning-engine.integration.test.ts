@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -28,12 +28,12 @@ import {
 
 const RATED_AT_AGAIN = "2026-01-01T00:01:00.000Z";
 const RATED_AT_HARD = "2026-01-01T00:02:00.000Z";
-const FINALIZED_AT = "2026-01-01T00:03:00.000Z";
+const COMMITTED_AT = "2026-01-01T00:03:00.000Z";
 
-describe("SQLite learning-engine finalization", () => {
+describe("SQLite learning-engine commit", () => {
   let database: NodeSqliteDatabase;
   let attempts: SQLiteReviewAttemptRepository;
-  let finalization: SQLiteReviewAttemptFinalizationTransaction;
+  let commit: SQLiteReviewAttemptCommitTransaction;
   let memoryStates: SQLiteFlashcardMemoryStateRepository;
 
   beforeEach(async () => {
@@ -60,17 +60,14 @@ describe("SQLite learning-engine finalization", () => {
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
-    finalization = new SQLiteReviewAttemptFinalizationTransaction(
-      database.drizzle,
-      createLearningScheduler()
-    );
+    commit = new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler());
   });
 
   afterEach(() => {
     database.close();
   });
 
-  it("keeps editable ratings out of memory until finalization and applies only the final rating", async () => {
+  it("keeps editable ratings out of memory until commit and applies only the final rating", async () => {
     const attempt = await createAttempt(901);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
 
@@ -79,9 +76,7 @@ describe("SQLite learning-engine finalization", () => {
 
     expect(await memoryStates.findByFlashcardId(attempt.flashcardId)).toBeNull();
 
-    await expect(
-      finalization.finalizeAttempt(attempt.id, FINALIZED_AT, FINALIZED_AT)
-    ).resolves.toBe(true);
+    await expect(commit.commitAttempt(attempt.id, COMMITTED_AT, COMMITTED_AT)).resolves.toBe(true);
     const state = await memoryStates.findByFlashcardId(attempt.flashcardId);
     expect(state).toMatchObject({
       flashcardId: attempt.flashcardId,
@@ -89,20 +84,18 @@ describe("SQLite learning-engine finalization", () => {
       reps: 1,
       lapses: 0,
     });
-    const finalizedAttempt = await attempts.findById(attempt.id);
-    expect(finalizedAttempt?.finalizedAt).toBe(FINALIZED_AT);
+    const committedAttempt = await attempts.findById(attempt.id);
+    expect(committedAttempt?.committedAt).toBe(COMMITTED_AT);
   });
 
   it("does not create memory for an unrated attempt", async () => {
     const attempt = await createAttempt(902);
 
-    await expect(
-      finalization.finalizeAttempt(attempt.id, FINALIZED_AT, FINALIZED_AT)
-    ).resolves.toBe(true);
+    await expect(commit.commitAttempt(attempt.id, COMMITTED_AT, COMMITTED_AT)).resolves.toBe(true);
 
     expect(await memoryStates.findByFlashcardId(attempt.flashcardId)).toBeNull();
-    const finalizedAttempt = await attempts.findById(attempt.id);
-    expect(finalizedAttempt?.finalizedAt).toBe(FINALIZED_AT);
+    const committedAttempt = await attempts.findById(attempt.id);
+    expect(committedAttempt?.committedAt).toBe(COMMITTED_AT);
   });
 
   it("is idempotent and preserves all persisted FSRS fields across reconstruction", async () => {
@@ -110,16 +103,10 @@ describe("SQLite learning-engine finalization", () => {
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
     await rating.rateAttempt(attempt.id, "good", RATED_AT_AGAIN, null, null);
 
-    await expect(
-      finalization.finalizeAttempt(attempt.id, FINALIZED_AT, FINALIZED_AT)
-    ).resolves.toBe(true);
+    await expect(commit.commitAttempt(attempt.id, COMMITTED_AT, COMMITTED_AT)).resolves.toBe(true);
     const first = await memoryStates.findByFlashcardId(attempt.flashcardId);
     await expect(
-      finalization.finalizeAttempt(
-        attempt.id,
-        "2026-01-02T00:00:00.000Z",
-        "2026-01-02T00:00:00.000Z"
-      )
+      commit.commitAttempt(attempt.id, "2026-01-02T00:00:00.000Z", "2026-01-02T00:00:00.000Z")
     ).resolves.toBe(false);
 
     const reconstructed = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
@@ -127,7 +114,7 @@ describe("SQLite learning-engine finalization", () => {
     expect(first?.reps).toBe(1);
   });
 
-  it("finalizes rated attempts when a study session completes", async () => {
+  it("commits rated attempts when a study session completes", async () => {
     const attempt = await createAttempt(904);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
     await rating.rateAttempt(attempt.id, "easy", RATED_AT_AGAIN, null, null);
@@ -139,19 +126,19 @@ describe("SQLite learning-engine finalization", () => {
       lastReviewAt: RATED_AT_AGAIN,
       reps: 1,
     });
-    const finalizedAttempt = await attempts.findById(attempt.id);
-    expect(finalizedAttempt?.finalizedAt).not.toBeNull();
+    const committedAttempt = await attempts.findById(attempt.id);
+    expect(committedAttempt?.committedAt).not.toBeNull();
   });
 
-  it("carries a finalized Again into the next FSRS lapse transition", async () => {
+  it("carries a committed Again into the next FSRS lapse transition", async () => {
     const firstAttempt = await createAttempt(905);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
     await rating.rateAttempt(firstAttempt.id, "good", RATED_AT_AGAIN, null, null);
-    await finalization.finalizeAttempt(firstAttempt.id, FINALIZED_AT, FINALIZED_AT);
+    await commit.commitAttempt(firstAttempt.id, COMMITTED_AT, COMMITTED_AT);
 
     const secondAttempt = await createAttempt(906);
     await rating.rateAttempt(secondAttempt.id, "again", "2026-01-02T00:01:00.000Z", null, null);
-    await finalization.finalizeAttempt(
+    await commit.commitAttempt(
       secondAttempt.id,
       "2026-01-02T00:02:00.000Z",
       "2026-01-02T00:02:00.000Z"
@@ -174,7 +161,7 @@ describe("SQLite learning-engine finalization", () => {
     const firstRatedAt = firstRating?.ratedAt;
     expect(firstRatedAt).not.toBeNull();
     await graph.study.updateSessionReelPosition(testId(900), 5);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
     const firstState = await memoryStates.findByFlashcardId(makeFlashcard(1).id);
     expect(firstState?.lastReviewAt).toBe(firstRatedAt);
     expect(Date.parse(firstState?.dueAt ?? "") - Date.parse(firstRatedAt ?? "")).toBeCloseTo(
@@ -195,7 +182,7 @@ describe("SQLite learning-engine finalization", () => {
     await graph.study.rateAttempt(recurrenceAttempt, "good");
     await graph.study.consumeRecurrence(scheduledRecurrence.id);
     await graph.study.updateSessionReelPosition(testId(900), 13);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
 
     expect(await memoryStates.findByFlashcardId(makeFlashcard(1).id)).toEqual(firstState);
     expect(
@@ -244,7 +231,7 @@ describe("SQLite learning-engine finalization", () => {
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
     await graph.study.updateSessionReelPosition(testId(900), 6);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
 
     const actual = await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId);
     expect(actual).toMatchObject(firstExpected);
@@ -294,14 +281,14 @@ describe("SQLite learning-engine finalization", () => {
 
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     await graph.study.updateSessionReelPosition(testId(900), 5);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
 
     const earlierAttemptAfterFirstPass = await attempts.findById(earlierReelAttempt.id);
-    expect(earlierAttemptAfterFirstPass?.finalizedAt).toBeNull();
+    expect(earlierAttemptAfterFirstPass?.committedAt).toBeNull();
     expect(await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId)).toBeNull();
 
     await graph.study.updateSessionReelPosition(testId(900), 6);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
 
     const scheduler = createLearningScheduler();
     const afterLaterReview = scheduler.review(
@@ -315,42 +302,42 @@ describe("SQLite learning-engine finalization", () => {
     expect(actual).toMatchObject(afterLaterReview);
     const laterAttemptAfterSecondPass = await attempts.findById(laterReelAttempt.id);
     const earlierAttemptAfterSecondPass = await attempts.findById(earlierReelAttempt.id);
-    expect(laterAttemptAfterSecondPass?.finalizedAt).not.toBeNull();
-    expect(earlierAttemptAfterSecondPass?.finalizedAt).not.toBeNull();
+    expect(laterAttemptAfterSecondPass?.committedAt).not.toBeNull();
+    expect(earlierAttemptAfterSecondPass?.committedAt).not.toBeNull();
   });
 
-  it("finalizes concurrent activation work serially without duplicate scheduler application", async () => {
+  it("commits concurrent activation work serially without duplicate scheduler application", async () => {
     const firstAttempt = await createAttempt(914, 0);
     const secondAttempt = await createAttempt(915, 1);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
     await rating.rateAttempt(firstAttempt.id, "good", "2026-01-01T00:01:00.000Z", null, null);
     await rating.rateAttempt(secondAttempt.id, "hard", "2026-01-01T00:02:00.000Z", null, null);
-    const trackingFinalization = new TrackingFinalizationTransaction(
-      new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, createLearningScheduler())
+    const trackingCommit = new TrackingCommitTransaction(
+      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
     );
     const graph = createScenarioGraph(
       database,
       new TestClock(),
       new SequenceIdGenerator(),
       () => 0,
-      trackingFinalization
+      trackingCommit
     );
 
     await graph.study.updateSessionReelPosition(testId(900), 6);
     await Promise.all([
-      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900)),
-      graph.study.finalizeAttemptsOutsideEditableWindow(testId(900)),
+      graph.study.commitAttemptsOutsideEditableWindow(testId(900)),
+      graph.study.commitAttemptsOutsideEditableWindow(testId(900)),
     ]);
 
     const state = await memoryStates.findByFlashcardId(firstAttempt.flashcardId);
     expect(state?.reps).toBe(1);
     expect(state?.lastReviewAt).toBe("2026-01-01T00:01:00.000Z");
-    expect(trackingFinalization.maximumConcurrentCalls).toBe(1);
-    expect(trackingFinalization.finalizedAttemptIds).toEqual([firstAttempt.id, secondAttempt.id]);
-    const finalizedFirstAttempt = await attempts.findById(firstAttempt.id);
-    const finalizedSecondAttempt = await attempts.findById(secondAttempt.id);
-    expect(finalizedFirstAttempt?.finalizedAt).not.toBeNull();
-    expect(finalizedSecondAttempt?.finalizedAt).not.toBeNull();
+    expect(trackingCommit.maximumConcurrentCalls).toBe(1);
+    expect(trackingCommit.committedAttemptIds).toEqual([firstAttempt.id, secondAttempt.id]);
+    const committedFirstAttempt = await attempts.findById(firstAttempt.id);
+    const committedSecondAttempt = await attempts.findById(secondAttempt.id);
+    expect(committedFirstAttempt?.committedAt).not.toBeNull();
+    expect(committedSecondAttempt?.committedAt).not.toBeNull();
   });
 
   it("commits memory before feed extension reads candidates", async () => {
@@ -381,7 +368,7 @@ describe("SQLite learning-engine finalization", () => {
         (await graph.study.updateSessionReelPosition(prepared.studySessionId, 5)) !== null,
       async () => undefined,
       () => feed.recordVisibleCard(prepared.studySessionId, card.id),
-      () => graph.study.finalizeAttemptsOutsideEditableWindow(prepared.studySessionId),
+      () => graph.study.commitAttemptsOutsideEditableWindow(prepared.studySessionId),
       () => graph.study.compactSessionRuntimeData(prepared.studySessionId, 0),
       async () => {
         await feed.extendFeed([card], prepared.studySessionId);
@@ -391,7 +378,7 @@ describe("SQLite learning-engine finalization", () => {
     expect(observedStates.at(-1)).not.toBeNull();
   });
 
-  it("lets an unrated skip finalize without blocking a rated review", async () => {
+  it("lets an unrated skip commit without blocking a rated review", async () => {
     const skippedAttempt = await createAttempt(916, 0);
     const ratedAttempt = await createAttempt(917, 1);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
@@ -399,16 +386,16 @@ describe("SQLite learning-engine finalization", () => {
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
     await graph.study.updateSessionReelPosition(testId(900), 5);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
     const skippedAttemptAfterFirstPass = await attempts.findById(skippedAttempt.id);
     const ratedAttemptAfterFirstPass = await attempts.findById(ratedAttempt.id);
-    expect(skippedAttemptAfterFirstPass?.finalizedAt).not.toBeNull();
-    expect(ratedAttemptAfterFirstPass?.finalizedAt).toBeNull();
+    expect(skippedAttemptAfterFirstPass?.committedAt).not.toBeNull();
+    expect(ratedAttemptAfterFirstPass?.committedAt).toBeNull();
 
     await graph.study.updateSessionReelPosition(testId(900), 6);
-    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    await graph.study.commitAttemptsOutsideEditableWindow(testId(900));
     const ratedAttemptAfterSecondPass = await attempts.findById(ratedAttempt.id);
-    expect(ratedAttemptAfterSecondPass?.finalizedAt).not.toBeNull();
+    expect(ratedAttemptAfterSecondPass?.committedAt).not.toBeNull();
     expect(await memoryStates.findByFlashcardId(ratedAttempt.flashcardId)).toMatchObject({
       reps: 1,
     });
@@ -420,7 +407,7 @@ describe("SQLite learning-engine finalization", () => {
   ): Promise<FlashcardReviewAttempt> {
     const attempt = new FlashcardReviewAttempt({
       createdAt: RATED_AT_AGAIN,
-      finalizedAt: null,
+      committedAt: null,
       flashcardId: makeFlashcard(1).id,
       id: testId(index),
       rating: null,
@@ -434,30 +421,26 @@ describe("SQLite learning-engine finalization", () => {
   }
 });
 
-class TrackingFinalizationTransaction implements ReviewAttemptFinalizationTransaction {
+class TrackingCommitTransaction implements ReviewAttemptCommitTransaction {
   private activeCalls = 0;
-  private readonly delegate: ReviewAttemptFinalizationTransaction;
+  private readonly delegate: ReviewAttemptCommitTransaction;
   maximumConcurrentCalls = 0;
-  readonly finalizedAttemptIds: string[] = [];
+  readonly committedAttemptIds: string[] = [];
 
-  constructor(delegate: ReviewAttemptFinalizationTransaction) {
+  constructor(delegate: ReviewAttemptCommitTransaction) {
     this.delegate = delegate;
   }
 
-  async finalizeAttempt(
-    attemptId: string,
-    finalizedAt: string,
-    updatedAt: string
-  ): Promise<boolean> {
+  async commitAttempt(attemptId: string, committedAt: string, updatedAt: string): Promise<boolean> {
     this.activeCalls += 1;
     this.maximumConcurrentCalls = Math.max(this.maximumConcurrentCalls, this.activeCalls);
     await Promise.resolve();
     try {
-      const finalized = await this.delegate.finalizeAttempt(attemptId, finalizedAt, updatedAt);
-      if (finalized) {
-        this.finalizedAttemptIds.push(attemptId);
+      const committed = await this.delegate.commitAttempt(attemptId, committedAt, updatedAt);
+      if (committed) {
+        this.committedAttemptIds.push(attemptId);
       }
-      return finalized;
+      return committed;
     } finally {
       this.activeCalls -= 1;
     }

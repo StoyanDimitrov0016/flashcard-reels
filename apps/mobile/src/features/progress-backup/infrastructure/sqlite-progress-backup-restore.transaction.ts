@@ -74,7 +74,16 @@ export class SQLiteProgressBackupRestoreTransaction<
       for (let offset = 0; offset < document.reviewEvents.length; offset += INSERT_CHUNK_SIZE) {
         transaction
           .insert(reviewEvents)
-          .values(document.reviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE))
+          .values(
+            document.reviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => ({
+              id: row.id,
+              deckId: row.deckId,
+              flashcardId: row.flashcardId,
+              rating: row.rating,
+              reviewedAt: row.reviewedAt,
+              committedAt: row.finalizedAt,
+            }))
+          )
           .run();
       }
       if (safetyCopyFileName) {

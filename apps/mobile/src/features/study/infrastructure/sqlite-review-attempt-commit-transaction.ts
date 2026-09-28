@@ -1,7 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { isFirstReviewOnLocalDay } from "@/features/learning-engine/domain/review-day";
@@ -14,9 +14,9 @@ import {
   reviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
-export class SQLiteReviewAttemptFinalizationTransaction<
+export class SQLiteReviewAttemptCommitTransaction<
   TRunResult = unknown,
-> implements ReviewAttemptFinalizationTransaction {
+> implements ReviewAttemptCommitTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
   private readonly scheduler: LearningScheduler;
 
@@ -25,11 +25,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
     this.scheduler = scheduler;
   }
 
-  async finalizeAttempt(
-    attemptId: string,
-    finalizedAt: string,
-    updatedAt: string
-  ): Promise<boolean> {
+  async commitAttempt(attemptId: string, committedAt: string, updatedAt: string): Promise<boolean> {
     return this.database.transaction((transaction) => {
       const rows = transaction
         .select()
@@ -37,7 +33,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
         .where(
           and(
             eq(flashcardReviewAttempts.id, attemptId),
-            isNull(flashcardReviewAttempts.finalizedAt)
+            isNull(flashcardReviewAttempts.committedAt)
           )
         )
         .limit(1)
@@ -56,7 +52,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           .limit(1)
           .all()[0];
         if (!card) {
-          throw new Error(`Missing flashcard ${attempt.flashcardId} for review finalization`);
+          throw new Error(`Missing flashcard ${attempt.flashcardId} for review commit`);
         }
         const memoryRows = transaction
           .select()
@@ -74,7 +70,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
             attempt.ratedAt
           ).memoryState;
           const values = {
-            createdAt: current?.createdAt ?? finalizedAt,
+            createdAt: current?.createdAt ?? committedAt,
             dueAt: nextState.dueAt,
             difficulty: nextState.difficulty,
             deckId: card.deckId,
@@ -87,7 +83,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
             scheduledDays: nextState.scheduledDays,
             stability: nextState.stability,
             state: nextState.state,
-            updatedAt: finalizedAt,
+            updatedAt: committedAt,
           };
           transaction
             .insert(flashcardMemoryStates)
@@ -103,7 +99,7 @@ export class SQLiteReviewAttemptFinalizationTransaction<
             flashcardId: attempt.flashcardId,
             rating: attempt.rating,
             reviewedAt: attempt.ratedAt,
-            finalizedAt,
+            committedAt,
           })
           .onConflictDoNothing()
           .run();
@@ -127,18 +123,18 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           .run();
       }
 
-      const finalized = transaction
+      const committed = transaction
         .update(flashcardReviewAttempts)
-        .set({ finalizedAt, updatedAt })
+        .set({ committedAt, updatedAt })
         .where(
           and(
             eq(flashcardReviewAttempts.id, attemptId),
-            isNull(flashcardReviewAttempts.finalizedAt)
+            isNull(flashcardReviewAttempts.committedAt)
           )
         )
         .returning({ id: flashcardReviewAttempts.id })
         .all();
-      return finalized.length > 0;
+      return committed.length > 0;
     });
   }
 }

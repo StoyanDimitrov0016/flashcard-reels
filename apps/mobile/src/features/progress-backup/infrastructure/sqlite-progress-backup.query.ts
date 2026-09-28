@@ -53,7 +53,19 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
           .from(flashcardMemoryStates)
           .orderBy(asc(flashcardMemoryStates.flashcardId))
           .all(),
-        reviewEvents: transaction.select().from(reviewEvents).orderBy(asc(reviewEvents.id)).all(),
+        reviewEvents: transaction
+          .select()
+          .from(reviewEvents)
+          .orderBy(asc(reviewEvents.id))
+          .all()
+          .map((row) => ({
+            id: row.id,
+            deckId: row.deckId,
+            flashcardId: row.flashcardId,
+            rating: row.rating,
+            reviewedAt: row.reviewedAt,
+            finalizedAt: row.committedAt,
+          })),
       };
     });
   }

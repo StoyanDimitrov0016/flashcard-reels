@@ -15,7 +15,7 @@ import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashc
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import {
   deckProgress,
   flashcardMemoryStates,
@@ -68,11 +68,11 @@ describe("archived deck progress", () => {
       createdAt: reviewedAt,
       updatedAt: reviewedAt,
     });
-    const finalization = new SQLiteReviewAttemptFinalizationTransaction(
+    const commit = new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
       createLearningScheduler()
     );
-    expect(await finalization.finalizeAttempt(attemptId, reviewedAt, reviewedAt)).toBe(true);
+    expect(await commit.commitAttempt(attemptId, reviewedAt, reviewedAt)).toBe(true);
     const aggregation = new SQLiteFlashcardProgressAggregationTransaction(database.drizzle);
     await aggregation.aggregate(sessionId, 0, reviewedAt);
   }
@@ -165,7 +165,7 @@ describe("archived deck progress", () => {
       lastActiveAt: reviewedAt,
       feedState: "{}",
     });
-    const finalization = new SQLiteReviewAttemptFinalizationTransaction(
+    const commit = new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
       createLearningScheduler()
     );
@@ -183,8 +183,8 @@ describe("archived deck progress", () => {
         createdAt: ratedAt,
         updatedAt: ratedAt,
       });
-      // oxlint-disable-next-line no-await-in-loop -- FSRS transitions must be finalized in order.
-      expect(await finalization.finalizeAttempt(attemptId, ratedAt, ratedAt)).toBe(true);
+      // oxlint-disable-next-line no-await-in-loop -- FSRS transitions must be committed in order.
+      expect(await commit.commitAttempt(attemptId, ratedAt, ratedAt)).toBe(true);
     }
 
     const repository = new SQLiteDeckRepository(database.drizzle);

@@ -70,7 +70,7 @@ export class SQLiteFlashcardProgressAggregationTransaction<
             eq(flashcardReviewAttempts.studySessionId, studySessionId),
             gt(flashcardReviewAttempts.reelPosition, session.aggregatedThroughReelPosition),
             lte(flashcardReviewAttempts.reelPosition, through),
-            isNotNull(flashcardReviewAttempts.finalizedAt),
+            isNotNull(flashcardReviewAttempts.committedAt),
             isNotNull(flashcardReviewAttempts.rating),
             isNotNull(flashcardReviewAttempts.ratedAt)
           )
