@@ -62,9 +62,20 @@ export function applyPendingAppDataReset(): void {
     if (!marker.exists) {
       return;
     }
+    // SQLite exposes a native path; FileSystem requires a file URI.
+    const databaseDirectory: unknown = defaultDatabaseDirectory;
+    if (
+      typeof databaseDirectory !== "string" ||
+      (!databaseDirectory.startsWith("/") && !databaseDirectory.startsWith("file:///"))
+    ) {
+      throw new Error("SQLite database directory must be an absolute path or file URI");
+    }
+    const databaseDirectoryUri = databaseDirectory.startsWith("file://")
+      ? databaseDirectory
+      : `file://${databaseDirectory}`;
     for (const name of DATABASE_FILES) {
       for (const suffix of ["", "-wal", "-shm", "-journal"]) {
-        const file = new File(defaultDatabaseDirectory, name + suffix);
+        const file = new File(databaseDirectoryUri, name + suffix);
         if (file.exists) {
           file.delete();
         }

@@ -5,6 +5,7 @@ const state = vi.hoisted(() => ({
   deleted: [] as string[],
   failOn: "",
   platform: "android",
+  databaseDirectory: "/documents/SQLite",
 }));
 
 vi.mock("react-native", () => ({
@@ -14,7 +15,11 @@ vi.mock("react-native", () => ({
     },
   },
 }));
-vi.mock("expo-sqlite", () => ({ defaultDatabaseDirectory: "documents/SQLite" }));
+vi.mock("expo-sqlite", () => ({
+  get defaultDatabaseDirectory() {
+    return state.databaseDirectory;
+  },
+}));
 vi.mock("expo-file-system", () => {
   class File {
     uri: string;
@@ -25,6 +30,9 @@ vi.mock("expo-file-system", () => {
       return this.uri.split("/").at(-1) ?? "";
     }
     get exists() {
+      if (!this.uri.startsWith("file:///")) {
+        throw new Error("URI is not absolute");
+      }
       return state.files.has(this.uri);
     }
     write() {
@@ -48,7 +56,7 @@ vi.mock("expo-file-system", () => {
   return {
     File,
     Directory,
-    Paths: { document: new Directory("documents"), cache: new Directory("cache") },
+    Paths: { document: new Directory("file:///documents"), cache: new Directory("file:///cache") },
   };
 });
 
@@ -59,20 +67,21 @@ import {
 } from "@/infrastructure/app-recovery";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
-const marker = "documents/flashcard-reels-reset-pending";
+const marker = "file:///documents/flashcard-reels-reset-pending";
 
 beforeEach(() => {
   state.files.clear();
   state.deleted.length = 0;
   state.failOn = "";
   state.platform = "android";
+  state.databaseDirectory = "/documents/SQLite";
 });
 
 describe("full app recovery", () => {
   it("defers new reset requests across root retries until a cold launch", () => {
     prepareAppStorage();
     requestAppDataReset();
-    state.files.add("documents/SQLite/flashcard-reels.db");
+    state.files.add("file:///documents/SQLite/flashcard-reels.db");
     prepareAppStorage();
     expect(state.deleted).toEqual([]);
     expect(state.files.has(marker)).toBe(true);
@@ -84,47 +93,56 @@ describe("full app recovery", () => {
   });
 
   it("does not delete anything without an explicit request", () => {
-    state.files.add("documents/SQLite/flashcard-reels.db");
+    state.files.add("file:///documents/SQLite/flashcard-reels.db");
     applyPendingAppDataReset();
     expect(state.deleted).toEqual([]);
   });
 
-  it("deletes owned data and sidecars, preserving unrelated files", () => {
-    for (const path of [
-      marker,
-      "documents/SQLite/flashcard-reels.db",
-      "documents/SQLite/flashcard-reels.db-wal",
-      "documents/SQLite/flashcard-reels-v2.db",
-      "documents/SQLite/flashcard-reels-v2.db-wal",
-      "documents/SQLite/ExpoSQLiteStorage",
-      "documents/deck-audio",
-      "cache",
-      "cache/deck-import-123.fcrdeck",
-      "cache/other.file",
-      "documents/unrelated.txt",
-    ]) {
-      state.files.add(path);
+  it.each([
+    ["android", "/documents/SQLite"],
+    ["ios", "/documents/SQLite"],
+    ["ios", "file:///documents/SQLite"],
+  ])(
+    "deletes owned data and sidecars on %s with directory %s, preserving unrelated files",
+    (platform, databaseDirectory) => {
+      state.platform = platform;
+      state.databaseDirectory = databaseDirectory;
+      for (const path of [
+        marker,
+        "file:///documents/SQLite/flashcard-reels.db",
+        "file:///documents/SQLite/flashcard-reels.db-wal",
+        "file:///documents/SQLite/flashcard-reels-v2.db",
+        "file:///documents/SQLite/flashcard-reels-v2.db-wal",
+        "file:///documents/SQLite/ExpoSQLiteStorage",
+        "file:///documents/deck-audio",
+        "file:///cache",
+        "file:///cache/deck-import-123.fcrdeck",
+        "file:///cache/other.file",
+        "file:///documents/unrelated.txt",
+      ]) {
+        state.files.add(path);
+      }
+      applyPendingAppDataReset();
+      expect(state.deleted).toEqual([
+        "file:///documents/SQLite/flashcard-reels.db",
+        "file:///documents/SQLite/flashcard-reels.db-wal",
+        "file:///documents/SQLite/flashcard-reels-v2.db",
+        "file:///documents/SQLite/flashcard-reels-v2.db-wal",
+        "file:///documents/SQLite/ExpoSQLiteStorage",
+        "file:///documents/deck-audio",
+        "file:///cache/deck-import-123.fcrdeck",
+        marker,
+      ]);
+      expect(state.files.has("file:///cache/other.file")).toBe(true);
+      expect(state.files.has("file:///documents/unrelated.txt")).toBe(true);
     }
-    applyPendingAppDataReset();
-    expect(state.deleted).toEqual([
-      "documents/SQLite/flashcard-reels.db",
-      "documents/SQLite/flashcard-reels.db-wal",
-      "documents/SQLite/flashcard-reels-v2.db",
-      "documents/SQLite/flashcard-reels-v2.db-wal",
-      "documents/SQLite/ExpoSQLiteStorage",
-      "documents/deck-audio",
-      "cache/deck-import-123.fcrdeck",
-      marker,
-    ]);
-    expect(state.files.has("cache/other.file")).toBe(true);
-    expect(state.files.has("documents/unrelated.txt")).toBe(true);
-  });
+  );
 
   it("keeps the request after a partial failure and safely retries", () => {
     requestAppDataReset();
-    state.files.add("documents/SQLite/flashcard-reels.db");
-    state.files.add("documents/deck-audio");
-    state.failOn = "documents/deck-audio";
+    state.files.add("file:///documents/SQLite/flashcard-reels.db");
+    state.files.add("file:///documents/deck-audio");
+    state.failOn = "file:///documents/deck-audio";
     let caught: unknown;
     try {
       applyPendingAppDataReset();
