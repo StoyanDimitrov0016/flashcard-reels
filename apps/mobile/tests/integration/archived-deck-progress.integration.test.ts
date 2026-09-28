@@ -4,9 +4,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
@@ -182,7 +182,7 @@ describe("archived deck progress", () => {
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     const service = new DeckServiceImpl(
       repository,
-      new SQLiteDeckAppearanceRepository(database.drizzle),
+      new SQLiteDeckThemeSelectionRepository(database.drizzle),
       new SQLiteDeckRemovalTransaction(database.drizzle),
       null,
       graph.study

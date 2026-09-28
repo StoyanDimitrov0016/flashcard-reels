@@ -17,8 +17,8 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
   DeckContentProvider,
@@ -139,7 +139,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     harness.services = {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),
-        new SQLiteDeckAppearanceRepository(database.drizzle),
+        new SQLiteDeckThemeSelectionRepository(database.drizzle),
         new SQLiteDeckRemovalTransaction(database.drizzle),
         null,
         graph.study

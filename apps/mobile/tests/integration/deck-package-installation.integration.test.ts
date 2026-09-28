@@ -20,7 +20,7 @@ import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-dec
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import {
-  deckAppearances,
+  deckThemeSelections,
   flashcardMemoryStates,
   flashcardReviewAttempts,
 } from "@/infrastructure/sqlite/schema";
@@ -278,10 +278,10 @@ describe("deck package installation", () => {
     expect(initialInstall.status).toBe("installed");
     expect(
       await database.drizzle
-        .select({ presetId: deckAppearances.presetId })
-        .from(deckAppearances)
-        .where(eq(deckAppearances.deckId, TEST_DECK_ID))
-    ).toEqual([{ presetId: "graphite" }]);
+        .select({ theme: deckThemeSelections.theme })
+        .from(deckThemeSelections)
+        .where(eq(deckThemeSelections.deckId, TEST_DECK_ID))
+    ).toEqual([{ theme: "graphite" }]);
     expect(audio.staged).toHaveLength(1);
     expect(audio.activated).toHaveLength(1);
     const sessionId = await reviewCard(graph, database, cardA.id, false);

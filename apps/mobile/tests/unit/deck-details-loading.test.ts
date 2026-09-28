@@ -6,7 +6,7 @@ const harness = vi.hoisted(() => ({
   effect: undefined as (() => void | (() => void)) | undefined,
   findDeck: vi.fn(),
   cards: vi.fn(),
-  appearance: vi.fn(),
+  themeSelection: vi.fn(),
   progress: vi.fn(),
 }));
 vi.mock("react", () => ({
@@ -22,7 +22,7 @@ vi.mock("react", () => ({
 }));
 vi.mock("@/infrastructure/app-services", () => ({
   useAppServices: () => ({
-    deckService: { findById: harness.findDeck, getAppearance: harness.appearance },
+    deckService: { findById: harness.findDeck, getThemeSelection: harness.themeSelection },
     flashcardService: { listByDeckId: harness.cards },
     flashcardProgressService: { findByFlashcardIds: harness.progress },
   }),
@@ -46,7 +46,7 @@ describe("deck detail loading after content changes", () => {
     harness.effect = undefined;
     harness.findDeck.mockResolvedValue(null);
     harness.cards.mockResolvedValue([]);
-    harness.appearance.mockResolvedValue(null);
+    harness.themeSelection.mockResolvedValue(null);
     harness.progress.mockResolvedValue(new Map());
   });
 
