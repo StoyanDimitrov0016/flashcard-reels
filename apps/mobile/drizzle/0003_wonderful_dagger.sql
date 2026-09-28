@@ -1,1 +1,0 @@
-ALTER TABLE `flashcards` ADD `lesson_id` text;

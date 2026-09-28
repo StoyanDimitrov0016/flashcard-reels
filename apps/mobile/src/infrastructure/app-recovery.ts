@@ -5,7 +5,12 @@ import { Platform } from "react-native";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const RESET_MARKER = "flashcard-reels-reset-pending";
-const DATABASE_FILES = ["flashcard-reels.db", "flashcard-reels-v2.db", "ExpoSQLiteStorage"];
+const DATABASE_FILES = [
+  "flashcard-reels.db",
+  "flashcard-reels-v2.db",
+  "flashcard-reels-v3.db",
+  "ExpoSQLiteStorage",
+];
 const DeckImportFileNamePattern = /^deck-import-.*\.fcrdeck$/;
 let storagePrepared = false;
 
