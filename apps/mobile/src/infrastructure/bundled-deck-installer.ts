@@ -1,9 +1,9 @@
 import type { Clock } from "@/shared/domain/clock";
 
 // oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
-import { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import { Deck } from "@/features/decks/domain/deck.model";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
 import {
@@ -28,7 +28,7 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
     deckRepository,
     sessionSettlement: null,
   });
-  const appearanceRepository = new SQLiteDeckAppearanceRepository(database);
+  const themeSelectionRepository = new SQLiteDeckThemeSelectionRepository(database);
   for (const definition of Object.values(bundledDeckRegistry)) {
     if (await removedDeckRepository.wasRemoved(definition.id)) {
       continue;
@@ -41,10 +41,10 @@ export async function installBundledDecks(database: AppDatabase, clock: Clock): 
     if (!shouldApplyBundledAppearance(result.status)) {
       continue;
     }
-    await appearanceRepository.save(
-      new DeckAppearance({
+    await themeSelectionRepository.save(
+      new DeckThemeSelection({
         deckId: definition.id,
-        presetId: definition.appearance.presetId,
+        theme: definition.appearance.theme,
       })
     );
     const deck = await deckRepository.findById(definition.id);

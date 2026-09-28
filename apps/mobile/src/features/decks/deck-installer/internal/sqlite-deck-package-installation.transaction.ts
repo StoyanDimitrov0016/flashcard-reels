@@ -9,7 +9,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { DeckPackageVersionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import {
   decks,
-  deckAppearances,
+  deckThemeSelections,
   deckProgress,
   flashcardMemoryStates,
   flashcards,
@@ -105,10 +105,10 @@ export class SQLiteDeckPackageInstallationTransaction<
           })
           .run();
         transaction
-          .insert(deckAppearances)
+          .insert(deckThemeSelections)
           .values({
             deckId: deckPackage.id,
-            presetId: "graphite",
+            theme: "graphite",
           })
           .onConflictDoNothing()
           .run();

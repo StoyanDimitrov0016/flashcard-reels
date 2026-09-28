@@ -4,9 +4,9 @@ import { File } from "expo-file-system";
 import type { DeckCoverAsset, DeckId } from "@/features/decks/domain/deck.model";
 
 import {
-  isDeckAppearancePresetId,
-  type DeckAppearancePresetId,
-} from "@/features/decks/domain/deck-appearance.model";
+  isDeckThemeId,
+  type DeckThemeId,
+} from "@/features/decks/domain/deck-theme-selection.model";
 import registryMetadata from "@/infrastructure/bundled-deck-registry.json";
 
 // Metro must see a static import for every bundled asset; registry metadata alone cannot
@@ -18,7 +18,7 @@ export type BundledDeckDefinition = Readonly<{
   version: number;
   asset: number;
   appearance: Readonly<{
-    presetId: DeckAppearancePresetId;
+    theme: DeckThemeId;
     coverAsset: DeckCoverAsset;
   }>;
 }>;
@@ -49,12 +49,12 @@ export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>
       if (!isDeckCoverAsset(metadata.appearance.coverAsset)) {
         throw new Error(`Invalid cover asset ${metadata.appearance.coverAsset}`);
       }
-      if (!isDeckAppearancePresetId(metadata.appearance.presetId)) {
-        throw new Error(`Invalid deck appearance preset ${metadata.appearance.presetId}`);
+      if (!isDeckThemeId(metadata.appearance.theme)) {
+        throw new Error(`Invalid deck theme ${metadata.appearance.theme}`);
       }
       const definition: BundledDeckDefinition = {
         appearance: {
-          presetId: metadata.appearance.presetId,
+          theme: metadata.appearance.theme,
           coverAsset: metadata.appearance.coverAsset,
         },
         asset,

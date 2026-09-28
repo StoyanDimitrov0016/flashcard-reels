@@ -9,9 +9,9 @@ import { SavedProgressServiceImpl } from "@/features/decks/application/saved-pro
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
 import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
@@ -39,7 +39,7 @@ export function createDeckServices({ database, clock, studyService }: CreateDeck
     deckPackagePicker: new ExpoDeckPackagePicker(),
     deckService: new DeckServiceImpl(
       deckRepository,
-      new SQLiteDeckAppearanceRepository(database),
+      new SQLiteDeckThemeSelectionRepository(database),
       new SQLiteDeckRemovalTransaction(database),
       deckAudioRemover,
       studyService

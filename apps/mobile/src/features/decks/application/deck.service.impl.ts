@@ -1,6 +1,6 @@
 import type { DeckRemovalTransaction } from "@/features/decks/application/deck-removal.transaction";
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import type { DeckAppearanceRepository } from "@/features/decks/domain/deck-appearance.repository";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
+import type { DeckThemeSelectionRepository } from "@/features/decks/domain/deck-theme-selection.repository";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { DeckAudioRemover, DeckService } from "@/features/decks/domain/deck.service";
@@ -9,20 +9,20 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 export class DeckServiceImpl implements DeckService {
   private readonly deckRepository: DeckRepository;
   private readonly deckRemovalTransaction: DeckRemovalTransaction;
-  private readonly deckAppearanceRepository: DeckAppearanceRepository;
+  private readonly deckThemeSelectionRepository: DeckThemeSelectionRepository;
   private readonly deckAudioRemover: DeckAudioRemover | null;
   private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
     deckRepository: DeckRepository,
-    deckAppearanceRepository: DeckAppearanceRepository,
+    deckThemeSelectionRepository: DeckThemeSelectionRepository,
     deckRemovalTransaction: DeckRemovalTransaction,
     deckAudioRemover: DeckAudioRemover | null = null,
     sessionSettlement: StudySessionSettlement | null = null
   ) {
     this.deckRepository = deckRepository;
     this.deckRemovalTransaction = deckRemovalTransaction;
-    this.deckAppearanceRepository = deckAppearanceRepository;
+    this.deckThemeSelectionRepository = deckThemeSelectionRepository;
     this.deckAudioRemover = deckAudioRemover;
     this.sessionSettlement = sessionSettlement;
   }
@@ -35,20 +35,20 @@ export class DeckServiceImpl implements DeckService {
     return this.deckRepository.findByIds(ids);
   }
 
-  async getAppearance(deckId: DeckId): Promise<DeckAppearance | null> {
-    return this.deckAppearanceRepository.findByDeckId(deckId);
+  async getThemeSelection(deckId: DeckId): Promise<DeckThemeSelection | null> {
+    return this.deckThemeSelectionRepository.findByDeckId(deckId);
   }
 
-  async getAppearances(deckIds: readonly DeckId[]): Promise<DeckAppearance[]> {
-    return this.deckAppearanceRepository.findAppearancesByDeckIds(deckIds);
+  async getThemeSelections(deckIds: readonly DeckId[]): Promise<DeckThemeSelection[]> {
+    return this.deckThemeSelectionRepository.findThemeSelectionsByDeckIds(deckIds);
   }
 
   async list(): Promise<Deck[]> {
     return this.deckRepository.list();
   }
 
-  async saveAppearance(appearance: DeckAppearance): Promise<void> {
-    return this.deckAppearanceRepository.save(appearance);
+  async saveThemeSelection(themeSelection: DeckThemeSelection): Promise<void> {
+    return this.deckThemeSelectionRepository.save(themeSelection);
   }
 
   async remove(id: DeckId): Promise<void> {

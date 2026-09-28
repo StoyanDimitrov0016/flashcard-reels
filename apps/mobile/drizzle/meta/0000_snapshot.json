@@ -1,47 +1,9 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "76da0e46-42af-4fc8-bc1a-0c27c60d5f7e",
+  "id": "4dc1e704-495a-4a74-8833-0f647e759d8b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "deck_appearances": {
-      "name": "deck_appearances",
-      "columns": {
-        "deck_id": {
-          "name": "deck_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "preset_id": {
-          "name": "preset_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "deck_appearances_deck_id_decks_id_fk": {
-          "name": "deck_appearances_deck_id_decks_id_fk",
-          "tableFrom": "deck_appearances",
-          "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "deck_progress": {
       "name": "deck_progress",
       "columns": {
@@ -83,6 +45,60 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "deck_theme_selections": {
+      "name": "deck_theme_selections",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6))))"
+        },
+        "deck_id": {
+          "name": "deck_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "theme": {
+          "name": "theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "deck_theme_selections_deck_id_unique": {
+          "name": "deck_theme_selections_deck_id_unique",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "deck_theme_selections_deck_id_decks_id_fk": {
+          "name": "deck_theme_selections_deck_id_decks_id_fk",
+          "tableFrom": "deck_theme_selections",
+          "tableTo": "decks",
+          "columnsFrom": [
+            "deck_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -282,6 +298,153 @@
         "flashcard_memory_states_learning_steps_check": {
           "name": "flashcard_memory_states_learning_steps_check",
           "value": "\"flashcard_memory_states\".\"learning_steps\" >= 0"
+        }
+      }
+    },
+    "flashcard_progress": {
+      "name": "flashcard_progress",
+      "columns": {
+        "flashcard_id": {
+          "name": "flashcard_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deck_id": {
+          "name": "deck_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "review_count": {
+          "name": "review_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "again_count": {
+          "name": "again_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "hard_count": {
+          "name": "hard_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "good_count": {
+          "name": "good_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "easy_count": {
+          "name": "easy_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "first_reviewed_at": {
+          "name": "first_reviewed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_reviewed_at": {
+          "name": "last_reviewed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reset_at": {
+          "name": "reset_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "flashcard_progress_deck_id_idx": {
+          "name": "flashcard_progress_deck_id_idx",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": false
+        },
+        "flashcard_progress_reset_at_idx": {
+          "name": "flashcard_progress_reset_at_idx",
+          "columns": [
+            "reset_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "flashcard_progress_review_count_check": {
+          "name": "flashcard_progress_review_count_check",
+          "value": "\"flashcard_progress\".\"review_count\" >= 0"
+        },
+        "flashcard_progress_again_count_check": {
+          "name": "flashcard_progress_again_count_check",
+          "value": "\"flashcard_progress\".\"again_count\" >= 0"
+        },
+        "flashcard_progress_hard_count_check": {
+          "name": "flashcard_progress_hard_count_check",
+          "value": "\"flashcard_progress\".\"hard_count\" >= 0"
+        },
+        "flashcard_progress_good_count_check": {
+          "name": "flashcard_progress_good_count_check",
+          "value": "\"flashcard_progress\".\"good_count\" >= 0"
+        },
+        "flashcard_progress_easy_count_check": {
+          "name": "flashcard_progress_easy_count_check",
+          "value": "\"flashcard_progress\".\"easy_count\" >= 0"
+        },
+        "flashcard_progress_counter_sum_check": {
+          "name": "flashcard_progress_counter_sum_check",
+          "value": "\"flashcard_progress\".\"review_count\" = \"flashcard_progress\".\"again_count\" + \"flashcard_progress\".\"hard_count\" + \"flashcard_progress\".\"good_count\" + \"flashcard_progress\".\"easy_count\""
+        },
+        "flashcard_progress_reviewed_at_presence_check": {
+          "name": "flashcard_progress_reviewed_at_presence_check",
+          "value": "(\"flashcard_progress\".\"review_count\" = 0 AND \"flashcard_progress\".\"first_reviewed_at\" IS NULL AND \"flashcard_progress\".\"last_reviewed_at\" IS NULL) OR (\"flashcard_progress\".\"review_count\" > 0 AND \"flashcard_progress\".\"first_reviewed_at\" IS NOT NULL AND \"flashcard_progress\".\"last_reviewed_at\" IS NOT NULL)"
+        },
+        "flashcard_progress_reviewed_at_order_check": {
+          "name": "flashcard_progress_reviewed_at_order_check",
+          "value": "\"flashcard_progress\".\"first_reviewed_at\" IS NULL OR \"flashcard_progress\".\"last_reviewed_at\" IS NULL OR \"flashcard_progress\".\"first_reviewed_at\" <= \"flashcard_progress\".\"last_reviewed_at\""
         }
       }
     },
@@ -527,11 +690,11 @@
         }
       }
     },
-    "flashcard_progress": {
-      "name": "flashcard_progress",
+    "lessons": {
+      "name": "lessons",
       "columns": {
-        "flashcard_id": {
-          "name": "flashcard_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
@@ -544,76 +707,22 @@
           "notNull": true,
           "autoincrement": false
         },
-        "review_count": {
-          "name": "review_count",
+        "order": {
+          "name": "order",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "again_count": {
-          "name": "again_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "hard_count": {
-          "name": "hard_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "good_count": {
-          "name": "good_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "easy_count": {
-          "name": "easy_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "first_reviewed_at": {
-          "name": "first_reviewed_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
-        "last_reviewed_at": {
-          "name": "last_reviewed_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "reset_at": {
-          "name": "reset_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "updated_at": {
-          "name": "updated_at",
+        "content": {
+          "name": "content",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -621,58 +730,69 @@
         }
       },
       "indexes": {
-        "flashcard_progress_deck_id_idx": {
-          "name": "flashcard_progress_deck_id_idx",
+        "lessons_deck_id_idx": {
+          "name": "lessons_deck_id_idx",
           "columns": [
             "deck_id"
           ],
           "isUnique": false
         },
-        "flashcard_progress_reset_at_idx": {
-          "name": "flashcard_progress_reset_at_idx",
+        "lessons_order_unique": {
+          "name": "lessons_order_unique",
           "columns": [
-            "reset_at"
+            "deck_id",
+            "order"
           ],
-          "isUnique": false
+          "isUnique": true
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "lessons_deck_id_decks_id_fk": {
+          "name": "lessons_deck_id_decks_id_fk",
+          "tableFrom": "lessons",
+          "tableTo": "decks",
+          "columnsFrom": [
+            "deck_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
-        "flashcard_progress_review_count_check": {
-          "name": "flashcard_progress_review_count_check",
-          "value": "\"flashcard_progress\".\"review_count\" >= 0"
-        },
-        "flashcard_progress_again_count_check": {
-          "name": "flashcard_progress_again_count_check",
-          "value": "\"flashcard_progress\".\"again_count\" >= 0"
-        },
-        "flashcard_progress_hard_count_check": {
-          "name": "flashcard_progress_hard_count_check",
-          "value": "\"flashcard_progress\".\"hard_count\" >= 0"
-        },
-        "flashcard_progress_good_count_check": {
-          "name": "flashcard_progress_good_count_check",
-          "value": "\"flashcard_progress\".\"good_count\" >= 0"
-        },
-        "flashcard_progress_easy_count_check": {
-          "name": "flashcard_progress_easy_count_check",
-          "value": "\"flashcard_progress\".\"easy_count\" >= 0"
-        },
-        "flashcard_progress_counter_sum_check": {
-          "name": "flashcard_progress_counter_sum_check",
-          "value": "\"flashcard_progress\".\"review_count\" = \"flashcard_progress\".\"again_count\" + \"flashcard_progress\".\"hard_count\" + \"flashcard_progress\".\"good_count\" + \"flashcard_progress\".\"easy_count\""
-        },
-        "flashcard_progress_reviewed_at_presence_check": {
-          "name": "flashcard_progress_reviewed_at_presence_check",
-          "value": "(\"flashcard_progress\".\"review_count\" = 0 AND \"flashcard_progress\".\"first_reviewed_at\" IS NULL AND \"flashcard_progress\".\"last_reviewed_at\" IS NULL) OR (\"flashcard_progress\".\"review_count\" > 0 AND \"flashcard_progress\".\"first_reviewed_at\" IS NOT NULL AND \"flashcard_progress\".\"last_reviewed_at\" IS NOT NULL)"
-        },
-        "flashcard_progress_reviewed_at_order_check": {
-          "name": "flashcard_progress_reviewed_at_order_check",
-          "value": "\"flashcard_progress\".\"first_reviewed_at\" IS NULL OR \"flashcard_progress\".\"last_reviewed_at\" IS NULL OR \"flashcard_progress\".\"first_reviewed_at\" <= \"flashcard_progress\".\"last_reviewed_at\""
+        "lessons_order_check": {
+          "name": "lessons_order_check",
+          "value": "\"lessons\".\"order\" >= 0"
         }
       }
+    },
+    "progress_backup_state": {
+      "name": "progress_backup_state",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "safety_copy_file_name": {
+          "name": "safety_copy_file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "removed_decks": {
       "name": "removed_decks",
