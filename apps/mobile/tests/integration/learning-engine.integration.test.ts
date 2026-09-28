@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type {
-  FlashcardMemoryState,
-  SchedulerMemoryState,
-} from "@/features/learning-engine/domain/flashcard-memory-state";
+import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 
@@ -167,6 +164,66 @@ describe("SQLite learning-engine finalization", () => {
     });
   });
 
+  it("counts a same-day recurrence without rescheduling memory, then learns again the next day", async () => {
+    const clock = new TestClock();
+    clock.advance(new Date(2026, 0, 10, 12).getTime() - Date.parse("2026-01-01T00:00:00.000Z"));
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator(), () => 0.5);
+    const firstAttempt = await graph.study.startAttempt(makeFlashcard(1).id, 0, testId(900));
+    await graph.study.rateAttempt(firstAttempt, "again");
+    const firstRating = await attempts.findById(firstAttempt);
+    const firstRatedAt = firstRating?.ratedAt;
+    expect(firstRatedAt).not.toBeNull();
+    await graph.study.updateSessionReelPosition(testId(900), 5);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+    const firstState = await memoryStates.findByFlashcardId(makeFlashcard(1).id);
+    expect(firstState?.lastReviewAt).toBe(firstRatedAt);
+    expect(Date.parse(firstState?.dueAt ?? "") - Date.parse(firstRatedAt ?? "")).toBeCloseTo(
+      24 * 60 * 60 * 1000,
+      -5
+    );
+
+    const scheduledRecurrences = await graph.recurrences.listBySessionId(testId(900));
+    const scheduledRecurrence = scheduledRecurrences[0];
+    if (!scheduledRecurrence) {
+      throw new Error("Expected an Again recurrence");
+    }
+    expect(scheduledRecurrence).toMatchObject({
+      flashcardId: makeFlashcard(1).id,
+      targetReelPosition: 8,
+    });
+    const recurrenceAttempt = await graph.study.startAttempt(makeFlashcard(1).id, 8, testId(900));
+    await graph.study.rateAttempt(recurrenceAttempt, "good");
+    await graph.study.consumeRecurrence(scheduledRecurrence.id);
+    await graph.study.updateSessionReelPosition(testId(900), 13);
+    await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
+
+    expect(await memoryStates.findByFlashcardId(makeFlashcard(1).id)).toEqual(firstState);
+    expect(
+      await database.getAllAsync("SELECT rating FROM review_events ORDER BY reviewed_at")
+    ).toEqual([{ rating: "again" }, { rating: "good" }]);
+
+    clock.advance(24 * 60 * 60 * 1000);
+    const nextDayAttempt = await graph.study.startAttempt(makeFlashcard(1).id, 16, testId(900));
+    await graph.study.rateAttempt(nextDayAttempt, "good");
+    const nextDayRating = await attempts.findById(nextDayAttempt);
+    const nextDayRatedAt = nextDayRating?.ratedAt;
+    await graph.study.completeSession(testId(900));
+
+    expect(await memoryStates.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
+      lastReviewAt: nextDayRatedAt,
+      reps: 2,
+    });
+    expect(
+      await database.getAllAsync("SELECT rating FROM review_events ORDER BY reviewed_at")
+    ).toEqual([{ rating: "again" }, { rating: "good" }, { rating: "good" }]);
+    expect(
+      await database.getFirstAsync(
+        "SELECT review_count, again_count, good_count FROM flashcard_progress WHERE flashcard_id = ?",
+        makeFlashcard(1).id
+      )
+    ).toEqual({ review_count: 3, again_count: 1, good_count: 2 });
+  });
+
   it("applies repeated reviews in ratedAt order rather than reel order", async () => {
     const earlierReelAttempt = await createAttempt(907, 0);
     const laterReelAttempt = await createAttempt(908, 1);
@@ -184,21 +241,15 @@ describe("SQLite learning-engine finalization", () => {
       "good",
       laterRatingAt
     ).memoryState;
-    const expected = scheduler.review(
-      earlierReelAttempt.flashcardId,
-      withPersistence(firstExpected),
-      "again",
-      earlierRatingAt
-    ).memoryState;
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
     await graph.study.updateSessionReelPosition(testId(900), 6);
     await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
 
     const actual = await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId);
-    expect(actual).toMatchObject(expected);
-    expect(actual?.reps).toBe(2);
-    expect(actual?.lastReviewAt).toBe(earlierRatingAt);
+    expect(actual).toMatchObject(firstExpected);
+    expect(actual?.reps).toBe(1);
+    expect(actual?.lastReviewAt).toBe(laterRatingAt);
   });
 
   it("keeps session-completion reviews chronological across three attempts", async () => {
@@ -221,26 +272,14 @@ describe("SQLite learning-engine finalization", () => {
       "good",
       firstRatingAt
     ).memoryState;
-    const afterHard = scheduler.review(
-      firstReelAttempt.flashcardId,
-      withPersistence(afterGood),
-      "hard",
-      secondRatingAt
-    ).memoryState;
-    const expected = scheduler.review(
-      firstReelAttempt.flashcardId,
-      withPersistence(afterHard),
-      "easy",
-      thirdRatingAt
-    ).memoryState;
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
     await graph.study.completeSession(testId(900));
 
     const actual = await memoryStates.findByFlashcardId(firstReelAttempt.flashcardId);
-    expect(actual).toMatchObject(expected);
-    expect(actual?.reps).toBe(3);
-    expect(actual?.lastReviewAt).toBe(thirdRatingAt);
+    expect(actual).toMatchObject(afterGood);
+    expect(actual?.reps).toBe(1);
+    expect(actual?.lastReviewAt).toBe(firstRatingAt);
   });
 
   it("defers a cross-window review until an earlier same-card review is eligible", async () => {
@@ -271,15 +310,9 @@ describe("SQLite learning-engine finalization", () => {
       "good",
       laterRatingAt
     ).memoryState;
-    const expected = scheduler.review(
-      earlierReelAttempt.flashcardId,
-      withPersistence(afterLaterReview),
-      "again",
-      earlierRatingAt
-    ).memoryState;
     const actual = await memoryStates.findByFlashcardId(earlierReelAttempt.flashcardId);
 
-    expect(actual).toMatchObject(expected);
+    expect(actual).toMatchObject(afterLaterReview);
     const laterAttemptAfterSecondPass = await attempts.findById(laterReelAttempt.id);
     const earlierAttemptAfterSecondPass = await attempts.findById(earlierReelAttempt.id);
     expect(laterAttemptAfterSecondPass?.finalizedAt).not.toBeNull();
@@ -310,8 +343,8 @@ describe("SQLite learning-engine finalization", () => {
     ]);
 
     const state = await memoryStates.findByFlashcardId(firstAttempt.flashcardId);
-    expect(state?.reps).toBe(2);
-    expect(state?.lastReviewAt).toBe("2026-01-01T00:02:00.000Z");
+    expect(state?.reps).toBe(1);
+    expect(state?.lastReviewAt).toBe("2026-01-01T00:01:00.000Z");
     expect(trackingFinalization.maximumConcurrentCalls).toBe(1);
     expect(trackingFinalization.finalizedAttemptIds).toEqual([firstAttempt.id, secondAttempt.id]);
     const finalizedFirstAttempt = await attempts.findById(firstAttempt.id);
@@ -400,14 +433,6 @@ describe("SQLite learning-engine finalization", () => {
     return attempt;
   }
 });
-
-function withPersistence(state: SchedulerMemoryState): FlashcardMemoryState {
-  return {
-    ...state,
-    createdAt: FINALIZED_AT,
-    updatedAt: FINALIZED_AT,
-  };
-}
 
 class TrackingFinalizationTransaction implements ReviewAttemptFinalizationTransaction {
   private activeCalls = 0;
