@@ -1,6 +1,7 @@
 # Android manual device checklist
 
-Use a preview APK and a physical Android device. Mark each item after verifying it.
+Use an EAS preview APK on a physical Android device. Mark each item after verifying it, and
+record the tested commit, build, device, and date with the results.
 
 ## Fresh install
 
@@ -25,17 +26,17 @@ Use a preview APK and a physical Android device. Mark each item after verifying 
 - [ ] Show the deck's phone-transfer QR code.
 - [ ] In the app, choose Library → Import → Scan QR code and grant camera access.
 - [ ] Scan the QR code; confirm the app reports download/import progress and concise success feedback.
-- [ ] Confirm the imported deck, audio, version, and learner-history behavior match a local-file import.
+- [ ] Confirm the imported deck, audio, revision, and learner-history behavior match a local-file import.
 - [ ] Retry with an expired or invalid code; confirm no partial deck or permanent audio is left behind.
 
-## Version behavior
+## Revision behavior
 
 Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-deck generator.
 
 - [ ] Import v1 again; confirm already-current/no-op feedback and unchanged content.
 - [ ] Import v2; confirm updated feedback and updated content.
 - [ ] Confirm the removed card no longer appears, existing history remains, and the new card is new.
-- [ ] Attempt v1 after v2; confirm lower-version rejection and no content change.
+- [ ] Attempt v1 after v2; confirm lower-revision rejection and no content change.
 
 ## Archived deck progress
 
@@ -59,11 +60,13 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 - [ ] Confirm the previous local progress backup can be shared after import. Import an invalid or damaged JSON file and confirm existing progress remains unchanged.
 - [ ] Import a backup containing a removed deck on a device without that deck. Confirm the progress appears in Archived progress. Install the deck and confirm the existing Continue / Start fresh choice appears.
 - [ ] After restoring a backup, return to Discover and Focus and confirm neither uses a stale study session. Check that downloaded decks, audio, appearance, and preferences remain unchanged.
+- [ ] Export from one install, then import that exact file into a clean install, or after a full app data reset with the file kept outside the app. Install the matching deck and check the studied deck count, review counts, due state, and one resumed card.
+- [ ] Import the same file again and confirm nothing is replaced.
 
-## Phase 0 runtime stabilization smoke sequence
+## Runtime smoke sequence
 
 - [ ] Launch in both dark and light/device theme.
-- [ ] Vertically page cards and horizontally page all five primary tabs; confirm the gestures do not conflict.
+- [ ] Vertically page cards and horizontally page every primary destination; confirm the gestures do not conflict.
 - [ ] Hold a Discover card to enter Focus and confirm the revealed side and selected rating carry over once.
 - [ ] Swipe from For you to Focus to Reading. Confirm the header underline follows the swipe, the header is not tappable, and it is gone on Reading. Confirm the Study icon stays active on both feeds.
 - [ ] Background Focus past its inactivity timeout, resume, and confirm it opens the replacement session without replaying handoff state.

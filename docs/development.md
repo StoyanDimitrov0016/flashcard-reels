@@ -1,170 +1,123 @@
-# Development guide
+# Development
 
-## JSX and error conventions
+## Commands
 
-React permits JSX variables; avoiding local JSX staging is a project readability preference, not a claim that it is invalid React. Derive conditions/data above the return, keep markup in the returned tree, and extract substantial reused branches into named, module-scope components. Keep hooks unconditional. See [React conditional rendering](https://react.dev/learn/conditional-rendering) and [Codebase Preferences](codebase-preferences.md).
-
-`unicorn/custom-error-definition` is disabled because our errors delegate their name to the shared object constructor; the syntactic rule cannot validate that contract. Runtime error-contract tests, rather than repeated suppression comments, check names, inheritance, codes and causes. Other lint rules remain enabled.
-
-## Prerequisites
-
-- Node.js and npm
-- Expo Go for a physical device, or an Android/iOS simulator
-- EAS CLI only when creating cloud builds
-
-Install dependencies and start Expo:
+Root scripts orchestrate the whole repository:
 
 ```bash
-npm install
-npm run dev:mobile
+npm run dev:mobile     # Expo; scan with Expo Go or press a / i / w
+npm run dev:web        # Next.js portal
+npm run check          # formatting, import order, custom lint rules, lint, types
+npm test               # every workspace's tests once
+npm run verify         # check, tests, dead-code analysis, production builds
 ```
 
-For app-local development, change to the mobile workspace and use its local script:
+For routine work, run the workspace's own scripts from `apps/mobile` or `apps/web` so unrelated
+workspaces are not validated. In `apps/mobile`, `npm run verify` adds Drizzle, architecture,
+Expo Doctor, and Android export checks; run it after native, Expo, database, bundled-deck, or
+Android changes. Run Vitest with `--watch` for an interactive loop.
 
-```bash
-cd apps/mobile
-npm run dev
-```
+Expo and Next.js commands must run in their workspace. `npx expo start` from the root misses
+`expo-router/entry` and looks for a root `App` file.
 
-From the Expo terminal, scan the QR code or press `a`, `i`, or `w` for Android, iOS, or web.
+While Metro runs, press `j` for React Native DevTools and `m` for the developer menu.
 
-## Local Windows emulator workaround
+## CI
 
-These commands are intentionally specific to Stoyan's current Windows laptop.
-Android Emulator 37.1.11 freezes before guest boot on this machine; Google's
-archived Emulator 36.6.11 at `D:\AndroidEmulatorArchive\36.6.11` works with the
-`Expo_API_35_Stable` AVD. This is a temporary host-tool workaround, not a
-portable project or CI requirement. Re-test a newer stable Android Emulator
-when Google publishes one, then remove this section and the two machine scripts
-once the managed version boots normally.
+`.github/workflows/ci.yml` runs on every pull request, whatever its target, and on pushes to `main`: formatting,
+lint, types, all tests, a production dependency audit, the web build, database validation,
+dead-code checks, Expo Doctor, and an Android export. Every job installs through
+`.github/actions/setup-workspace` with the Node version from `.node-version`, the npm version
+from the root `package.json`, and `npm ci`. Pushing a feature branch alone does not run CI, and
+re-running an old workflow does not pick up newer commits.
 
-Start the emulator, wait for Android to finish booting, and open the app in
-Expo Go:
+## Dependencies
 
-```powershell
-npm run android:machine:start -w @flashcard-reels/mobile
-```
-
-Press `Ctrl+C` to stop the foreground Metro process. To clean up Metro on port
-8081, the local emulator, and adb together, run:
-
-```powershell
-npm run android:machine:stop -w @flashcard-reels/mobile
-```
-
-The helper accepts `FLASHCARD_ANDROID_EMULATOR` and `FLASHCARD_ANDROID_AVD`
-environment-variable overrides if the archived emulator or AVD changes.
-
-While Metro is running and the app is connected, press `j` to open React Native
-DevTools. Its Console, Sources, Network, Memory, Components, and Profiler panels
-provide JavaScript debugging and React render profiling. Press `m` for the
-in-app developer menu.
-
-## Quality checks
-
-Use the root scripts for repository-wide validation:
-
-```bash
-npm run check          # formatting/import order, custom-rule tests, lint, and types
-npm test               # all workspace test suites once
-npm run verify         # root checks, tests, dead-code analysis, and production builds
-```
-
-For focused mobile work, run local scripts from `apps/mobile`. Use the extended
-verification after native, Expo, database, bundled-deck, or Android changes:
-
-```bash
-npm run check
-npm test
-npm run verify         # includes Drizzle, architecture, Doctor, and Android export
-```
-
-See [Monorepo](monorepo.md) for command ownership. Run Vitest with `--watch` when
-an interactive test loop is useful.
-
-CI uses `.github/actions/setup-workspace` in every job to install the Node version from `.node-version`, the exact npm version declared in root `package.json`, and dependencies with root `npm ci`. The npm cache stores downloaded packages, not installed `node_modules`; the committed lockfile determines dependency versions. Mobile validation prints the checked-out commit and installed Expo version before running Doctor. Keep Doctor's compatibility check enabled and update the mobile manifest and root lockfile together when Expo recommends a patch. Re-running an old workflow run does not pick up newer commits. Feature branches are validated by pull requests targeting `main`; simply pushing a feature branch does not trigger this workflow.
-
-Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
-`tests/integration` exercises real SQLite, filesystem, and application boundaries, and
-`tests/architecture` protects static module and runtime-resource invariants. Native gestures and
-presentation remain in the manual device checklist.
+- Expo SDK packages, React, React Native, and their native libraries follow the installed SDK.
+  Update them with `npx expo install --check` in `apps/mobile`, not to npm `latest`. Keep
+  Expo Doctor's check on, and update the mobile manifest and root lockfile together.
+- Other dependencies track their latest releases.
+- All workspaces share the one `@types/react` version the Expo SDK pins. A second copy breaks
+  the web type check.
+- `react-native-tab-view` and `react-native-pager-view` are loaded by other libraries, not
+  imported. `knip.json` ignores them, and an architecture test keeps them declared.
+- `unicorn/custom-error-definition` is off because errors delegate their name to a shared
+  constructor. Error-contract tests check names, inheritance, codes, and causes instead.
 
 ## Database changes
 
-The local database schema is defined in `apps/mobile/src/infrastructure/sqlite/schema.ts`.
+The schema lives in `apps/mobile/src/infrastructure/sqlite/schema.ts`, and `drizzle/` is its
+generated output.
 
 ```bash
-npm run db:generate -w @flashcard-reels/mobile # generate a Drizzle migration
-npm run db:check -w @flashcard-reels/mobile    # validate schema and migrations
+npm run db:generate -w @flashcard-reels/mobile   # generate a migration
+npm run db:check -w @flashcard-reels/mobile      # validate schema and migrations
 ```
 
-Phase 0 uses one clean `0000` migration baseline. Whenever that baseline is regenerated, recreate local development databases before launching the app. Commit the generated baseline and metadata with schema changes.
+Until Phase 0 closes, regenerate one `0000` baseline from the current schema instead of adding
+compatibility migrations. When you do, rename `DATABASE_NAME` in `src/infrastructure/sqlite/database.ts`
+and add the new name to the reset list in `src/infrastructure/app-recovery.ts`, so existing installs
+open a fresh database instead of failing on an unknown migration history. From the first daily-use
+APK, every change is a forward migration. Commit generated migrations and metadata with the schema.
 
-## Android preview builds
-
-The `preview` profile in `eas.json` uses EAS internal distribution and produces an installable APK:
-
-```bash
-eas build --platform android --profile preview
-```
-
-Share the resulting Expo build page with testers. Internal build URLs are accessible to anyone with the link by default; Expo project settings can require sign-in when restricted access is needed. These APKs are preview artifacts, not Google Play releases.
-
-The current preview is available from the [latest APK build page](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/7ead0247-4974-48b9-abe3-9784b4fab465).
-
-## Android UI scenarios with Maestro
-
-The Maestro flows in `apps/mobile/.maestro` cover archived learning progress: continue after reinstall, start fresh after reinstall, and delete archived progress. A separate flow checks the full app data reset confirmation sheet and cancels it without resetting data. The progress-backup flow imports a checked-in backup file, verifies restored progress, and opens the native export share sheet. These flows use the versioned test deck, including its checked-in audio fixture, so no audio generation is needed.
-
-Install the [Maestro CLI](https://github.com/mobile-dev-inc/maestro-docs/blob/main/maestro-cli/how-to-install-maestro-cli/README.md) and make `maestro` available on PATH. Build a current APK with embedded JavaScript (such as a local release APK or an EAS preview APK), then run from the repository root:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File apps/mobile/scripts/run-maestro.ps1 -ApkPath C:\path\to\flashcard-reels.apk
-```
-
-The runner starts this machine's known-working Android emulator through `android-machine.ps1 -Action Ready`, installs the APK, generates the fixture package, copies it to Android Downloads, and runs each flow with cleared app state. If the current APK is already installed, omit `-ApkPath`. The runner leaves the emulator running; use `npm run android:machine:stop -w @flashcard-reels/mobile` when finished. A Maestro flow requires an installed APK; the JavaScript-only Android export check does not create one.
-
-These scenarios complement the SQLite integration tests. Device picker labels and native gestures should be checked on the target emulator before making this suite a required CI gate.
-
-## Android production builds
-
-The `production` profile produces the Android release artifact and increments the remote build version. Start it manually from EAS:
+## Android builds
 
 ```bash
 cd apps/mobile
-eas build --platform android --profile production
+eas build --platform android --profile preview      # installable APK, internal distribution
+eas build --platform android --profile production   # release artifact
 ```
 
-Repository pull requests and pushes to `main` are validated by GitHub Actions. EAS remains the release-build system and uses the Expo project's EAS credentials.
+Both profiles auto-increment the remote build version. Preview build pages are open to anyone
+with the link unless Expo project settings require sign-in. Production builds run manually or
+from `mobile-v*` tags. The README links the current preview.
 
-## Deck authoring, runtime assets, and exports
+## This Windows machine
 
-The dedicated six-card/two-audio demo source lives under `data/demo-deck` and is excluded from EAS uploads. `assets/decks` contains only the generated demo package required at runtime. Installed state is SQLite plus versioned application-owned audio; larger libraries arrive through external `.fcrdeck` import.
+These notes apply only to the owner's current laptop. Remove them when newer tools work.
 
-Startup reads the demo asset only when it is absent or newer than the installed version. Equal or newer installed versions skip the asset. Runtime verification reads the registry and demo archive directly and never depends on authoring data.
+- **Emulator:** Android Emulator 37.1.11 freezes before boot. The archived 36.6.11 in
+  `D:\AndroidEmulatorArchive\36.6.11` works with the `Expo_API_35_Stable` AVD. Override with
+  `FLASHCARD_ANDROID_EMULATOR` and `FLASHCARD_ANDROID_AVD`.
 
-After changing the source library or recordings, run:
+  ```powershell
+  npm run android:machine:start -w @flashcard-reels/mobile   # boot and open in Expo Go
+  npm run android:machine:stop -w @flashcard-reels/mobile    # stop Metro, emulator, adb
+  ```
+
+- **Gradle:** set `GRADLE_USER_HOME=D:\g`. The Cyrillic user path breaks Prefab, and a longer
+  path inside the repository breaks Ninja's 260-character limit. `D:\g\gradle.properties` runs
+  the Kotlin compiler in-process. Gradle cannot download Maven artifacts on this machine, so
+  exact versions are kept in the ignored `apps/mobile/android/.local-maven` and mapped by
+  `D:\g\local-artifacts.gradle`.
+
+- **Local release APK** (embeds JavaScript, needs no Metro), from `apps/mobile/android`:
+
+  ```powershell
+  $env:GRADLE_USER_HOME = 'D:\g'
+  $env:NODE_ENV = 'production'
+  .\gradlew.bat app:assembleRelease -x lint -x test -x extractReleaseAnnotations -x generateReleaseLintModel -x generateReleaseLintVitalModel -x lintVitalAnalyzeRelease -x lintVitalReportRelease -x lintVitalRelease --offline --init-script D:\g\local-artifacts.gradle --configure-on-demand --build-cache -PreactNativeArchitectures=x86_64
+  ```
+
+  Android installs an update only over an app signed with the same key. The EAS key lives in
+  EAS credentials, not in this project, so keep local builds on the emulator and install only
+  EAS builds on the phone. Otherwise an update needs an uninstall, which deletes all data.
+
+## Maestro
+
+Flows in `apps/mobile/.maestro` cover continuing and starting fresh after a reinstall, deleting
+archived progress, cancelling the full data reset, and importing and exporting a progress
+backup. They use the versioned test deck and its checked-in audio fixture.
+
+Install the Maestro CLI (on this machine it is in `%TEMP%\flashcard-maestro-cli\maestro\bin`),
+build an APK with embedded JavaScript, then run from the repository root:
 
 ```powershell
-npm.cmd run decks:packages -w @flashcard-reels/mobile
-npm.cmd run decks:check -w @flashcard-reels/mobile
+$env:MAESTRO_CLI_NO_ANALYTICS = '1'
+./apps/mobile/scripts/run-maestro.ps1 -ApkPath ./apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-See [Audio generation](audio-generation.md) before changing the source content or rebuilding recordings.
-
-## Local deck tooling
-
-Inspect a package without installing it:
-
-```powershell
-npm.cmd run decks:inspect -w @flashcard-reels/mobile -- path/to/deck.fcrdeck
-```
-
-Generate a small package from an editable JSON fixture:
-
-```powershell
-npm.cmd run decks:test:generate -w @flashcard-reels/mobile -- data/test-decks/versioned/v1/deck.json tmp/v1.fcrdeck
-npm.cmd run decks:test:generate -w @flashcard-reels/mobile -- data/test-decks/versioned/v2/deck.json tmp/v2.fcrdeck
-```
-
-The versioned fixtures share a deck ID and demonstrate an unchanged card, an edited card, a removed card, a new card, and optional audio. The generator and inspector use the same package contract and reader as the app; neither command installs or changes app data.
+The runner boots the emulator, installs the APK, generates the deck package, copies it and the
+backup fixture to Downloads, and runs every flow with cleared app state. Omit `-ApkPath` when
+the APK is already installed. The emulator keeps running afterwards. The file picker taps the
+Downloads drawer at `30%, 27%`; adjust it if the picker layout changes.

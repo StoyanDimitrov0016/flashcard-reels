@@ -1,33 +1,49 @@
-# Web deck portal
+# Web portal
 
-The [internal web portal](https://flashcard-reels.vercel.app/) is a Next.js catalog for browsing and transferring curated Flashcard Reels decks. It is not a second study client and does not store mobile progress.
+The [internal portal](https://flashcard-reels.vercel.app/) is how decks reach the phone. After
+signing in with the shared password, you can search decks, browse cards and lessons, download
+a `.fcrdeck`, or show a QR code that sends a deck to the phone. It never stores learning data.
 
-After signing in with the shared team password, users can search decks, browse cards and reveal answers, read a deck's lessons, download `.fcrdeck` packages, and display a phone-transfer QR code. The catalog lists every package uploaded under `decks/` in the R2 bucket, so publishing a deck needs no portal change.
+Built with Next.js App Router, Tailwind CSS, and shadcn/ui (Base UI) components. Workspace
+conventions are in `apps/web/AGENTS.md`.
 
-## Server cache
+## Routes
 
-Each server instance keeps an in-memory `lru-cache` for parsed deck summaries and previews.
-Both caches retain at most 32 entries and automatically remove entries after 30 minutes;
-reads update recency but do not extend the TTL. The preview cache also has an 8 MiB budget
-measured by the UTF-8 JSON size of its cards, lessons, and metadata. This is a content-size
-budget, not an exact JavaScript heap limit. Larger previews are served without being cached.
-Audio and complete archive bytes are never retained in these caches.
+| Route                                     | Access                   | Purpose                                               |
+| ----------------------------------------- | ------------------------ | ----------------------------------------------------- |
+| `/login`                                  | Public                   | Shared-password sign-in                               |
+| `/`                                       | Session                  | Deck catalog, filtered by `?q=`                       |
+| `/decks/<deck-id>`                        | Session                  | Cards (`?card=`, `?q=`) and lessons (`?view=lessons`) |
+| `/decks/<deck-id>/download`               | Session                  | Downloads the package                                 |
+| `POST /api/decks/<deck-id>/transfer-link` | Session                  | Creates a QR transfer link                            |
+| `/t/<token>`                              | Signed token, 10 minutes | Phone download                                        |
 
-The storage listing is reused for 60 seconds. Refreshing it removes cached revisions that
-were deleted or replaced. Concurrent preview loads share one read, and failed loads can be
-retried. All caches are local to the server instance and disappear when it restarts.
+Sign-in sets a signed, HTTP-only, same-site session cookie for 12 hours. The proxy protects
+pages and API routes, and sensitive route handlers check the session again.
+
+## Deck storage
+
+Every object under `decks/` in the R2 bucket that ends in `.fcrdeck` appears in the catalog.
+The deck ID comes from the package. Packages are read by byte range, so rendering a page never
+downloads audio. A package that fails validation is skipped and logged.
+
+Each server instance caches parsed summaries and previews in memory: at most 32 entries each,
+30 minutes each, with an 8 MiB content budget for previews. The storage listing is reused for
+60 seconds, and a re-uploaded package is read again.
 
 ## Phone transfer
 
-1. Open a deck in the portal and choose **Send to phone**.
-2. In the app, choose **Library → Import → Scan QR code**.
-3. Grant camera access and scan the code.
+1. In the portal, open a deck and choose **Send to phone**.
+2. In the app, choose **Library → Import → Scan QR code** and scan it.
+3. The QR link expires after 10 minutes. The portal redirects the phone to a 15-minute presigned
+   R2 URL, and the app installs the package through its normal installer.
 
-The QR code contains a signed transfer URL that expires after 10 minutes; the dialog shows a new code when it does. The portal redirects the phone to a short-lived Cloudflare R2 download, and the mobile app performs its normal package validation and installation.
+The app cancels a download after 60 seconds without new bytes. A slow download that keeps
+receiving data can take longer.
 
-## Vercel configuration
+## Configuration
 
-Set these server-only variables in the Vercel project:
+Server-only variables, set in Vercel and in `apps/web/.env.local` (see `.env.example`):
 
 ```text
 INTERNAL_APP_PASSWORD
@@ -38,29 +54,24 @@ R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME
 ```
 
-Leave `DECK_TRANSFER_ORIGIN` unset on Vercel. The app derives the origin from the incoming HTTPS request, which keeps production and custom-domain links correct. Set it only when a deliberate fixed origin is needed, such as a private development host; public plain HTTP is rejected.
+Never give them a `NEXT_PUBLIC_` prefix. The Vercel project root is `apps/web`.
 
-For local R2-backed phone testing, leave `DECK_TRANSFER_ORIGIN` unset in
-`apps/web/.env.local`. The QR code then points directly to HTTPS storage, so the
-phone does not need access to the laptop. These longer signed download URLs make
-denser QR codes than the compact links used in production.
+- `DECK_TRANSFER_ORIGIN`: leave unset on Vercel, so links use the request's HTTPS origin. Set
+  it only for a fixed public URL or a private development host. Public plain HTTP is rejected.
+- `LOCAL_DECKS_DIR`: points a development server at a local folder of packages instead of R2.
+  Ignored in production.
 
-To use compact links locally, configure a reachable HTTPS tunnel for the web
-server, or use the computer's LAN address, for example `http://192.168.1.20:3000`.
-Check that the phone can open that address in its browser before setting
-`DECK_TRANSFER_ORIGIN`, and restart the web dev server after changing it. A phone
-hotspot or firewall can prevent access even when the laptop is connected to the
-phone. Do not use `localhost`, which points to the phone itself when scanned. The
-Expo tunnel serves the mobile development bundle and does not expose the web server.
+### Phone testing against a local server
 
-The mobile downloader cancels a transfer after 60 seconds without receiving more
-bytes. Downloads that continue receiving data can take longer than one minute.
+With `DECK_TRANSFER_ORIGIN` unset, the QR code points straight at HTTPS R2 storage, so the
+phone does not need to reach the laptop. The code is denser because the presigned URL is long.
 
-Do not set `LOCAL_DECKS_DIR` on Vercel. It points development servers at a local folder of packages and is ignored in production.
+For compact codes, set `DECK_TRANSFER_ORIGIN` to an HTTPS tunnel or the laptop's LAN address,
+such as `http://192.168.1.20:3000`. Check that the phone's browser can open it first, and
+restart the dev server after changing it. Never use `localhost`, which is the phone itself.
+The Expo tunnel does not expose the web server.
 
-Configure the Vercel project root as `apps/web`. Never expose passwords, session secrets, or R2 credentials with a `NEXT_PUBLIC_` prefix.
-
-Run web checks from the repository root:
+## Checks
 
 ```bash
 npm run check -w @flashcard-reels/web

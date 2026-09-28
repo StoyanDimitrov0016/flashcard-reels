@@ -1,63 +1,51 @@
 # Flashcard Reels
 
-Flashcard Reels turns technical study into a fast, swipeable feed. Review short questions across JavaScript, React, system design, databases, computer science, and operating systems, then rate your recall so difficult cards return more often.
+Flashcard Reels turns technical study into a swipeable feed. Swipe through short questions,
+double-tap to reveal the answer, and rate your recall so difficult cards return more often.
+Short lessons let you learn a deck's material before you are tested on it.
 
-The project contains two connected products:
+The repository holds two products:
 
-- an Expo/React Native mobile app for local-first study;
-- an internal Next.js/Vercel portal for browsing, inspecting, and transferring larger deck libraries.
+- an Expo/React Native app for local-first study on Android;
+- an internal Next.js portal for browsing decks and sending them to the phone with a QR code.
 
-The mobile app includes a bundled demo deck, mixed and deck-focused study modes, offline audio, local progress tracking, customizable deck appearances, and portable `.fcrdeck` imports. The portal can transfer a deck directly to the app with a short-lived QR code.
+## Try it
 
-## Try the current builds
-
-[Install the latest Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/29fcdb77-61dc-48f6-9d36-a2d4503de931)
-
-[Open the internal web deck portal](https://flashcard-reels.vercel.app/)
-
-The APK is an EAS internal-distribution preview, not a Google Play release. Android may ask you to allow installation from your browser or file manager. The Expo build link is accessible to anyone who has it.
-
-The Vercel site is currently for internal use and requires the shared team password. After signing in, use the portal to search the deck catalog, inspect cards, download a `.fcrdeck` package, or show a transfer QR code for the mobile app.
+- [Latest Android preview APK](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/29fcdb77-61dc-48f6-9d36-a2d4503de931).
+  An EAS internal build, not a Google Play release; Android may ask to allow installs from
+  your browser.
+- [Web deck portal](https://flashcard-reels.vercel.app/), protected by a shared team password.
 
 ## Run locally
 
-You need Node.js 24, npm 11+, and the Expo Go app or a supported simulator.
+Requires Node.js 24 and npm 11+.
 
 ```bash
 npm install
-npm run dev:mobile
+npm run dev:mobile   # scan the QR code with Expo Go, or press a / i / w
+npm run dev:web      # needs the server-only variables in docs/web-portal.md
+npm run verify       # full repository validation
 ```
-
-Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or the mobile web target.
-
-To run the Vercel portal locally, configure its server-only environment variables first, then run:
-
-```bash
-npm run dev:web
-```
-
-See [Web portal](docs/web-portal.md) for deployment, authentication, R2, and phone-transfer details.
-
-For focused work, change to the relevant workspace and use its local scripts, such
-as `npm run check`, `npm test`, or `npm run doctor`. Root scripts are reserved
-for repository-wide orchestration and validation. See the
-[monorepo guide](docs/monorepo.md) for command and configuration ownership.
-
-## Test
-
-`npm run verify` runs the complete automated verification. Unit tests cover pure deterministic
-logic, integration tests use real SQLite/filesystem/application boundaries, and architecture tests
-protect static module and resource contracts. Native gesture and presentation checks remain in the
-manual device checklist.
 
 ## Documentation
 
-- [Product guide](docs/product-guide.md)
-- [Web portal](docs/web-portal.md)
-- [Architecture](docs/architecture.md)
-- [Deck package format](docs/deck-packages.md)
-- [Development guide](docs/development.md)
-- [Audio generation](docs/audio-generation.md)
-- [Android manual testing](docs/manual-device-testing.md)
+Start with the first three.
 
-Built with Expo, React Native, TypeScript, SQLite, Drizzle ORM, Next.js, Tailwind CSS, and Cloudflare R2.
+- [Principles](docs/principles.md): the product ideas every feature follows.
+- [Functional requirements](docs/functional-requirements.md): what the app does and does not
+  do, and what closes Phase 0.
+- [Roadmap](docs/roadmap.md): the Phase 0 order of work and what comes after.
+- [Architecture](docs/architecture.md): how the repository, mobile app, and portal fit together.
+- [Learning data](docs/learning-data.md): how progress is stored, archived, backed up, and
+  restored.
+- [Deck packages](docs/deck-packages.md): the `.fcrdeck` format, authoring, and publishing.
+- [Visual system](docs/visual-system.md): theme, deck appearance, and layout rules.
+- [Web portal](docs/web-portal.md): routes, access, storage, phone transfer, and deployment.
+- [Development](docs/development.md): commands, checks, database changes, builds, and Maestro.
+- [Manual device testing](docs/manual-device-testing.md): the Android checklist.
+- [Codebase preferences](docs/codebase-preferences.md): implementation conventions with
+  examples.
+- [Feature specs](docs/specs/README.md): the decisions behind each feature.
+
+Built with Expo, React Native, TypeScript, SQLite, Drizzle ORM, Next.js, Tailwind CSS, and
+Cloudflare R2.

@@ -11,6 +11,7 @@ Flashcard Reels is an npm-workspaces Turborepo.
 
 - `apps/mobile` - Expo / React Native app.
 - `apps/web` - Next.js internal portal.
+- `packages/deck-contract` - the shared `.fcrdeck` schema and package parser.
 - `packages/design-tokens` - framework-neutral shared package.
 
 ## Working conventions
@@ -23,6 +24,17 @@ existing one already fits.
 
 Follow `docs/codebase-preferences.md` for repository-wide implementation
 conventions and examples.
+
+## Documentation
+
+Before searching the code, read `docs/principles.md` for the product ideas,
+`docs/functional-requirements.md` for what the app does, and
+`docs/architecture.md` for how it is built. `docs/roadmap.md` holds the order
+of work. The README lists the other docs.
+
+All docs live in the root `docs/`. Each doc has one job. Extend an existing doc
+before adding a new one, keep docs concise, and update them in the same change
+as the behavior they describe.
 
 ## Commands
 

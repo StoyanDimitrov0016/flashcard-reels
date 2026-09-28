@@ -1,75 +1,124 @@
-# `.fcrdeck` deck packages
+# Deck packages
 
-`.fcrdeck` is a ZIP archive validated by `@flashcard-reels/deck-contract`. It contains one
-`deck.json` manifest and the assets named by that manifest:
+`.fcrdeck` is the portable deck format: a ZIP archive with one `deck.json` manifest and the
+assets it names. `@flashcard-reels/deck-contract` owns the format and is used by the app, the
+portal, and the tooling.
 
 ```text
 <deck-id>.fcrdeck
 ├── deck.json
-├── audio/
-│   └── <card-id>.mp3
-└── lessons/
-    └── <lesson-id>.md
+├── audio/<card-id>.mp3
+└── lessons/<lesson-id>.md
 ```
 
-The manifest uses `schema: 1` for the package format and a positive `revision` for the content
-snapshot. It includes a stable deck UUID, an `authorId` UUID, timestamps, metadata, cards, and
-lessons. A card has a stable ID, question, answer, `lessonId` (UUID or `null`), `audio` flag, and
-timestamps. A lesson has a stable ID and title. **Array position determines card and lesson
-order**; neither object has an `order` property.
+```json
+{
+  "schema": 1,
+  "id": "stable-deck-uuid",
+  "authorId": "stable-author-uuid",
+  "revision": 1,
+  "title": "Deck title",
+  "description": "Deck description",
+  "createdAt": "2026-09-28T10:00:00.000Z",
+  "updatedAt": "2026-09-28T10:00:00.000Z",
+  "cards": [
+    {
+      "id": "stable-card-uuid",
+      "question": "Question",
+      "answer": "Answer",
+      "lessonId": "stable-lesson-uuid",
+      "audio": true,
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T10:00:00.000Z"
+    }
+  ],
+  "lessons": [{ "id": "stable-lesson-uuid", "title": "Lesson title" }]
+}
+```
 
-Every card with `audio: true` requires exactly one `audio/<card-id>.mp3` file. That file contains
-the spoken question, a short pause, and the spoken answer; its playback control is on the back of the card.
-Cards with `audio: false` have no audio file. Every listed lesson requires a nonempty
-`lessons/<lesson-id>.md` file. Extra files are rejected.
+- `schema` is the package format version; `revision` is the content snapshot.
+- Array position sets card and lesson order. Neither has an `order` field.
+- `lessonId` links a card to the lesson that explains it, or is `null`.
+- A card with `audio: true` has exactly one `audio/<card-id>.mp3` that reads the question, a
+  short pause, and the answer. A card with `audio: false` has no file.
+- Every listed lesson has a non-empty `lessons/<lesson-id>.md`. Unlisted files are rejected.
 
-Package limits are 64 MiB compressed and 128 MiB expanded. Within a package, `deck.json` may be
-at most 8 MiB, each audio file 5 MiB, and each lesson file 256 KiB. The mobile installer and web
-catalog enforce these shared limits before expanding entries.
+## Limits
 
-## Updating a deck
+| Item             | Limit                               |
+| ---------------- | ----------------------------------- |
+| Cards            | 1 to 1,000                          |
+| Lessons          | up to 200                           |
+| Package          | 64 MiB compressed, 128 MiB expanded |
+| `deck.json`      | 8 MiB                               |
+| Each audio file  | 5 MiB                               |
+| Each lesson file | 256 KiB                             |
 
-Raise `revision` whenever the content snapshot changes. Importing the installed revision is a
-no-op; importing an older revision is rejected. A higher revision replaces the content while
-keeping learning history for stable card IDs. Removed cards become inactive so their history is
-retained. Keep the deck's `authorId` stable across revisions. Use a new card ID when the learning
-content changes substantially.
+The app and the portal enforce the same limits before expanding entries, and the installer
+validates the whole package before changing SQLite or installed audio.
 
-Deleting a downloaded deck archives its learning data. Reinstalling the same deck ID pauses
-study until the learner chooses to continue with saved progress or start fresh.
+## Identity and revisions
 
-File imports and QR downloads feed the same mobile installer. The installer validates the full
-package before changing SQLite or installed audio. The bundled demo is a generated package.
+- Deck, card, and lesson IDs are stable learning identities, and a card or lesson ID never
+  appears in two decks. `authorId` never changes across revisions.
+- Give a card a new ID when what it teaches changes substantially; otherwise its history
+  carries over.
+- Raise `revision` whenever content changes. The installed revision again is a no-op, a lower
+  one is rejected, and a higher one replaces content while keeping history. Removed cards keep
+  their history.
 
-## Authoring and checking
+File import, QR transfer, and the bundled demo all use the same installer.
 
-Deck sources live under `apps/mobile/data/decks/<deck-name>/`, with `deck.json`, optional
-`audio/<card-id>.mp3` files, and `lessons/<lesson-id>.md` files. The generator can also use
-combined audio from `data/technical_flashcard_library/audio` for matching stable card IDs.
+## Lessons
 
-From `apps/mobile`:
+The reader supports headings, paragraphs, bold, italic, bulleted and numbered lists, inline
+code, and fenced code blocks. Other syntax shows as plain text, links and images keep only their
+text, and nothing loads from the network.
+
+## Authoring
+
+Deck sources live in `apps/mobile/data/decks/<deck-name>/` with the package layout. Audio is
+generated with the sibling `audiofier-tts` repository; the generator also takes combined audio
+from `data/technical_flashcard_library/audio` for matching card IDs. From `apps/mobile`:
 
 ```powershell
-npm.cmd run decks:generate -- data/decks/system-design-foundations
+npm.cmd run decks:generate -- data/decks/<deck-name>   # one package in build/decks
 npm.cmd run decks:inspect -- build/decks/<deck-id>.fcrdeck
-npm.cmd run decks:curated:prepare
-npm.cmd run decks:packages
-npm.cmd run decks:check
+npm.cmd run decks:curated:prepare                     # every deck, checked together
 ```
 
-`decks:packages` regenerates the bundled demo; `decks:check` validates the runtime package
-against the bundled registry. The web portal reads the same schema 1 manifest and checks the
-archive's asset names with byte ranges, so listing and previewing decks do not download audio.
+`decks:curated:prepare` generates every source in `data/decks`, validates each package, checks
+that no deck, card, or lesson ID overlaps across decks, and writes the packages to
+`apps/mobile/build/curated-decks` and `flashcard-reels-decks.zip` at the repository root. Both
+outputs are ignored by Git.
 
-`decks:curated:prepare` generates every source in `data/decks`, validates each package with the
-shared contract, checks that deck, card, and lesson IDs do not overlap across decks, and writes
-the individual packages to `apps/mobile/build/curated-decks` and `flashcard-reels-decks.zip` at
-the repository root. The ZIP currently contains seven `.fcrdeck` packages
-ready for publication review. Generated packages and the ZIP are ignored by Git; source manifests
-and lessons are versioned. From the repository root, run `npm run r2:push-decks -- --dry-run` to
-compare that ZIP with the R2 catalog before uploading. Uploading requires an interactive `publish`
-confirmation.
+The bundled demo lives in `data/demo-deck` and ships only as the generated package in
+`assets/decks`. After changing it, run `decks:packages` and `decks:check`. On startup the app
+installs the demo only when it is missing or older than the bundled revision.
 
-The existing R2 catalog may still contain packages from the earlier format, stored under title
-based file names with `version` metadata. The publisher stops when it sees those objects. Review
-and remove that legacy catalog as a separate cutover step before using the revision based publisher.
+`data/test-decks/versioned/v1` and `v2` share a deck ID for testing updates. Build them with
+`decks:test:generate -- <deck.json> <output>`.
+
+## Publishing
+
+From the repository root:
+
+```powershell
+npm run r2:push-decks -- --dry-run   # compare flashcard-reels-decks.zip with R2
+npm run r2:push-decks                # upload after review
+```
+
+The publish check compares each package with the published deck of the same ID and reports
+added, changed, and removed cards and lessons. It blocks the whole publish when:
+
+- content changed without a higher revision, or the revision went down;
+- a published deck would move to another file name;
+- the `authorId` changed;
+- a card or lesson ID appears in more than one deck.
+
+A removed card re-added with identical text produces a warning, because a new ID resets
+progress. When R2 cannot be read, nothing uploads. Uploading requires typing `publish` in an
+interactive terminal, so an agent can prepare a review but cannot confirm it.
+
+The publisher also stops while R2 still holds packages in the earlier format. Removing them is
+a separate cutover step (G6 in the [functional requirements](functional-requirements.md)).

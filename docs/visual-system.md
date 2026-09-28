@@ -1,25 +1,43 @@
 # Visual system
 
-Recovery UI uses one contextual title, a short explanation, and relevant actions. Technical details remain collapsed. Use subheadings only to separate genuinely distinct groups; avoid decorative pills, dot-separated labels, nested headings, and repeated explanations. Controls groups related settings and places reset alongside other data actions.
+## Two palettes
 
-Flashcard Reels separates application chrome from deck content.
+- **App palette:** navigation, surfaces, sheets, overlays, gesture chrome, and Study Island
+  controls. It follows the Light, Dark, or Device setting and uses Notion-like neutrals tuned
+  for WCAG AA: body and secondary text reach 4.5:1 on every surface, tertiary text and
+  inactive icons 3:1. `apps/mobile/tests/unit/app-palette.test.ts` keeps those ratios.
+- **Deck appearance:** card background, accent, question, answer, and secondary card text. Each
+  deck uses one of ten curated presets with its own light and dark variants. Changing the app
+  theme never changes a deck's identity.
 
-The application palette owns navigation, generic surfaces, sheets, overlays, gesture chrome, and Study Island controls. Deck appearance owns the card background, accent, question, answer, and secondary card copy.
+Colors come from `@flashcard-reels/design-tokens`, shared by the app and the portal. Cards,
+controls, sheets, and touch targets take their sizes and type from the shared `sizes`,
+`fontSize`, and `fontWeight` tokens; see
+[codebase preferences §16](codebase-preferences.md#16-styles-and-constants).
 
-Decks select one of ten curated appearance presets. Each preset includes intentional light and dark variants, and the selected preset remains stable when the device or app theme changes.
+## Study feeds
 
-Reel cards use a consistent header, body, and footer structure. The Study Island reserves space beside or below answer content instead of covering it. Shared sizing and typography tokens keep cards, controls, sheets, and touch targets consistent across the mobile UI.
+- Feeds run full-bleed: the deck background extends under the status bar and the feed header.
+- The feed header is a non-interactive indicator that follows the horizontal pager.
+- Reel cards share a header, body, and footer structure.
+- The Study Island sits left, right, or below a card and reserves its space instead of
+  covering content. Rating direction changes the visual order, never the meaning of a rating.
+- The audio and Reading buttons each have a side. When one side is empty, a matching space
+  keeps the ratings centered.
+- Haptics mark meaningful events only: rating, a successful hold-to-Focus, and a successful
+  reset.
 
-The web portal uses the same product identity through the shared design-token package while adapting the layout for catalog browsing and card inspection.
+## Lists, settings, and recovery
 
-Study feeds run full-bleed: the deck background extends under the status bar and the For you and
-Focus header, which is a non-interactive indicator that follows the horizontal pager. Settings and
-reading lists use grouped rows: one raised card per section, hairline dividers inset past the
-icon, and rows of at least 52 points. Destructive rows keep the same shape and use the error color.
+- Settings and reading lists use grouped rows: one raised card per section, hairline dividers
+  inset past the icon, and rows of at least 52 points. Destructive rows keep the shape and use
+  the error color.
+- Recovery screens have one title, a short explanation, and the relevant actions, with
+  technical details collapsed.
+- Use subheadings only for genuinely distinct groups. Avoid decorative pills, dot-separated
+  labels, nested headings, and repeated explanations.
 
-Card text renders backtick spans as inline code in a monospace face. Lesson Markdown uses the
-`codeText` and `codeSurface` tokens for inline code.
+## Text
 
-The app palette follows Notion's neutrals, tuned for WCAG AA: body and secondary text reach 4.5:1
-on every surface, and tertiary text and inactive icons reach 3:1. The palette test in
-`apps/mobile/tests/unit/app-palette.test.ts` keeps those ratios.
+Backtick spans in card text render as inline code in a monospace face. Lesson Markdown uses the
+`codeText` and `codeSurface` tokens.

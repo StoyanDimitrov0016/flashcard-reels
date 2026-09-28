@@ -545,3 +545,125 @@ top-level `createAppServices` function assembles these results in dependency ord
 Use named options for factories with several inputs. Avoid mutable registration containers and
 service locators: explicit inputs and return types make the dependency graph easier to inspect.
 Keep startup-only wiring distinct when it has different dependencies from normal runtime wiring.
+
+## 14. Presentational components
+
+**Preference**
+
+A component renders JSX. Every value it shows comes from its props or from one hook it calls.
+The component body may only destructure props, call hooks, and do light formatting or
+derivation that makes the JSX easier to read, such as joining a label, choosing a color, or
+turning a count into a percentage.
+
+Data loading, persistence, business rules, and side effects live in a controller hook
+(`presentation/controllers`) or behind it in the application layer.
+
+**Correct**
+
+```tsx
+type DeckRowProps = Readonly<{
+  deck: DeckSummary;
+  onOpen: (deckId: DeckId) => void;
+}>;
+
+export function DeckRow({ deck, onOpen }: DeckRowProps) {
+  const reviewedLabel = `${deck.reviewedCount} / ${deck.cardCount} reviewed`;
+
+  return (
+    <Pressable onPress={() => onOpen(deck.id)}>
+      <Text>{deck.title}</Text>
+      <Text>{reviewedLabel}</Text>
+    </Pressable>
+  );
+}
+```
+
+**Incorrect**
+
+```tsx
+export function DeckRow({ deckId }: DeckRowProps) {
+  const [cards, setCards] = useState<Flashcard[]>([]);
+
+  useEffect(() => {
+    flashcardRepository.findByDeck(deckId).then(setCards);
+  }, [deckId]);
+
+  const reviewed = cards.filter((card) => card.reviewCount > 0 && !card.isReset).length;
+
+  return <Text>{reviewed} reviewed</Text>;
+}
+```
+
+**You can see it when**
+
+- a component file imports no repository, service, container, SQLite, or file-system module;
+- a component contains no `useEffect` that loads or writes data;
+- filtering, sorting, or reducing domain data happens in a hook or a pure function, not in
+  the component body.
+
+## 15. Pure logic in plain functions
+
+**Preference**
+
+Logic that needs no React, Expo, or I/O lives in plain exported functions: business rules in
+the feature's `domain`, and view formatting in a presentation helper such as
+`shared/presentation/format`. Components and hooks call these functions instead of
+containing the logic inline. Each function with a real rule has a unit test.
+
+**Correct**
+
+```ts
+// features/decks/domain/deck-progress.ts
+export function reviewedShare(reviewed: number, total: number): number {
+  return total === 0 ? 0 : Math.round((reviewed / total) * 100);
+}
+```
+
+**Incorrect**
+
+The same calculation copied inline into two screens.
+
+**You can see it when**
+
+- a rule used in two places exists once, in a plain function;
+- the function's file imports nothing from React, React Native, or Expo;
+- `tests/unit` has a test for each such function with a real rule.
+
+## 16. Styles and constants
+
+**Preference**
+
+Colors come from `useAppTheme()` or the deck appearance. Spacing, radii, and sizes come from
+`sizes`. Font sizes and weights come from `fontSize` and `fontWeight`. A style used by two
+screens becomes a shared component in `shared/presentation/components` or a shared style.
+Meaningful numbers, such as durations, limits, and thresholds, are named constants in the
+module that owns them.
+
+**Correct**
+
+```ts
+const styles = StyleSheet.create({
+  title: { fontSize: fontSize.title2, fontWeight: fontWeight.heavy },
+  row: {
+    borderRadius: sizes.radius.row,
+    gap: sizes.spacing.medium,
+    minHeight: sizes.control.standard,
+  },
+});
+```
+
+**Incorrect**
+
+```ts
+const styles = StyleSheet.create({
+  title: { color: "#1f1f1f", fontSize: 22, fontWeight: "800" },
+  row: { borderRadius: 14, gap: 8, minHeight: 48 },
+});
+```
+
+**You can see it when**
+
+- no component or screen file contains a hex color, or a numeric `fontSize`, `fontWeight`,
+  spacing, or radius literal;
+- two screens that look alike use the same component instead of copied style blocks;
+- no duration, limit, or threshold appears as a bare number in logic.
