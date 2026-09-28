@@ -260,10 +260,10 @@ export class SQLiteDeckPackageInstallationTransaction<
             isNull(studySessions.completedAt),
             existingDeck
               ? or(
-                  eq(studySessions.scope, "mixed"),
-                  and(eq(studySessions.scope, "focused"), eq(studySessions.deckId, deck.id))
+                  eq(studySessions.scope, "discover"),
+                  and(eq(studySessions.scope, "focus"), eq(studySessions.deckId, deck.id))
                 )
-              : eq(studySessions.scope, "mixed")
+              : eq(studySessions.scope, "discover")
           )
         )
         .all();

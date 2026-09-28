@@ -9,7 +9,7 @@ import type {
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudyService } from "@/features/study/domain/study.service";
@@ -277,10 +277,10 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       session.currentReelPosition + FEED_ENGINE_CONFIG.futureWindowSize,
       materializedThrough
     );
-    let items: StudySessionItem[] = [];
+    let items: StudySessionReel[] = [];
     let recurrences: StudySessionRecurrence[] = [];
     if (loadedFromReelPosition <= loadedThroughReelPosition) {
-      items = await this.studyService.listSessionItemsInReelPositionRange(
+      items = await this.studyService.listSessionReelsInReelPositionRange(
         session.id,
         loadedFromReelPosition,
         loadedThroughReelPosition
@@ -311,7 +311,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   }
 
   private mergeMaterializedReels(
-    items: readonly StudySessionItem[],
+    items: readonly StudySessionReel[],
     recurrences: readonly StudySessionRecurrence[],
     cardsById: ReadonlyMap<string, Flashcard>,
     fromReelPosition: number,

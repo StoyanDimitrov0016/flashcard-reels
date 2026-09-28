@@ -1,6 +1,6 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 
-export type StudySessionScope = "mixed" | "focused";
+export type StudySessionScope = "discover" | "focus";
 export type StudySessionFields = Readonly<{
   completedAt: string | null;
   aggregatedThroughReelPosition: number;

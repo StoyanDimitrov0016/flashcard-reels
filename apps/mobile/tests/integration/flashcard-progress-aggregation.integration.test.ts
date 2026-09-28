@@ -12,7 +12,7 @@ import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -71,7 +71,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("aggregates only committed attempts and is idempotent on retry", async () => {
-    const session = makeSession(testId(500), "mixed");
+    const session = makeSession(testId(500), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await createAttempt(session.id, 1, "hard", "2026-01-01T00:02:00.000Z");
@@ -122,7 +122,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("advances in bounded ranges instead of scanning the entire history", async () => {
-    const session = makeSession(testId(510), "mixed");
+    const session = makeSession(testId(510), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 30, "hard", "2026-01-01T00:01:00.000Z");
 
@@ -138,7 +138,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("rolls back progress updates and checkpoint advancement together", async () => {
-    const session = makeSession(testId(520), "mixed");
+    const session = makeSession(testId(520), "discover");
     await sessions.create(session);
     await insertResetProgress("2025-12-01T00:00:00.000Z");
     await createAttempt(session.id, 0, "good", "2026-01-01T00:01:00.000Z");
@@ -159,7 +159,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("honors reset boundaries while allowing later attempts to contribute", async () => {
-    const session = makeSession(testId(530), "mixed");
+    const session = makeSession(testId(530), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await insertResetProgress("2026-01-01T00:02:00.000Z");
@@ -177,7 +177,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("uses the immutable rating time across editable commit and reconstruction", async () => {
-    const session = makeSession(testId(535), "mixed");
+    const session = makeSession(testId(535), "discover");
     await sessions.create(session);
     const editable = await createAttempt(session.id, 0, null, null);
     const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
@@ -233,7 +233,7 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("aggregates all remaining history when a Focus session completes", async () => {
     const service = createService();
-    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    const opened = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(opened.session.id, 0, "hard", "2026-01-01T00:01:00.000Z");
 
     await service.completeSession(opened.session.id);
@@ -248,7 +248,7 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("aggregates safe history while an active Discover session continues", async () => {
     const service = createService();
-    const opened = await service.openSession("mixed", null, false);
+    const opened = await service.openSession("discover", null, false);
     await createAttempt(opened.session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await service.updateSessionReelPosition(opened.session.id, 130);
     await service.commitAttemptsOutsideEditableWindow(opened.session.id);
@@ -263,10 +263,10 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("aggregates a replaced Focus session after its commit boundary closes", async () => {
     const service = createService();
-    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    const first = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(first.session.id, 0, "easy", "2026-01-01T00:01:00.000Z");
 
-    const replacement = await service.openSession("focused", TEST_DECK_ID, true);
+    const replacement = await service.openSession("focus", TEST_DECK_ID, true);
 
     expect(replacement.replacedSessionId).toBe(first.session.id);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -278,7 +278,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   it("rediscovers a replaced completed Focus session after aggregation failure and reconstruction", async () => {
     const idGenerator = new SequenceIdGenerator();
     const service = createService(aggregation, sessions, idGenerator);
-    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    const first = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(first.session.id, 0, "easy", null, "2026-01-01T00:01:00.000Z");
     const replacementService = createService(
       {
@@ -290,11 +290,11 @@ describe("SQLite flashcard-progress aggregation", () => {
       idGenerator
     );
 
-    await expect(replacementService.openSession("focused", TEST_DECK_ID, true)).rejects.toThrow(
+    await expect(replacementService.openSession("focus", TEST_DECK_ID, true)).rejects.toThrow(
       "simulated aggregation interruption"
     );
     const replacedSession = await sessions.findById(first.session.id);
-    const activeFocusedSession = await sessions.findActiveByScope("focused");
+    const activeFocusedSession = await sessions.findActiveByScope("focus");
     expect(replacedSession?.completedAt).not.toBeNull();
     expect(activeFocusedSession?.id).not.toBe(first.session.id);
 
@@ -303,20 +303,20 @@ describe("SQLite flashcard-progress aggregation", () => {
       new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
       reconstructedSessions
     );
-    await recovered.openSession("focused", TEST_DECK_ID, false);
+    await recovered.openSession("focus", TEST_DECK_ID, false);
 
     expect(await aggregationQuery.findCompletedSessionsPendingAggregation(10)).toEqual([]);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
     });
-    const reconstructedActiveSession = await reconstructedSessions.findActiveByScope("focused");
+    const reconstructedActiveSession = await reconstructedSessions.findActiveByScope("focus");
     expect(reconstructedActiveSession?.id).not.toBe(first.session.id);
   });
 
   it("limits completed-session recovery results", async () => {
-    const first = makeSession(testId(540), "focused");
-    const second = makeSession(testId(541), "focused");
+    const first = makeSession(testId(540), "focus");
+    const second = makeSession(testId(541), "focus");
     await sessions.create(first);
     await createAttempt(first.id, 0, "good", "2026-01-01T00:01:00.000Z");
     await sessions.complete(first.id, "2026-01-01T00:03:00.000Z");
@@ -332,7 +332,7 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("bounds foreground completed-session aggregation and resumes from its checkpoint", async () => {
     const service = createService();
-    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    const opened = await service.openSession("focus", TEST_DECK_ID, false);
     await Promise.all(
       Array.from({ length: 150 }, (_value, reelPosition) =>
         createAttempt(opened.session.id, reelPosition, "good", "2026-01-01T00:01:00.000Z")
@@ -382,7 +382,7 @@ describe("SQLite flashcard-progress aggregation", () => {
       attempts,
       sessionRepository,
       new SQLiteStudySessionAggregationQuery(database.drizzle),
-      new SQLiteStudySessionItemRepository(database.drizzle),
+      new SQLiteStudySessionReelRepository(database.drizzle),
       new SQLiteStudySessionRecurrenceRepository(database.drizzle),
       new TestClock(),
       idGenerator,

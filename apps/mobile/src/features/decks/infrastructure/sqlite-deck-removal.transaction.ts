@@ -14,7 +14,7 @@ import {
   flashcards,
   lessons,
   removedDecks,
-  studySessionItems,
+  studySessionReels,
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -60,8 +60,8 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
           .where(inArray(flashcardReviewAttempts.flashcardId, cardIds))
           .run();
         transaction
-          .delete(studySessionItems)
-          .where(inArray(studySessionItems.flashcardId, cardIds))
+          .delete(studySessionReels)
+          .where(inArray(studySessionReels.flashcardId, cardIds))
           .run();
       }
       transaction.delete(flashcards).where(eq(flashcards.deckId, id)).run();

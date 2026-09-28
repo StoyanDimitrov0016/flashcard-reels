@@ -5,14 +5,14 @@ import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastr
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -32,7 +32,7 @@ import {
 describe("SQLite study persistence", () => {
   let database: NodeSqliteDatabase;
   let sessions: SQLiteStudySessionRepository;
-  let items: SQLiteStudySessionItemRepository;
+  let items: SQLiteStudySessionReelRepository;
   let attempts: SQLiteReviewAttemptRepository;
   let attemptTransaction: SQLiteReviewAttemptTransaction;
   let recurrences: SQLiteStudySessionRecurrenceRepository;
@@ -72,7 +72,7 @@ describe("SQLite study persistence", () => {
       }))
     );
     sessions = new SQLiteStudySessionRepository(database.drizzle);
-    items = new SQLiteStudySessionItemRepository(database.drizzle);
+    items = new SQLiteStudySessionReelRepository(database.drizzle);
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     attemptTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
     recurrences = new SQLiteStudySessionRecurrenceRepository(database.drizzle);
@@ -83,23 +83,23 @@ describe("SQLite study persistence", () => {
   });
 
   it("creates Mixed and Focused sessions with their defined deck relationships", async () => {
-    const mixed = makeSession(testId(200), "mixed");
-    const focused = makeSession(testId(201), "focused", TEST_DECK_ID);
+    const mixed = makeSession(testId(200), "discover");
+    const focused = makeSession(testId(201), "focus", TEST_DECK_ID);
     await sessions.create(mixed);
     await sessions.create(focused);
 
-    const activeMixedSession = await sessions.findActive("mixed", null);
-    const activeFocusedSession = await sessions.findActive("focused", TEST_DECK_ID);
+    const activeMixedSession = await sessions.findActive("discover", null);
+    const activeFocusedSession = await sessions.findActive("focus", TEST_DECK_ID);
     expect(activeMixedSession?.deckId).toBeNull();
     expect(activeFocusedSession?.deckId).toBe(TEST_DECK_ID);
     await expect(
-      sessions.create(makeSession(testId(202), "mixed", TEST_DECK_ID))
+      sessions.create(makeSession(testId(202), "discover", TEST_DECK_ID))
     ).rejects.toThrow();
   });
 
   it("cascades all deck-owned study data when a deck is removed", async () => {
-    await sessions.create(makeSession(testId(200), "mixed"));
-    await sessions.create(makeSession(testId(201), "focused", TEST_DECK_ID));
+    await sessions.create(makeSession(testId(200), "discover"));
+    await sessions.create(makeSession(testId(201), "focus", TEST_DECK_ID));
 
     await expect(
       new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID)
@@ -111,12 +111,12 @@ describe("SQLite study persistence", () => {
   });
 
   it("enforces one active session per scope while permitting completed history", async () => {
-    const first = makeSession(testId(203), "mixed");
+    const first = makeSession(testId(203), "discover");
     await sessions.create(first);
-    await expect(sessions.create(makeSession(testId(204), "mixed"))).rejects.toThrow();
+    await expect(sessions.create(makeSession(testId(204), "discover"))).rejects.toThrow();
 
     await sessions.complete(first.id, "2026-01-01T00:01:00.000Z");
-    await expect(sessions.create(makeSession(testId(205), "mixed"))).resolves.toBeUndefined();
+    await expect(sessions.create(makeSession(testId(205), "discover"))).resolves.toBeUndefined();
   });
 
   it("replaces an active Focus session atomically without touching Discover", async () => {
@@ -134,9 +134,9 @@ describe("SQLite study persistence", () => {
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
       new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
     );
-    const mixed = await service.openSession("mixed", null, false);
-    const firstFocus = await service.openSession("focused", TEST_DECK_ID, false);
-    const replacement = await service.openSession("focused", OTHER_DECK_ID, false);
+    const mixed = await service.openSession("discover", null, false);
+    const firstFocus = await service.openSession("focus", TEST_DECK_ID, false);
+    const replacement = await service.openSession("focus", OTHER_DECK_ID, false);
 
     expect(replacement.created).toBe(true);
     const replacedFocusSession = await sessions.findById(firstFocus.session.id);
@@ -166,14 +166,14 @@ describe("SQLite study persistence", () => {
     );
 
     await Promise.all([
-      service.openSession("mixed", null, false),
-      service.openSession("mixed", null, false),
-      service.openSession("mixed", null, false),
+      service.openSession("discover", null, false),
+      service.openSession("discover", null, false),
+      service.openSession("discover", null, false),
     ]);
 
     expect(
       await database.getFirstAsync(
-        "SELECT COUNT(*) AS count FROM study_sessions WHERE scope = 'mixed' AND completed_at IS NULL"
+        "SELECT COUNT(*) AS count FROM study_sessions WHERE scope = 'discover' AND completed_at IS NULL"
       )
     ).toEqual({ count: 1 });
   });
@@ -214,17 +214,17 @@ describe("SQLite study persistence", () => {
   });
 
   it("returns session items ordered by position and permits repeated flashcards", async () => {
-    const session = makeSession(testId(210), "mixed");
+    const session = makeSession(testId(210), "discover");
     await sessions.create(session);
     await items.createMany([
-      new StudySessionItem({
+      new StudySessionReel({
         flashcardId: makeFlashcard(1).id,
         id: testId(211),
         baseFeedPosition: 2,
         reelPosition: 2,
         studySessionId: session.id,
       }),
-      new StudySessionItem({
+      new StudySessionReel({
         flashcardId: makeFlashcard(1).id,
         id: testId(212),
         baseFeedPosition: 0,
@@ -240,7 +240,7 @@ describe("SQLite study persistence", () => {
     ]);
     await expect(
       items.createMany([
-        new StudySessionItem({
+        new StudySessionReel({
           flashcardId: makeFlashcard(2).id,
           id: testId(213),
           baseFeedPosition: 2,
@@ -252,13 +252,13 @@ describe("SQLite study persistence", () => {
   });
 
   it("reads only the requested session-item reel range", async () => {
-    const session = makeSession(testId(216), "mixed");
+    const session = makeSession(testId(216), "discover");
     await sessions.create(session);
     await items.createMany(
       Array.from(
         { length: 12 },
         (_, reelPosition) =>
-          new StudySessionItem({
+          new StudySessionReel({
             flashcardId: makeFlashcard((reelPosition % 2) + 1).id,
             id: testId(217 + reelPosition),
             baseFeedPosition: reelPosition,
@@ -275,7 +275,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("reads only review attempts in the retained reel range", async () => {
-    const session = makeSession(testId(229), "mixed");
+    const session = makeSession(testId(229), "discover");
     await sessions.create(session);
     await Promise.all(
       [10, 11, 12].map((reelPosition) =>
@@ -300,17 +300,17 @@ describe("SQLite study persistence", () => {
   });
 
   it("rolls back feed items and feed state together", async () => {
-    const session = makeSession(testId(214), "mixed");
+    const session = makeSession(testId(214), "discover");
     await sessions.create(session);
     const feedTransaction = new SQLiteStudySessionFeedTransaction(database.drizzle);
-    const item = new StudySessionItem({
+    const item = new StudySessionReel({
       baseFeedPosition: 0,
       flashcardId: makeFlashcard(1).id,
       id: testId(215),
       reelPosition: 0,
       studySessionId: session.id,
     });
-    const duplicate = new StudySessionItem({
+    const duplicate = new StudySessionReel({
       baseFeedPosition: 0,
       flashcardId: makeFlashcard(2).id,
       id: testId(216),
@@ -327,19 +327,19 @@ describe("SQLite study persistence", () => {
   });
 
   it("rolls back a batch session-item insert when one item violates a constraint", async () => {
-    const session = makeSession(testId(220), "mixed");
+    const session = makeSession(testId(220), "discover");
     await sessions.create(session);
 
     await expect(
       items.createMany([
-        new StudySessionItem({
+        new StudySessionReel({
           flashcardId: makeFlashcard(1).id,
           id: testId(221),
           baseFeedPosition: 0,
           reelPosition: 0,
           studySessionId: session.id,
         }),
-        new StudySessionItem({
+        new StudySessionReel({
           flashcardId: makeFlashcard(2).id,
           id: testId(222),
           baseFeedPosition: 0,
@@ -352,7 +352,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("protects committed attempts from later rating updates", async () => {
-    const session = makeSession(testId(230), "mixed");
+    const session = makeSession(testId(230), "discover");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -405,7 +405,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("does not create review attempts for completed sessions", async () => {
-    const session = makeSession(testId(232), "mixed");
+    const session = makeSession(testId(232), "discover");
     await sessions.create(session);
     await sessions.complete(session.id, "2026-01-01T00:01:00.000Z");
     const attempt = new FlashcardReviewAttempt({
@@ -426,7 +426,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("rejects incoherent rating and flashcard-progress timestamp states", async () => {
-    const session = makeSession(testId(274), "mixed");
+    const session = makeSession(testId(274), "discover");
     await sessions.create(session);
     await expect(
       database.runAsync(
@@ -460,7 +460,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("rolls back the rating when its recurrence write fails", async () => {
-    const session = makeSession(testId(235), "mixed");
+    const session = makeSession(testId(235), "discover");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -485,7 +485,7 @@ describe("SQLite study persistence", () => {
           createdAt: "2026-01-01T00:01:00.000Z",
           flashcardId: attempt.flashcardId,
           id: testId(237),
-          sourceAttemptId: testId(238),
+          flashcardReviewAttemptId: testId(238),
           studySessionId: session.id,
           targetReelPosition: 8,
         }),
@@ -499,12 +499,12 @@ describe("SQLite study persistence", () => {
   });
 
   it("moves recurrence targets past committed base reels without changing them", async () => {
-    const session = makeSession(testId(238), "mixed");
+    const session = makeSession(testId(238), "discover");
     await sessions.create(session);
     const baseItems = Array.from(
       { length: 1_001 },
       (_, reelPosition) =>
-        new StudySessionItem({
+        new StudySessionReel({
           baseFeedPosition: reelPosition,
           flashcardId: makeFlashcard((reelPosition % 2) + 1).id,
           id: testId(340 + reelPosition),
@@ -529,7 +529,7 @@ describe("SQLite study persistence", () => {
       createdAt: "2026-01-01T00:01:00.000Z",
       flashcardId: attempt.flashcardId,
       id: testId(353),
-      sourceAttemptId: attempt.id,
+      flashcardReviewAttemptId: attempt.id,
       studySessionId: session.id,
       targetReelPosition: 8,
     });
@@ -545,7 +545,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("keeps recurrence references and enforces pending uniqueness rules", async () => {
-    const session = makeSession(testId(240), "mixed");
+    const session = makeSession(testId(240), "discover");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -576,7 +576,7 @@ describe("SQLite study persistence", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
       flashcardId: attempt.flashcardId,
       id: testId(242),
-      sourceAttemptId: attempt.id,
+      flashcardReviewAttemptId: attempt.id,
       studySessionId: session.id,
       targetReelPosition: 8,
     });
@@ -594,7 +594,7 @@ describe("SQLite study persistence", () => {
           createdAt: recurrence.createdAt,
           flashcardId: recurrence.flashcardId,
           id: testId(243),
-          sourceAttemptId: recurrence.sourceAttemptId,
+          flashcardReviewAttemptId: recurrence.flashcardReviewAttemptId,
           studySessionId: recurrence.studySessionId,
           targetReelPosition: 9,
         })
@@ -607,7 +607,7 @@ describe("SQLite study persistence", () => {
           createdAt: recurrence.createdAt,
           flashcardId: recurrence.flashcardId,
           id: testId(244),
-          sourceAttemptId: secondAttempt.id,
+          flashcardReviewAttemptId: secondAttempt.id,
           studySessionId: recurrence.studySessionId,
           targetReelPosition: recurrence.targetReelPosition,
         })
@@ -621,7 +621,7 @@ describe("SQLite study persistence", () => {
         createdAt: recurrence.createdAt,
         flashcardId: secondAttempt.flashcardId,
         id: testId(246),
-        sourceAttemptId: secondAttempt.id,
+        flashcardReviewAttemptId: secondAttempt.id,
         studySessionId: recurrence.studySessionId,
         targetReelPosition: recurrence.targetReelPosition,
       })
@@ -630,7 +630,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("reserves the next free recurrence slot inside the SQLite transaction", async () => {
-    const session = makeSession(testId(247), "mixed");
+    const session = makeSession(testId(247), "discover");
     await sessions.create(session);
     const firstAttempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -662,7 +662,7 @@ describe("SQLite study persistence", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
       flashcardId: firstAttempt.flashcardId,
       id: testId(250),
-      sourceAttemptId: firstAttempt.id,
+      flashcardReviewAttemptId: firstAttempt.id,
       studySessionId: session.id,
       targetReelPosition: 8,
     });
@@ -671,7 +671,7 @@ describe("SQLite study persistence", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
       flashcardId: secondAttempt.flashcardId,
       id: testId(251),
-      sourceAttemptId: secondAttempt.id,
+      flashcardReviewAttemptId: secondAttempt.id,
       studySessionId: session.id,
       targetReelPosition: 8,
     });
@@ -707,7 +707,7 @@ describe("SQLite study persistence", () => {
           createdAt: "2026-01-01T00:00:00.000Z",
           flashcardId: makeFlashcard(1).id,
           id: testId(250),
-          sourceAttemptId: testId(251),
+          flashcardReviewAttemptId: testId(251),
           studySessionId: testId(252),
           targetReelPosition: 1,
         })
@@ -716,7 +716,7 @@ describe("SQLite study persistence", () => {
   });
 
   it("cascades session-owned items, attempts, and recurrences", async () => {
-    const session = makeSession(testId(260), "mixed");
+    const session = makeSession(testId(260), "discover");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -731,7 +731,7 @@ describe("SQLite study persistence", () => {
     });
     await attemptTransaction.createAttempt(attempt);
     await items.createMany([
-      new StudySessionItem({
+      new StudySessionReel({
         flashcardId: attempt.flashcardId,
         id: testId(262),
         baseFeedPosition: 0,
@@ -745,7 +745,7 @@ describe("SQLite study persistence", () => {
         createdAt: "2026-01-01T00:00:00.000Z",
         flashcardId: attempt.flashcardId,
         id: testId(263),
-        sourceAttemptId: attempt.id,
+        flashcardReviewAttemptId: attempt.id,
         studySessionId: session.id,
         targetReelPosition: 8,
       })
@@ -775,7 +775,7 @@ describe("SQLite study persistence", () => {
       { name: "progress_backup_state" },
       { name: "removed_decks" },
       { name: "review_events" },
-      { name: "study_session_items" },
+      { name: "study_session_reels" },
       { name: "study_session_recurrences" },
       { name: "study_sessions" },
     ]);

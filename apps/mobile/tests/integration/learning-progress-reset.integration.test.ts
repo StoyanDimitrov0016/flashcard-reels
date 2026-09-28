@@ -14,7 +14,7 @@ import {
   flashcardReviewAttempts,
   flashcards,
   flashcardProgress,
-  studySessionItems,
+  studySessionReels,
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -67,7 +67,7 @@ describe("SQLite learning progress reset transaction", () => {
     await insertMemory(1);
     await insertProgress(3);
     await insertMemory(3);
-    await insertActiveSession("active-mixed", "mixed", null, true);
+    await insertActiveSession("active-mixed", "discover", null, true);
     await insertCompletedSession("completed-mixed");
 
     await service.resetAllProgress();
@@ -84,7 +84,7 @@ describe("SQLite learning progress reset transaction", () => {
       )
     ).toEqual({ count: 0 });
     expect(
-      await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_items")
+      await database.getFirstAsync("SELECT COUNT(*) AS count FROM study_session_reels")
     ).toEqual({ count: 0 });
     expect(
       await database.getFirstAsync("SELECT COUNT(*) AS count FROM flashcard_review_attempts")
@@ -113,8 +113,8 @@ describe("SQLite learning progress reset transaction", () => {
     await insertMemory(2);
     await insertProgress(3);
     await insertMemory(3);
-    await insertActiveSession("mixed", "mixed", null, false);
-    await insertActiveSession("focused-a", "focused", TEST_DECK_ID, false);
+    await insertActiveSession("discover", "discover", null, false);
+    await insertActiveSession("focused-a", "focus", TEST_DECK_ID, false);
 
     await service.resetDeckProgress(TEST_DECK_ID);
 
@@ -136,7 +136,7 @@ describe("SQLite learning progress reset transaction", () => {
     await insertMemory(1);
     await insertProgress(2);
     await insertMemory(2);
-    await insertActiveSession("active", "mixed", null, false);
+    await insertActiveSession("active", "discover", null, false);
 
     await service.resetFlashcardProgress(makeFlashcard(1).id);
 
@@ -176,7 +176,7 @@ describe("SQLite learning progress reset transaction", () => {
     }
     const feed = await graph.feed.prepareFeed(
       [deckCard, otherDeckCard],
-      "mixed",
+      "discover",
       null,
       false,
       null
@@ -280,7 +280,7 @@ describe("SQLite learning progress reset transaction", () => {
 
   async function insertActiveSession(
     id: string,
-    scope: "mixed" | "focused",
+    scope: "discover" | "focus",
     deckId: string | null,
     withChildren: boolean
   ): Promise<void> {
@@ -298,7 +298,7 @@ describe("SQLite learning progress reset transaction", () => {
       return;
     }
     const card = makeFlashcard(1);
-    await database.drizzle.insert(studySessionItems).values({
+    await database.drizzle.insert(studySessionReels).values({
       baseFeedPosition: 0,
       flashcardId: card.id,
       id: testId(901),
@@ -319,7 +319,7 @@ describe("SQLite learning progress reset transaction", () => {
       createdAt: REVIEWED_AT,
       flashcardId: card.id,
       id: testId(903),
-      sourceAttemptId: testId(902),
+      flashcardReviewAttemptId: testId(902),
       studySessionId: id,
       targetReelPosition: 8,
     });
@@ -334,7 +334,7 @@ describe("SQLite learning progress reset transaction", () => {
       feedState: "{}",
       id,
       lastActiveAt: REVIEWED_AT,
-      scope: "mixed",
+      scope: "discover",
     });
   }
 

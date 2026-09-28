@@ -120,7 +120,7 @@ describe("progress backup", () => {
       await database.drizzle.update(flashcards).set({ createdAt });
       const clock = new TestClock();
       const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-      const { session } = await graph.study.openSession("mixed", null, false);
+      const { session } = await graph.study.openSession("discover", null, false);
       const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
       await graph.study.rateAttempt(attemptId, "good");
       const files = new MemoryBackupFiles();
@@ -153,7 +153,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, cardIds);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const { session } = await graph.study.openSession("mixed", null, false);
+    const { session } = await graph.study.openSession("discover", null, false);
     const ratings = ["again", "hard", "good", "easy"] as const;
     // oxlint-disable no-await-in-loop -- Rate each card in the order a learner studies it.
     for (const [position, rating] of ratings.entries()) {
@@ -184,7 +184,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, [flashcardId]);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const { session } = await graph.study.openSession("mixed", null, false);
+    const { session } = await graph.study.openSession("discover", null, false);
     const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
     await graph.study.rateAttempt(attemptId, "good");
     const cause = new Error("File sharing is unavailable on this device");
@@ -218,7 +218,7 @@ describe("progress backup", () => {
     await seedDeck(source, TEST_DECK_ID, [flashcardId]);
     const sourceClock = new TestClock();
     const sourceGraph = createScenarioGraph(source, sourceClock, new SequenceIdGenerator());
-    const session = makeSession(testId(701), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(701), "focus", TEST_DECK_ID);
     await sourceGraph.sessions.create(session);
     await source.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(801),
@@ -284,7 +284,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, cardIds);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const session = makeSession(testId(700), "focused", TEST_DECK_ID, 0, 59);
+    const session = makeSession(testId(700), "focus", TEST_DECK_ID, 0, 59);
     await graph.sessions.create(session);
     await database.drizzle.insert(flashcardReviewAttempts).values(
       cardIds.map((flashcardId, reelPosition) => ({
@@ -324,7 +324,7 @@ describe("progress backup", () => {
     await seedDeck(source, TEST_DECK_ID, [cardId]);
     const sourceClock = new TestClock();
     const sourceGraph = createScenarioGraph(source, sourceClock, new SequenceIdGenerator());
-    const session = makeSession(testId(701), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(701), "focus", TEST_DECK_ID);
     await sourceGraph.sessions.create(session);
     await source.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(801),
@@ -347,7 +347,7 @@ describe("progress backup", () => {
     const targetGraph = createScenarioGraph(target, targetClock, new SequenceIdGenerator());
     await target.drizzle.insert(studySessions).values({
       id: testId(901),
-      scope: "focused",
+      scope: "focus",
       deckId: TEST_DECK_ID,
       currentReelPosition: 0,
       furthestReelPosition: 0,
@@ -368,7 +368,7 @@ describe("progress backup", () => {
     await targetGraph.study.completeSession(testId(901));
     await target.drizzle.insert(studySessions).values({
       id: testId(902),
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: 0,
       furthestReelPosition: 0,
@@ -531,7 +531,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, [flashcardId]);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const session = makeSession(testId(707), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(707), "focus", TEST_DECK_ID);
     await graph.sessions.create(session);
     await database.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(808),

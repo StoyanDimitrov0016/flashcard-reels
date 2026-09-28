@@ -178,7 +178,7 @@ export const studySessions = sqliteTable(
   "study_sessions",
   {
     id: text("id").primaryKey().notNull(),
-    scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
+    scope: text("scope", { enum: ["discover", "focus"] }).notNull(),
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
     currentReelPosition: integer("current_reel_position").notNull(),
     furthestReelPosition: integer("furthest_reel_position").notNull(),
@@ -193,7 +193,7 @@ export const studySessions = sqliteTable(
   (table) => [
     check(
       "study_sessions_scope_deck_check",
-      sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
+      sql`(${table.scope} = 'discover' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focus' AND ${table.deckId} IS NOT NULL)`
     ),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
     check(
@@ -217,8 +217,8 @@ export const studySessions = sqliteTable(
   ]
 );
 
-export const studySessionItems = sqliteTable(
-  "study_session_items",
+export const studySessionReels = sqliteTable(
+  "study_session_reels",
   {
     id: text("id").primaryKey().notNull(),
     studySessionId: text("study_session_id")
@@ -231,17 +231,17 @@ export const studySessionItems = sqliteTable(
     reelPosition: integer("reel_position").notNull(),
   },
   (table) => [
-    check("study_session_items_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
-    check("study_session_items_reel_position_check", sql`${table.reelPosition} >= 0`),
-    unique("study_session_items_session_position_unique").on(
+    check("study_session_reels_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
+    check("study_session_reels_reel_position_check", sql`${table.reelPosition} >= 0`),
+    unique("study_session_reels_session_position_unique").on(
       table.studySessionId,
       table.baseFeedPosition
     ),
-    unique("study_session_items_session_reel_position_unique").on(
+    unique("study_session_reels_session_reel_position_unique").on(
       table.studySessionId,
       table.reelPosition
     ),
-    index("study_session_items_flashcard_id_idx").on(table.flashcardId),
+    index("study_session_reels_flashcard_id_idx").on(table.flashcardId),
   ]
 );
 
@@ -297,7 +297,7 @@ export const studySessionRecurrences = sqliteTable(
     flashcardId: text("flashcard_id")
       .notNull()
       .references(() => flashcards.id, { onDelete: "cascade" }),
-    sourceAttemptId: text("source_attempt_id")
+    flashcardReviewAttemptId: text("flashcard_review_attempt_id")
       .notNull()
       .references(() => flashcardReviewAttempts.id, { onDelete: "cascade" }),
     targetReelPosition: integer("target_reel_position").notNull(),
@@ -319,8 +319,8 @@ export const studySessionRecurrences = sqliteTable(
     uniqueIndex("study_session_recurrences_pending_target_idx")
       .on(table.studySessionId, table.targetReelPosition)
       .where(sql`${table.consumedAt} IS NULL`),
-    uniqueIndex("study_session_recurrences_pending_source_attempt_idx")
-      .on(table.sourceAttemptId)
+    uniqueIndex("study_session_recurrences_pending_flashcard_review_attempt_idx")
+      .on(table.flashcardReviewAttemptId)
       .where(sql`${table.consumedAt} IS NULL`),
   ]
 );
@@ -336,7 +336,7 @@ export const databaseSchema = {
   reviewEvents,
   deckProgress,
   studySessions,
-  studySessionItems,
+  studySessionReels,
   flashcardReviewAttempts,
   studySessionRecurrences,
 };

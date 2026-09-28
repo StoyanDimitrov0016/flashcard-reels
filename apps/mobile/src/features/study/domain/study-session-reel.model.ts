@@ -1,6 +1,6 @@
 import type { FlashcardId } from "@/features/flashcards/domain/flashcard.model";
 
-export type StudySessionItemFields = Readonly<{
+export type StudySessionReelFields = Readonly<{
   flashcardId: FlashcardId;
   id: string;
   baseFeedPosition: number;
@@ -8,14 +8,14 @@ export type StudySessionItemFields = Readonly<{
   studySessionId: string;
 }>;
 
-export class StudySessionItem {
+export class StudySessionReel {
   public readonly id: string;
   public readonly studySessionId: string;
   public readonly flashcardId: FlashcardId;
   public readonly baseFeedPosition: number;
   public readonly reelPosition: number;
 
-  constructor(fields: StudySessionItemFields) {
+  constructor(fields: StudySessionReelFields) {
     this.flashcardId = fields.flashcardId;
     this.id = fields.id;
     this.baseFeedPosition = fields.baseFeedPosition;

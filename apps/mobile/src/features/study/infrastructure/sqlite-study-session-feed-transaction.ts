@@ -1,10 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm";
 
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { studySessionItems, studySessions } from "@/infrastructure/sqlite/schema";
+import { studySessionReels, studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionFeedTransaction<
   TRunResult = unknown,
@@ -17,13 +17,13 @@ export class SQLiteStudySessionFeedTransaction<
 
   async append(
     sessionId: string,
-    items: readonly StudySessionItem[],
+    items: readonly StudySessionReel[],
     feedState: string
   ): Promise<void> {
     this.database.transaction((transaction) => {
       if (items.length > 0) {
         transaction
-          .insert(studySessionItems)
+          .insert(studySessionReels)
           .values(
             items.map((item) => ({
               baseFeedPosition: item.baseFeedPosition,

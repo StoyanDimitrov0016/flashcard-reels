@@ -142,7 +142,7 @@ CREATE TABLE `review_events` (
 --> statement-breakpoint
 CREATE INDEX `review_events_deck_id_idx` ON `review_events` (`deck_id`);--> statement-breakpoint
 CREATE INDEX `review_events_flashcard_id_idx` ON `review_events` (`flashcard_id`);--> statement-breakpoint
-CREATE TABLE `study_session_items` (
+CREATE TABLE `study_session_reels` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,
 	`flashcard_id` text NOT NULL,
@@ -150,31 +150,31 @@ CREATE TABLE `study_session_items` (
 	`reel_position` integer NOT NULL,
 	FOREIGN KEY (`study_session_id`) REFERENCES `study_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
-	CONSTRAINT "study_session_items_base_feed_position_check" CHECK("study_session_items"."base_feed_position" >= 0),
-	CONSTRAINT "study_session_items_reel_position_check" CHECK("study_session_items"."reel_position" >= 0)
+	CONSTRAINT "study_session_reels_base_feed_position_check" CHECK("study_session_reels"."base_feed_position" >= 0),
+	CONSTRAINT "study_session_reels_reel_position_check" CHECK("study_session_reels"."reel_position" >= 0)
 );
 --> statement-breakpoint
-CREATE INDEX `study_session_items_flashcard_id_idx` ON `study_session_items` (`flashcard_id`);--> statement-breakpoint
-CREATE UNIQUE INDEX `study_session_items_session_position_unique` ON `study_session_items` (`study_session_id`,`base_feed_position`);--> statement-breakpoint
-CREATE UNIQUE INDEX `study_session_items_session_reel_position_unique` ON `study_session_items` (`study_session_id`,`reel_position`);--> statement-breakpoint
+CREATE INDEX `study_session_reels_flashcard_id_idx` ON `study_session_reels` (`flashcard_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_session_reels_session_position_unique` ON `study_session_reels` (`study_session_id`,`base_feed_position`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_session_reels_session_reel_position_unique` ON `study_session_reels` (`study_session_id`,`reel_position`);--> statement-breakpoint
 CREATE TABLE `study_session_recurrences` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,
 	`flashcard_id` text NOT NULL,
-	`source_attempt_id` text NOT NULL,
+	`flashcard_review_attempt_id` text NOT NULL,
 	`target_reel_position` integer NOT NULL,
 	`created_at` text NOT NULL,
 	`consumed_at` text,
 	FOREIGN KEY (`study_session_id`) REFERENCES `study_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`source_attempt_id`) REFERENCES `flashcard_review_attempts`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`flashcard_review_attempt_id`) REFERENCES `flashcard_review_attempts`(`id`) ON UPDATE no action ON DELETE cascade,
 	CONSTRAINT "study_session_recurrences_target_reel_position_check" CHECK("study_session_recurrences"."target_reel_position" >= 0)
 );
 --> statement-breakpoint
 CREATE INDEX `study_session_recurrences_session_position_idx` ON `study_session_recurrences` (`study_session_id`,`target_reel_position`,`created_at`,`id`);--> statement-breakpoint
 CREATE INDEX `study_session_recurrences_flashcard_id_idx` ON `study_session_recurrences` (`flashcard_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `study_session_recurrences_pending_target_idx` ON `study_session_recurrences` (`study_session_id`,`target_reel_position`) WHERE "study_session_recurrences"."consumed_at" IS NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX `study_session_recurrences_pending_source_attempt_idx` ON `study_session_recurrences` (`source_attempt_id`) WHERE "study_session_recurrences"."consumed_at" IS NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX `study_session_recurrences_pending_flashcard_review_attempt_idx` ON `study_session_recurrences` (`flashcard_review_attempt_id`) WHERE "study_session_recurrences"."consumed_at" IS NULL;--> statement-breakpoint
 CREATE TABLE `study_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`scope` text NOT NULL,
@@ -187,7 +187,7 @@ CREATE TABLE `study_sessions` (
 	`last_active_at` text NOT NULL,
 	`feed_state` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
-	CONSTRAINT "study_sessions_scope_deck_check" CHECK(("study_sessions"."scope" = 'mixed' AND "study_sessions"."deck_id" IS NULL) OR ("study_sessions"."scope" = 'focused' AND "study_sessions"."deck_id" IS NOT NULL)),
+	CONSTRAINT "study_sessions_scope_deck_check" CHECK(("study_sessions"."scope" = 'discover' AND "study_sessions"."deck_id" IS NULL) OR ("study_sessions"."scope" = 'focus' AND "study_sessions"."deck_id" IS NOT NULL)),
 	CONSTRAINT "study_sessions_current_reel_position_check" CHECK("study_sessions"."current_reel_position" >= 0),
 	CONSTRAINT "study_sessions_furthest_reel_position_check" CHECK("study_sessions"."furthest_reel_position" >= "study_sessions"."current_reel_position"),
 	CONSTRAINT "study_sessions_aggregated_through_reel_position_check" CHECK("study_sessions"."aggregated_through_reel_position" >= -1)

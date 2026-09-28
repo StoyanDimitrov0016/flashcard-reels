@@ -900,8 +900,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "study_session_items": {
-      "name": "study_session_items",
+    "study_session_reels": {
+      "name": "study_session_reels",
       "columns": {
         "id": {
           "name": "id",
@@ -940,23 +940,23 @@
         }
       },
       "indexes": {
-        "study_session_items_flashcard_id_idx": {
-          "name": "study_session_items_flashcard_id_idx",
+        "study_session_reels_flashcard_id_idx": {
+          "name": "study_session_reels_flashcard_id_idx",
           "columns": [
             "flashcard_id"
           ],
           "isUnique": false
         },
-        "study_session_items_session_position_unique": {
-          "name": "study_session_items_session_position_unique",
+        "study_session_reels_session_position_unique": {
+          "name": "study_session_reels_session_position_unique",
           "columns": [
             "study_session_id",
             "base_feed_position"
           ],
           "isUnique": true
         },
-        "study_session_items_session_reel_position_unique": {
-          "name": "study_session_items_session_reel_position_unique",
+        "study_session_reels_session_reel_position_unique": {
+          "name": "study_session_reels_session_reel_position_unique",
           "columns": [
             "study_session_id",
             "reel_position"
@@ -965,9 +965,9 @@
         }
       },
       "foreignKeys": {
-        "study_session_items_study_session_id_study_sessions_id_fk": {
-          "name": "study_session_items_study_session_id_study_sessions_id_fk",
-          "tableFrom": "study_session_items",
+        "study_session_reels_study_session_id_study_sessions_id_fk": {
+          "name": "study_session_reels_study_session_id_study_sessions_id_fk",
+          "tableFrom": "study_session_reels",
           "tableTo": "study_sessions",
           "columnsFrom": [
             "study_session_id"
@@ -978,9 +978,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "study_session_items_flashcard_id_flashcards_id_fk": {
-          "name": "study_session_items_flashcard_id_flashcards_id_fk",
-          "tableFrom": "study_session_items",
+        "study_session_reels_flashcard_id_flashcards_id_fk": {
+          "name": "study_session_reels_flashcard_id_flashcards_id_fk",
+          "tableFrom": "study_session_reels",
           "tableTo": "flashcards",
           "columnsFrom": [
             "flashcard_id"
@@ -995,13 +995,13 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
-        "study_session_items_base_feed_position_check": {
-          "name": "study_session_items_base_feed_position_check",
-          "value": "\"study_session_items\".\"base_feed_position\" >= 0"
+        "study_session_reels_base_feed_position_check": {
+          "name": "study_session_reels_base_feed_position_check",
+          "value": "\"study_session_reels\".\"base_feed_position\" >= 0"
         },
-        "study_session_items_reel_position_check": {
-          "name": "study_session_items_reel_position_check",
-          "value": "\"study_session_items\".\"reel_position\" >= 0"
+        "study_session_reels_reel_position_check": {
+          "name": "study_session_reels_reel_position_check",
+          "value": "\"study_session_reels\".\"reel_position\" >= 0"
         }
       }
     },
@@ -1029,8 +1029,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "source_attempt_id": {
-          "name": "source_attempt_id",
+        "flashcard_review_attempt_id": {
+          "name": "flashcard_review_attempt_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1085,10 +1085,10 @@
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
         },
-        "study_session_recurrences_pending_source_attempt_idx": {
-          "name": "study_session_recurrences_pending_source_attempt_idx",
+        "study_session_recurrences_pending_flashcard_review_attempt_idx": {
+          "name": "study_session_recurrences_pending_flashcard_review_attempt_idx",
           "columns": [
-            "source_attempt_id"
+            "flashcard_review_attempt_id"
           ],
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
@@ -1121,12 +1121,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "study_session_recurrences_source_attempt_id_flashcard_review_attempts_id_fk": {
-          "name": "study_session_recurrences_source_attempt_id_flashcard_review_attempts_id_fk",
+        "study_session_recurrences_flashcard_review_attempt_id_flashcard_review_attempts_id_fk": {
+          "name": "study_session_recurrences_flashcard_review_attempt_id_flashcard_review_attempts_id_fk",
           "tableFrom": "study_session_recurrences",
           "tableTo": "flashcard_review_attempts",
           "columnsFrom": [
-            "source_attempt_id"
+            "flashcard_review_attempt_id"
           ],
           "columnsTo": [
             "id"
@@ -1260,7 +1260,7 @@
       "checkConstraints": {
         "study_sessions_scope_deck_check": {
           "name": "study_sessions_scope_deck_check",
-          "value": "(\"study_sessions\".\"scope\" = 'mixed' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focused' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"
+          "value": "(\"study_sessions\".\"scope\" = 'discover' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focus' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"
         },
         "study_sessions_current_reel_position_check": {
           "name": "study_sessions_current_reel_position_check",

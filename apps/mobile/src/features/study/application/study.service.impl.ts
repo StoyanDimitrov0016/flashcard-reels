@@ -12,7 +12,7 @@ import type { StudySessionMaintenanceTransaction } from "@/features/study/applic
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
-import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
+import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
@@ -36,7 +36,7 @@ import {
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
-import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 
 export type OpenStudySession = OpenStudySessionResult;
@@ -46,7 +46,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
   private readonly studySessionRepository: StudySessionRepository;
   private readonly studySessionAggregationQuery: StudySessionAggregationQuery;
-  private readonly studySessionItemRepository: StudySessionItemRepository;
+  private readonly studySessionReelRepository: StudySessionReelRepository;
   private readonly clock: Clock;
   private readonly idGenerator: IdGenerator;
   private readonly random: RandomSource;
@@ -63,7 +63,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     reviewAttemptRepository: ReviewAttemptRepository,
     studySessionRepository: StudySessionRepository,
     studySessionAggregationQuery: StudySessionAggregationQuery,
-    studySessionItemRepository: StudySessionItemRepository,
+    studySessionReelRepository: StudySessionReelRepository,
     studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
     clock: Clock,
     idGenerator: IdGenerator,
@@ -79,7 +79,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
     this.studySessionRepository = studySessionRepository;
     this.studySessionAggregationQuery = studySessionAggregationQuery;
-    this.studySessionItemRepository = studySessionItemRepository;
+    this.studySessionReelRepository = studySessionReelRepository;
     this.clock = clock;
     this.idGenerator = idGenerator;
     this.reviewAttemptTransaction = reviewAttemptTransaction;
@@ -96,10 +96,10 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     deckId: DeckId | null,
     replaceExisting: boolean
   ): Promise<OpenStudySession> {
-    if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
+    if ((scope === "discover" && deckId !== null) || (scope === "focus" && deckId === null)) {
       throw new Error("Study session scope and deck must agree");
     }
-    return scope === "focused"
+    return scope === "focus"
       ? this.serializeFocusedSessionLifecycle(() =>
           this.openSessionDirect(scope, deckId, replaceExisting)
         )
@@ -108,11 +108,11 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
 
   async resumeFocusedSession(): Promise<StudySession | null> {
     return this.serializeFocusedSessionLifecycle(async () => {
-      const activeSession = await this.studySessionRepository.findActiveByScope("focused");
+      const activeSession = await this.studySessionRepository.findActiveByScope("focus");
       if (!activeSession || activeSession.deckId === null) {
         return null;
       }
-      const resumed = await this.openSessionDirect("focused", activeSession.deckId, false);
+      const resumed = await this.openSessionDirect("focus", activeSession.deckId, false);
       return resumed.session;
     });
   }
@@ -156,7 +156,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
 
   async settleForProgressBackup(): Promise<void> {
     // oxlint-disable no-await-in-loop -- Each session must be committed before its snapshot is read.
-    for (const scope of ["mixed", "focused"] as const) {
+    for (const scope of ["discover", "focus"] as const) {
       const active = await this.studySessionRepository.findActiveByScope(scope);
       if (active) {
         await this.completeSession(active.id);
@@ -188,14 +188,14 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   }
 
   async settleActiveSessionsAffectedByDeck(deckId: DeckId, includeFocused: boolean): Promise<void> {
-    const mixed = await this.studySessionRepository.findActiveByScope("mixed");
+    const mixed = await this.studySessionRepository.findActiveByScope("discover");
     if (mixed) {
       await this.completeSession(mixed.id);
     }
     if (!includeFocused) {
       return;
     }
-    const focused = await this.studySessionRepository.findActiveByScope("focused");
+    const focused = await this.studySessionRepository.findActiveByScope("focus");
     if (focused?.deckId === deckId) {
       await this.completeSession(focused.id);
     }
@@ -315,7 +315,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     }
     const items = cards.map(
       (card, index) =>
-        new StudySessionItem({
+        new StudySessionReel({
           flashcardId: card.id,
           id: this.idGenerator.generate(),
           baseFeedPosition: baseFeedPositionStart + index,
@@ -330,24 +330,24 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     await this.studySessionFeedTransaction.updateState(sessionId, feedState);
   }
 
-  async listSessionItems(sessionId: string): Promise<StudySessionItem[]> {
-    return this.studySessionItemRepository.listBySessionId(sessionId);
+  async listSessionReels(sessionId: string): Promise<StudySessionReel[]> {
+    return this.studySessionReelRepository.listBySessionId(sessionId);
   }
 
   async findMaxSessionBaseFeedPosition(sessionId: string): Promise<number | null> {
-    return this.studySessionItemRepository.findMaxBaseFeedPosition(sessionId);
+    return this.studySessionReelRepository.findMaxBaseFeedPosition(sessionId);
   }
 
   async findMaxSessionReelPosition(sessionId: string): Promise<number | null> {
-    return this.studySessionItemRepository.findMaxReelPosition(sessionId);
+    return this.studySessionReelRepository.findMaxReelPosition(sessionId);
   }
 
-  async listSessionItemsInReelPositionRange(
+  async listSessionReelsInReelPositionRange(
     sessionId: string,
     fromReelPosition: number,
     throughReelPosition: number
-  ): Promise<StudySessionItem[]> {
-    return this.studySessionItemRepository.listBySessionIdInReelPositionRange(
+  ): Promise<StudySessionReel[]> {
+    return this.studySessionReelRepository.listBySessionIdInReelPositionRange(
       sessionId,
       fromReelPosition,
       throughReelPosition
@@ -454,7 +454,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
             createdAt: updatedAt,
             flashcardId: attempt.flashcardId,
             id: this.idGenerator.generate(),
-            sourceAttemptId: attempt.id,
+            flashcardReviewAttemptId: attempt.id,
             studySessionId: attempt.studySessionId,
             targetReelPosition: proposedTargetReelPosition,
           });

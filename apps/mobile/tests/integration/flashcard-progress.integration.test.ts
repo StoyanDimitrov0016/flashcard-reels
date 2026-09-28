@@ -64,7 +64,7 @@ describe("SQLite flashcard progress", () => {
       feedState: "{}",
       id: sessionId,
       lastActiveAt: "2026-01-02T00:00:00.000Z",
-      scope: "mixed",
+      scope: "discover",
     });
     await database.drizzle.insert(flashcardReviewAttempts).values({
       createdAt: "2026-01-02T00:00:00.000Z",

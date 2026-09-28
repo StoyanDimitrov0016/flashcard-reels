@@ -3,7 +3,7 @@ import { and, eq, isNotNull, lt } from "drizzle-orm";
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import { studySessionItems, studySessionRecurrences } from "@/infrastructure/sqlite/schema";
+import { studySessionReels, studySessionRecurrences } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionMaintenanceTransaction<
   TRunResult = unknown,
@@ -17,11 +17,11 @@ export class SQLiteStudySessionMaintenanceTransaction<
   async compact(sessionId: string, minimumRetainedReelPosition: number): Promise<void> {
     this.database.transaction((transaction) => {
       transaction
-        .delete(studySessionItems)
+        .delete(studySessionReels)
         .where(
           and(
-            eq(studySessionItems.studySessionId, sessionId),
-            lt(studySessionItems.reelPosition, minimumRetainedReelPosition)
+            eq(studySessionReels.studySessionId, sessionId),
+            lt(studySessionReels.reelPosition, minimumRetainedReelPosition)
           )
         )
         .run();

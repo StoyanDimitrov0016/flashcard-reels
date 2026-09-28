@@ -39,11 +39,11 @@ export class SQLiteStudySessionLifecycleTransaction<
       const activeRow = activeRows[0];
       const focusExpired =
         activeRow &&
-        scope === "focused" &&
+        scope === "focus" &&
         Date.parse(now) - Date.parse(activeRow.lastActiveAt) >= FOCUS_SESSION_INACTIVITY_TIMEOUT_MS;
       const shouldReplace =
         activeRow &&
-        (replaceExisting || (scope === "focused" && (activeRow.deckId !== deckId || focusExpired)));
+        (replaceExisting || (scope === "focus" && (activeRow.deckId !== deckId || focusExpired)));
 
       if (activeRow && !shouldReplace) {
         transaction

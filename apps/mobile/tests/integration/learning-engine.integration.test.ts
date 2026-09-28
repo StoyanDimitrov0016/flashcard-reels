@@ -56,7 +56,7 @@ describe("SQLite learning-engine commit", () => {
       updatedAt: card.updatedAt,
     });
     await new SQLiteStudySessionRepository(database.drizzle).create(
-      makeSession(testId(900), "mixed")
+      makeSession(testId(900), "discover")
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
@@ -359,7 +359,7 @@ describe("SQLite learning-engine commit", () => {
       new TestClock(),
       () => 0
     );
-    const prepared = await feed.prepareFeed([card], "mixed", null, false, null);
+    const prepared = await feed.prepareFeed([card], "discover", null, false, null);
     const attemptId = await graph.study.startAttempt(card.id, 0, prepared.studySessionId);
     await graph.study.rateAttempt(attemptId, "good");
 

@@ -44,7 +44,7 @@ function ReadyFocusedFeedContent({
   const consumed = useRef(false);
   const preparedFeed = usePreparedReelFeed(
     cards,
-    "focused",
+    "focus",
     deckId,
     replaceSession,
     entryTransition?.anchorFlashcardId ?? null

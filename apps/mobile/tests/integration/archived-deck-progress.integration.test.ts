@@ -50,7 +50,7 @@ describe("archived deck progress", () => {
     const attemptId = testId(701);
     await database.drizzle.insert(studySessions).values({
       id: sessionId,
-      scope: "focused",
+      scope: "focus",
       deckId: TEST_DECK_ID,
       currentReelPosition: 1,
       furthestReelPosition: 1,
@@ -156,7 +156,7 @@ describe("archived deck progress", () => {
     const reviewCount = 51;
     await database.drizzle.insert(studySessions).values({
       id: sessionId,
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: reviewCount - 1,
       furthestReelPosition: reviewCount - 1,
@@ -220,7 +220,7 @@ describe("archived deck progress", () => {
     const unrelatedSessionId = testId(702);
     await database.drizzle.insert(studySessions).values({
       id: unrelatedSessionId,
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: 0,
       furthestReelPosition: 0,

@@ -158,8 +158,8 @@ export class SQLiteLearningProgressResetTransaction<
         and(
           isNull(studySessions.completedAt),
           or(
-            eq(studySessions.scope, "mixed"),
-            and(eq(studySessions.scope, "focused"), eq(studySessions.deckId, deckId))
+            eq(studySessions.scope, "discover"),
+            and(eq(studySessions.scope, "focus"), eq(studySessions.deckId, deckId))
           )
         )
       )

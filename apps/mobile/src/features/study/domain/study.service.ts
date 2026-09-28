@@ -2,7 +2,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
+import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionPosition } from "@/features/study/domain/study-session.repository";
@@ -38,14 +38,14 @@ export interface StudyService {
     reelPositions?: number[]
   ): Promise<void>;
   updateSessionFeedState(sessionId: string, feedState: string): Promise<void>;
-  listSessionItems(sessionId: string): Promise<StudySessionItem[]>;
+  listSessionReels(sessionId: string): Promise<StudySessionReel[]>;
   findMaxSessionBaseFeedPosition(sessionId: string): Promise<number | null>;
   findMaxSessionReelPosition(sessionId: string): Promise<number | null>;
-  listSessionItemsInReelPositionRange(
+  listSessionReelsInReelPositionRange(
     sessionId: string,
     fromReelPosition: number,
     throughReelPosition: number
-  ): Promise<StudySessionItem[]>;
+  ): Promise<StudySessionReel[]>;
   listSessionRecurrences(sessionId: string): Promise<StudySessionRecurrence[]>;
   listPendingRecurrenceFlashcardIdsFromTargetPosition(
     sessionId: string,

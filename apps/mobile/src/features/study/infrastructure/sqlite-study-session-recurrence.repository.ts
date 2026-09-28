@@ -15,12 +15,12 @@ export class SQLiteStudySessionRecurrenceRepository<
     this.database = database;
   }
 
-  async cancelPendingBySourceAttemptId(sourceAttemptId: string): Promise<void> {
+  async cancelPendingBySourceAttemptId(flashcardReviewAttemptId: string): Promise<void> {
     await this.database
       .delete(studySessionRecurrences)
       .where(
         and(
-          eq(studySessionRecurrences.sourceAttemptId, sourceAttemptId),
+          eq(studySessionRecurrences.flashcardReviewAttemptId, flashcardReviewAttemptId),
           isNull(studySessionRecurrences.consumedAt)
         )
       );
@@ -32,7 +32,7 @@ export class SQLiteStudySessionRecurrenceRepository<
       createdAt: recurrence.createdAt,
       flashcardId: recurrence.flashcardId,
       id: recurrence.id,
-      sourceAttemptId: recurrence.sourceAttemptId,
+      flashcardReviewAttemptId: recurrence.flashcardReviewAttemptId,
       studySessionId: recurrence.studySessionId,
       targetReelPosition: recurrence.targetReelPosition,
     });
@@ -103,7 +103,7 @@ export class SQLiteStudySessionRecurrenceRepository<
       createdAt: row.createdAt,
       flashcardId: row.flashcardId,
       id: row.id,
-      sourceAttemptId: row.sourceAttemptId,
+      flashcardReviewAttemptId: row.flashcardReviewAttemptId,
       studySessionId: row.studySessionId,
       targetReelPosition: row.targetReelPosition,
     });

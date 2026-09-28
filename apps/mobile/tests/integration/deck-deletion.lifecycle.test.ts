@@ -71,7 +71,7 @@ class Boundary extends Component<Readonly<{ children: ReactNode }>, { error: Err
 }
 
 function MixedFeedProbe({ cards }: Readonly<{ cards: Flashcard[] }>) {
-  const feed = usePreparedReelFeed(cards, "mixed", null, false);
+  const feed = usePreparedReelFeed(cards, "discover", null, false);
   useEffect(
     function observeMixedFeed() {
       observedFeed = feed;
@@ -184,7 +184,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
   it("clears the persisted focused deck immediately after deletion without requiring foregrounding", async () => {
     await graph.feed.prepareFeed(
       await flashcardService.listByDeckId(TEST_DECK_ID),
-      "focused",
+      "focus",
       TEST_DECK_ID,
       true,
       null
@@ -243,7 +243,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     const cards = await flashcardService.list();
     const { result } = renderHook(
       () => ({
-        feed: usePreparedReelFeed(cards, "mixed", null, false),
+        feed: usePreparedReelFeed(cards, "discover", null, false),
         ...useLearningProgressRevision(),
       }),
       { wrapper: Providers }
@@ -254,7 +254,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     act(() => result.current.invalidateLearningProgress());
     expect(result.current.feed).toBeNull();
     await act(async () =>
-      preparation.resolve(await graph.feed.prepareFeed(cards, "mixed", null, false, null))
+      preparation.resolve(await graph.feed.prepareFeed(cards, "discover", null, false, null))
     );
     await waitFor(() => expect(result.current.feed).not.toBeNull());
   });

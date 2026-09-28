@@ -9,7 +9,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { findNextFreeRecurrenceSlot } from "@/features/study/domain/recurrences";
 import {
   flashcardReviewAttempts,
-  studySessionItems,
+  studySessionReels,
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
@@ -83,7 +83,7 @@ export class SQLiteReviewAttemptTransaction<
           .delete(studySessionRecurrences)
           .where(
             and(
-              eq(studySessionRecurrences.sourceAttemptId, attemptId),
+              eq(studySessionRecurrences.flashcardReviewAttemptId, attemptId),
               isNull(studySessionRecurrences.consumedAt)
             )
           )
@@ -102,7 +102,7 @@ export class SQLiteReviewAttemptTransaction<
         .from(studySessionRecurrences)
         .where(
           and(
-            eq(studySessionRecurrences.sourceAttemptId, attemptId),
+            eq(studySessionRecurrences.flashcardReviewAttemptId, attemptId),
             isNull(studySessionRecurrences.consumedAt)
           )
         )
@@ -118,18 +118,18 @@ export class SQLiteReviewAttemptTransaction<
           and(
             eq(studySessionRecurrences.studySessionId, recurrence.studySessionId),
             isNull(studySessionRecurrences.consumedAt),
-            ne(studySessionRecurrences.sourceAttemptId, attemptId),
+            ne(studySessionRecurrences.flashcardReviewAttemptId, attemptId),
             gte(studySessionRecurrences.targetReelPosition, proposedTargetReelPosition)
           )
         )
         .all();
       const occupiedBaseRows = transaction
-        .select({ reelPosition: studySessionItems.reelPosition })
-        .from(studySessionItems)
+        .select({ reelPosition: studySessionReels.reelPosition })
+        .from(studySessionReels)
         .where(
           and(
-            eq(studySessionItems.studySessionId, recurrence.studySessionId),
-            gte(studySessionItems.reelPosition, proposedTargetReelPosition)
+            eq(studySessionReels.studySessionId, recurrence.studySessionId),
+            gte(studySessionReels.reelPosition, proposedTargetReelPosition)
           )
         )
         .all();
@@ -161,7 +161,7 @@ export class SQLiteReviewAttemptTransaction<
             createdAt: recurrence.createdAt,
             flashcardId: recurrence.flashcardId,
             id: recurrence.id,
-            sourceAttemptId: recurrence.sourceAttemptId,
+            flashcardReviewAttemptId: recurrence.flashcardReviewAttemptId,
             studySessionId: recurrence.studySessionId,
             targetReelPosition,
           })

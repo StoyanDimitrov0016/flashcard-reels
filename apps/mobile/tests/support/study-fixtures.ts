@@ -31,8 +31,8 @@ export function makeFlashcard(
 
 export function makeSession(
   id: string,
-  scope: "mixed" | "focused",
-  deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
+  scope: "discover" | "focus",
+  deckId: string | null = scope === "focus" ? TEST_DECK_ID : null,
   currentReelPosition = 0,
   furthestReelPosition = currentReelPosition
 ): StudySession {

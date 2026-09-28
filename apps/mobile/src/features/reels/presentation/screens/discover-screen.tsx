@@ -13,7 +13,7 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 type ReadyMixedFeedProps = Readonly<{ cards: Flashcard[] }>;
 
 function ReadyMixedFeed({ cards }: ReadyMixedFeedProps) {
-  const preparedFeed = usePreparedReelFeed(cards, "mixed", null, false);
+  const preparedFeed = usePreparedReelFeed(cards, "discover", null, false);
   const contentInsetTop = useStudyFeedContentInset();
   if (!preparedFeed) {
     return <LoadingState />;

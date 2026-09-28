@@ -269,7 +269,7 @@ async function reviewCard(
   if (!flashcard) {
     throw new Error(`Missing scenario card ${cardId}`);
   }
-  const feed = await graph.feed.prepareFeed([flashcard], "focused", TEST_DECK_ID, false, null);
+  const feed = await graph.feed.prepareFeed([flashcard], "focus", TEST_DECK_ID, false, null);
   const attemptId = await graph.study.startAttempt(cardId, 0, feed.studySessionId);
   await graph.study.rateAttempt(attemptId, "good");
   if (complete) {
@@ -527,7 +527,7 @@ describe("deck package installation", () => {
     }
     const focused = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
@@ -634,12 +634,12 @@ describe("deck package installation", () => {
       .get();
     const focused = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
     );
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
+    const mixed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
 
     await importer.installFromBytes(validArchive(2, [card(existingCard.id, 0, "Updated")]));
     const completedFocusedSession = await graph.sessions.findById(focused.studySessionId);
@@ -686,7 +686,7 @@ describe("deck package installation", () => {
     }
     const feed = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
@@ -733,7 +733,7 @@ describe("deck package installation", () => {
     }
     const feed = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
@@ -794,7 +794,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
+    const feed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -843,7 +843,7 @@ describe("deck package installation", () => {
     }
     const feed = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
@@ -869,10 +869,10 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false, null);
+    const mixed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
     const focused = await graph.feed.prepareFeed(
       [installedCard],
-      "focused",
+      "focus",
       TEST_DECK_ID,
       false,
       null
