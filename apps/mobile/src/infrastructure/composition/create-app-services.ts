@@ -2,7 +2,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
-import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
+import type { FlashcardAudioService } from "@/features/audio/domain/flashcard-audio.service";
 import type { DeckPackageDownloader } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackagePicker } from "@/features/decks/application/deck-package-picker";
 import type { SavedProgressService } from "@/features/decks/application/saved-progress.service";
@@ -28,7 +28,7 @@ import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 
 export type AppServices = Readonly<{
-  answerAudioService: AnswerAudioService;
+  flashcardAudioService: FlashcardAudioService;
   deckInstaller: DeckInstaller;
   deckPackageDownloader: DeckPackageDownloader;
   deckPackagePicker: DeckPackagePicker;

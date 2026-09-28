@@ -8,7 +8,7 @@ import { reportError } from "@/shared/errors/report-error";
 
 type PlaybackFailure = Readonly<{ error: Error; uri: string | null }>;
 
-export function useAnswerAudio(reference: AudioReference) {
+export function useFlashcardAudio(reference: AudioReference) {
   const source: AudioSource = reference;
   const player = useAudioPlayer(source, { updateInterval: 100 });
   const status = useAudioPlayerStatus(player);

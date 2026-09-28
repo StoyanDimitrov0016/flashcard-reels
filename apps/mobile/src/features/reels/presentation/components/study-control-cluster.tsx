@@ -7,7 +7,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonId } from "@/features/lessons/domain/lesson.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { FlashcardAudioPlayer } from "@/features/audio/presentation/components/flashcard-audio-player";
 import { ReadingButton } from "@/features/lessons/presentation/components/reading-button";
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
@@ -43,7 +43,7 @@ export function StudyControlCluster({
   const after: ReactElement[] = [];
   if (audioEnabled && audioSource !== null) {
     (isBeforeRatings(audioPosition) ? before : after).push(
-      <AnswerAudioPlayer isActive={isActive} key="audio" source={audioSource} />
+      <FlashcardAudioPlayer isActive={isActive} key="audio" source={audioSource} />
     );
   }
   if (readingEnabled && lessonId && hasLesson(deckId, lessonId)) {

@@ -41,7 +41,7 @@ export function ReelFeed({
     sourceCards,
   });
   const {
-    answerAudioService,
+    flashcardAudioService,
     extensionError,
     fatalError,
     feed,
@@ -113,7 +113,7 @@ export function ReelFeed({
     return (
       <ReelCard
         themeSelection={themeSelection}
-        audioSource={answerAudioService.findSourceForFlashcard(
+        audioSource={flashcardAudioService.findSourceForFlashcard(
           item.card.deckId,
           deck.revision,
           item.card.id

@@ -3,16 +3,16 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 
-import { useAnswerAudio } from "@/features/audio/presentation/hooks/use-answer-audio";
+import { useFlashcardAudio } from "@/features/audio/presentation/hooks/use-flashcard-audio";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
-type AnswerAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
+type FlashcardAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
 
-export function AnswerAudioPlayer({ isActive, source }: AnswerAudioPlayerProps) {
+export function FlashcardAudioPlayer({ isActive, source }: FlashcardAudioPlayerProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const { playbackError, status, togglePlayback } = useAnswerAudio(isActive ? source : null);
+  const { playbackError, status, togglePlayback } = useFlashcardAudio(isActive ? source : null);
 
   if (!source) {
     return null;

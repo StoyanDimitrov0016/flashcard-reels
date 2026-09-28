@@ -28,7 +28,7 @@ export function useReelController({
   initialFeed,
   sourceCards,
 }: ReelControllerOptions) {
-  const { answerAudioService, reelFeedService, studyService } = useReels();
+  const { flashcardAudioService, reelFeedService, studyService } = useReels();
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
   const sourceCardsReference = useRef(sourceCards);
@@ -320,7 +320,7 @@ export function useReelController({
   );
 
   return {
-    answerAudioService,
+    flashcardAudioService,
     feed,
     onOccurrenceBecameActive,
     onRatingSelected,

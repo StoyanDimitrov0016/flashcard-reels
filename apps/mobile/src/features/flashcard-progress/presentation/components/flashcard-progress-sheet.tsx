@@ -5,7 +5,7 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { FlashcardAudioPlayer } from "@/features/audio/presentation/components/flashcard-audio-player";
 import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
@@ -52,7 +52,7 @@ export function FlashcardProgressSheet({
           <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <View style={styles.answerRow}>
               <FlashcardText style={styles.answer} text={card.answer} />
-              {!!audioSource && <AnswerAudioPlayer isActive source={audioSource} />}
+              {!!audioSource && <FlashcardAudioPlayer isActive source={audioSource} />}
             </View>
             <View style={styles.progressHeading}>
               <Text

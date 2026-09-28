@@ -37,7 +37,7 @@ export function createDeckPackageServices({
     sessionSettlement
   );
   return {
-    answerAudioRepository: audioStorage,
+    flashcardAudioRepository: audioStorage,
     deckAudioRemover: audioStorage,
     deckInstaller: installer as DeckInstaller,
     installBundledPackage: (bytes: Uint8Array) => installer.installFromBytes(bytes),

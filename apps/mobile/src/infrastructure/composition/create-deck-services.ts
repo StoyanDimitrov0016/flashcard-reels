@@ -4,7 +4,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
-import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SavedProgressServiceImpl } from "@/features/decks/application/saved-progress.service.impl";
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
@@ -32,7 +32,7 @@ export function createDeckServices({
   studyService,
 }: CreateDeckServicesOptions) {
   const deckRepository = new SQLiteDeckRepository(database);
-  const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices({
+  const { flashcardAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices({
     database,
     clock,
     deckRepository,
@@ -41,7 +41,7 @@ export function createDeckServices({
   });
 
   return {
-    answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
+    flashcardAudioService: new FlashcardAudioServiceImpl(flashcardAudioRepository),
     deckInstaller,
     deckPackageDownloader: new ExpoDeckPackageDownloader(),
     deckPackagePicker: new ExpoDeckPackagePicker(),

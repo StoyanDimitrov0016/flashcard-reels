@@ -4,7 +4,7 @@ import { StyleSheet, View } from "react-native";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { FlashcardAudioPlayer } from "@/features/audio/presentation/components/flashcard-audio-player";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
@@ -36,7 +36,7 @@ export function FlashcardDetailsSheet({ audioSource, card, onClose }: FlashcardD
           <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <View style={styles.answerRow}>
               <FlashcardText style={styles.answer} text={card.answer} />
-              {!!audioSource && <AnswerAudioPlayer isActive source={audioSource} />}
+              {!!audioSource && <FlashcardAudioPlayer isActive source={audioSource} />}
             </View>
           </BottomSheetScrollView>
         )}

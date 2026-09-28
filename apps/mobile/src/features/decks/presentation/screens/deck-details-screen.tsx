@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
+import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
@@ -149,7 +149,7 @@ export default function DeckDetailsScreen() {
       showProgress={showProgress}
     />
   );
-  const audioSource = useCardAnswerAudioSource(deck, selectedCard);
+  const audioSource = useFlashcardAudioSource(deck, selectedCard);
   const confirmReset = () => {
     if (resetting) {
       return;

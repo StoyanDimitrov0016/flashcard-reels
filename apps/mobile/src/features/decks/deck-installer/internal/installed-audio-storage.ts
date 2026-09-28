@@ -1,6 +1,6 @@
 import { Directory, File, Paths } from "expo-file-system";
 
-import type { AnswerAudioRepository } from "@/features/audio/domain/answer-audio.repository";
+import type { FlashcardAudioRepository } from "@/features/audio/domain/flashcard-audio.repository";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type {
   DeckAudioStorage,
@@ -12,7 +12,7 @@ import type { DeckAudioRemover } from "@/features/decks/domain/deck.service";
 const AUDIO_ROOT_NAME = "deck-audio";
 
 export class InstalledAudioStorage
-  implements DeckAudioStorage, AnswerAudioRepository, DeckAudioRemover
+  implements DeckAudioStorage, FlashcardAudioRepository, DeckAudioRemover
 {
   private readonly stagedDirectories = new Map<string, Directory>();
 

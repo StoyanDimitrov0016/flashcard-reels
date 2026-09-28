@@ -67,7 +67,7 @@ vi.mock("expo-file-system", () => ({
   Paths: { document: "document" },
 }));
 
-import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { InstalledAudioStorage } from "@/features/decks/deck-installer/internal/installed-audio-storage";
 
 describe("installed audio lookup", () => {
@@ -93,7 +93,7 @@ describe("installed audio lookup", () => {
 
   it("passes deck, revision, and card through the application service", () => {
     const repository = { findSourceForFlashcard: vi.fn(() => ({ uri: "installed.mp3" })) };
-    const service = new AnswerAudioServiceImpl(repository);
+    const service = new FlashcardAudioServiceImpl(repository);
 
     expect(service.findSourceForFlashcard("deck", 7, "card")).toEqual({
       uri: "installed.mp3",
