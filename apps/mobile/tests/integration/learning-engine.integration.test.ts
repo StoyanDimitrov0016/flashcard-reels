@@ -167,7 +167,7 @@ describe("SQLite learning-engine finalization", () => {
   it("counts a same-day recurrence without rescheduling memory, then learns again the next day", async () => {
     const clock = new TestClock();
     clock.advance(new Date(2026, 0, 10, 12).getTime() - Date.parse("2026-01-01T00:00:00.000Z"));
-    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator(), () => 0.5);
     const firstAttempt = await graph.study.startAttempt(makeFlashcard(1).id, 0, testId(900));
     await graph.study.rateAttempt(firstAttempt, "again");
     const firstRating = await attempts.findById(firstAttempt);
@@ -182,8 +182,18 @@ describe("SQLite learning-engine finalization", () => {
       -5
     );
 
-    const recurrence = await graph.study.startAttempt(makeFlashcard(1).id, 8, testId(900));
-    await graph.study.rateAttempt(recurrence, "good");
+    const scheduledRecurrences = await graph.recurrences.listBySessionId(testId(900));
+    const scheduledRecurrence = scheduledRecurrences[0];
+    if (!scheduledRecurrence) {
+      throw new Error("Expected an Again recurrence");
+    }
+    expect(scheduledRecurrence).toMatchObject({
+      flashcardId: makeFlashcard(1).id,
+      targetReelPosition: 8,
+    });
+    const recurrenceAttempt = await graph.study.startAttempt(makeFlashcard(1).id, 8, testId(900));
+    await graph.study.rateAttempt(recurrenceAttempt, "good");
+    await graph.study.consumeRecurrence(scheduledRecurrence.id);
     await graph.study.updateSessionReelPosition(testId(900), 13);
     await graph.study.finalizeAttemptsOutsideEditableWindow(testId(900));
 
