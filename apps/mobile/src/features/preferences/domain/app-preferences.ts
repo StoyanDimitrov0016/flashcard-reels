@@ -2,16 +2,16 @@ import type { ResolvedColorScheme } from "@/shared/domain/color-scheme";
 
 export type { ResolvedColorScheme } from "@/shared/domain/color-scheme";
 
-export type AppearancePreference = "light" | "dark" | "device";
-export type RecollectionIslandPosition = "left" | "bottom" | "right";
+export type ColorMode = "light" | "dark" | "device";
+export type StudyIslandPosition = "left" | "bottom" | "right";
 export type RatingDirection = "forward" | "reverse";
 /** Which side of the study island a control sits on: before the ratings, or after them. */
 export type ControlSide = "primary" | "opposite";
 export type AudioSide = ControlSide;
 
 export type AppPreferences = Readonly<{
-  appearance: AppearancePreference;
-  recollectionIslandPosition: RecollectionIslandPosition;
+  colorMode: ColorMode;
+  studyIslandPosition: StudyIslandPosition;
   ratingDirection: RatingDirection;
   audioSide: AudioSide;
   audioEnabled: boolean;
@@ -21,8 +21,8 @@ export type AppPreferences = Readonly<{
 }>;
 
 export const defaultAppPreferences: AppPreferences = {
-  appearance: "device",
-  recollectionIslandPosition: "right",
+  colorMode: "device",
+  studyIslandPosition: "right",
   ratingDirection: "forward",
   audioSide: "primary",
   audioEnabled: true,
@@ -33,11 +33,11 @@ export const defaultAppPreferences: AppPreferences = {
 };
 
 export function resolveColorScheme(
-  appearance: AppearancePreference,
+  colorMode: ColorMode,
   deviceScheme: ResolvedColorScheme | null | undefined
 ): ResolvedColorScheme {
-  if (appearance === "light" || appearance === "dark") {
-    return appearance;
+  if (colorMode === "light" || colorMode === "dark") {
+    return colorMode;
   }
   return deviceScheme === "light" ? "light" : "dark";
 }

@@ -6,8 +6,8 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 
 export const AppPreferencesSchema = z.object({
-  appearance: z.enum(["light", "dark", "device"]),
-  recollectionIslandPosition: z.enum(["left", "bottom", "right"]),
+  colorMode: z.enum(["light", "dark", "device"]),
+  studyIslandPosition: z.enum(["left", "bottom", "right"]),
   ratingDirection: z.enum(["forward", "reverse"]),
   audioSide: z.enum(["primary", "opposite"]),
   audioEnabled: z.boolean(),
@@ -17,8 +17,8 @@ export const AppPreferencesSchema = z.object({
 });
 
 const preferenceKeys: ReadonlyArray<keyof AppPreferences> = [
-  "appearance",
-  "recollectionIslandPosition",
+  "colorMode",
+  "studyIslandPosition",
   "ratingDirection",
   "audioSide",
   "audioEnabled",

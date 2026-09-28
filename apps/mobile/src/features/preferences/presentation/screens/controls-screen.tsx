@@ -43,7 +43,7 @@ export default function ControlsScreen() {
     setReadingEnabled,
     setReadingSide,
     setRatingDirection,
-    setRecollectionIslandPosition,
+    setStudyIslandPosition,
   } = usePreferences();
   const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
@@ -76,13 +76,13 @@ export default function ControlsScreen() {
       >
         <View style={styles.sections}>
           <PreferenceSection grouped={false} title="Appearance">
-            <AppearanceSelector onChange={setAppearance} selected={preferences.appearance} />
+            <AppearanceSelector onChange={setAppearance} selected={preferences.colorMode} />
           </PreferenceSection>
           <PreferenceSection title="Interaction">
             <PreferenceRow
               detail={
-                preferences.recollectionIslandPosition.charAt(0).toUpperCase() +
-                preferences.recollectionIslandPosition.slice(1) +
+                preferences.studyIslandPosition.charAt(0).toUpperCase() +
+                preferences.studyIslandPosition.slice(1) +
                 ", " +
                 (preferences.ratingDirection === "forward" ? "forward ratings" : "reverse ratings")
               }
@@ -190,7 +190,7 @@ export default function ControlsScreen() {
       <StudyControlsSheet
         onAudioSideChange={setAudioSide}
         onClose={() => setStudyControlsPresented(false)}
-        onPositionChange={setRecollectionIslandPosition}
+        onPositionChange={setStudyIslandPosition}
         onRatingDirectionChange={setRatingDirection}
         onReadingSideChange={setReadingSide}
         preferences={preferences}

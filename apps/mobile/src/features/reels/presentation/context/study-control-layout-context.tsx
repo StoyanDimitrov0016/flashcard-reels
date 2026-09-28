@@ -18,7 +18,7 @@ export function StudyControlLayoutProvider({ children }: StudyControlLayoutProvi
     ratingDirection: preferences.ratingDirection,
     readingEnabled: preferences.readingEnabled,
     readingSide: preferences.readingSide,
-    recollectionIslandPosition: preferences.recollectionIslandPosition,
+    studyIslandPosition: preferences.studyIslandPosition,
   });
 
   return (

@@ -7,7 +7,7 @@ import type {
   AppPreferences,
   ControlSide,
   RatingDirection,
-  RecollectionIslandPosition,
+  StudyIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
 
 import { recallOptions } from "@/features/reels/presentation/recall-options";
@@ -25,7 +25,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
+const positions: readonly StudyIslandPosition[] = ["left", "bottom", "right"];
 
 // The preview is a small card, so its island uses compact markers instead of the real 40pt ones.
 const PREVIEW_MARKER = 24;
@@ -136,7 +136,7 @@ function animateNext() {
 type StudyControlsSheetProps = Readonly<{
   onAudioSideChange: (value: ControlSide) => void;
   onClose: () => void;
-  onPositionChange: (value: RecollectionIslandPosition) => void;
+  onPositionChange: (value: StudyIslandPosition) => void;
   onRatingDirectionChange: (value: RatingDirection) => void;
   onReadingSideChange: (value: ControlSide) => void;
   preferences: AppPreferences;
@@ -155,7 +155,7 @@ export function StudyControlsSheet({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const layout = resolveStudyControlLayout(preferences);
-  const position = preferences.recollectionIslandPosition;
+  const position = preferences.studyIslandPosition;
   const sideOptions = [
     {
       label: getControlSideLabel(position, "primary"),
@@ -238,7 +238,7 @@ export function StudyControlsSheet({
   );
 }
 
-function getPositionSymbol(position: RecollectionIslandPosition): SymbolViewProps["name"] {
+function getPositionSymbol(position: StudyIslandPosition): SymbolViewProps["name"] {
   if (position === "left") {
     return {
       android: "align_horizontal_left",
@@ -261,7 +261,7 @@ function getPositionSymbol(position: RecollectionIslandPosition): SymbolViewProp
 }
 
 function getDirectionSymbol(
-  position: RecollectionIslandPosition,
+  position: StudyIslandPosition,
   direction: RatingDirection
 ): SymbolViewProps["name"] {
   if (position === "bottom") {
@@ -275,7 +275,7 @@ function getDirectionSymbol(
 }
 
 function getPlacementSymbol(
-  position: RecollectionIslandPosition,
+  position: StudyIslandPosition,
   side: ControlSide
 ): SymbolViewProps["name"] {
   const names = {

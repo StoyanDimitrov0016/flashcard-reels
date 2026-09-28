@@ -43,7 +43,7 @@ describe("study control derivation", () => {
         ratingDirection: "reverse",
         readingEnabled: true,
         readingSide: "primary",
-        recollectionIslandPosition: "right",
+        studyIslandPosition: "right",
       })
     ).toEqual({
       audioEnabled: true,
@@ -61,7 +61,7 @@ describe("study control derivation", () => {
         ratingDirection: "forward",
         readingEnabled: false,
         readingSide: "opposite",
-        recollectionIslandPosition: "bottom",
+        studyIslandPosition: "bottom",
       })
     ).toEqual({
       audioEnabled: false,

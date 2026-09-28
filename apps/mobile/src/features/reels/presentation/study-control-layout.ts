@@ -3,7 +3,7 @@ import type {
   AudioSide,
   ControlSide,
   RatingDirection,
-  RecollectionIslandPosition,
+  StudyIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
@@ -12,7 +12,7 @@ export type StudyControlAudioPosition = "left" | "right" | "above" | "below";
 export type StudyControlPlacement = StudyControlAudioPosition;
 
 export type ResolvedStudyControlLayout = Readonly<{
-  position: RecollectionIslandPosition;
+  position: StudyIslandPosition;
   orientation: StudyControlOrientation;
   ratingOrder: readonly RecallLevel[];
   audioPosition: StudyControlAudioPosition;
@@ -25,7 +25,7 @@ const canonicalRatingOrder: readonly RecallLevel[] = ["again", "hard", "good", "
 const reverseRatingOrder: readonly RecallLevel[] = ["easy", "good", "hard", "again"];
 
 export function deriveIslandOrientation(
-  position: RecollectionIslandPosition
+  position: StudyIslandPosition
 ): StudyControlOrientation {
   return position === "bottom" ? "horizontal" : "vertical";
 }
@@ -36,7 +36,7 @@ export function deriveRatingOrder(direction: RatingDirection): readonly RecallLe
 
 /** Places a control before (primary) or after (opposite) the ratings along the island's axis. */
 export function deriveControlPlacement(
-  islandPosition: RecollectionIslandPosition,
+  islandPosition: StudyIslandPosition,
   side: ControlSide
 ): StudyControlPlacement {
   if (islandPosition === "bottom") {
@@ -46,7 +46,7 @@ export function deriveControlPlacement(
 }
 
 export function deriveAudioPosition(
-  islandPosition: RecollectionIslandPosition,
+  islandPosition: StudyIslandPosition,
   audioSide: AudioSide
 ): StudyControlAudioPosition {
   return deriveControlPlacement(islandPosition, audioSide);
@@ -59,7 +59,7 @@ export function isBeforeRatings(placement: StudyControlPlacement): boolean {
 export function resolveStudyControlLayout(
   preferences: Pick<
     AppPreferences,
-    | "recollectionIslandPosition"
+    | "studyIslandPosition"
     | "ratingDirection"
     | "audioSide"
     | "audioEnabled"
@@ -70,22 +70,22 @@ export function resolveStudyControlLayout(
   return {
     audioEnabled: preferences.audioEnabled,
     audioPosition: deriveAudioPosition(
-      preferences.recollectionIslandPosition,
+      preferences.studyIslandPosition,
       preferences.audioSide
     ),
-    orientation: deriveIslandOrientation(preferences.recollectionIslandPosition),
-    position: preferences.recollectionIslandPosition,
+    orientation: deriveIslandOrientation(preferences.studyIslandPosition),
+    position: preferences.studyIslandPosition,
     ratingOrder: deriveRatingOrder(preferences.ratingDirection),
     readingEnabled: preferences.readingEnabled,
     readingPosition: deriveControlPlacement(
-      preferences.recollectionIslandPosition,
+      preferences.studyIslandPosition,
       preferences.readingSide
     ),
   };
 }
 
 export function getRatingDirectionLabel(
-  islandPosition: RecollectionIslandPosition,
+  islandPosition: StudyIslandPosition,
   direction: RatingDirection
 ): string {
   const horizontal = islandPosition === "bottom";
@@ -95,7 +95,7 @@ export function getRatingDirectionLabel(
   return direction === "forward" ? "Top → Bottom" : "Bottom → Top";
 }
 
-export function getControlSideLabel(islandPosition: RecollectionIslandPosition, side: ControlSide) {
+export function getControlSideLabel(islandPosition: StudyIslandPosition, side: ControlSide) {
   const horizontal = islandPosition === "bottom";
   if (horizontal) {
     return side === "primary" ? "Left" : "Right";
@@ -104,7 +104,7 @@ export function getControlSideLabel(islandPosition: RecollectionIslandPosition, 
 }
 
 export function getAudioSideLabel(
-  islandPosition: RecollectionIslandPosition,
+  islandPosition: StudyIslandPosition,
   audioSide: AudioSide
 ) {
   return getControlSideLabel(islandPosition, audioSide);

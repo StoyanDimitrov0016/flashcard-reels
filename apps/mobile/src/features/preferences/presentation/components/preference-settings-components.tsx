@@ -2,30 +2,30 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Children, isValidElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
+import type { ColorMode } from "@/features/preferences/domain/app-preferences";
 
 import { AppSwitch } from "@/shared/presentation/components/app-switch";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
-const appearanceLabels: Record<AppearancePreference, string> = {
+const colorModeLabels: Record<ColorMode, string> = {
   light: "Light",
   dark: "Dark",
   device: "Device",
 };
 
-const appearanceIcons: Record<AppearancePreference, SymbolViewProps["name"]> = {
+const colorModeIcons: Record<ColorMode, SymbolViewProps["name"]> = {
   light: { android: "light_mode", ios: "sun.max.fill", web: "light_mode" },
   dark: { android: "dark_mode", ios: "moon.fill", web: "dark_mode" },
   device: { android: "devices", ios: "iphone", web: "devices" },
 };
 
-const appearanceOptions: readonly AppearancePreference[] = ["light", "dark", "device"];
+const colorModeOptions: readonly ColorMode[] = ["light", "dark", "device"];
 
 type AppearanceSelectorProps = Readonly<{
-  onChange: (value: AppearancePreference) => void;
-  selected: AppearancePreference;
+  onChange: (value: ColorMode) => void;
+  selected: ColorMode;
 }>;
 
 export function AppearanceSelector({ onChange, selected }: AppearanceSelectorProps) {
@@ -34,26 +34,26 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
 
   return (
     <View accessibilityRole="radiogroup" style={styles.segmentedControl}>
-      {appearanceOptions.map((appearance) => {
-        const isSelected = selected === appearance;
+      {colorModeOptions.map((colorMode) => {
+        const isSelected = selected === colorMode;
         return (
           <Pressable
-            accessibilityLabel={appearanceLabels[appearance] + " appearance"}
+            accessibilityLabel={colorModeLabels[colorMode] + " colorMode"}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected, selected: isSelected }}
             hitSlop={4}
-            key={appearance}
-            onPress={() => onChange(appearance)}
+            key={colorMode}
+            onPress={() => onChange(colorMode)}
             style={[styles.segment, isSelected && styles.segmentSelected]}
           >
             <View style={styles.segmentContent}>
               <SymbolView
-                name={appearanceIcons[appearance]}
+                name={colorModeIcons[colorMode]}
                 size={16}
                 tintColor={isSelected ? colors.textPrimary : colors.textSecondary}
               />
               <Text style={[styles.segmentLabel, isSelected && styles.segmentLabelSelected]}>
-                {appearanceLabels[appearance]}
+                {colorModeLabels[colorMode]}
               </Text>
             </View>
           </Pressable>
