@@ -239,14 +239,35 @@ describe("deck publication review", () => {
     expect(result.decks[0]?.warnings[0]).toContain(deckId);
   });
 
-  it("blocks a published deck under a different file name", async () => {
-    const result = await review(
-      storeWith(candidate(deckDocument())),
-      candidate(deckDocument({ revision: 2 }), "Renamed.fcrdeck")
-    );
+  it("updates a published deck at its existing key when the source file name changes", async () => {
+    const renamed = candidate(deckDocument({ revision: 2 }), `${deckId}.fcrdeck`);
+    const result = await review(storeWith(candidate(deckDocument())), renamed);
 
-    expect(result.decks[0]?.status).toBe("blocked");
-    expect(result.decks[0]?.blocks[0]).toContain("decks/Scaling.fcrdeck");
+    expect(result.decks[0]).toMatchObject({
+      key: "decks/Scaling.fcrdeck",
+      status: "updated",
+    });
+    expect(canPublish(result)).toBe(true);
+    expect(publicationUploads(result, [renamed])).toMatchObject([
+      { deckId, key: "decks/Scaling.fcrdeck", bytes: renamed.bytes, revision: 2 },
+    ]);
+  });
+
+  it("blocks a new deck from overwriting another published deck's object key", async () => {
+    const incoming = candidate(
+      deckDocument({
+        cards: deckCards({ 0: { id: replacementCardId } }).slice(0, 1),
+        id: otherDeckId,
+        title: "Other",
+      })
+    );
+    const result = await review(storeWith(candidate(deckDocument())), incoming);
+
+    expect(result.blocks).toContain(
+      `Object key decks/Scaling.fcrdeck already belongs to deck ${deckId}.`
+    );
+    expect(canPublish(result)).toBe(false);
+    expect(publicationUploads(result, [incoming])).toEqual([]);
   });
 
   it("rejects the whole review when the published catalog cannot be read", async () => {

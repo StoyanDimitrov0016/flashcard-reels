@@ -207,6 +207,15 @@ export async function reviewDeckPublication({
     });
   });
 
+  const ownersByKey = new Map(publishedEntries.map((entry) => [entry.key, entry.deckId]));
+  for (const change of changes) {
+    const owner = ownersByKey.get(change.key);
+    if (owner && owner !== change.deckId) {
+      catalogBlocks.push(`Object key ${change.key} already belongs to deck ${owner}.`);
+    }
+    ownersByKey.set(change.key, change.deckId);
+  }
+
   catalogBlocks.push(
     ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck), ...publishedIds])
   );
@@ -261,7 +270,7 @@ function reviewDeck({
   publishedDeck,
   publishedEntries,
 }: ReviewDeckOptions): DeckPublicationChange {
-  const key = `${publishedKeyPrefix}${candidate.fileName}`;
+  const key = published?.key ?? `${publishedKeyPrefix}${candidate.fileName}`;
   const base = {
     deckId: deck.id,
     fileName: candidate.fileName,
@@ -290,11 +299,6 @@ function reviewDeck({
   }
 
   const blocks: string[] = [];
-  if (published.key !== key) {
-    blocks.push(
-      `Deck ${deck.id} is already published as ${published.key}. Publish it with that file name.`
-    );
-  }
   if (publishedDeck && publishedDeck.authorId !== deck.authorId) {
     blocks.push(`Deck ${deck.id} cannot change author ID across revisions.`);
   }
