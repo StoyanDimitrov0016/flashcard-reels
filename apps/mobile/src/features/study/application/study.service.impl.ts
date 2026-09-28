@@ -20,13 +20,13 @@ import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { type Rating } from "@/features/learning-engine/domain/rating";
 import {
   compareRatedAttempts,
   isRatedReviewAttempt,
   orderReviewAttemptsForFinalization,
 } from "@/features/study/application/review-attempt-finalization-order";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { type RecallLevel } from "@/features/study/domain/recall-level";
 import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import {
   AGGREGATION_CHECK_INTERVAL,
@@ -434,7 +434,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     );
   }
 
-  async rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean> {
+  async rateAttempt(attemptId: string, rating: Rating): Promise<boolean> {
     const attempt = await this.reviewAttemptRepository.findById(attemptId);
     if (!attempt || attempt.finalizedAt !== null) {
       return false;

@@ -23,12 +23,12 @@ const colorModeIcons: Record<ColorMode, SymbolViewProps["name"]> = {
 
 const colorModeOptions: readonly ColorMode[] = ["light", "dark", "device"];
 
-type AppearanceSelectorProps = Readonly<{
+type ColorModeSelectorProps = Readonly<{
   onChange: (value: ColorMode) => void;
   selected: ColorMode;
 }>;
 
-export function AppearanceSelector({ onChange, selected }: AppearanceSelectorProps) {
+export function ColorModeSelector({ onChange, selected }: ColorModeSelectorProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -38,7 +38,7 @@ export function AppearanceSelector({ onChange, selected }: AppearanceSelectorPro
         const isSelected = selected === colorMode;
         return (
           <Pressable
-            accessibilityLabel={colorModeLabels[colorMode] + " colorMode"}
+            accessibilityLabel={colorModeLabels[colorMode] + " color mode"}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected, selected: isSelected }}
             hitSlop={4}

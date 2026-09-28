@@ -29,7 +29,7 @@ type StudyFeedHeaderProps = Readonly<{
 
 /**
  * A fixed, non-interactive header over the two study feeds. It follows the horizontal pager, so
- * the underline slides between For you and Focus while swiping and the header fades out as the
+ * the underline slides between Discover and Focus while swiping and the header fades out as the
  * learner swipes on to the next destination.
  */
 export function StudyFeedHeader({ position, forYouIndex, focusIndex }: StudyFeedHeaderProps) {
@@ -83,7 +83,7 @@ export function StudyFeedHeader({ position, forYouIndex, focusIndex }: StudyFeed
         <FeedLabel
           colors={colors}
           emphasis={forYouEmphasis}
-          label="For you"
+          label="Discover"
           onLayout={(event) => setForYouLayout(toLabelLayout(event))}
         />
         <FeedLabel

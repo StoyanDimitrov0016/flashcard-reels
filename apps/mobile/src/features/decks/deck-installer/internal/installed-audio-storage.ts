@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from "expo-file-system";
 
-import type { FlashcardAudioRepository } from "@/features/audio/domain/flashcard-audio.repository";
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
+import type { FlashcardAudioRepository } from "@/features/audio/domain/flashcard-audio.repository";
 import type {
   DeckAudioStorage,
   DeckPackage,

@@ -37,7 +37,7 @@ export function createFocusedFeedState(
           anchorFlashcardId,
           cardState: options?.cardState ?? {
             cardId: anchorFlashcardId,
-            recallLevel: null,
+            rating: null,
             revealed: false,
           },
         }

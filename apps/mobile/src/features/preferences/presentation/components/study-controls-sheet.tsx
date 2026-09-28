@@ -85,13 +85,13 @@ function StudyIslandPreview({ layout }: StudyIslandPreviewProps) {
     <View style={[styles.previewCluster, horizontal && styles.previewClusterHorizontal]}>
       {toolGroup(before)}
       <View style={[styles.previewIsland, horizontal && styles.previewIslandHorizontal]}>
-        {layout.ratingOrder.map((level) => {
-          const option = recallOptions.find((current) => current.level === level);
+        {layout.ratingOrder.map((rating) => {
+          const option = recallOptions.find((current) => current.rating === rating);
           if (!option) {
             return null;
           }
           return (
-            <View key={level} style={[styles.previewAction, horizontal && styles.flexOne]}>
+            <View key={rating} style={[styles.previewAction, horizontal && styles.flexOne]}>
               <View style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}>
                 <SymbolView name={option.symbol} size={13} tintColor={colors.actionPrimaryText} />
               </View>
@@ -230,7 +230,7 @@ export function StudyControlsSheet({
             />
           </View>
           {(!preferences.audioEnabled || !preferences.readingEnabled) && (
-            <Text style={styles.footnote}>Turned-off buttons can be switched on in Controls.</Text>
+            <Text style={styles.footnote}>Turned-off buttons can be switched on in Settings.</Text>
           )}
         </View>
       </View>

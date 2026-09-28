@@ -6,7 +6,7 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
@@ -83,9 +83,9 @@ type ReelCardProps = Readonly<{
   height: number;
   isActive: boolean;
   onFlip: () => void;
-  onRate: (level: RecallLevel) => void;
+  onRate: (rating: Rating) => void;
   ratingEnabled: boolean;
-  recallLevel: RecallLevel | null;
+  rating: Rating | null;
   revealed: boolean;
   occurrenceKey: string;
   reelPosition: number;
@@ -105,7 +105,7 @@ export function ReelCard({
   onFlip,
   onRate,
   ratingEnabled,
-  recallLevel,
+  rating,
   revealed,
   occurrenceKey,
   reelPosition,
@@ -119,7 +119,7 @@ export function ReelCard({
   const openFocusedFeed = useOpenFocusedFeed();
   const { hasLesson, openLesson } = useDeckLessons();
   const hasLinkedLesson = card.lessonId !== null && hasLesson(card.deckId, card.lessonId);
-  const focusedCardState = { cardId: card.id, recallLevel, revealed } as const;
+  const focusedCardState = { cardId: card.id, rating, revealed } as const;
   const openFocusWithCurrentCardState = () => {
     openFocusedFeed(card.deckId, card.id, { cardState: focusedCardState });
   };
@@ -380,7 +380,7 @@ export function ReelCard({
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}
-                  selectedLevel={recallLevel}
+                  selectedRating={rating}
                 />
               </AnswerControlRegion>
             </AnswerBodyLayout>

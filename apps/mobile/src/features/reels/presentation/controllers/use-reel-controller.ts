@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
 import {
@@ -51,7 +51,7 @@ export function useReelController({
         position:
           initialFeed.occurrences.find(({ card }) => card.id === initialCardState.cardId)
             ?.reelPosition ?? initialFeed.currentReelPosition,
-        recallLevel: initialCardState.recallLevel,
+        rating: initialCardState.rating,
         revealed: initialCardState.revealed,
       }
     : undefined;
@@ -76,7 +76,7 @@ export function useReelController({
     initialRecallState,
     recordCriticalFailure
   );
-  const { getAttemptId, getRecallLevel, rateCard, setAttemptId } = recallSession;
+  const { getAttemptId, getRating, rateCard, setAttemptId } = recallSession;
 
   const replaceFeed = useCallback((nextFeed: PreparedReelFeed) => {
     const occurrences = mergeMountedReelOccurrences(
@@ -285,13 +285,13 @@ export function useReelController({
   );
 
   const onRatingSelected = useCallback(
-    (occurrence: PreparedReelOccurrence, level: RecallLevel) => {
+    (occurrence: PreparedReelOccurrence, rating: Rating) => {
       if (criticalFailureReference.current) {
         return;
       }
-      const previousLevel = getRecallLevel(occurrence.reelPosition);
+      const previousRating = getRating(occurrence.reelPosition);
       const ratingPersistence = startAttempt(occurrence)
-        .then((attemptId) => studyService.rateAttempt(attemptId, level))
+        .then((attemptId) => studyService.rateAttempt(attemptId, rating))
         .then((updated) => {
           if (!updated) {
             throw new OperationError({
@@ -300,8 +300,8 @@ export function useReelController({
               message: "The selected rating could not be saved",
             });
           }
-          rateCard(occurrence.reelPosition, level);
-          if (hasRecurrence(previousLevel) || hasRecurrence(level)) {
+          rateCard(occurrence.reelPosition, rating);
+          if (hasRecurrence(previousRating) || hasRecurrence(rating)) {
             void refreshFeed();
           }
         })
@@ -316,7 +316,7 @@ export function useReelController({
         })
         .catch(() => undefined);
     },
-    [getRecallLevel, rateCard, recordCriticalFailure, refreshFeed, startAttempt, studyService]
+    [getRating, rateCard, recordCriticalFailure, refreshFeed, startAttempt, studyService]
   );
 
   return {
@@ -333,6 +333,6 @@ export function useReelController({
   };
 }
 
-function hasRecurrence(level: RecallLevel | undefined): boolean {
-  return level === "again" || level === "hard";
+function hasRecurrence(rating: Rating | undefined): boolean {
+  return rating === "again" || rating === "hard";
 }

@@ -1,11 +1,11 @@
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 export type FlashcardReviewAttemptFields = Readonly<{
   id: string;
   flashcardId: string;
   studySessionId: string;
   reelPosition: number;
-  rating: RecallLevel | null;
+  rating: Rating | null;
   createdAt: string;
   ratedAt?: string | null;
   updatedAt: string;
@@ -17,7 +17,7 @@ export class FlashcardReviewAttempt {
   public readonly flashcardId: string;
   public readonly studySessionId: string;
   public readonly reelPosition: number;
-  public readonly rating: RecallLevel | null;
+  public readonly rating: Rating | null;
   public readonly createdAt: string;
   public readonly ratedAt: string | null;
   public readonly updatedAt: string;

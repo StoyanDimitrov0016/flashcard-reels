@@ -4,7 +4,7 @@ import type {
   FlashcardProgressAggregationResult,
   FlashcardProgressAggregationTransaction,
 } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts";
@@ -204,7 +204,7 @@ export class SQLiteFlashcardProgressAggregationTransaction<
   }
 }
 
-function newContribution(rating: RecallLevel, reviewedAt: string): Contribution {
+function newContribution(rating: Rating, reviewedAt: string): Contribution {
   return {
     againCount: rating === "again" ? 1 : 0,
     easyCount: rating === "easy" ? 1 : 0,
@@ -217,7 +217,7 @@ function newContribution(rating: RecallLevel, reviewedAt: string): Contribution 
 
 function addContribution(
   contribution: Contribution,
-  rating: RecallLevel,
+  rating: Rating,
   reviewedAt: string
 ): Contribution {
   const next = newContribution(rating, reviewedAt);

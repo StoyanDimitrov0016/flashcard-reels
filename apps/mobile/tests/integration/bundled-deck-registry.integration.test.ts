@@ -22,7 +22,7 @@ describe("bundled deck registry", () => {
         (entry: { packageAsset: string }) => entry.packageAsset === packageFile
       );
       expect(metadata).toMatchObject({
-        colorMode: { theme: "gold" },
+        appearance: { theme: "gold" },
         id: deckPackage.id,
         revision: deckPackage.revision,
       });

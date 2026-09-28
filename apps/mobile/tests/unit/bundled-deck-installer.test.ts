@@ -18,7 +18,7 @@ describe("bundled deck startup version behavior", () => {
     }
   );
 
-  it("applies bundled colorMode only to a fresh installation", () => {
+  it("applies bundled appearance only to a fresh installation", () => {
     expect(shouldApplyBundledAppearance("installed")).toBe(true);
     expect(shouldApplyBundledAppearance("updated")).toBe(false);
     expect(shouldApplyBundledAppearance("no-op")).toBe(false);

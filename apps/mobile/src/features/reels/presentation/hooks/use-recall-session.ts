@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { StudyService } from "@/features/study/domain/study.service";
 
 import { toOperationError } from "@/shared/errors/normalize-error";
@@ -12,15 +12,15 @@ export function useRecallSession(
   throughReelPosition: number,
   initialCardState?: Readonly<{
     position: number;
-    recallLevel: RecallLevel | null;
+    rating: Rating | null;
     revealed: boolean;
   }>,
   onLoadError?: (error: Error) => void
 ) {
-  const initialRecallLevels =
-    initialCardState?.recallLevel === null || initialCardState?.recallLevel === undefined
-      ? new Map<number, RecallLevel>()
-      : new Map([[initialCardState.position, initialCardState.recallLevel]]);
+  const initialRatings =
+    initialCardState?.rating === null || initialCardState?.rating === undefined
+      ? new Map<number, Rating>()
+      : new Map([[initialCardState.position, initialCardState.rating]]);
   const [attemptIds, setAttemptIds] = useState<ReadonlyMap<number, string>>(() => new Map());
   const attemptIdsReference = useRef<ReadonlyMap<number, string>>(new Map());
   const retainedRangeReference = useRef({ fromReelPosition, throughReelPosition });
@@ -30,9 +30,8 @@ export function useRecallSession(
   const revealedPositionsReference = useRef<ReadonlySet<number>>(
     initialCardState?.revealed ? new Set([initialCardState.position]) : new Set()
   );
-  const [recallLevels, setRecallLevels] =
-    useState<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
-  const recallLevelsReference = useRef<ReadonlyMap<number, RecallLevel>>(initialRecallLevels);
+  const [ratings, setRatings] = useState<ReadonlyMap<number, Rating>>(initialRatings);
+  const ratingsReference = useRef<ReadonlyMap<number, Rating>>(initialRatings);
   const [loadError, setLoadError] = useState<Error | null>(null);
 
   useEffect(
@@ -43,17 +42,17 @@ export function useRecallSession(
       const nextAttemptIds = new Map(
         [...attemptIdsReference.current].filter(([position]) => isRetained(position))
       );
-      const nextRecallLevels = new Map(
-        [...recallLevelsReference.current].filter(([position]) => isRetained(position))
+      const nextRatings = new Map(
+        [...ratingsReference.current].filter(([position]) => isRetained(position))
       );
       const nextRevealedPositions = new Set(
         [...revealedPositionsReference.current].filter((position) => isRetained(position))
       );
       attemptIdsReference.current = nextAttemptIds;
-      recallLevelsReference.current = nextRecallLevels;
+      ratingsReference.current = nextRatings;
       revealedPositionsReference.current = nextRevealedPositions;
       setAttemptIds(nextAttemptIds);
-      setRecallLevels(nextRecallLevels);
+      setRatings(nextRatings);
       setRevealedPositions(nextRevealedPositions);
     },
     [fromReelPosition, throughReelPosition]
@@ -74,25 +73,25 @@ export function useRecallSession(
           }
           setLoadError(null);
           const nextAttemptIds = new Map<number, string>();
-          const nextRecallLevels = new Map<number, RecallLevel>();
+          const nextRatings = new Map<number, Rating>();
           for (const attempt of attempts) {
             nextAttemptIds.set(attempt.reelPosition, attempt.id);
             if (attempt.rating !== null) {
-              nextRecallLevels.set(attempt.reelPosition, attempt.rating);
+              nextRatings.set(attempt.reelPosition, attempt.rating);
             }
           }
           attemptIdsReference.current = nextAttemptIds;
           setAttemptIds(nextAttemptIds);
           if (
-            initialCardState?.recallLevel !== null &&
-            initialCardState?.recallLevel !== undefined &&
+            initialCardState?.rating !== null &&
+            initialCardState?.rating !== undefined &&
             initialCardState.position >= fromReelPosition &&
             initialCardState.position <= throughReelPosition
           ) {
-            nextRecallLevels.set(initialCardState.position, initialCardState.recallLevel);
+            nextRatings.set(initialCardState.position, initialCardState.rating);
           }
-          recallLevelsReference.current = nextRecallLevels;
-          setRecallLevels(nextRecallLevels);
+          ratingsReference.current = nextRatings;
+          setRatings(nextRatings);
         })
         .catch((error: unknown) => {
           if (active) {
@@ -146,20 +145,20 @@ export function useRecallSession(
     });
   }, []);
 
-  const rateCard = useCallback((reelPosition: number, level: RecallLevel) => {
+  const rateCard = useCallback((reelPosition: number, rating: Rating) => {
     if (
       reelPosition < retainedRangeReference.current.fromReelPosition ||
       reelPosition > retainedRangeReference.current.throughReelPosition
     ) {
       return;
     }
-    const nextLevels = new Map(recallLevelsReference.current).set(reelPosition, level);
-    recallLevelsReference.current = nextLevels;
-    setRecallLevels(nextLevels);
+    const nextRatings = new Map(ratingsReference.current).set(reelPosition, rating);
+    ratingsReference.current = nextRatings;
+    setRatings(nextRatings);
   }, []);
 
-  const getRecallLevel = useCallback(
-    (reelPosition: number) => recallLevelsReference.current.get(reelPosition),
+  const getRating = useCallback(
+    (reelPosition: number) => ratingsReference.current.get(reelPosition),
     []
   );
 
@@ -178,10 +177,10 @@ export function useRecallSession(
   return {
     attemptIds,
     getAttemptId,
-    getRecallLevel,
+    getRating,
     loadError,
     rateCard,
-    recallLevels,
+    ratings,
     revealedPositions,
     setAttemptId,
     toggleCard,

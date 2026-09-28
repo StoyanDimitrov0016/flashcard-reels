@@ -50,14 +50,14 @@ export async function installBundledDecks(
     await themeSelectionRepository.save(
       new DeckThemeSelection({
         deckId: definition.id,
-        theme: definition.colorMode.theme,
+        theme: definition.appearance.theme,
       })
     );
     const deck = await deckRepository.findById(definition.id);
     if (deck) {
       await deckRepository.save(
         new Deck({
-          coverAsset: definition.colorMode.coverAsset,
+          coverAsset: definition.appearance.coverAsset,
           createdAt: deck.createdAt,
           description: deck.description,
           id: deck.id,

@@ -1,22 +1,19 @@
-import { createEmptyCard, fsrs, Rating, State, type Card, type Grade } from "ts-fsrs";
+import { createEmptyCard, fsrs, Rating as FsrsRating, State, type Card, type Grade } from "ts-fsrs";
 
 import type { FlashcardMemoryState, SchedulerMemoryState } from "../domain/flashcard-memory-state";
-import type {
-  LearningRating,
-  LearningScheduler,
-  SchedulerReviewResult,
-} from "../domain/learning-scheduler";
+import type { LearningScheduler, SchedulerReviewResult } from "../domain/learning-scheduler";
+import type { Rating } from "../domain/rating";
 
 const scheduler = fsrs({
   enable_fuzz: false,
   enable_short_term: false,
 });
 
-const ratingMap: Readonly<Record<LearningRating, Grade>> = {
-  again: Rating.Again,
-  hard: Rating.Hard,
-  good: Rating.Good,
-  easy: Rating.Easy,
+const ratingMap: Readonly<Record<Rating, Grade>> = {
+  again: FsrsRating.Again,
+  hard: FsrsRating.Hard,
+  good: FsrsRating.Good,
+  easy: FsrsRating.Easy,
 };
 
 const stateMap: Readonly<Record<State, SchedulerMemoryState["state"]>> = {
@@ -30,7 +27,7 @@ export class TsFsrsLearningScheduler implements LearningScheduler {
   review(
     flashcardId: string,
     currentState: FlashcardMemoryState | null,
-    rating: LearningRating,
+    rating: Rating,
     reviewedAt: string
   ): SchedulerReviewResult {
     const reviewDate = new Date(reviewedAt);

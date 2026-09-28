@@ -49,7 +49,7 @@ export function ReelFeed({
     onRatingSelected,
     refreshError,
     requestFeedExtension,
-    recallLevels,
+    ratings,
     revealedPositions,
     retryFeedExtension,
     toggleCard,
@@ -126,8 +126,8 @@ export function ReelFeed({
         ratingEnabled={item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)}
         isActive={item.reelPosition === activeReelPosition}
         onFlip={() => toggleCard(item.reelPosition)}
-        onRate={(level) => onRatingSelected(item, level)}
-        recallLevel={recallLevels.get(item.reelPosition) ?? null}
+        onRate={(rating) => onRatingSelected(item, rating)}
+        rating={ratings.get(item.reelPosition) ?? null}
         revealed={revealedPositions.has(item.reelPosition)}
         occurrenceKey={item.key}
         reelPosition={item.reelPosition}
@@ -140,7 +140,7 @@ export function ReelFeed({
     activeIndex,
     activeReelPosition,
     furthestReelPosition: feed.furthestReelPosition,
-    recallLevels,
+    ratings,
     revealedPositions,
   };
   const handleEndReached = useCallback(() => {

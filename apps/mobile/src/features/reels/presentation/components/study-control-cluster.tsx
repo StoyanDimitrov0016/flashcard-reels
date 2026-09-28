@@ -4,8 +4,8 @@ import { StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { LessonId } from "@/features/lessons/domain/lesson.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 import { FlashcardAudioPlayer } from "@/features/audio/presentation/components/flashcard-audio-player";
 import { ReadingButton } from "@/features/lessons/presentation/components/reading-button";
@@ -20,9 +20,9 @@ type StudyControlClusterProps = Readonly<{
   deckId: DeckId;
   lessonId: LessonId | null;
   isActive: boolean;
-  onRate: (level: RecallLevel) => void;
+  onRate: (rating: Rating) => void;
   ratingEnabled: boolean;
-  selectedLevel: RecallLevel | null;
+  selectedRating: Rating | null;
 }>;
 
 /** The ratings island with the audio and reading buttons on their chosen sides. */
@@ -33,7 +33,7 @@ export function StudyControlCluster({
   isActive,
   onRate,
   ratingEnabled,
-  selectedLevel,
+  selectedRating,
 }: StudyControlClusterProps) {
   const { audioEnabled, audioPosition, orientation, readingEnabled, readingPosition } =
     useStudyControlLayout();
@@ -66,7 +66,7 @@ export function StudyControlCluster({
       <RecallControls
         onSelect={onRate}
         ratingEnabled={ratingEnabled}
-        selectedLevel={selectedLevel}
+        selectedRating={selectedRating}
       />
       {after.length > 0 ? <View style={styles.tools}>{after}</View> : spacerCount > 0 && spacer}
     </View>

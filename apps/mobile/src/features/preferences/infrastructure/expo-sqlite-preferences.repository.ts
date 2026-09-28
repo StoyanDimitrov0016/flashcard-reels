@@ -8,7 +8,7 @@ import {
 } from "@/features/preferences/application/normalize-preferences";
 import { type AppPreferences } from "@/features/preferences/domain/app-preferences";
 
-const PREFERENCES_STORAGE_KEY = "flashcard-reels.preferences.v1";
+const PREFERENCES_STORAGE_KEY = "flashcard-reels.preferences.v2";
 
 class ExpoSqlitePreferencesRepository implements PreferencesRepository {
   async load(): Promise<AppPreferences> {

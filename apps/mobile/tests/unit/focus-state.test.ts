@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 import {
   confirmFocusedFeedSession,
@@ -13,7 +13,7 @@ import {
   type FocusedFeedOptions,
 } from "@/features/reels/presentation/open-focused-feed";
 
-const focusHandoffCases: readonly (readonly [boolean, RecallLevel | null])[] = [
+const focusHandoffCases: readonly (readonly [boolean, Rating | null])[] = [
   [true, "hard"],
   [false, null],
   [false, "easy"],
@@ -24,7 +24,7 @@ describe("focus state handoff", () => {
     const startFocusedFeed = vi.fn();
     const navigate = vi.fn();
     const options: FocusedFeedOptions = {
-      cardState: { cardId: "card-1", recallLevel: "hard", revealed: true },
+      cardState: { cardId: "card-1", rating: "hard", revealed: true },
     };
 
     openFocusedFeed("deck-1", startFocusedFeed, navigate, "card-1", options);
@@ -35,17 +35,17 @@ describe("focus state handoff", () => {
 
   it.each(focusHandoffCases)(
     "preserves revealed side and independent rating state (%s, %s)",
-    (revealed, recallLevel) => {
+    (revealed, rating) => {
       const startFocusedFeed = vi.fn();
       const navigate = vi.fn();
       const options: FocusedFeedOptions = {
-        cardState: { cardId: "card-1", recallLevel, revealed },
+        cardState: { cardId: "card-1", rating, revealed },
       };
 
       openFocusedFeed("deck-1", startFocusedFeed, navigate, "card-1", options);
 
       expect(startFocusedFeed).toHaveBeenCalledWith("deck-1", "card-1", options);
-      expect(options.cardState).toEqual({ cardId: "card-1", recallLevel, revealed });
+      expect(options.cardState).toEqual({ cardId: "card-1", rating, revealed });
     }
   );
 
@@ -58,7 +58,7 @@ describe("focus state handoff", () => {
       status: "ready",
       transition: {
         anchorFlashcardId: "card-1",
-        cardState: { cardId: "card-1", recallLevel: "hard", revealed: true },
+        cardState: { cardId: "card-1", rating: "hard", revealed: true },
       },
     };
 
@@ -163,7 +163,7 @@ describe("focus state handoff", () => {
       status: "ready",
       transition: {
         anchorFlashcardId: "card-2",
-        cardState: { cardId: "card-2", recallLevel: "easy", revealed: true },
+        cardState: { cardId: "card-2", rating: "easy", revealed: true },
       },
     };
 

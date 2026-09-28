@@ -1,8 +1,8 @@
 import { and, desc, eq, gte, isNull, ne } from "drizzle-orm";
 
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
@@ -56,7 +56,7 @@ export class SQLiteReviewAttemptTransaction<
 
   async rateAttempt(
     attemptId: string,
-    rating: RecallLevel,
+    rating: Rating,
     updatedAt: string,
     recurrence: StudySessionRecurrence | null,
     proposedTargetReelPosition: number | null

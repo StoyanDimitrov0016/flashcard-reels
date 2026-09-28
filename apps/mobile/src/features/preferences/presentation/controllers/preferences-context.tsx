@@ -22,7 +22,7 @@ type PreferencesContextValue = Readonly<{
   ready: boolean;
   storageError: Error | null;
   resolvedScheme: ResolvedColorScheme;
-  setAppearance: (colorMode: ColorMode) => void;
+  setColorMode: (colorMode: ColorMode) => void;
   setAudioEnabled: (enabled: boolean) => void;
   setAudioSide: (audioSide: AudioSide) => void;
   setHapticsEnabled: (enabled: boolean) => void;
@@ -107,15 +107,14 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
       preferences.colorMode,
       deviceScheme === "light" || deviceScheme === "dark" ? deviceScheme : null
     ),
-    setAppearance: (colorMode) => updatePreferences("colorMode", colorMode),
+    setColorMode: (colorMode) => updatePreferences("colorMode", colorMode),
     setAudioEnabled: (enabled) => updatePreferences("audioEnabled", enabled),
     setAudioSide: (audioSide) => updatePreferences("audioSide", audioSide),
     setHapticsEnabled: (enabled) => updatePreferences("hapticsEnabled", enabled),
     setReadingEnabled: (enabled) => updatePreferences("readingEnabled", enabled),
     setReadingSide: (readingSide) => updatePreferences("readingSide", readingSide),
     setRatingDirection: (ratingDirection) => updatePreferences("ratingDirection", ratingDirection),
-    setStudyIslandPosition: (position) =>
-      updatePreferences("studyIslandPosition", position),
+    setStudyIslandPosition: (position) => updatePreferences("studyIslandPosition", position),
   };
 
   return <PreferencesContext.Provider value={contextValue}>{children}</PreferencesContext.Provider>;

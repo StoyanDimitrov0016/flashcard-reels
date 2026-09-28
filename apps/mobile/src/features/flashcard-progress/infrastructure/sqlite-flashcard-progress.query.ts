@@ -2,7 +2,7 @@ import { and, eq, gt, inArray, isNotNull } from "drizzle-orm";
 
 import type { FlashcardProgressQuery } from "@/features/flashcard-progress/domain/flashcard-progress.query";
 import type { FlashcardProgressRepository } from "@/features/flashcard-progress/domain/flashcard-progress.repository";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
@@ -69,7 +69,7 @@ export class SQLiteFlashcardProgressQuery<TRunResult = unknown> implements Flash
 function addPendingRating(
   progress: FlashcardProgress | undefined,
   flashcardId: string,
-  rating: RecallLevel,
+  rating: Rating,
   ratedAt: string,
   createdAt: string
 ): FlashcardProgress {

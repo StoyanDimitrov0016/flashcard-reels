@@ -1,7 +1,7 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 import type { StudySessionItem } from "@/features/study/domain/study-session-item.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
@@ -66,7 +66,7 @@ export interface StudyService {
     fromReelPosition: number,
     throughReelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;
-  rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean>;
+  rateAttempt(attemptId: string, rating: Rating): Promise<boolean>;
   consumeRecurrence(recurrenceId: string): Promise<boolean>;
   finalizeAttempt(attemptId: string): Promise<void>;
   finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void>;

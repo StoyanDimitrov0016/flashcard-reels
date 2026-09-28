@@ -1,3 +1,4 @@
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type {
   AppPreferences,
   AudioSide,
@@ -5,7 +6,6 @@ import type {
   RatingDirection,
   StudyIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
 
 export type StudyControlOrientation = "horizontal" | "vertical";
 export type StudyControlAudioPosition = "left" | "right" | "above" | "below";
@@ -14,23 +14,21 @@ export type StudyControlPlacement = StudyControlAudioPosition;
 export type ResolvedStudyControlLayout = Readonly<{
   position: StudyIslandPosition;
   orientation: StudyControlOrientation;
-  ratingOrder: readonly RecallLevel[];
+  ratingOrder: readonly Rating[];
   audioPosition: StudyControlAudioPosition;
   audioEnabled: boolean;
   readingPosition: StudyControlPlacement;
   readingEnabled: boolean;
 }>;
 
-const canonicalRatingOrder: readonly RecallLevel[] = ["again", "hard", "good", "easy"];
-const reverseRatingOrder: readonly RecallLevel[] = ["easy", "good", "hard", "again"];
+const canonicalRatingOrder: readonly Rating[] = ["again", "hard", "good", "easy"];
+const reverseRatingOrder: readonly Rating[] = ["easy", "good", "hard", "again"];
 
-export function deriveIslandOrientation(
-  position: StudyIslandPosition
-): StudyControlOrientation {
+export function deriveIslandOrientation(position: StudyIslandPosition): StudyControlOrientation {
   return position === "bottom" ? "horizontal" : "vertical";
 }
 
-export function deriveRatingOrder(direction: RatingDirection): readonly RecallLevel[] {
+export function deriveRatingOrder(direction: RatingDirection): readonly Rating[] {
   return direction === "forward" ? canonicalRatingOrder : reverseRatingOrder;
 }
 
@@ -69,10 +67,7 @@ export function resolveStudyControlLayout(
 ): ResolvedStudyControlLayout {
   return {
     audioEnabled: preferences.audioEnabled,
-    audioPosition: deriveAudioPosition(
-      preferences.studyIslandPosition,
-      preferences.audioSide
-    ),
+    audioPosition: deriveAudioPosition(preferences.studyIslandPosition, preferences.audioSide),
     orientation: deriveIslandOrientation(preferences.studyIslandPosition),
     position: preferences.studyIslandPosition,
     ratingOrder: deriveRatingOrder(preferences.ratingDirection),
@@ -103,9 +98,6 @@ export function getControlSideLabel(islandPosition: StudyIslandPosition, side: C
   return side === "primary" ? "Top" : "Bottom";
 }
 
-export function getAudioSideLabel(
-  islandPosition: StudyIslandPosition,
-  audioSide: AudioSide
-) {
+export function getAudioSideLabel(islandPosition: StudyIslandPosition, audioSide: AudioSide) {
   return getControlSideLabel(islandPosition, audioSide);
 }

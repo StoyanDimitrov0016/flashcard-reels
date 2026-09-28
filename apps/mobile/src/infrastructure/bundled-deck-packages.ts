@@ -17,7 +17,7 @@ export type BundledDeckDefinition = Readonly<{
   id: DeckId;
   revision: number;
   asset: number;
-  colorMode: Readonly<{
+  appearance: Readonly<{
     theme: DeckThemeId;
     coverAsset: DeckCoverAsset;
   }>;
@@ -46,16 +46,16 @@ export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>
       if (asset === undefined) {
         throw new Error(`No runtime asset is registered for ${metadata.packageAsset}`);
       }
-      if (!isDeckCoverAsset(metadata.colorMode.coverAsset)) {
-        throw new Error(`Invalid cover asset ${metadata.colorMode.coverAsset}`);
+      if (!isDeckCoverAsset(metadata.appearance.coverAsset)) {
+        throw new Error(`Invalid cover asset ${metadata.appearance.coverAsset}`);
       }
-      if (!isDeckThemeId(metadata.colorMode.theme)) {
-        throw new Error(`Invalid deck theme ${metadata.colorMode.theme}`);
+      if (!isDeckThemeId(metadata.appearance.theme)) {
+        throw new Error(`Invalid deck theme ${metadata.appearance.theme}`);
       }
       const definition: BundledDeckDefinition = {
-        colorMode: {
-          theme: metadata.colorMode.theme,
-          coverAsset: metadata.colorMode.coverAsset,
+        appearance: {
+          theme: metadata.appearance.theme,
+          coverAsset: metadata.appearance.coverAsset,
         },
         asset,
         id: metadata.id,
