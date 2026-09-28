@@ -1,7 +1,11 @@
 import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
 import { describe, expect, it } from "vitest";
 
-import { DeckPackageRevisionError, type DeckInstallResult } from "@/features/decks/deck-installer";
+import {
+  DeckPackageAuthorError,
+  DeckPackageRevisionError,
+  type DeckInstallResult,
+} from "@/features/decks/deck-installer";
 import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import {
   getDeckImportErrorFeedback,
@@ -51,6 +55,10 @@ describe("deck import presentation feedback", () => {
     [
       new DeckPackageRevisionError("revision 1 is older"),
       "That deck package is older than the installed revision.",
+    ],
+    [
+      new DeckPackageAuthorError("author ID changed"),
+      "That deck belongs to a different author than the installed deck.",
     ],
     [new Error("SQLite busy: database is locked"), "Could not import deck package. Try again."],
   ])(
