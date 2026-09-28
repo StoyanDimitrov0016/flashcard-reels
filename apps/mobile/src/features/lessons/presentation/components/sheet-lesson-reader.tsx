@@ -4,8 +4,8 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import {
   ReadingProgressBar,
@@ -45,10 +45,10 @@ export function SheetLessonReader({
   const styles = createStyles(colors);
   const height = useSheetMaxHeight();
   const { blocks, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
-  const { appearances } = useDeckAppearances([deckId]);
-  const appearance = appearances.get(deckId);
-  const accent = appearance
-    ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+  const { themeSelections } = useDeckThemeSelections([deckId]);
+  const themeSelection = themeSelections.get(deckId);
+  const accent = themeSelection
+    ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
 

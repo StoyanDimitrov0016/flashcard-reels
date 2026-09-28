@@ -2,8 +2,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import {
   ReadingProgressBar,
@@ -26,10 +26,10 @@ export default function LessonScreen() {
   const router = useRouter();
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
-  const { appearances } = useDeckAppearances(lesson ? [lesson.deckId] : []);
-  const appearance = lesson ? appearances.get(lesson.deckId) : undefined;
-  const accent = appearance
-    ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+  const { themeSelections } = useDeckThemeSelections(lesson ? [lesson.deckId] : []);
+  const themeSelection = lesson ? themeSelections.get(lesson.deckId) : undefined;
+  const accent = themeSelection
+    ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
 

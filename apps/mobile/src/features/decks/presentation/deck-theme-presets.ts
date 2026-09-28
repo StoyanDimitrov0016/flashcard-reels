@@ -1,22 +1,22 @@
 import type { ResolvedColorScheme } from "@/features/preferences/domain/app-preferences";
 
-import { type DeckAppearancePresetId } from "@/features/decks/domain/deck-appearance.model";
+import { type DeckThemeId } from "@/features/decks/domain/deck-theme-selection.model";
 
-export type DeckAppearanceVariant = Readonly<{
+export type DeckThemeVariant = Readonly<{
   background: string;
   accent: string;
   textPrimary: string;
   textSecondary: string;
 }>;
 
-export type DeckAppearancePreset = Readonly<{
-  id: DeckAppearancePresetId;
+export type DeckTheme = Readonly<{
+  id: DeckThemeId;
   name: string;
-  light: DeckAppearanceVariant;
-  dark: DeckAppearanceVariant;
+  light: DeckThemeVariant;
+  dark: DeckThemeVariant;
 }>;
 
-export const deckAppearancePresets: readonly DeckAppearancePreset[] = [
+export const deckThemes: readonly DeckTheme[] = [
   {
     id: "graphite",
     name: "Graphite",
@@ -181,26 +181,26 @@ export const deckAppearancePresets: readonly DeckAppearancePreset[] = [
   },
 ] as const;
 
-const presetsById: ReadonlyMap<DeckAppearancePresetId, DeckAppearancePreset> = new Map(
-  deckAppearancePresets.map((preset) => [preset.id, preset])
+const presetsById: ReadonlyMap<DeckThemeId, DeckTheme> = new Map(
+  deckThemes.map((preset) => [preset.id, preset])
 );
 
-export function resolveDeckAppearance(
-  presetId: DeckAppearancePresetId,
+export function resolveDeckTheme(
+  theme: DeckThemeId,
   scheme: ResolvedColorScheme
-): DeckAppearanceVariant {
-  const preset = presetsById.get(presetId);
+): DeckThemeVariant {
+  const preset = presetsById.get(theme);
   if (!preset) {
-    throw new Error(`Unknown deck appearance preset ${presetId}`);
+    throw new Error(`Unknown deck theme ${theme}`);
   }
   return scheme === "light" ? preset.light : preset.dark;
 }
 
 export function isCurrentPreset(
-  preset: DeckAppearancePreset,
-  appearance: Readonly<{ presetId: DeckAppearancePresetId }>
+  preset: DeckTheme,
+  themeSelection: Readonly<{ theme: DeckThemeId }>
 ): boolean {
-  return preset.id === appearance.presetId;
+  return preset.id === themeSelection.theme;
 }
 
 export function contrastRatio(first: string, second: string): number {

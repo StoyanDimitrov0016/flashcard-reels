@@ -6,8 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { DeckReadingList } from "@/features/lessons/domain/lesson.model";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getDeckLessonsHref } from "@/features/lessons/presentation/lesson-href";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
@@ -23,7 +23,7 @@ export default function ReadingScreen() {
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();
   const { loading, readingLists } = useReadingLists();
-  const { appearances } = useDeckAppearances(readingLists.map((list) => list.deckId));
+  const { themeSelections } = useDeckThemeSelections(readingLists.map((list) => list.deckId));
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -42,9 +42,9 @@ export default function ReadingScreen() {
           ]}
         >
           {readingLists.map((readingList) => {
-            const appearance = appearances.get(readingList.deckId);
-            const accent = appearance
-              ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+            const themeSelection = themeSelections.get(readingList.deckId);
+            const accent = themeSelection
+              ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
               : colors.textTertiary;
             return (
               <DeckLessonsCard

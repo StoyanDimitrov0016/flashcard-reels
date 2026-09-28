@@ -4,9 +4,9 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "r
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
@@ -23,7 +23,7 @@ export default function ProgressScreen() {
   const router = useRouter();
   const { loading, refresh, rows } = useFlashcardProgressList();
   const decks = [...new Map(rows.map((row) => [row.deck.id, row.deck] as const)).values()];
-  const { appearances } = useDeckAppearances(decks.map((deck) => deck.id));
+  const { themeSelections } = useDeckThemeSelections(decks.map((deck) => deck.id));
   const reviewedCount = rows.filter((row) => row.explanation.reviewCount > 0).length;
 
   useFocusEffect(
@@ -65,9 +65,9 @@ export default function ProgressScreen() {
                 const percentage = deckRows.length
                   ? Math.round((reviewed / deckRows.length) * 100)
                   : 0;
-                const appearance = appearances.get(deck.id);
-                const accent = appearance
-                  ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+                const themeSelection = themeSelections.get(deck.id);
+                const accent = themeSelection
+                  ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
                   : colors.actionPrimary;
                 return (
                   <View key={deck.id} style={styles.deckCard}>
