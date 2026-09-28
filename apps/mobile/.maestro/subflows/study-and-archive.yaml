@@ -17,7 +17,7 @@ appId: com.flashcardreels.app
 - assertVisible: "Delete Versioned Test Deck?"
 - tapOn: Delete deck
 - assertNotVisible: Versioned Test Deck
-- tapOn: You tab
+- tapOn: Settings tab
 - tapOn: Archived deck progress
 - assertVisible: Archived progress
 - assertVisible: Versioned Test Deck

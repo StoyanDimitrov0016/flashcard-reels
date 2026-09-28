@@ -2,8 +2,8 @@ appId: com.flashcardreels.app
 ---
 - launchApp:
     clearState: true
-- tapOn: You tab
-- assertVisible: Controls
+- tapOn: Settings tab
+- assertVisible: Settings
 - scrollUntilVisible:
     element: Reset all app data
     direction: DOWN

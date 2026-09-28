@@ -11,7 +11,7 @@ import { textStyles } from "@/shared/presentation/typography";
 type SubScreenHeaderProps = Readonly<{
   /** Icon buttons on the right, such as delete. */
   actions?: ReactNode;
-  /** Spoken label for the back button, such as "Back to Controls". */
+  /** Spoken label for the back button, such as "Back to Settings". */
   backLabel: string;
   onBack: () => void;
   title?: string;

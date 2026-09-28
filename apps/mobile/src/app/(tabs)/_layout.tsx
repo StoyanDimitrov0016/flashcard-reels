@@ -32,10 +32,10 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return <ViewErrorState allowAppRecovery error={error} retry={retry} scope="section" />;
 }
 
-// Swipe order follows the screen order below. For you and Focus share the Study item.
+// Swipe order follows the screen order below. Discover and Focus share the Study item.
 const forYouRoute = "(discover)";
 const focusRoute = "focus";
-const destinationRoutes = [forYouRoute, focusRoute, "reading", "library", "progress", "controls"];
+const destinationRoutes = [forYouRoute, focusRoute, "reading", "library", "progress", "settings"];
 
 const tabItems: readonly AppTabItem[] = [
   {
@@ -63,10 +63,10 @@ const tabItems: readonly AppTabItem[] = [
     routeNames: ["progress"],
   },
   {
-    accessibilityLabel: "Controls tab",
+    accessibilityLabel: "Settings tab",
     icon: { android: "settings", ios: "gearshape.fill", web: "settings" },
-    key: "controls",
-    routeNames: ["controls"],
+    key: "settings",
+    routeNames: ["settings"],
   },
 ];
 

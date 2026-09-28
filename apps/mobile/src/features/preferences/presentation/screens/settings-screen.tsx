@@ -7,7 +7,7 @@ import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/c
 import { useResetAllProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-all-progress";
 import { appMetadata } from "@/features/preferences/presentation/app-metadata";
 import {
-  AppearanceSelector,
+  ColorModeSelector,
   PreferenceRow,
   PreferenceSection,
   PreferenceSwitch,
@@ -28,7 +28,7 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 
 import appIcon from "../../../../../assets/images/app-icon.png";
 
-export default function ControlsScreen() {
+export default function SettingsScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();
@@ -36,7 +36,7 @@ export default function ControlsScreen() {
   const {
     preferences,
     storageError,
-    setAppearance,
+    setColorMode,
     setAudioEnabled,
     setAudioSide,
     setHapticsEnabled,
@@ -65,7 +65,7 @@ export default function ControlsScreen() {
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScreenHeader>
         <Text accessibilityRole="header" style={styles.title}>
-          Controls
+          Settings
         </Text>
       </ScreenHeader>
       <ScrollView
@@ -75,8 +75,8 @@ export default function ControlsScreen() {
         ]}
       >
         <View style={styles.sections}>
-          <PreferenceSection grouped={false} title="Appearance">
-            <AppearanceSelector onChange={setAppearance} selected={preferences.colorMode} />
+          <PreferenceSection grouped={false} title="Color mode">
+            <ColorModeSelector onChange={setColorMode} selected={preferences.colorMode} />
           </PreferenceSection>
           <PreferenceSection title="Interaction">
             <PreferenceRow

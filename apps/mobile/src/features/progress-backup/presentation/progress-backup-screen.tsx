@@ -50,7 +50,7 @@ export default function ProgressBackupScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <SubScreenHeader
-        backLabel="Back to Controls"
+        backLabel="Back to Settings"
         onBack={() => router.back()}
         title="Progress backup"
       />

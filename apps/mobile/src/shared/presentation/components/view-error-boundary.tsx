@@ -10,7 +10,7 @@ const viewTitles: Readonly<Record<string, string>> = {
   "/reading": "Couldn’t load Reading",
   "/library": "Couldn’t load Library",
   "/progress": "Couldn’t load Progress",
-  "/controls": "Couldn’t open Controls",
+  "/settings": "Couldn’t open Controls",
   "/archived-progress": "Couldn’t load archived progress",
   "/progress-backup": "Couldn’t open progress backup",
 };
