@@ -27,8 +27,8 @@ export class SQLiteSavedProgressContinuationTransaction<
       }
       const resolved = transaction
         .update(deckProgress)
-        .set({ resolution: "active" })
-        .where(and(eq(deckProgress.deckId, id), eq(deckProgress.resolution, "pending")))
+        .set({ status: "active" })
+        .where(and(eq(deckProgress.deckId, id), eq(deckProgress.status, "pending")))
         .returning({ deckId: deckProgress.deckId })
         .all();
       if (resolved.length === 0) {

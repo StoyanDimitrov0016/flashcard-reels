@@ -3,13 +3,14 @@ import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import {
   deckProgress,
   flashcardMemoryStates,
   flashcards,
   flashcardProgress,
-  reviewEvents,
+  flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -17,9 +18,11 @@ export class SQLiteLearningProgressResetTransaction<
   TRunResult = unknown,
 > implements LearningProgressResetTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async resetCard(flashcardId: string, resetAt: string): Promise<void> {
@@ -45,11 +48,14 @@ export class SQLiteLearningProgressResetTransaction<
         .delete(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.flashcardId, flashcardId))
         .run();
-      transaction.delete(reviewEvents).where(eq(reviewEvents.flashcardId, flashcardId)).run();
+      transaction
+        .delete(flashcardReviewEvents)
+        .where(eq(flashcardReviewEvents.flashcardId, flashcardId))
+        .run();
       const remainingReviews = transaction
-        .select({ lastReviewedAt: sql<string | null>`max(${reviewEvents.reviewedAt})` })
-        .from(reviewEvents)
-        .where(eq(reviewEvents.deckId, card.deckId))
+        .select({ lastReviewedAt: sql<string | null>`max(${flashcardReviewEvents.reviewedAt})` })
+        .from(flashcardReviewEvents)
+        .where(eq(flashcardReviewEvents.deckId, card.deckId))
         .get();
       if (remainingReviews?.lastReviewedAt) {
         transaction
@@ -77,7 +83,10 @@ export class SQLiteLearningProgressResetTransaction<
         .delete(flashcardMemoryStates)
         .where(eq(flashcardMemoryStates.deckId, deckId))
         .run();
-      transaction.delete(reviewEvents).where(eq(reviewEvents.deckId, deckId)).run();
+      transaction
+        .delete(flashcardReviewEvents)
+        .where(eq(flashcardReviewEvents.deckId, deckId))
+        .run();
       transaction.delete(deckProgress).where(eq(deckProgress.deckId, deckId)).run();
       this.deleteActiveSessionsForDeck(transaction, deckId);
     });
@@ -92,7 +101,7 @@ export class SQLiteLearningProgressResetTransaction<
       transaction.delete(flashcardProgress).run();
       this.resetCardsProgress(transaction, cards, resetAt);
       transaction.delete(flashcardMemoryStates).run();
-      transaction.delete(reviewEvents).run();
+      transaction.delete(flashcardReviewEvents).run();
       transaction.delete(deckProgress).run();
       transaction.delete(studySessions).where(isNull(studySessions.completedAt)).run();
     });
@@ -118,6 +127,7 @@ export class SQLiteLearningProgressResetTransaction<
     transaction
       .insert(flashcardProgress)
       .values({
+        id: this.idGenerator.generate(),
         againCount: 0,
         createdAt,
         deckId,

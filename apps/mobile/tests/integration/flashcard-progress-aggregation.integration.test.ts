@@ -12,9 +12,9 @@ import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { flashcardProgress, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
@@ -41,6 +41,10 @@ describe("SQLite flashcard-progress aggregation", () => {
     database = new NodeSqliteDatabase();
     const timestamp = "2026-01-01T00:00:00.000Z";
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: timestamp,
       description: "Test deck",
       id: TEST_DECK_ID,
@@ -59,11 +63,18 @@ describe("SQLite flashcard-progress aggregation", () => {
       }))
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
-    aggregation = new SQLiteFlashcardProgressAggregationTransaction(database.drizzle);
+    aggregation = new SQLiteFlashcardProgressAggregationTransaction(
+      database.drizzle,
+      database.rowIds
+    );
     progress = new SQLiteFlashcardProgressRepository(database.drizzle);
     sessions = new SQLiteStudySessionRepository(database.drizzle);
     aggregationQuery = new SQLiteStudySessionAggregationQuery(database.drizzle);
-    commit = new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler());
+    commit = new SQLiteReviewAttemptCommitTransaction(
+      database.drizzle,
+      createLearningScheduler(),
+      database.rowIds
+    );
   });
 
   afterEach(() => {
@@ -209,7 +220,8 @@ describe("SQLite flashcard-progress aggregation", () => {
     });
 
     const reconstructedAggregation = new SQLiteFlashcardProgressAggregationTransaction(
-      database.drizzle
+      database.drizzle,
+      database.rowIds
     );
     const reconstructedProgress = new SQLiteFlashcardProgressRepository(database.drizzle);
     const later = await createAttempt(session.id, 1, null, null);
@@ -222,7 +234,8 @@ describe("SQLite flashcard-progress aggregation", () => {
     );
     await new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
+      createLearningScheduler(),
+      database.rowIds
     ).commitAttempt(later.id, "2026-01-01T00:07:00.000Z", "2026-01-01T00:07:00.000Z");
     await reconstructedAggregation.aggregate(session.id, 1, "2026-01-01T00:08:00.000Z");
     expect(await reconstructedProgress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -300,7 +313,7 @@ describe("SQLite flashcard-progress aggregation", () => {
 
     const reconstructedSessions = new SQLiteStudySessionRepository(database.drizzle);
     const recovered = createService(
-      new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
+      new SQLiteFlashcardProgressAggregationTransaction(database.drizzle, database.rowIds),
       reconstructedSessions
     );
     await recovered.openSession("focus", TEST_DECK_ID, false);
@@ -389,7 +402,11 @@ describe("SQLite flashcard-progress aggregation", () => {
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler()),
+      new SQLiteReviewAttemptCommitTransaction(
+        database.drizzle,
+        createLearningScheduler(),
+        database.rowIds
+      ),
       () => 0,
       aggregationTransaction
     );
@@ -420,6 +437,8 @@ describe("SQLite flashcard-progress aggregation", () => {
   async function insertResetProgress(resetAt: string): Promise<void> {
     const card = makeFlashcard(1);
     await database.drizzle.insert(flashcardProgress).values({
+      id: database.rowIds.generate(),
+
       againCount: 0,
       createdAt: card.createdAt,
       deckId: card.deckId,

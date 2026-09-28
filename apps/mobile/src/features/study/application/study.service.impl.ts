@@ -12,8 +12,8 @@ import type { StudySessionMaintenanceTransaction } from "@/features/study/applic
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
-import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
+import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { StudyService } from "@/features/study/domain/study.service";
@@ -36,8 +36,8 @@ import {
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
-import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 
 export type OpenStudySession = OpenStudySessionResult;
 
@@ -303,7 +303,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     };
   }
 
-  async appendSessionItems(
+  async appendSessionReels(
     sessionId: string,
     cards: readonly Flashcard[],
     feedState: string,

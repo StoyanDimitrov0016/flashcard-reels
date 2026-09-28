@@ -9,8 +9,8 @@ import type {
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
-import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
@@ -250,7 +250,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       return null;
     }
 
-    await this.studyService.appendSessionItems(
+    await this.studyService.appendSessionReels(
       session.id,
       batchCards,
       JSON.stringify(persistedFeedState),

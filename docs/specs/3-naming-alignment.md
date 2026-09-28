@@ -192,6 +192,10 @@ These tables keep having no foreign keys where they have none today.
 
 ### 3.3 Leftover defaults and the schema object
 
+- Replace `DeckRepository.save(deck)` with update-only `updateCoverAsset(deckId, coverAsset)`
+  in the domain interface and SQLite implementation. Bundled-deck startup calls it directly;
+  only the package installer creates decks. Test that it changes only `cover_asset` on an
+  installed deck and does nothing for an uninstalled deck ID.
 - Remove the column defaults on `decks.author_id`, `decks.package_schema`, and `decks.revision`;
   the installer always sets them. Delete `src/features/decks/domain/system-author.ts` if nothing
   else uses `SYSTEM_AUTHOR_ID`.

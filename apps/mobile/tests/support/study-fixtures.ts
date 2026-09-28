@@ -64,7 +64,11 @@ export class TestClock implements Clock {
 }
 
 export class SequenceIdGenerator implements IdGenerator {
-  private nextId = 1000;
+  private nextId: number;
+
+  constructor(firstId = 1000) {
+    this.nextId = firstId;
+  }
 
   generate(): string {
     const id = testId(this.nextId);

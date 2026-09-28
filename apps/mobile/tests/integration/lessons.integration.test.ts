@@ -94,7 +94,7 @@ function createGraph(database: NodeSqliteDatabase) {
       new SQLiteLessonRepository(database.drizzle),
       new SQLiteReadingListQuery(database.drizzle)
     ),
-    removal: new SQLiteDeckRemovalTransaction(database.drizzle),
+    removal: new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
   };
 }
 
@@ -183,9 +183,11 @@ describe("deck lessons", () => {
     const graph = createGraph(database);
     await graph.installer.installFromBytes(packageWithLessons(1, [introduction]));
     await database.drizzle.insert(deckProgress).values({
+      id: database.rowIds.generate(),
+
       deckId: TEST_DECK_ID,
       lastReviewedAt: timestamp,
-      resolution: "pending",
+      status: "pending",
       title: "Scaling",
       revision: 1,
     });

@@ -16,6 +16,10 @@ describe("deck theme selection persistence", () => {
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: "2026-01-01T00:00:00.000Z",
       description: "Untouched content",
       id: TEST_DECK_ID,
@@ -31,7 +35,7 @@ describe("deck theme selection persistence", () => {
     const service = new DeckServiceImpl(
       new SQLiteDeckRepository(database.drizzle),
       new SQLiteDeckThemeSelectionRepository(database.drizzle, ids),
-      new SQLiteDeckRemovalTransaction(database.drizzle)
+      new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds)
     );
     const selection = new DeckThemeSelection({
       deckId: TEST_DECK_ID,
@@ -69,7 +73,7 @@ describe("deck theme selection persistence", () => {
     );
     await repository.save(new DeckThemeSelection({ deckId: TEST_DECK_ID, theme: "gold" }));
 
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
 
     expect(await repository.findByDeckId(TEST_DECK_ID)).toBeNull();
     expect(await database.drizzle.select().from(deckThemeSelections)).toEqual([]);

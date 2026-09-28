@@ -24,7 +24,7 @@ export class SQLiteFlashcardAvailabilityQuery<
       .where(
         and(
           eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
+          or(isNull(deckProgress.deckId), ne(deckProgress.status, "pending"))
         )
       )
       .orderBy(asc(flashcards.createdAt), asc(flashcards.id));
@@ -40,7 +40,7 @@ export class SQLiteFlashcardAvailabilityQuery<
         and(
           eq(flashcards.deckId, deckId),
           eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
+          or(isNull(deckProgress.deckId), ne(deckProgress.status, "pending"))
         )
       )
       .orderBy(asc(flashcards.order), asc(flashcards.id));

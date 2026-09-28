@@ -40,6 +40,10 @@ describe("SQLite learning-engine commit", () => {
     database = new NodeSqliteDatabase();
     const card = makeFlashcard(1);
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: RATED_AT_AGAIN,
       description: "Test deck",
       id: TEST_DECK_ID,
@@ -60,7 +64,11 @@ describe("SQLite learning-engine commit", () => {
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
     memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
-    commit = new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler());
+    commit = new SQLiteReviewAttemptCommitTransaction(
+      database.drizzle,
+      createLearningScheduler(),
+      database.rowIds
+    );
   });
 
   afterEach(() => {
@@ -186,7 +194,7 @@ describe("SQLite learning-engine commit", () => {
 
     expect(await memoryStates.findByFlashcardId(makeFlashcard(1).id)).toEqual(firstState);
     expect(
-      await database.getAllAsync("SELECT rating FROM review_events ORDER BY reviewed_at")
+      await database.getAllAsync("SELECT rating FROM flashcard_review_events ORDER BY reviewed_at")
     ).toEqual([{ rating: "again" }, { rating: "good" }]);
 
     clock.advance(24 * 60 * 60 * 1000);
@@ -201,7 +209,7 @@ describe("SQLite learning-engine commit", () => {
       reps: 2,
     });
     expect(
-      await database.getAllAsync("SELECT rating FROM review_events ORDER BY reviewed_at")
+      await database.getAllAsync("SELECT rating FROM flashcard_review_events ORDER BY reviewed_at")
     ).toEqual([{ rating: "again" }, { rating: "good" }, { rating: "good" }]);
     expect(
       await database.getFirstAsync(
@@ -313,7 +321,11 @@ describe("SQLite learning-engine commit", () => {
     await rating.rateAttempt(firstAttempt.id, "good", "2026-01-01T00:01:00.000Z", null, null);
     await rating.rateAttempt(secondAttempt.id, "hard", "2026-01-01T00:02:00.000Z", null, null);
     const trackingCommit = new TrackingCommitTransaction(
-      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
+      new SQLiteReviewAttemptCommitTransaction(
+        database.drizzle,
+        createLearningScheduler(),
+        database.rowIds
+      )
     );
     const graph = createScenarioGraph(
       database,

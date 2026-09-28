@@ -5,16 +5,16 @@ import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastr
 import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { decks, flashcards as flashcardRows } from "@/infrastructure/sqlite/schema";
 
@@ -42,6 +42,10 @@ describe("SQLite study persistence", () => {
     const timestamp = "2026-01-01T00:00:00.000Z";
     await database.drizzle.insert(decks).values([
       {
+        authorId: "00000000-0000-4000-8000-000000000001",
+        packageSchema: 1,
+        revision: 1,
+
         createdAt: timestamp,
         description: "Test deck",
         id: TEST_DECK_ID,
@@ -49,6 +53,10 @@ describe("SQLite study persistence", () => {
         updatedAt: timestamp,
       },
       {
+        authorId: "00000000-0000-4000-8000-000000000001",
+        packageSchema: 1,
+        revision: 1,
+
         createdAt: timestamp,
         description: "Other deck",
         id: OTHER_DECK_ID,
@@ -102,7 +110,7 @@ describe("SQLite study persistence", () => {
     await sessions.create(makeSession(testId(201), "focus", TEST_DECK_ID));
 
     await expect(
-      new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID)
+      new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID)
     ).resolves.toBeUndefined();
     await expect(database.getAllAsync("PRAGMA foreign_key_check")).resolves.toEqual([]);
     await expect(
@@ -132,7 +140,11 @@ describe("SQLite study persistence", () => {
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
+      new SQLiteReviewAttemptCommitTransaction(
+        database.drizzle,
+        createLearningScheduler(),
+        database.rowIds
+      )
     );
     const mixed = await service.openSession("discover", null, false);
     const firstFocus = await service.openSession("focus", TEST_DECK_ID, false);
@@ -162,7 +174,11 @@ describe("SQLite study persistence", () => {
       new SQLiteReviewAttemptTransaction(database.drizzle),
       new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptCommitTransaction(database.drizzle, createLearningScheduler())
+      new SQLiteReviewAttemptCommitTransaction(
+        database.drizzle,
+        createLearningScheduler(),
+        database.rowIds
+      )
     );
 
     await Promise.all([
@@ -251,7 +267,7 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
   });
 
-  it("reads only the requested session-item reel range", async () => {
+  it("reads only the requested session-reel reel range", async () => {
     const session = makeSession(testId(216), "discover");
     await sessions.create(session);
     await items.createMany(
@@ -326,7 +342,7 @@ describe("SQLite study persistence", () => {
     expect(rolledBackSession?.feedState).toBe("{}");
   });
 
-  it("rolls back a batch session-item insert when one item violates a constraint", async () => {
+  it("rolls back a batch session-reel insert when one item violates a constraint", async () => {
     const session = makeSession(testId(220), "discover");
     await sessions.create(session);
 
@@ -393,7 +409,8 @@ describe("SQLite study persistence", () => {
     );
     await new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
+      createLearningScheduler(),
+      database.rowIds
     ).commitAttempt(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
 
     const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
@@ -767,16 +784,16 @@ describe("SQLite study persistence", () => {
       { name: "deck_progress" },
       { name: "deck_theme_selections" },
       { name: "decks" },
+      { name: "dismissed_bundled_decks" },
       { name: "flashcard_memory_states" },
       { name: "flashcard_progress" },
       { name: "flashcard_review_attempts" },
+      { name: "flashcard_review_events" },
       { name: "flashcards" },
       { name: "lessons" },
       { name: "progress_backup_state" },
-      { name: "removed_decks" },
-      { name: "review_events" },
-      { name: "study_session_reels" },
       { name: "study_session_recurrences" },
+      { name: "study_session_reels" },
       { name: "study_sessions" },
     ]);
   });

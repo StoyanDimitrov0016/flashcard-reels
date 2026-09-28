@@ -15,7 +15,7 @@ export class SQLiteStudySessionRecurrenceRepository<
     this.database = database;
   }
 
-  async cancelPendingBySourceAttemptId(flashcardReviewAttemptId: string): Promise<void> {
+  async cancelPendingByFlashcardReviewAttemptId(flashcardReviewAttemptId: string): Promise<void> {
     await this.database
       .delete(studySessionRecurrences)
       .where(

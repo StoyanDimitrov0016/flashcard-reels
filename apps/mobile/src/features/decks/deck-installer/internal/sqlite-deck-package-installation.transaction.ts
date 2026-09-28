@@ -20,8 +20,8 @@ import {
   flashcards,
   flashcardProgress,
   lessons,
-  reviewEvents,
-  removedDecks,
+  flashcardReviewEvents,
+  dismissedBundledDecks,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -64,7 +64,10 @@ export class SQLiteDeckPackageInstallationTransaction<
         );
       }
 
-      transaction.delete(removedDecks).where(eq(removedDecks.id, deck.id)).run();
+      transaction
+        .delete(dismissedBundledDecks)
+        .where(eq(dismissedBundledDecks.deckId, deck.id))
+        .run();
       const savedProgress = transaction
         .select()
         .from(deckProgress)
@@ -94,9 +97,9 @@ export class SQLiteDeckPackageInstallationTransaction<
           .where(inArray(flashcardMemoryStates.flashcardId, incomingIds))
           .all();
         const eventOwners = transaction
-          .select({ deckId: reviewEvents.deckId, id: reviewEvents.flashcardId })
-          .from(reviewEvents)
-          .where(inArray(reviewEvents.flashcardId, incomingIds))
+          .select({ deckId: flashcardReviewEvents.deckId, id: flashcardReviewEvents.flashcardId })
+          .from(flashcardReviewEvents)
+          .where(inArray(flashcardReviewEvents.flashcardId, incomingIds))
           .all();
         for (const card of [...progressOwners, ...memoryOwners, ...eventOwners]) {
           if (card.deckId !== deck.id) {
@@ -238,10 +241,10 @@ export class SQLiteDeckPackageInstallationTransaction<
           .run();
       }
 
-      if (savedProgress?.resolution === "archived") {
+      if (savedProgress?.status === "archived") {
         transaction
           .update(deckProgress)
-          .set({ title: deck.title, revision: deck.revision, resolution: "pending" })
+          .set({ title: deck.title, revision: deck.revision, status: "pending" })
           .where(eq(deckProgress.deckId, deck.id))
           .run();
       } else if (savedProgress) {

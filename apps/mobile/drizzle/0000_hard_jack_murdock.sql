@@ -1,11 +1,13 @@
 CREATE TABLE `deck_progress` (
-	`deck_id` text PRIMARY KEY NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
 	`title` text NOT NULL,
 	`revision` integer NOT NULL,
 	`last_reviewed_at` text NOT NULL,
-	`resolution` text NOT NULL
+	`status` text NOT NULL
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `deck_progress_deck_id_unique` ON `deck_progress` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `deck_theme_selections` (
 	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
@@ -16,18 +18,25 @@ CREATE TABLE `deck_theme_selections` (
 CREATE UNIQUE INDEX `deck_theme_selections_deck_id_unique` ON `deck_theme_selections` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `decks` (
 	`id` text PRIMARY KEY NOT NULL,
-	`author_id` text DEFAULT 'bf0b5aa7-18d6-4b36-aae9-5aa93f93235e' NOT NULL,
-	`package_schema` integer DEFAULT 1 NOT NULL,
+	`author_id` text NOT NULL,
+	`package_schema` integer NOT NULL,
 	`title` text NOT NULL,
 	`description` text NOT NULL,
 	`cover_asset` text DEFAULT 'cards' NOT NULL,
-	`revision` integer DEFAULT 1 NOT NULL,
+	`revision` integer NOT NULL,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `dismissed_bundled_decks` (
+	`id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `dismissed_bundled_decks_deck_id_unique` ON `dismissed_bundled_decks` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `flashcard_memory_states` (
-	`flashcard_id` text PRIMARY KEY NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
+	`flashcard_id` text NOT NULL,
 	`deck_id` text NOT NULL,
 	`state` text NOT NULL,
 	`due_at` text NOT NULL,
@@ -48,9 +57,11 @@ CREATE TABLE `flashcard_memory_states` (
 	CONSTRAINT "flashcard_memory_states_learning_steps_check" CHECK("flashcard_memory_states"."learning_steps" >= 0)
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `flashcard_memory_states_flashcard_id_unique` ON `flashcard_memory_states` (`flashcard_id`);--> statement-breakpoint
 CREATE INDEX `flashcard_memory_states_deck_id_idx` ON `flashcard_memory_states` (`deck_id`);--> statement-breakpoint
 CREATE TABLE `flashcard_progress` (
-	`flashcard_id` text PRIMARY KEY NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
+	`flashcard_id` text NOT NULL,
 	`deck_id` text NOT NULL,
 	`review_count` integer DEFAULT 0 NOT NULL,
 	`again_count` integer DEFAULT 0 NOT NULL,
@@ -72,6 +83,7 @@ CREATE TABLE `flashcard_progress` (
 	CONSTRAINT "flashcard_progress_reviewed_at_order_check" CHECK("flashcard_progress"."first_reviewed_at" IS NULL OR "flashcard_progress"."last_reviewed_at" IS NULL OR "flashcard_progress"."first_reviewed_at" <= "flashcard_progress"."last_reviewed_at")
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `flashcard_progress_flashcard_id_unique` ON `flashcard_progress` (`flashcard_id`);--> statement-breakpoint
 CREATE INDEX `flashcard_progress_deck_id_idx` ON `flashcard_progress` (`deck_id`);--> statement-breakpoint
 CREATE INDEX `flashcard_progress_reset_at_idx` ON `flashcard_progress` (`reset_at`);--> statement-breakpoint
 CREATE TABLE `flashcard_review_attempts` (
@@ -83,7 +95,7 @@ CREATE TABLE `flashcard_review_attempts` (
 	`created_at` text NOT NULL,
 	`rated_at` text,
 	`updated_at` text NOT NULL,
-	`finalized_at` text,
+	`committed_at` text,
 	FOREIGN KEY (`study_session_id`) REFERENCES `study_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
 	CONSTRAINT "flashcard_review_attempts_reel_position_check" CHECK("flashcard_review_attempts"."reel_position" >= 0),
@@ -91,9 +103,20 @@ CREATE TABLE `flashcard_review_attempts` (
 	CONSTRAINT "flashcard_review_attempts_rating_timestamp_check" CHECK(("flashcard_review_attempts"."rating" IS NULL AND "flashcard_review_attempts"."rated_at" IS NULL) OR ("flashcard_review_attempts"."rating" IS NOT NULL AND "flashcard_review_attempts"."rated_at" IS NOT NULL))
 );
 --> statement-breakpoint
-CREATE INDEX `review_attempts_flashcard_id_idx` ON `flashcard_review_attempts` (`flashcard_id`);--> statement-breakpoint
-CREATE INDEX `review_attempts_session_position_aggregation_idx` ON `flashcard_review_attempts` (`study_session_id`,`reel_position`,`finalized_at`,`rating`,`rated_at`);--> statement-breakpoint
-CREATE UNIQUE INDEX `review_attempts_session_reel_position_unique` ON `flashcard_review_attempts` (`study_session_id`,`reel_position`);--> statement-breakpoint
+CREATE INDEX `flashcard_review_attempts_flashcard_id_idx` ON `flashcard_review_attempts` (`flashcard_id`);--> statement-breakpoint
+CREATE INDEX `flashcard_review_attempts_session_position_aggregation_idx` ON `flashcard_review_attempts` (`study_session_id`,`reel_position`,`committed_at`,`rating`,`rated_at`);--> statement-breakpoint
+CREATE UNIQUE INDEX `flashcard_review_attempts_session_reel_position_unique` ON `flashcard_review_attempts` (`study_session_id`,`reel_position`);--> statement-breakpoint
+CREATE TABLE `flashcard_review_events` (
+	`id` text PRIMARY KEY NOT NULL,
+	`deck_id` text NOT NULL,
+	`flashcard_id` text NOT NULL,
+	`rating` text NOT NULL,
+	`reviewed_at` text NOT NULL,
+	`committed_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `flashcard_review_events_deck_id_idx` ON `flashcard_review_events` (`deck_id`);--> statement-breakpoint
+CREATE INDEX `flashcard_review_events_flashcard_id_idx` ON `flashcard_review_events` (`flashcard_id`);--> statement-breakpoint
 CREATE TABLE `flashcards` (
 	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
@@ -127,36 +150,6 @@ CREATE TABLE `progress_backup_state` (
 	`safety_copy_file_name` text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `removed_decks` (
-	`id` text PRIMARY KEY NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `review_events` (
-	`id` text PRIMARY KEY NOT NULL,
-	`deck_id` text NOT NULL,
-	`flashcard_id` text NOT NULL,
-	`rating` text NOT NULL,
-	`reviewed_at` text NOT NULL,
-	`finalized_at` text NOT NULL
-);
---> statement-breakpoint
-CREATE INDEX `review_events_deck_id_idx` ON `review_events` (`deck_id`);--> statement-breakpoint
-CREATE INDEX `review_events_flashcard_id_idx` ON `review_events` (`flashcard_id`);--> statement-breakpoint
-CREATE TABLE `study_session_reels` (
-	`id` text PRIMARY KEY NOT NULL,
-	`study_session_id` text NOT NULL,
-	`flashcard_id` text NOT NULL,
-	`base_feed_position` integer NOT NULL,
-	`reel_position` integer NOT NULL,
-	FOREIGN KEY (`study_session_id`) REFERENCES `study_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
-	CONSTRAINT "study_session_reels_base_feed_position_check" CHECK("study_session_reels"."base_feed_position" >= 0),
-	CONSTRAINT "study_session_reels_reel_position_check" CHECK("study_session_reels"."reel_position" >= 0)
-);
---> statement-breakpoint
-CREATE INDEX `study_session_reels_flashcard_id_idx` ON `study_session_reels` (`flashcard_id`);--> statement-breakpoint
-CREATE UNIQUE INDEX `study_session_reels_session_position_unique` ON `study_session_reels` (`study_session_id`,`base_feed_position`);--> statement-breakpoint
-CREATE UNIQUE INDEX `study_session_reels_session_reel_position_unique` ON `study_session_reels` (`study_session_id`,`reel_position`);--> statement-breakpoint
 CREATE TABLE `study_session_recurrences` (
 	`id` text PRIMARY KEY NOT NULL,
 	`study_session_id` text NOT NULL,
@@ -175,6 +168,21 @@ CREATE INDEX `study_session_recurrences_session_position_idx` ON `study_session_
 CREATE INDEX `study_session_recurrences_flashcard_id_idx` ON `study_session_recurrences` (`flashcard_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `study_session_recurrences_pending_target_idx` ON `study_session_recurrences` (`study_session_id`,`target_reel_position`) WHERE "study_session_recurrences"."consumed_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX `study_session_recurrences_pending_flashcard_review_attempt_idx` ON `study_session_recurrences` (`flashcard_review_attempt_id`) WHERE "study_session_recurrences"."consumed_at" IS NULL;--> statement-breakpoint
+CREATE TABLE `study_session_reels` (
+	`id` text PRIMARY KEY NOT NULL,
+	`study_session_id` text NOT NULL,
+	`flashcard_id` text NOT NULL,
+	`base_feed_position` integer NOT NULL,
+	`reel_position` integer NOT NULL,
+	FOREIGN KEY (`study_session_id`) REFERENCES `study_sessions`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`flashcard_id`) REFERENCES `flashcards`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "study_session_reels_base_feed_position_check" CHECK("study_session_reels"."base_feed_position" >= 0),
+	CONSTRAINT "study_session_reels_reel_position_check" CHECK("study_session_reels"."reel_position" >= 0)
+);
+--> statement-breakpoint
+CREATE INDEX `study_session_reels_flashcard_id_idx` ON `study_session_reels` (`flashcard_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_session_reels_session_position_unique` ON `study_session_reels` (`study_session_id`,`base_feed_position`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_session_reels_session_reel_position_unique` ON `study_session_reels` (`study_session_id`,`reel_position`);--> statement-breakpoint
 CREATE TABLE `study_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`scope` text NOT NULL,

@@ -20,7 +20,7 @@ import {
   flashcardReviewAttempts,
   flashcards,
   flashcardProgress,
-  reviewEvents,
+  flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -127,7 +127,7 @@ describe("progress backup", () => {
       const backup = new ProgressBackupServiceImpl(
         graph.study,
         new SQLiteProgressBackupQuery(database.drizzle),
-        new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+        new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
         files,
         clock
       );
@@ -166,7 +166,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -196,7 +196,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -234,7 +234,7 @@ describe("progress backup", () => {
     const sourceBackup = new ProgressBackupServiceImpl(
       sourceGraph.study,
       new SQLiteProgressBackupQuery(source.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(source.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
       exportedFiles,
       sourceClock
     );
@@ -254,7 +254,7 @@ describe("progress backup", () => {
     const targetBackup = new ProgressBackupServiceImpl(
       targetGraph.study,
       targetQuery,
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       importedFiles,
       targetClock
     );
@@ -302,7 +302,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -337,7 +337,7 @@ describe("progress backup", () => {
       updatedAt: sourceClock.now(),
     });
     await sourceGraph.study.completeSession(session.id);
-    await new SQLiteDeckRemovalTransaction(source.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(source.drizzle, source.rowIds).remove(TEST_DECK_ID);
     const archived = await new SQLiteProgressBackupQuery(source.drizzle).read(sourceClock.now());
     expect(archived.deckProgress[0]?.resolution).toBe("archived");
 
@@ -381,7 +381,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       targetGraph.study,
       new SQLiteProgressBackupQuery(target.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       files,
       targetClock
     );
@@ -415,7 +415,9 @@ describe("progress backup", () => {
   it("preserves the last successful safety copy when a later restore fails", async () => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const files = new MemoryBackupFiles();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
@@ -433,7 +435,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -489,7 +491,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -513,7 +515,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -545,7 +547,7 @@ describe("progress backup", () => {
     });
     await graph.study.completeSession(session.id);
     const resetAt = clock.now();
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetCard(
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetCard(
       flashcardId,
       resetAt
     );
@@ -553,7 +555,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -605,7 +607,9 @@ describe("progress backup", () => {
   ] as const)("rejects inconsistent %s without changing saved progress", async (_, corrupt) => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const before = await query.read(original.exportedAt);
     const incoming = structuredClone(original);
@@ -617,7 +621,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -630,7 +634,9 @@ describe("progress backup", () => {
   it("retains current progress when the safety copy cannot be saved", async () => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const before = await query.read(original.exportedAt);
     const files = new MemoryBackupFiles();
@@ -649,7 +655,7 @@ describe("progress backup", () => {
     const backup = new ProgressBackupServiceImpl(
       graph.study,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -669,7 +675,9 @@ describe("progress backup", () => {
     const document = loadDeviceFixture();
     firstRow(document.deckProgress).resolution = "active";
 
-    await new SQLiteProgressBackupRestoreTransaction(target.drizzle).restore(document);
+    await new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds).restore(
+      document
+    );
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(document.exportedAt);
     expect(restored.deckProgress[0]?.resolution).toBe("archived");
@@ -680,7 +688,10 @@ describe("progress backup", () => {
     const database = createDatabase();
     const document = loadDeviceFixture();
     const query = new SQLiteProgressBackupQuery(database.drizzle);
-    const transaction = new SQLiteProgressBackupRestoreTransaction(database.drizzle);
+    const transaction = new SQLiteProgressBackupRestoreTransaction(
+      database.drizzle,
+      database.rowIds
+    );
     await transaction.restore(document);
     const archived = await query.read(document.exportedAt);
     expect(archived.deckProgress[0]?.resolution).toBe("archived");
@@ -707,7 +718,7 @@ describe("progress backup", () => {
   it("rolls back all deletions if a restore row fails a SQLite constraint", async () => {
     const target = createDatabase();
     const timestamp = "2026-01-01T00:00:00.000Z";
-    await target.drizzle.insert(reviewEvents).values({
+    await target.drizzle.insert(flashcardReviewEvents).values({
       id: testId(950),
       deckId: TEST_DECK_ID,
       flashcardId: testId(1),
@@ -741,9 +752,9 @@ describe("progress backup", () => {
     };
 
     await expect(
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle).restore(invalid)
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds).restore(invalid)
     ).rejects.toThrow();
-    const remainingEvents = await target.drizzle.select().from(reviewEvents);
+    const remainingEvents = await target.drizzle.select().from(flashcardReviewEvents);
     expect(remainingEvents.map((event) => event.id)).toEqual([testId(950)]);
   });
 });

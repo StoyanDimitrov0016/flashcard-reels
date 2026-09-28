@@ -10,6 +10,7 @@ const DATABASE_FILES = [
   "flashcard-reels-v2.db",
   "flashcard-reels-v3.db",
   "flashcard-reels-v4.db",
+  "flashcard-reels-v5.db",
   "ExpoSQLiteStorage",
 ];
 const DeckImportFileNamePattern = /^deck-import-.*\.fcrdeck$/;

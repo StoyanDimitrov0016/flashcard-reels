@@ -3,10 +3,9 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 // oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
 import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
-import { Deck } from "@/features/decks/domain/deck.model";
 import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
+import { SQLiteDismissedBundledDeckRepository } from "@/features/decks/infrastructure/sqlite-dismissed-bundled-deck.repository";
 import {
   bundledDeckRegistry,
   readBundledDeckPackage,
@@ -26,7 +25,7 @@ export async function installBundledDecks(
   idGenerator: IdGenerator
 ): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);
-  const removedDeckRepository = new SQLiteRemovedDeckRepository(database);
+  const dismissedBundledDeckRepository = new SQLiteDismissedBundledDeckRepository(database);
   const { installBundledPackage } = createDeckPackageServices({
     database,
     clock,
@@ -36,7 +35,7 @@ export async function installBundledDecks(
   });
   const themeSelectionRepository = new SQLiteDeckThemeSelectionRepository(database, idGenerator);
   for (const definition of Object.values(bundledDeckRegistry)) {
-    if (await removedDeckRepository.wasRemoved(definition.id)) {
+    if (await dismissedBundledDeckRepository.wasRemoved(definition.id)) {
       continue;
     }
     const installedRevision = await deckRepository.findRevision(definition.id);
@@ -53,19 +52,6 @@ export async function installBundledDecks(
         theme: definition.appearance.theme,
       })
     );
-    const deck = await deckRepository.findById(definition.id);
-    if (deck) {
-      await deckRepository.save(
-        new Deck({
-          coverAsset: definition.appearance.coverAsset,
-          createdAt: deck.createdAt,
-          description: deck.description,
-          id: deck.id,
-          title: deck.title,
-          updatedAt: deck.updatedAt,
-          revision: deck.revision,
-        })
-      );
-    }
+    await deckRepository.updateCoverAsset(definition.id, definition.appearance.coverAsset);
   }
 }

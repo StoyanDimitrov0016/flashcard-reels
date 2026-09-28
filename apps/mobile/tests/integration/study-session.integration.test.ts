@@ -145,7 +145,9 @@ describe("SQLite study sessions", () => {
     await graph.study.rateAttempt(pendingAttempt, "again");
     const scheduledRecurrences = await graph.recurrences.listBySessionId(opened.studySessionId);
     const pendingRecurrence = at(
-      scheduledRecurrences.filter((recurrence) => recurrence.flashcardReviewAttemptId === pendingAttempt),
+      scheduledRecurrences.filter(
+        (recurrence) => recurrence.flashcardReviewAttemptId === pendingAttempt
+      ),
       0
     );
 
@@ -186,6 +188,8 @@ describe("SQLite study sessions", () => {
     const initialIds = initial.occurrences.map((occurrence) => occurrence.card.id);
     await database.drizzle.insert(flashcardProgress).values(
       focusCards.map((card) => ({
+        id: database.rowIds.generate(),
+
         againCount: 1,
         createdAt: "2026-01-01T00:00:00.000Z",
         deckId: card.deckId,

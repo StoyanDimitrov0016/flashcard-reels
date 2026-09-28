@@ -10,22 +10,21 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-import { SYSTEM_AUTHOR_ID } from "../../features/decks/domain/system-author";
-
 export const decks = sqliteTable("decks", {
   id: text("id").primaryKey().notNull(),
-  authorId: text("author_id").notNull().default(SYSTEM_AUTHOR_ID),
-  packageSchema: integer("package_schema").notNull().default(1),
+  authorId: text("author_id").notNull(),
+  packageSchema: integer("package_schema").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   coverAsset: text("cover_asset").notNull().default("cards"),
-  revision: integer("revision").notNull().default(1),
+  revision: integer("revision").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
 
-export const removedDecks = sqliteTable("removed_decks", {
+export const dismissedBundledDecks = sqliteTable("dismissed_bundled_decks", {
   id: text("id").primaryKey().notNull(),
+  deckId: text("deck_id").notNull().unique(),
 });
 
 export const deckThemeSelections = sqliteTable("deck_theme_selections", {
@@ -81,7 +80,8 @@ export const lessons = sqliteTable(
 export const flashcardProgress = sqliteTable(
   "flashcard_progress",
   {
-    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    id: text("id").primaryKey().notNull(),
+    flashcardId: text("flashcard_id").notNull().unique(),
     deckId: text("deck_id").notNull(),
     reviewCount: integer("review_count").notNull().default(0),
     againCount: integer("again_count").notNull().default(0),
@@ -120,7 +120,8 @@ export const flashcardProgress = sqliteTable(
 export const flashcardMemoryStates = sqliteTable(
   "flashcard_memory_states",
   {
-    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    id: text("id").primaryKey().notNull(),
+    flashcardId: text("flashcard_id").notNull().unique(),
     deckId: text("deck_id").notNull(),
     state: text("state", { enum: ["new", "learning", "review", "relearning"] }).notNull(),
     dueAt: text("due_at").notNull(),
@@ -145,28 +146,29 @@ export const flashcardMemoryStates = sqliteTable(
   ]
 );
 
-export const reviewEvents = sqliteTable(
-  "review_events",
+export const flashcardReviewEvents = sqliteTable(
+  "flashcard_review_events",
   {
     id: text("id").primaryKey().notNull(),
     deckId: text("deck_id").notNull(),
     flashcardId: text("flashcard_id").notNull(),
     rating: text("rating", { enum: ["again", "hard", "good", "easy"] }).notNull(),
     reviewedAt: text("reviewed_at").notNull(),
-    committedAt: text("finalized_at").notNull(),
+    committedAt: text("committed_at").notNull(),
   },
   (table) => [
-    index("review_events_deck_id_idx").on(table.deckId),
-    index("review_events_flashcard_id_idx").on(table.flashcardId),
+    index("flashcard_review_events_deck_id_idx").on(table.deckId),
+    index("flashcard_review_events_flashcard_id_idx").on(table.flashcardId),
   ]
 );
 
 export const deckProgress = sqliteTable("deck_progress", {
-  deckId: text("deck_id").primaryKey().notNull(),
+  id: text("id").primaryKey().notNull(),
+  deckId: text("deck_id").notNull().unique(),
   title: text("title").notNull(),
   revision: integer("revision").notNull(),
   lastReviewedAt: text("last_reviewed_at").notNull(),
-  resolution: text("resolution", { enum: ["active", "archived", "pending"] }).notNull(),
+  status: text("status", { enum: ["active", "archived", "pending"] }).notNull(),
 });
 
 export const progressBackupState = sqliteTable("progress_backup_state", {
@@ -260,7 +262,7 @@ export const flashcardReviewAttempts = sqliteTable(
     createdAt: text("created_at").notNull(),
     ratedAt: text("rated_at"),
     updatedAt: text("updated_at").notNull(),
-    committedAt: text("finalized_at"),
+    committedAt: text("committed_at"),
   },
   (table) => [
     check("flashcard_review_attempts_reel_position_check", sql`${table.reelPosition} >= 0`),
@@ -272,12 +274,12 @@ export const flashcardReviewAttempts = sqliteTable(
       "flashcard_review_attempts_rating_timestamp_check",
       sql`(${table.rating} IS NULL AND ${table.ratedAt} IS NULL) OR (${table.rating} IS NOT NULL AND ${table.ratedAt} IS NOT NULL)`
     ),
-    unique("review_attempts_session_reel_position_unique").on(
+    unique("flashcard_review_attempts_session_reel_position_unique").on(
       table.studySessionId,
       table.reelPosition
     ),
-    index("review_attempts_flashcard_id_idx").on(table.flashcardId),
-    index("review_attempts_session_position_aggregation_idx").on(
+    index("flashcard_review_attempts_flashcard_id_idx").on(table.flashcardId),
+    index("flashcard_review_attempts_session_position_aggregation_idx").on(
       table.studySessionId,
       table.reelPosition,
       table.committedAt,
@@ -326,14 +328,15 @@ export const studySessionRecurrences = sqliteTable(
 );
 
 export const databaseSchema = {
+  progressBackupState,
   decks,
-  removedDecks,
+  dismissedBundledDecks,
   deckThemeSelections,
   flashcards,
   lessons,
   flashcardProgress,
   flashcardMemoryStates,
-  reviewEvents,
+  flashcardReviewEvents,
   deckProgress,
   studySessions,
   studySessionReels,

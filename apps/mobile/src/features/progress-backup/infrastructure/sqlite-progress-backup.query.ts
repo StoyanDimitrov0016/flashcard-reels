@@ -10,7 +10,7 @@ import {
   flashcardMemoryStates,
   flashcardProgress,
   progressBackupState,
-  reviewEvents,
+  flashcardReviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteProgressBackupQuery<TRunResult = unknown> implements ProgressBackupQuery {
@@ -23,7 +23,20 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
   async read(exportedAt: string): Promise<ProgressBackupDocument> {
     return this.database.transaction((transaction) => {
       const progress = transaction
-        .select()
+        .select({
+          flashcardId: flashcardProgress.flashcardId,
+          deckId: flashcardProgress.deckId,
+          reviewCount: flashcardProgress.reviewCount,
+          againCount: flashcardProgress.againCount,
+          hardCount: flashcardProgress.hardCount,
+          goodCount: flashcardProgress.goodCount,
+          easyCount: flashcardProgress.easyCount,
+          firstReviewedAt: flashcardProgress.firstReviewedAt,
+          lastReviewedAt: flashcardProgress.lastReviewedAt,
+          resetAt: flashcardProgress.resetAt,
+          createdAt: flashcardProgress.createdAt,
+          updatedAt: flashcardProgress.updatedAt,
+        })
         .from(flashcardProgress)
         .orderBy(asc(flashcardProgress.flashcardId))
         .all();
@@ -42,21 +55,36 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
             title: deckProgress.title,
             revision: deckProgress.revision,
             lastReviewedAt: deckProgress.lastReviewedAt,
-            resolution: deckProgress.resolution,
+            resolution: deckProgress.status,
           })
           .from(deckProgress)
           .orderBy(asc(deckProgress.deckId))
           .all(),
         flashcardProgress: progress,
         flashcardMemoryStates: transaction
-          .select()
+          .select({
+            flashcardId: flashcardMemoryStates.flashcardId,
+            deckId: flashcardMemoryStates.deckId,
+            state: flashcardMemoryStates.state,
+            dueAt: flashcardMemoryStates.dueAt,
+            stability: flashcardMemoryStates.stability,
+            difficulty: flashcardMemoryStates.difficulty,
+            elapsedDays: flashcardMemoryStates.elapsedDays,
+            scheduledDays: flashcardMemoryStates.scheduledDays,
+            reps: flashcardMemoryStates.reps,
+            lapses: flashcardMemoryStates.lapses,
+            learningSteps: flashcardMemoryStates.learningSteps,
+            lastReviewAt: flashcardMemoryStates.lastReviewAt,
+            createdAt: flashcardMemoryStates.createdAt,
+            updatedAt: flashcardMemoryStates.updatedAt,
+          })
           .from(flashcardMemoryStates)
           .orderBy(asc(flashcardMemoryStates.flashcardId))
           .all(),
         reviewEvents: transaction
           .select()
-          .from(reviewEvents)
-          .orderBy(asc(reviewEvents.id))
+          .from(flashcardReviewEvents)
+          .orderBy(asc(flashcardReviewEvents.id))
           .all()
           .map((row) => ({
             id: row.id,

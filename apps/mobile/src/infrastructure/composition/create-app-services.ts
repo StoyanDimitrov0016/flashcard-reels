@@ -61,13 +61,19 @@ export function createAppServices(sqliteDatabase: SQLiteDatabase): AppServices {
     ...decks,
     flashcardService,
     flashcardProgressService: createFlashcardProgressService({
+      idGenerator,
       database,
       clock,
       studyService,
       flashcardService,
     }),
     lessonService: createLessonService(database),
-    progressBackupService: createProgressBackupService({ database, clock, studyService }),
+    progressBackupService: createProgressBackupService({
+      database,
+      clock,
+      idGenerator,
+      studyService,
+    }),
     reelFeedService: createReelFeedService({
       studyService,
       flashcardMemoryStateRepository,

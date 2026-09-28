@@ -3,6 +3,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
 import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { isFirstReviewOnLocalDay } from "@/features/learning-engine/domain/review-day";
 import {
@@ -11,17 +12,23 @@ import {
   flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
-  reviewEvents,
+  flashcardReviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteReviewAttemptCommitTransaction<
   TRunResult = unknown,
 > implements ReviewAttemptCommitTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
   private readonly scheduler: LearningScheduler;
 
-  constructor(database: DrizzleDatabase<TRunResult>, scheduler: LearningScheduler) {
+  constructor(
+    database: DrizzleDatabase<TRunResult>,
+    scheduler: LearningScheduler,
+    idGenerator: IdGenerator
+  ) {
     this.database = database;
+    this.idGenerator = idGenerator;
     this.scheduler = scheduler;
   }
 
@@ -70,6 +77,7 @@ export class SQLiteReviewAttemptCommitTransaction<
             attempt.ratedAt
           ).memoryState;
           const values = {
+            id: current?.id ?? this.idGenerator.generate(),
             createdAt: current?.createdAt ?? committedAt,
             dueAt: nextState.dueAt,
             difficulty: nextState.difficulty,
@@ -92,7 +100,7 @@ export class SQLiteReviewAttemptCommitTransaction<
             .run();
         }
         transaction
-          .insert(reviewEvents)
+          .insert(flashcardReviewEvents)
           .values({
             id: attempt.id,
             deckId: card.deckId,
@@ -106,11 +114,12 @@ export class SQLiteReviewAttemptCommitTransaction<
         transaction
           .insert(deckProgress)
           .values({
+            id: this.idGenerator.generate(),
             deckId: card.deckId,
             title: card.title,
             revision: card.version,
             lastReviewedAt: attempt.ratedAt,
-            resolution: "active",
+            status: "active",
           })
           .onConflictDoUpdate({
             target: deckProgress.deckId,

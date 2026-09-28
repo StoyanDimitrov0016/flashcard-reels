@@ -4,7 +4,12 @@ import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
-import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
+import {
+  Deck as DeckModel,
+  type Deck,
+  type DeckCoverAsset,
+  type DeckId,
+} from "@/features/decks/domain/deck.model";
 import { decks } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepository {
@@ -37,28 +42,8 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
     return rows.map((row) => this.toModel(row));
   }
 
-  async save(deck: Deck): Promise<void> {
-    await this.database
-      .insert(decks)
-      .values({
-        createdAt: deck.createdAt,
-        description: deck.description,
-        id: deck.id,
-        coverAsset: deck.coverAsset,
-        title: deck.title,
-        revision: deck.revision,
-        updatedAt: deck.updatedAt,
-      })
-      .onConflictDoUpdate({
-        target: decks.id,
-        set: {
-          description: deck.description,
-          title: deck.title,
-          coverAsset: deck.coverAsset,
-          revision: deck.revision,
-          updatedAt: deck.updatedAt,
-        },
-      });
+  async updateCoverAsset(deckId: DeckId, coverAsset: DeckCoverAsset): Promise<void> {
+    await this.database.update(decks).set({ coverAsset }).where(eq(decks.id, deckId));
   }
 
   async findRevision(id: DeckId): Promise<number | null> {

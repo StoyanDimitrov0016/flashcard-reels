@@ -28,7 +28,7 @@ describe("SQLite flashcard progress", () => {
     await insertFlashcard(makeFlashcard(2, TEST_DECK_ID));
     await insertFlashcard(makeFlashcard(3, OTHER_DECK_ID));
     progress = new SQLiteFlashcardProgressRepository(database.drizzle);
-    reset = new SQLiteLearningProgressResetTransaction(database.drizzle);
+    reset = new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds);
   });
 
   afterEach(() => {
@@ -140,6 +140,10 @@ describe("SQLite flashcard progress", () => {
 
   async function insertDeck(id: string, title: string): Promise<void> {
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: "2026-01-01T00:00:00.000Z",
       description: title,
       id,

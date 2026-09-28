@@ -8,7 +8,7 @@ import {
   flashcardProgress,
   deckProgress,
   flashcardMemoryStates,
-  reviewEvents,
+  flashcardReviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteSavedProgressDeletionTransaction<
@@ -23,14 +23,14 @@ export class SQLiteSavedProgressDeletionTransaction<
   async deleteProgress(id: DeckId): Promise<void> {
     this.database.transaction((transaction) => {
       const record = transaction
-        .select({ resolution: deckProgress.resolution })
+        .select({ status: deckProgress.status })
         .from(deckProgress)
         .where(eq(deckProgress.deckId, id))
         .get();
-      if (record?.resolution === "active") {
+      if (record?.status === "active") {
         throw new Error(`Deck ${id} must be archived or pending before deleting saved progress`);
       }
-      transaction.delete(reviewEvents).where(eq(reviewEvents.deckId, id)).run();
+      transaction.delete(flashcardReviewEvents).where(eq(flashcardReviewEvents.deckId, id)).run();
       transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
       transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
       transaction.delete(deckProgress).where(eq(deckProgress.deckId, id)).run();

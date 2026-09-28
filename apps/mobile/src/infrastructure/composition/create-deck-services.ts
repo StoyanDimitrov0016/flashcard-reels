@@ -48,7 +48,7 @@ export function createDeckServices({
     deckService: new DeckServiceImpl(
       deckRepository,
       new SQLiteDeckThemeSelectionRepository(database, idGenerator),
-      new SQLiteDeckRemovalTransaction(database),
+      new SQLiteDeckRemovalTransaction(database, idGenerator),
       deckAudioRemover,
       studyService
     ),

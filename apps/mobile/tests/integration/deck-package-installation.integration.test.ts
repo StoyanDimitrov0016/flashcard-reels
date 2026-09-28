@@ -610,6 +610,24 @@ describe("deck package installation", () => {
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${OTHER_DECK_ID}:1`]));
   });
 
+  it("updates only an installed deck's cover asset and never creates a missing deck", async () => {
+    database = new NodeSqliteDatabase();
+    const { importer } = createImporter(database, new TestClock());
+    await importer.installFromBytes(validArchive(1, [card(testId(13), 0)]));
+    const before = await database.getAllAsync("SELECT * FROM decks ORDER BY id");
+    const repository = new SQLiteDeckRepository(database.drizzle);
+
+    await repository.updateCoverAsset(TEST_DECK_ID, "javascript");
+
+    const after = await database.getAllAsync("SELECT * FROM decks ORDER BY id");
+    expect(after).toEqual([Object.assign({}, before[0], { cover_asset: "javascript" })]);
+
+    await repository.updateCoverAsset(OTHER_DECK_ID, "react");
+
+    expect(await database.getAllAsync("SELECT * FROM decks ORDER BY id")).toEqual(after);
+    expect(await repository.findById(OTHER_DECK_ID)).toBeNull();
+  });
+
   it("completes active focused and mixed sessions when an installed deck changes", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
@@ -684,13 +702,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed(
-      [installedCard],
-      "focus",
-      TEST_DECK_ID,
-      false,
-      null
-    );
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -731,13 +743,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed(
-      [installedCard],
-      "focus",
-      TEST_DECK_ID,
-      false,
-      null
-    );
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -841,13 +847,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed(
-      [installedCard],
-      "focus",
-      TEST_DECK_ID,
-      false,
-      null
-    );
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
 
     await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({ status: "no-op" });
 

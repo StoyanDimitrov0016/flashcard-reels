@@ -10,10 +10,10 @@ import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 
 type CreateStudyServiceOptions = Readonly<{
@@ -40,9 +40,9 @@ export function createStudyService({
     new SQLiteReviewAttemptTransaction(database),
     new SQLiteStudySessionFeedTransaction(database),
     new SQLiteStudySessionLifecycleTransaction(database),
-    new SQLiteReviewAttemptCommitTransaction(database, learningScheduler),
+    new SQLiteReviewAttemptCommitTransaction(database, learningScheduler, idGenerator),
     Math.random,
-    new SQLiteFlashcardProgressAggregationTransaction(database),
+    new SQLiteFlashcardProgressAggregationTransaction(database, idGenerator),
     new SQLiteStudySessionMaintenanceTransaction(database)
   );
 }

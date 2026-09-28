@@ -17,10 +17,10 @@ import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
 import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
 import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { decks, flashcards } from "@/infrastructure/sqlite/schema";
 
@@ -54,9 +54,10 @@ export function createScenarioGraph(
     new SQLiteReviewAttemptTransaction(database.drizzle),
     new SQLiteStudySessionFeedTransaction(database.drizzle),
     new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-    commitTransaction ?? new SQLiteReviewAttemptCommitTransaction(database.drizzle, scheduler),
+    commitTransaction ??
+      new SQLiteReviewAttemptCommitTransaction(database.drizzle, scheduler, database.rowIds),
     random,
-    new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
+    new SQLiteFlashcardProgressAggregationTransaction(database.drizzle, database.rowIds),
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
   return {
@@ -67,7 +68,7 @@ export function createScenarioGraph(
     flashcardProgress: new FlashcardProgressServiceImpl(
       new SQLiteFlashcardProgressQuery(database.drizzle, progress),
       clock,
-      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
       study,
       new FlashcardServiceImpl(
         new SQLiteFlashcardRepository(database.drizzle),
@@ -88,6 +89,10 @@ export async function seedDeck(
 ): Promise<void> {
   const timestamp = "2026-01-01T00:00:00.000Z";
   await database.drizzle.insert(decks).values({
+    authorId: "00000000-0000-4000-8000-000000000001",
+    packageSchema: 1,
+    revision: 1,
+
     createdAt: timestamp,
     description: "Scenario fixture",
     id: deckId,

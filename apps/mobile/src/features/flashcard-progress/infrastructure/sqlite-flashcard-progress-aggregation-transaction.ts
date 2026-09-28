@@ -6,6 +6,7 @@ import type {
 } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
 import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { AGGREGATION_CHUNK_SIZE } from "@/features/study/domain/review-attempts";
 import {
@@ -28,9 +29,11 @@ export class SQLiteFlashcardProgressAggregationTransaction<
   TRunResult = unknown,
 > implements FlashcardProgressAggregationTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async aggregate(
@@ -155,6 +158,7 @@ export class SQLiteFlashcardProgressAggregationTransaction<
         transaction
           .insert(flashcardProgress)
           .values({
+            id: progress?.id ?? this.idGenerator.generate(),
             againCount,
             createdAt,
             deckId,

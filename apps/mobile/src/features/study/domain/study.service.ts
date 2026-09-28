@@ -2,8 +2,8 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionPosition } from "@/features/study/domain/study-session.repository";
 
@@ -30,7 +30,7 @@ export interface StudyService {
     shouldCheck: boolean;
     safeThroughReelPosition: number;
   }> | null>;
-  appendSessionItems(
+  appendSessionReels(
     sessionId: string,
     cards: readonly Flashcard[],
     feedState: string,

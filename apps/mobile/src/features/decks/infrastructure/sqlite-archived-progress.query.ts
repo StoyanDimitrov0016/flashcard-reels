@@ -7,7 +7,7 @@ import {
   flashcardProgress,
   deckProgress,
   flashcardMemoryStates,
-  reviewEvents,
+  flashcardReviewEvents,
 } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteArchivedProgressQuery<TRunResult = unknown> implements ArchivedProgressQuery {
@@ -21,17 +21,17 @@ export class SQLiteArchivedProgressQuery<TRunResult = unknown> implements Archiv
     const records = await this.database
       .select()
       .from(deckProgress)
-      .where(eq(deckProgress.resolution, "archived"))
+      .where(eq(deckProgress.status, "archived"))
       .orderBy(asc(deckProgress.title), asc(deckProgress.deckId));
     return Promise.all(
       records.map(async (record) => {
         const [events, progress, memory] = await Promise.all([
           this.database
             .select({
-              bytes: sql<number>`coalesce(sum(length(${reviewEvents.id}) + length(${reviewEvents.deckId}) + length(${reviewEvents.flashcardId}) + length(${reviewEvents.rating}) + length(${reviewEvents.reviewedAt}) + length(${reviewEvents.committedAt}) + 64), 0)`,
+              bytes: sql<number>`coalesce(sum(length(${flashcardReviewEvents.id}) + length(${flashcardReviewEvents.deckId}) + length(${flashcardReviewEvents.flashcardId}) + length(${flashcardReviewEvents.rating}) + length(${flashcardReviewEvents.reviewedAt}) + length(${flashcardReviewEvents.committedAt}) + 64), 0)`,
             })
-            .from(reviewEvents)
-            .where(eq(reviewEvents.deckId, record.deckId)),
+            .from(flashcardReviewEvents)
+            .where(eq(flashcardReviewEvents.deckId, record.deckId)),
           this.database
             .select({
               reviewCount: sql<number>`coalesce(sum(${flashcardProgress.reviewCount}), 0)`,

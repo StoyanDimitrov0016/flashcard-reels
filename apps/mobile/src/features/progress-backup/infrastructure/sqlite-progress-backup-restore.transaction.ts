@@ -1,6 +1,7 @@
 import type { ProgressBackupRestoreTransaction } from "@/features/progress-backup/application/progress-backup-restore.transaction";
 import type { ProgressBackupDocument } from "@/features/progress-backup/contracts/progress-backup.schema";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import {
   deckProgress,
@@ -8,7 +9,7 @@ import {
   flashcardMemoryStates,
   flashcardProgress,
   progressBackupState,
-  reviewEvents,
+  flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -18,9 +19,11 @@ export class SQLiteProgressBackupRestoreTransaction<
   TRunResult = unknown,
 > implements ProgressBackupRestoreTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async restore(document: ProgressBackupDocument, safetyCopyFileName?: string): Promise<void> {
@@ -33,7 +36,7 @@ export class SQLiteProgressBackupRestoreTransaction<
 
       // Removing sessions first cascades through attempts, items, and recurrences.
       transaction.delete(studySessions).run();
-      transaction.delete(reviewEvents).run();
+      transaction.delete(flashcardReviewEvents).run();
       transaction.delete(flashcardProgress).run();
       transaction.delete(flashcardMemoryStates).run();
       transaction.delete(deckProgress).run();
@@ -42,11 +45,12 @@ export class SQLiteProgressBackupRestoreTransaction<
         const rows = document.deckProgress.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => {
           const installed = installedById.get(row.deckId);
           return {
+            id: this.idGenerator.generate(),
             deckId: row.deckId,
             lastReviewedAt: row.lastReviewedAt,
             title: installed?.title ?? row.title,
             revision: installed?.revision ?? row.revision,
-            resolution: installed ? ("active" as const) : ("archived" as const),
+            status: installed ? ("active" as const) : ("archived" as const),
           };
         });
         transaction.insert(deckProgress).values(rows).run();
@@ -58,7 +62,11 @@ export class SQLiteProgressBackupRestoreTransaction<
       ) {
         transaction
           .insert(flashcardProgress)
-          .values(document.flashcardProgress.slice(offset, offset + INSERT_CHUNK_SIZE))
+          .values(
+            document.flashcardProgress
+              .slice(offset, offset + INSERT_CHUNK_SIZE)
+              .map((row) => Object.assign({ id: this.idGenerator.generate() }, row))
+          )
           .run();
       }
       for (
@@ -68,12 +76,16 @@ export class SQLiteProgressBackupRestoreTransaction<
       ) {
         transaction
           .insert(flashcardMemoryStates)
-          .values(document.flashcardMemoryStates.slice(offset, offset + INSERT_CHUNK_SIZE))
+          .values(
+            document.flashcardMemoryStates
+              .slice(offset, offset + INSERT_CHUNK_SIZE)
+              .map((row) => Object.assign({ id: this.idGenerator.generate() }, row))
+          )
           .run();
       }
       for (let offset = 0; offset < document.reviewEvents.length; offset += INSERT_CHUNK_SIZE) {
         transaction
-          .insert(reviewEvents)
+          .insert(flashcardReviewEvents)
           .values(
             document.reviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => ({
               id: row.id,

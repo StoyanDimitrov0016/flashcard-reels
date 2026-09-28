@@ -51,7 +51,7 @@ describe("SQLite learning progress reset transaction", () => {
         new SQLiteFlashcardProgressRepository(database.drizzle)
       ),
       { now: () => RESET_AT },
-      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
       graph.study,
       new FlashcardServiceImpl(
         new SQLiteFlashcardRepository(database.drizzle),
@@ -165,7 +165,7 @@ describe("SQLite learning progress reset transaction", () => {
         new SQLiteFlashcardProgressRepository(database.drizzle)
       ),
       clock,
-      new SQLiteLearningProgressResetTransaction(database.drizzle),
+      new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
       graph.study,
       flashcardService
     );
@@ -219,6 +219,10 @@ describe("SQLite learning progress reset transaction", () => {
 
   async function insertDeck(id: string, title: string): Promise<void> {
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: REVIEWED_AT,
       description: title,
       id,
@@ -243,6 +247,8 @@ describe("SQLite learning progress reset transaction", () => {
   async function insertProgress(index: number): Promise<void> {
     const card = makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID);
     await database.drizzle.insert(flashcardProgress).values({
+      id: database.rowIds.generate(),
+
       againCount: 0,
       createdAt: card.createdAt,
       deckId: card.deckId,
@@ -261,6 +267,8 @@ describe("SQLite learning progress reset transaction", () => {
   async function insertMemory(index: number): Promise<void> {
     const card = makeFlashcard(index, index === 3 ? OTHER_DECK_ID : TEST_DECK_ID);
     await database.drizzle.insert(flashcardMemoryStates).values({
+      id: database.rowIds.generate(),
+
       createdAt: REVIEWED_AT,
       deckId: card.deckId,
       difficulty: 5,

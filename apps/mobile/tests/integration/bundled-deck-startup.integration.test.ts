@@ -44,6 +44,9 @@ describe("bundled deck startup", () => {
   ])("does not read a package when the installed version is %s", async (_case, version) => {
     database = new NodeSqliteDatabase();
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+
       createdAt: "2026-01-01T00:00:00.000Z",
       description: "",
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
