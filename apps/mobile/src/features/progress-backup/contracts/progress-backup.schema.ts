@@ -16,7 +16,7 @@ const DeckProgressSchema = z
     title: z.string().min(1),
     revision: z.number().int().positive(),
     lastReviewedAt: ProgressBackupTimestampSchema,
-    resolution: z.enum(["active", "archived", "pending"]),
+    status: z.enum(["active", "archived", "pending"]),
   })
   .strict();
 
@@ -74,7 +74,7 @@ const ReviewEventSchema = z
     flashcardId: ProgressBackupIdSchema,
     rating: z.enum(["again", "hard", "good", "easy"]),
     reviewedAt: ProgressBackupTimestampSchema,
-    finalizedAt: ProgressBackupTimestampSchema,
+    committedAt: ProgressBackupTimestampSchema,
   })
   .strict();
 
@@ -86,7 +86,7 @@ const ProgressBackupDocumentUncompiledSchema = z
     deckProgress: z.array(DeckProgressSchema),
     flashcardProgress: z.array(FlashcardProgressSchema),
     flashcardMemoryStates: z.array(FlashcardMemoryStateSchema),
-    reviewEvents: z.array(ReviewEventSchema),
+    flashcardReviewEvents: z.array(ReviewEventSchema),
   })
   .strict()
   .superRefine((document, context) => {
@@ -154,16 +154,16 @@ const ProgressBackupDocumentUncompiledSchema = z
       }
     >();
     const latestDeckReview = new Map<string, string>();
-    for (const [index, row] of document.reviewEvents.entries()) {
+    for (const [index, row] of document.flashcardReviewEvents.entries()) {
       if (eventIds.has(row.id)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents", index, "id"],
+          path: ["flashcardReviewEvents", index, "id"],
           message: "Duplicate review event",
         });
       }
       eventIds.add(row.id);
-      checkOwnership(row.flashcardId, row.deckId, ["reviewEvents", index, "deckId"]);
+      checkOwnership(row.flashcardId, row.deckId, ["flashcardReviewEvents", index, "deckId"]);
       const stats = eventStats.get(row.flashcardId) ?? {
         again: 0,
         hard: 0,
@@ -187,7 +187,7 @@ const ProgressBackupDocumentUncompiledSchema = z
       if (!studiedDeckIds.has(row.deckId)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents", index, "deckId"],
+          path: ["flashcardReviewEvents", index, "deckId"],
           message: "Missing deck progress for review event",
         });
       }
@@ -229,7 +229,7 @@ const ProgressBackupDocumentUncompiledSchema = z
       if (!progressIds.has(flashcardId)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents"],
+          path: ["flashcardReviewEvents"],
           message: `Missing progress summary for ${flashcardId}`,
         });
       }
@@ -260,8 +260,8 @@ export type ProgressBackupSummary = Readonly<{
 export function summarizeProgressBackup(document: ProgressBackupDocument): ProgressBackupSummary {
   return {
     deckCount: document.deckProgress.length,
-    reviewCount: document.reviewEvents.length,
-    lastReviewedAt: document.reviewEvents.reduce<string | null>(
+    reviewCount: document.flashcardReviewEvents.length,
+    lastReviewedAt: document.flashcardReviewEvents.reduce<string | null>(
       (latest, event) => (latest === null || event.reviewedAt > latest ? event.reviewedAt : latest),
       null
     ),

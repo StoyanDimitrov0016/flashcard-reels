@@ -8,7 +8,7 @@
       "title": "Versioned Test Deck",
       "revision": 1,
       "lastReviewedAt": "2026-01-01T12:00:00.000Z",
-      "resolution": "archived"
+      "status": "archived"
     }
   ],
   "flashcardProgress": [
@@ -45,14 +45,14 @@
       "updatedAt": "2026-01-01T12:00:00.000Z"
     }
   ],
-  "reviewEvents": [
+  "flashcardReviewEvents": [
     {
       "id": "c1000000-0000-4000-8000-000000000001",
       "deckId": "a1000000-0000-4000-8000-000000000001",
       "flashcardId": "b1000000-0000-4000-8000-000000000001",
       "rating": "good",
       "reviewedAt": "2026-01-01T12:00:00.000Z",
-      "finalizedAt": "2026-01-01T12:00:00.000Z"
+      "committedAt": "2026-01-01T12:00:00.000Z"
     }
   ]
 }

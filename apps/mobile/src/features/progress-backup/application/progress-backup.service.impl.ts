@@ -162,11 +162,11 @@ function hasSameProgress(
       (row) => row.deckId,
       (first, second) =>
         first.lastReviewedAt === second.lastReviewedAt &&
-        first.resolution === (installedDeckIds.has(first.deckId) ? "active" : "archived")
+        first.status === (installedDeckIds.has(first.deckId) ? "active" : "archived")
     ) &&
     sameRows(left.flashcardProgress, right.flashcardProgress, (row) => row.flashcardId) &&
     sameRows(left.flashcardMemoryStates, right.flashcardMemoryStates, (row) => row.flashcardId) &&
-    sameRows(left.reviewEvents, right.reviewEvents, (row) => row.id)
+    sameRows(left.flashcardReviewEvents, right.flashcardReviewEvents, (row) => row.id)
   );
 }
 

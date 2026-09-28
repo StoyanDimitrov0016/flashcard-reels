@@ -55,7 +55,7 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
             title: deckProgress.title,
             revision: deckProgress.revision,
             lastReviewedAt: deckProgress.lastReviewedAt,
-            resolution: deckProgress.status,
+            status: deckProgress.status,
           })
           .from(deckProgress)
           .orderBy(asc(deckProgress.deckId))
@@ -81,19 +81,11 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
           .from(flashcardMemoryStates)
           .orderBy(asc(flashcardMemoryStates.flashcardId))
           .all(),
-        reviewEvents: transaction
+        flashcardReviewEvents: transaction
           .select()
           .from(flashcardReviewEvents)
           .orderBy(asc(flashcardReviewEvents.id))
-          .all()
-          .map((row) => ({
-            id: row.id,
-            deckId: row.deckId,
-            flashcardId: row.flashcardId,
-            rating: row.rating,
-            reviewedAt: row.reviewedAt,
-            finalizedAt: row.committedAt,
-          })),
+          .all(),
       };
     });
   }

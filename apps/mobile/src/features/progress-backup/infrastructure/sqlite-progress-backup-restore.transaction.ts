@@ -83,19 +83,14 @@ export class SQLiteProgressBackupRestoreTransaction<
           )
           .run();
       }
-      for (let offset = 0; offset < document.reviewEvents.length; offset += INSERT_CHUNK_SIZE) {
+      for (
+        let offset = 0;
+        offset < document.flashcardReviewEvents.length;
+        offset += INSERT_CHUNK_SIZE
+      ) {
         transaction
           .insert(flashcardReviewEvents)
-          .values(
-            document.reviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => ({
-              id: row.id,
-              deckId: row.deckId,
-              flashcardId: row.flashcardId,
-              rating: row.rating,
-              reviewedAt: row.reviewedAt,
-              committedAt: row.finalizedAt,
-            }))
-          )
+          .values(document.flashcardReviewEvents.slice(offset, offset + INSERT_CHUNK_SIZE))
           .run();
       }
       if (safetyCopyFileName) {

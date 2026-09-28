@@ -105,7 +105,7 @@ describe("progress backup", () => {
 
   it("keeps the device import fixture compatible with the backup format", () => {
     const document = loadDeviceFixture();
-    expect(document.reviewEvents).toHaveLength(1);
+    expect(document.flashcardReviewEvents).toHaveLength(1);
   });
 
   it.each([
@@ -135,7 +135,7 @@ describe("progress backup", () => {
       await backup.exportProgress();
 
       expect(files.shared?.flashcardProgress[0]?.createdAt).toBe(expected);
-      expect(files.shared?.reviewEvents).toHaveLength(1);
+      expect(files.shared?.flashcardReviewEvents).toHaveLength(1);
       const stored = await database.drizzle.select().from(flashcardProgress);
       expect(stored[0]?.createdAt).toBe(createdAt);
       files.picked = JSON.stringify(files.shared);
@@ -173,7 +173,7 @@ describe("progress backup", () => {
 
     await backup.exportProgress();
 
-    expect(files.shared?.reviewEvents.map((event) => event.rating)).toEqual(ratings);
+    expect(files.shared?.flashcardReviewEvents.map((event) => event.rating)).toEqual(ratings);
     expect(files.shared?.flashcardProgress).toHaveLength(4);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(4);
   });
@@ -208,7 +208,7 @@ describe("progress backup", () => {
     });
 
     const retained = await query.read(clock.now());
-    expect(retained.reviewEvents).toHaveLength(1);
+    expect(retained.flashcardReviewEvents).toHaveLength(1);
     expect(retained.flashcardProgress[0]?.reviewCount).toBe(1);
   });
 
@@ -264,7 +264,7 @@ describe("progress backup", () => {
     }
     expect(await targetBackup.restore(prepared)).toBe(true);
     const restored = await targetQuery.read(exported.exportedAt);
-    expect(restored.reviewEvents).toEqual(exported.reviewEvents);
+    expect(restored.flashcardReviewEvents).toEqual(exported.flashcardReviewEvents);
     expect(restored.flashcardProgress).toEqual(exported.flashcardProgress);
     expect(restored.flashcardMemoryStates).toEqual(exported.flashcardMemoryStates);
     expect(restored.deckProgress).toEqual(exported.deckProgress);
@@ -309,7 +309,7 @@ describe("progress backup", () => {
 
     await backup.exportProgress();
 
-    expect(files.shared?.reviewEvents).toHaveLength(60);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(60);
     expect(files.shared?.flashcardProgress).toHaveLength(60);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(60);
     expect(files.shared?.flashcardProgress.every((row) => row.reviewCount === 1)).toBe(true);
@@ -339,7 +339,7 @@ describe("progress backup", () => {
     await sourceGraph.study.completeSession(session.id);
     await new SQLiteDeckRemovalTransaction(source.drizzle, source.rowIds).remove(TEST_DECK_ID);
     const archived = await new SQLiteProgressBackupQuery(source.drizzle).read(sourceClock.now());
-    expect(archived.deckProgress[0]?.resolution).toBe("archived");
+    expect(archived.deckProgress[0]?.status).toBe("archived");
 
     const target = createDatabase();
     await seedDeck(target, TEST_DECK_ID, [cardId]);
@@ -395,11 +395,11 @@ describe("progress backup", () => {
     expect(await backup.restore(prepared)).toBe(true);
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(targetClock.now());
-    expect(restored.reviewEvents.map((event) => event.id)).toEqual([testId(801)]);
-    expect(restored.deckProgress[0]?.resolution).toBe("active");
+    expect(restored.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(801)]);
+    expect(restored.deckProgress[0]?.status).toBe("active");
     expect(restored.flashcardMemoryStates).toHaveLength(1);
     expect(await target.drizzle.select().from(studySessions)).toHaveLength(0);
-    expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+    expect(files.safetyCopy?.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(900)]);
 
     const safetyCopyFileName = await new SQLiteProgressBackupQuery(
       target.drizzle
@@ -409,7 +409,7 @@ describe("progress backup", () => {
       safetyCopyFileName
     );
     expect(files.copies.size).toBe(1);
-    expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+    expect(files.safetyCopy?.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(900)]);
   });
 
   it("preserves the last successful safety copy when a later restore fails", async () => {
@@ -429,7 +429,7 @@ describe("progress backup", () => {
       deckProgress: [],
       flashcardProgress: [],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     };
     files.picked = JSON.stringify(emptyBackup);
     const backup = new ProgressBackupServiceImpl(
@@ -470,7 +470,7 @@ describe("progress backup", () => {
     expect(files.copies.size).toBe(1);
     expect(await query.read(emptyBackup.exportedAt)).toEqual(emptyBackup);
     await failingBackup.shareSafetyCopy();
-    expect(files.shared?.reviewEvents).toHaveLength(1);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(1);
 
     const successfulRetry = await backup.prepareRestore();
     if (!successfulRetry) {
@@ -479,7 +479,7 @@ describe("progress backup", () => {
     expect(await backup.restore(successfulRetry)).toBe(true);
     expect(await query.readSafetyCopyFileName()).not.toBe(successfulCopyName);
     expect(files.copies.size).toBe(1);
-    expect(files.safetyCopy?.reviewEvents).toHaveLength(0);
+    expect(files.safetyCopy?.flashcardReviewEvents).toHaveLength(0);
   });
 
   it("reports an unsupported backup version before changing local progress", async () => {
@@ -563,7 +563,7 @@ describe("progress backup", () => {
     await backup.exportProgress();
 
     expect(files.shared?.deckProgress).toHaveLength(0);
-    expect(files.shared?.reviewEvents).toHaveLength(0);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(0);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(0);
     expect(files.shared?.flashcardProgress).toMatchObject([
       { flashcardId, reviewCount: 0, resetAt },
@@ -599,7 +599,7 @@ describe("progress backup", () => {
     [
       "duplicate review IDs",
       (document: ProgressBackupDocument) => {
-        document.reviewEvents.push({ ...firstRow(document.reviewEvents) });
+        document.flashcardReviewEvents.push({ ...firstRow(document.flashcardReviewEvents) });
         firstRow(document.flashcardProgress).reviewCount = 2;
         firstRow(document.flashcardProgress).goodCount = 2;
       },
@@ -647,7 +647,7 @@ describe("progress backup", () => {
       deckProgress: [],
       flashcardProgress: [],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     });
     files.failSafetyCopy = true;
     const clock = new TestClock();
@@ -673,14 +673,14 @@ describe("progress backup", () => {
   it("keeps progress archived when its deck is absent on the receiving device", async () => {
     const target = createDatabase();
     const document = loadDeviceFixture();
-    firstRow(document.deckProgress).resolution = "active";
+    firstRow(document.deckProgress).status = "active";
 
     await new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds).restore(
       document
     );
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(document.exportedAt);
-    expect(restored.deckProgress[0]?.resolution).toBe("archived");
+    expect(restored.deckProgress[0]?.status).toBe("archived");
     expect(restored.deckProgress[0]?.title).toBe("Versioned Test Deck");
   });
 
@@ -694,7 +694,7 @@ describe("progress backup", () => {
     );
     await transaction.restore(document);
     const archived = await query.read(document.exportedAt);
-    expect(archived.deckProgress[0]?.resolution).toBe("archived");
+    expect(archived.deckProgress[0]?.status).toBe("archived");
     await seedDeck(database, firstRow(document.deckProgress).deckId, [
       firstRow(document.flashcardProgress).flashcardId,
     ]);
@@ -711,7 +711,7 @@ describe("progress backup", () => {
 
     expect(await backup.restore(prepared)).toBe(true);
     const restored = await query.read(document.exportedAt);
-    expect(restored.deckProgress[0]?.resolution).toBe("active");
+    expect(restored.deckProgress[0]?.status).toBe("active");
     expect(await backup.hasSafetyCopy()).toBe(true);
   });
 
@@ -748,7 +748,7 @@ describe("progress backup", () => {
         },
       ],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     };
 
     await expect(
