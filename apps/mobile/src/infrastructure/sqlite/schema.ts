@@ -28,12 +28,13 @@ export const removedDecks = sqliteTable("removed_decks", {
   id: text("id").primaryKey().notNull(),
 });
 
-export const deckAppearances = sqliteTable("deck_appearances", {
+export const deckThemeSelections = sqliteTable("deck_theme_selections", {
+  id: text("id").primaryKey().notNull(),
   deckId: text("deck_id")
-    .primaryKey()
     .notNull()
+    .unique()
     .references(() => decks.id, { onDelete: "cascade" }),
-  presetId: text("preset_id").notNull(),
+  theme: text("theme").notNull(),
 });
 
 export const flashcards = sqliteTable(
@@ -327,7 +328,7 @@ export const studySessionRecurrences = sqliteTable(
 export const databaseSchema = {
   decks,
   removedDecks,
-  deckAppearances,
+  deckThemeSelections,
   flashcards,
   lessons,
   flashcardProgress,

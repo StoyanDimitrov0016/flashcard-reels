@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
@@ -9,7 +9,7 @@ import { toOperationError } from "@/shared/errors/normalize-error";
 import { OperationError } from "@/shared/errors/operation-error";
 
 type DeckCatalogEntry = Readonly<{
-  appearance: DeckAppearance;
+  themeSelection: DeckThemeSelection;
   cardCount: number;
   deck: Deck;
 }>;
@@ -36,23 +36,25 @@ export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
         try {
           const decks = await deckService.list();
           const deckIds = decks.map((deck) => deck.id);
-          const [appearances, cardCounts] = await Promise.all([
-            deckService.getAppearances(deckIds),
+          const [themeSelections, cardCounts] = await Promise.all([
+            deckService.getThemeSelections(deckIds),
             flashcardService.countFlashcardsByDeckIds(deckIds),
           ]);
-          const appearancesByDeckId = new Map(
-            appearances.map((appearance) => [appearance.deckId, appearance] as const)
+          const themeSelectionsByDeckId = new Map(
+            themeSelections.map(
+              (themeSelection) => [themeSelection.deckId, themeSelection] as const
+            )
           );
           const entries = decks.map((deck) => {
-            const appearance = appearancesByDeckId.get(deck.id);
-            if (!appearance) {
+            const themeSelection = themeSelectionsByDeckId.get(deck.id);
+            if (!themeSelection) {
               throw new OperationError({
                 code: "VIEW_LOAD_FAILED",
                 context: { deckId: deck.id, operation: "deck-catalog.load" },
-                message: `Missing appearance for deck ${deck.id}`,
+                message: `Missing theme selection for deck ${deck.id}`,
               });
             }
-            return { appearance, cardCount: cardCounts.get(deck.id) ?? 0, deck };
+            return { themeSelection, cardCount: cardCounts.get(deck.id) ?? 0, deck };
           });
           if (active) {
             setState({ entries, error: null, loading: false });

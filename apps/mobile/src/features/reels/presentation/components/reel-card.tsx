@@ -3,12 +3,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { RecallLevel } from "@/features/study/domain/recall-level";
 
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
@@ -79,7 +79,7 @@ type ReelCardProps = Readonly<{
   contentInsetTop: number;
   deck: Deck;
   deckCardCount: number;
-  appearance: DeckAppearance;
+  themeSelection: DeckThemeSelection;
   height: number;
   isActive: boolean;
   onFlip: () => void;
@@ -99,7 +99,7 @@ export function ReelCard({
   contentInsetTop,
   deck,
   deckCardCount,
-  appearance,
+  themeSelection,
   height,
   isActive,
   onFlip,
@@ -115,7 +115,7 @@ export function ReelCard({
   const haptics = useHaptics();
   const { resolvedScheme } = useAppTheme();
   const styles = createStyles();
-  const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
+  const deckTheme = resolveDeckTheme(themeSelection.theme, resolvedScheme);
   const openFocusedFeed = useOpenFocusedFeed();
   const { hasLesson, openLesson } = useDeckLessons();
   const hasLinkedLesson = card.lessonId !== null && hasLesson(card.deckId, card.lessonId);
@@ -318,13 +318,13 @@ export function ReelCard({
         ]}
       >
         <CardPage
-          backgroundColor={reelAppearance.background}
+          backgroundColor={deckTheme.background}
           contentInsetTop={contentInsetTop}
           height={height}
           width={width}
         >
           <ReelHeader
-            appearance={reelAppearance}
+            theme={deckTheme}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
@@ -333,8 +333,8 @@ export function ReelCard({
           />
           <QuestionFaceContent
             cardQuestion={card.question}
-            instructionColor={reelAppearance.textSecondary}
-            questionColor={reelAppearance.textPrimary}
+            instructionColor={deckTheme.textSecondary}
+            questionColor={deckTheme.textPrimary}
             {...gestureProps}
           />
           <GestureFooter showHoldHint={!showMainFeedLink} />
@@ -349,13 +349,13 @@ export function ReelCard({
         ]}
       >
         <CardPage
-          backgroundColor={reelAppearance.background}
+          backgroundColor={deckTheme.background}
           contentInsetTop={contentInsetTop}
           height={height}
           width={width}
         >
           <ReelHeader
-            appearance={reelAppearance}
+            theme={deckTheme}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
@@ -367,8 +367,8 @@ export function ReelCard({
               <AnswerCopy
                 answer={card.answer}
                 hasLinkedLesson={hasLinkedLesson}
-                answerColor={reelAppearance.textPrimary}
-                promptColor={reelAppearance.textSecondary}
+                answerColor={deckTheme.textPrimary}
+                promptColor={deckTheme.textSecondary}
                 question={card.question}
                 {...gestureProps}
               />

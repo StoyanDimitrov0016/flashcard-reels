@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1790104575356,
-      "tag": "0000_cheerful_vengeance",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1790284408965,
-      "tag": "0001_military_roulette",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1790352599233,
-      "tag": "0002_lessons",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1790497854821,
-      "tag": "0003_wonderful_dagger",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1790530115818,
-      "tag": "0004_chief_chameleon",
+      "when": 1790789300274,
+      "tag": "0000_living_black_tom",
       "breakpoints": true
     }
   ]

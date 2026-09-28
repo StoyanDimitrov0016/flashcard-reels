@@ -4,9 +4,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
@@ -126,7 +126,10 @@ describe("archived deck progress", () => {
     const archived = await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress();
     expect(archived[0]?.estimatedBytes).toBeGreaterThan(0);
 
-    const installer = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installer = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     await installer.install(packageForReinstall(), reviewedAt);
     expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
       false
@@ -188,7 +191,7 @@ describe("archived deck progress", () => {
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     const service = new DeckServiceImpl(
       repository,
-      new SQLiteDeckAppearanceRepository(database.drizzle),
+      new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
       new SQLiteDeckRemovalTransaction(database.drizzle),
       null,
       graph.study
@@ -210,10 +213,10 @@ describe("archived deck progress", () => {
     expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
       true
     );
-    await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
-      packageForReinstall(),
-      reviewedAt
-    );
+    await new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    ).install(packageForReinstall(), reviewedAt);
     const unrelatedSessionId = testId(702);
     await database.drizzle.insert(studySessions).values({
       id: unrelatedSessionId,
@@ -304,7 +307,10 @@ describe("archived deck progress", () => {
     await reviewedDeck();
     await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
     const replacement = packageForReinstall();
-    await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
+    await new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    ).install(
       {
         ...replacement,
         deck: {

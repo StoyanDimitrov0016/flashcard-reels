@@ -4,6 +4,7 @@ import type { LearningScheduler } from "@/features/learning-engine/domain/learni
 import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
+import { isFirstReviewOnLocalDay } from "@/features/learning-engine/domain/review-day";
 import {
   deckProgress,
   decks,
@@ -64,34 +65,36 @@ export class SQLiteReviewAttemptFinalizationTransaction<
           .limit(1)
           .all();
         const current = memoryRows[0];
-        const currentState = current ? toMemoryState(current) : null;
-        const nextState = this.scheduler.review(
-          attempt.flashcardId,
-          currentState,
-          attempt.rating,
-          attempt.ratedAt
-        ).memoryState;
-        const values = {
-          createdAt: current?.createdAt ?? finalizedAt,
-          dueAt: nextState.dueAt,
-          difficulty: nextState.difficulty,
-          deckId: card.deckId,
-          elapsedDays: nextState.elapsedDays,
-          flashcardId: nextState.flashcardId,
-          lapses: nextState.lapses,
-          lastReviewAt: nextState.lastReviewAt,
-          learningSteps: nextState.learningSteps,
-          reps: nextState.reps,
-          scheduledDays: nextState.scheduledDays,
-          stability: nextState.stability,
-          state: nextState.state,
-          updatedAt: finalizedAt,
-        };
-        transaction
-          .insert(flashcardMemoryStates)
-          .values(values)
-          .onConflictDoUpdate({ target: flashcardMemoryStates.flashcardId, set: values })
-          .run();
+        if (isFirstReviewOnLocalDay(current?.lastReviewAt ?? null, attempt.ratedAt)) {
+          const currentState = current ? toMemoryState(current) : null;
+          const nextState = this.scheduler.review(
+            attempt.flashcardId,
+            currentState,
+            attempt.rating,
+            attempt.ratedAt
+          ).memoryState;
+          const values = {
+            createdAt: current?.createdAt ?? finalizedAt,
+            dueAt: nextState.dueAt,
+            difficulty: nextState.difficulty,
+            deckId: card.deckId,
+            elapsedDays: nextState.elapsedDays,
+            flashcardId: nextState.flashcardId,
+            lapses: nextState.lapses,
+            lastReviewAt: nextState.lastReviewAt,
+            learningSteps: nextState.learningSteps,
+            reps: nextState.reps,
+            scheduledDays: nextState.scheduledDays,
+            stability: nextState.stability,
+            state: nextState.state,
+            updatedAt: finalizedAt,
+          };
+          transaction
+            .insert(flashcardMemoryStates)
+            .values(values)
+            .onConflictDoUpdate({ target: flashcardMemoryStates.flashcardId, set: values })
+            .run();
+        }
         transaction
           .insert(reviewEvents)
           .values({

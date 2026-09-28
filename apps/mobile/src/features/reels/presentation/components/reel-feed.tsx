@@ -6,8 +6,8 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
 import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
+import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
 import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
@@ -73,7 +73,7 @@ export function ReelFeed({
     ? activeReelPosition
     : undefined;
   const deckIds = [...new Set(sourceCards.map((card) => card.deckId))];
-  const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
+  const { themeSelections, loading: themeSelectionsLoading } = useDeckThemeSelections(deckIds);
   const { decks, loading: decksLoading } = useDeckCollection(deckIds);
   const cardCountsByDeckId = new Map<Flashcard["deckId"], number>();
   for (const card of sourceCards) {
@@ -81,9 +81,9 @@ export function ReelFeed({
   }
 
   const metadataReady =
-    !appearancesLoading &&
+    !themeSelectionsLoading &&
     !decksLoading &&
-    deckIds.every((deckId) => appearances.has(deckId) && decks.has(deckId));
+    deckIds.every((deckId) => themeSelections.has(deckId) && decks.has(deckId));
 
   useEffect(
     function announceRefreshFailure() {
@@ -104,15 +104,15 @@ export function ReelFeed({
   );
 
   const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item }) => {
-    const appearance = appearances.get(item.card.deckId);
+    const themeSelection = themeSelections.get(item.card.deckId);
     const deck = decks.get(item.card.deckId);
-    if (!appearance || !deck) {
+    if (!themeSelection || !deck) {
       return null;
     }
 
     return (
       <ReelCard
-        appearance={appearance}
+        themeSelection={themeSelection}
         audioSource={answerAudioService.findSourceForFlashcard(
           item.card.deckId,
           deck.revision,

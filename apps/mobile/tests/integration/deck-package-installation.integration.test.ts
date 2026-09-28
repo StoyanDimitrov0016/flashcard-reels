@@ -19,7 +19,7 @@ import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-dec
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import {
-  deckAppearances,
+  deckThemeSelections,
   flashcardMemoryStates,
   flashcardReviewAttempts,
 } from "@/infrastructure/sqlite/schema";
@@ -238,7 +238,8 @@ function createImporter(
   clock: TestClock,
   audio = new MemoryAudioStorage(),
   installation: DeckPackageInstallationTransaction = new SQLiteDeckPackageInstallationTransaction(
-    database.drizzle
+    database.drizzle,
+    new SequenceIdGenerator()
   ),
   sessionSettlement: StudySessionSettlement | null = null
 ) {
@@ -357,10 +358,10 @@ describe("deck package installation", () => {
     expect(initialInstall.status).toBe("installed");
     expect(
       await database.drizzle
-        .select({ presetId: deckAppearances.presetId })
-        .from(deckAppearances)
-        .where(eq(deckAppearances.deckId, TEST_DECK_ID))
-    ).toEqual([{ presetId: "graphite" }]);
+        .select({ id: deckThemeSelections.id, theme: deckThemeSelections.theme })
+        .from(deckThemeSelections)
+        .where(eq(deckThemeSelections.deckId, TEST_DECK_ID))
+    ).toEqual([{ id: testId(1000), theme: "graphite" }]);
     expect(audio.staged).toHaveLength(1);
     expect(audio.activated).toHaveLength(1);
     const sessionId = await reviewCard(graph, database, cardA.id, false);
@@ -509,7 +510,10 @@ describe("deck package installation", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const audio = new MemoryAudioStorage();
-    const delegate = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const delegate = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const installation = new CountingInstallation(delegate);
     const { importer } = createImporter(database, clock, audio, installation);
     const existingCard = card(testId(20), 0);
@@ -559,7 +563,7 @@ describe("deck package installation", () => {
     await reviewCard(graph, database, existingCard.id);
     await graph.study.recoverPendingCompletedSessionAggregation();
     const gate = new GatedInstallation(
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator())
     );
     const { importer } = createImporter(database, clock, audio, gate);
     const update = validArchive(2, [card(existingCard.id, 0, "Concurrent winner")]);
@@ -591,7 +595,7 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const gate = new GatedInstallation(
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator())
     );
     const audio = new MemoryAudioStorage();
     const { importer } = createImporter(database, clock, audio, gate);
@@ -659,7 +663,10 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,
@@ -766,7 +773,10 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,
@@ -809,7 +819,10 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,

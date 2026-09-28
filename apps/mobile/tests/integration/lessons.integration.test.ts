@@ -20,7 +20,13 @@ import { SQLiteReadingListQuery } from "@/features/lessons/infrastructure/sqlite
 import { deckProgress } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { OTHER_DECK_ID, TEST_DECK_ID, TestClock, testId } from "../support/study-fixtures";
+import {
+  OTHER_DECK_ID,
+  SequenceIdGenerator,
+  TEST_DECK_ID,
+  TestClock,
+  testId,
+} from "../support/study-fixtures";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
 const lessonIds = [testId(901), testId(902), testId(903)] as const;
@@ -78,7 +84,7 @@ function createGraph(database: NodeSqliteDatabase) {
   return {
     installer: new DeckInstallerImpl(
       new ContractDeckPackageReader(),
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle),
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       new NoAudioStorage(),
       new TestClock(),
       { read: async () => new Uint8Array() },

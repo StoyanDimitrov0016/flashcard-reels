@@ -13,11 +13,11 @@ import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete
 import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
 import {
   resolveDeckDetailsMode,
   showsLearningProgress,
 } from "@/features/decks/presentation/deck-details-mode";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
@@ -126,7 +126,7 @@ export default function DeckDetailsScreen() {
   const mode = resolveDeckDetailsMode(modeParameter);
   const showProgress = showsLearningProgress(mode);
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
-  const { appearance, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
+  const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
   const [query, setQuery] = useState("");
@@ -137,7 +137,7 @@ export default function DeckDetailsScreen() {
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
-  const deckColors = appearance ? resolveDeckAppearance(appearance.presetId, resolvedScheme) : null;
+  const deckColors = themeSelection ? resolveDeckTheme(themeSelection.theme, resolvedScheme) : null;
   const accentColor = deckColors?.accent ?? colors.actionPrimary;
   const numberWidth = getNumberWidth(cards.length);
   const renderCard: ListRenderItem<Flashcard> = ({ index, item }) => (

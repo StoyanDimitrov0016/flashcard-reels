@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
-import type { DeckAppearanceVariant } from "@/features/decks/presentation/deck-appearance-presets";
+import type { DeckThemeVariant } from "@/features/decks/presentation/deck-theme-presets";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -9,7 +9,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 type ReelHeaderProps = Readonly<{
-  appearance: Readonly<Pick<DeckAppearanceVariant, "accent">>;
+  theme: Readonly<Pick<DeckThemeVariant, "accent">>;
   card: Flashcard;
   deck: Deck;
   deckCardCount: number;
@@ -18,7 +18,7 @@ type ReelHeaderProps = Readonly<{
 }>;
 
 export function ReelHeader({
-  appearance,
+  theme,
   card,
   deck,
   deckCardCount,
@@ -31,8 +31,8 @@ export function ReelHeader({
     <View style={styles.header}>
       {showMainFeedLink ? (
         <View style={styles.labelStack}>
-          <Text style={[styles.deckLabel, { color: appearance.accent }]}>{label}</Text>
-          <View style={[styles.accentLine, { backgroundColor: appearance.accent }]} />
+          <Text style={[styles.deckLabel, { color: theme.accent }]}>{label}</Text>
+          <View style={[styles.accentLine, { backgroundColor: theme.accent }]} />
         </View>
       ) : (
         <Pressable
@@ -42,8 +42,8 @@ export function ReelHeader({
           onPress={onOpenFocus}
           style={styles.labelStack}
         >
-          <Text style={[styles.deckLabel, { color: appearance.accent }]}>{label}</Text>
-          <View style={[styles.accentLine, { backgroundColor: appearance.accent }]} />
+          <Text style={[styles.deckLabel, { color: theme.accent }]}>{label}</Text>
+          <View style={[styles.accentLine, { backgroundColor: theme.accent }]} />
         </Pressable>
       )}
     </View>
