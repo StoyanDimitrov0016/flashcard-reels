@@ -139,7 +139,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     harness.services = {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),
-        new SQLiteDeckThemeSelectionRepository(database.drizzle),
+        new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
         new SQLiteDeckRemovalTransaction(database.drizzle),
         null,
         graph.study

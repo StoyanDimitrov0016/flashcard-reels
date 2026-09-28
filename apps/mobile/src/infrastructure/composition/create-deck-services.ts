@@ -2,6 +2,7 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
@@ -20,15 +21,22 @@ import { createDeckPackageServices } from "@/infrastructure/deck-package-service
 type CreateDeckServicesOptions = Readonly<{
   database: DrizzleDatabase;
   clock: Clock;
+  idGenerator: IdGenerator;
   studyService: StudyService & StudySessionSettlement;
 }>;
 
-export function createDeckServices({ database, clock, studyService }: CreateDeckServicesOptions) {
+export function createDeckServices({
+  database,
+  clock,
+  idGenerator,
+  studyService,
+}: CreateDeckServicesOptions) {
   const deckRepository = new SQLiteDeckRepository(database);
   const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices({
     database,
     clock,
     deckRepository,
+    idGenerator,
     sessionSettlement: studyService,
   });
 
@@ -39,7 +47,7 @@ export function createDeckServices({ database, clock, studyService }: CreateDeck
     deckPackagePicker: new ExpoDeckPackagePicker(),
     deckService: new DeckServiceImpl(
       deckRepository,
-      new SQLiteDeckThemeSelectionRepository(database),
+      new SQLiteDeckThemeSelectionRepository(database, idGenerator),
       new SQLiteDeckRemovalTransaction(database),
       deckAudioRemover,
       studyService

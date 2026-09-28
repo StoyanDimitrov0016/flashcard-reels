@@ -8,6 +8,7 @@ import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import { StartupError, type StartupErrorCode } from "@/infrastructure/errors/startup-error";
 import { SystemClock } from "@/infrastructure/system-clock";
+import { UuidGenerator } from "@/infrastructure/uuid-generator";
 import { AppError } from "@/shared/errors/app-error";
 
 import migrations from "../../../drizzle/migrations";
@@ -27,7 +28,7 @@ export async function initializeDatabase(database: SQLiteDatabase): Promise<void
     phase = "applying database migrations";
     await migrate(drizzleDatabase, migrations);
     phase = "installing bundled decks";
-    await installBundledDecks(drizzleDatabase, new SystemClock());
+    await installBundledDecks(drizzleDatabase, new SystemClock(), new UuidGenerator());
   } catch (cause) {
     // SQLiteProvider cannot close a connection when onInit rejects before returning it.
     try {

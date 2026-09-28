@@ -1,4 +1,5 @@
 import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 // oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
 import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
@@ -19,16 +20,21 @@ import {
   type AppDatabase,
 } from "@/infrastructure/deck-package-services";
 
-export async function installBundledDecks(database: AppDatabase, clock: Clock): Promise<void> {
+export async function installBundledDecks(
+  database: AppDatabase,
+  clock: Clock,
+  idGenerator: IdGenerator
+): Promise<void> {
   const deckRepository = new SQLiteDeckRepository(database);
   const removedDeckRepository = new SQLiteRemovedDeckRepository(database);
   const { installBundledPackage } = createDeckPackageServices({
     database,
     clock,
     deckRepository,
+    idGenerator,
     sessionSettlement: null,
   });
-  const themeSelectionRepository = new SQLiteDeckThemeSelectionRepository(database);
+  const themeSelectionRepository = new SQLiteDeckThemeSelectionRepository(database, idGenerator);
   for (const definition of Object.values(bundledDeckRegistry)) {
     if (await removedDeckRepository.wasRemoved(definition.id)) {
       continue;

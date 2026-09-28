@@ -5,6 +5,7 @@ import type {
   DeckPackageInstallationTransaction,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { DeckPackageVersionError, type DeckInstallResult } from "@/features/decks/deck-installer";
 import {
@@ -24,9 +25,11 @@ export class SQLiteDeckPackageInstallationTransaction<
   TRunResult = unknown,
 > implements DeckPackageInstallationTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult> {
@@ -107,6 +110,7 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .insert(deckThemeSelections)
           .values({
+            id: this.idGenerator.generate(),
             deckId: deckPackage.id,
             theme: "graphite",
           })

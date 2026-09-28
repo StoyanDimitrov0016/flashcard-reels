@@ -45,16 +45,17 @@ export type AppServices = Readonly<{
 export function createAppServices(sqliteDatabase: SQLiteDatabase): AppServices {
   const database = drizzle<DatabaseSchema>(sqliteDatabase);
   const clock = new SystemClock();
+  const idGenerator = new UuidGenerator();
   const { learningScheduler, flashcardMemoryStateRepository } =
     createLearningEngineServices(database);
   const studyService = createStudyService({
     database,
     clock,
-    idGenerator: new UuidGenerator(),
+    idGenerator,
     learningScheduler,
   });
   const flashcardService = createFlashcardService(database);
-  const decks = createDeckServices({ database, clock, studyService });
+  const decks = createDeckServices({ database, clock, idGenerator, studyService });
 
   return {
     ...decks,

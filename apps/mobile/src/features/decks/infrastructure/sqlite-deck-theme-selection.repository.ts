@@ -3,6 +3,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import type { DeckThemeSelectionRepository } from "@/features/decks/domain/deck-theme-selection.repository";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import {
   DeckThemeSelection,
@@ -14,9 +15,11 @@ export class SQLiteDeckThemeSelectionRepository<
   TRunResult = unknown,
 > implements DeckThemeSelectionRepository {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async findByDeckId(deckId: DeckId): Promise<DeckThemeSelection | null> {
@@ -45,6 +48,7 @@ export class SQLiteDeckThemeSelectionRepository<
     await this.database
       .insert(deckThemeSelections)
       .values({
+        id: this.idGenerator.generate(),
         deckId: themeSelection.deckId,
         theme: themeSelection.theme,
       })
