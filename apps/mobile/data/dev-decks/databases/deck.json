@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "id": "439a6f40-3054-4d48-b78c-d8a8e777052e",
+  "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+  "revision": 1,
+  "title": "Databases (dev)",
+  "description": "Small test deck for development.",
+  "createdAt": "2026-09-29T00:00:00.000Z",
+  "updatedAt": "2026-09-29T00:00:00.000Z",
+  "cards": [
+    {
+      "id": "d08d458e-e220-4943-92f0-0fc7b22350a8",
+      "question": "What is a database?",
+      "answer": "A database is an organized system for storing and retrieving data while enforcing selected rules about structure, concurrency, and durability.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "37440c41-76cd-4cbd-bcea-76f806f5bae1",
+      "audio": false
+    },
+    {
+      "id": "13592dbc-ae7f-41a9-be90-3138a3e59dad",
+      "question": "What is a relational database?",
+      "answer": "A relational database stores data in tables of rows and columns and supports relationships between tables through values such as keys.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "37440c41-76cd-4cbd-bcea-76f806f5bae1",
+      "audio": false
+    },
+    {
+      "id": "73d1e0ed-47cd-4167-8fe9-22ec904fba19",
+      "question": "What is a table row?",
+      "answer": "A row is one record in a table, containing values for the table’s defined columns.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "37440c41-76cd-4cbd-bcea-76f806f5bae1",
+      "audio": false
+    },
+    {
+      "id": "6c68e1db-7cd9-477d-8803-23e986a3f994",
+      "question": "What is SQL?",
+      "answer": "SQL is a declarative language for defining, querying, and modifying relational data. The query states the desired result while the database chooses an execution plan.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "37440c41-76cd-4cbd-bcea-76f806f5bae1",
+      "audio": false
+    },
+    {
+      "id": "556f6d15-c64f-40c8-b41c-85b13a8cd34d",
+      "question": "What is a primary key?",
+      "answer": "A primary key is a column or column set whose value uniquely identifies each row in a table.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "audio": false
+    },
+    {
+      "id": "f2025896-848d-4b2a-8166-6db9cca4f182",
+      "question": "What is a natural key?",
+      "answer": "A natural key uses domain data that is already unique, such as a stable external code, to identify a row.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "audio": false
+    },
+    {
+      "id": "8adf3831-769e-4849-b39b-34ffa9a55a2d",
+      "question": "What is a surrogate key?",
+      "answer": "A surrogate key is an artificial identifier with no domain meaning, such as an auto-increment integer or UUID.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "audio": false
+    },
+    {
+      "id": "e48d9011-8665-4ccb-a405-8d12fb2e880b",
+      "question": "What is a database sequence?",
+      "answer": "A sequence generates ordered numeric values independently of table rows, commonly for surrogate identifiers.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "audio": false
+    },
+    {
+      "id": "f74c7537-4305-4cbe-9a35-a459259a36b0",
+      "question": "What trade-off do UUID primary keys introduce?",
+      "answer": "They allow decentralized ID generation, but are wider than small integers and random forms can reduce index locality unless a locality-friendly variant or storage strategy is used.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "audio": false
+    },
+    {
+      "id": "11945388-c25d-450f-ab4c-81831b0952df",
+      "question": "What is a unique constraint?",
+      "answer": "It prevents two rows from having the same value or value combination in the constrained columns, subject to the database’s null semantics.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "audio": false
+    },
+    {
+      "id": "d1ea475a-b275-4f4c-b22c-1670fdade7e5",
+      "question": "What is a check constraint?",
+      "answer": "A check constraint rejects rows whose values do not satisfy a declared Boolean condition.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "audio": false
+    },
+    {
+      "id": "435a8a3f-2ddc-48b6-8bf9-d75d27ac733f",
+      "question": "What is a foreign key?",
+      "answer": "A foreign key is a constraint requiring values in one table to reference valid key values in another table, or be null when allowed.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "audio": false
+    },
+    {
+      "id": "c91c74e0-bf00-4f35-bca6-9f13b7efc75f",
+      "question": "What does referential integrity protect?",
+      "answer": "It prevents references to rows that do not exist and can control what happens when referenced rows are updated or deleted.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "audio": false
+    },
+    {
+      "id": "92cca625-d6d8-4875-8430-3c4b7165cb12",
+      "question": "What is an upsert?",
+      "answer": "An upsert inserts a row when no conflicting key exists or updates an existing row when a defined conflict occurs.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "audio": false
+    },
+    {
+      "id": "8fdb8985-3319-43f7-af55-63f1c80cb6fb",
+      "question": "What is a database schema?",
+      "answer": "A schema defines stored structures and rules such as tables, columns, data types, indexes, constraints, and relationships.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "audio": false
+    },
+    {
+      "id": "a0972546-c9a3-47ac-9883-4f39e82148fe",
+      "question": "Why should money usually not be stored as binary floating point?",
+      "answer": "Binary floating point cannot exactly represent many decimal fractions. Fixed-precision decimal types or integer minor units preserve required monetary rounding rules.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "audio": false
+    },
+    {
+      "id": "c429a5bb-e4b5-477b-be81-023000770f51",
+      "question": "Why should timestamps have an explicit time-zone strategy?",
+      "answer": "Ambiguous local times can repeat or disappear around daylight-saving changes. Store instants in a timezone-aware form and convert to local zones at boundaries where needed.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "audio": false
+    },
+    {
+      "id": "a0fba2a6-1505-4e5b-b9e5-b0ebd32b5acd",
+      "question": "What does database collation control?",
+      "answer": "Collation defines rules for comparing and sorting text, such as case sensitivity and locale-specific ordering.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "audio": false
+    },
+    {
+      "id": "aa7cab3c-7cc2-4992-aff8-4889a2db4f61",
+      "question": "What is schema migration?",
+      "answer": "A migration is a controlled change to database structure or data shape, applied in a known order so environments can evolve consistently.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "audio": false
+    },
+    {
+      "id": "b679cfbf-c519-4720-a9d4-a0f37e66600f",
+      "question": "Why are backward-compatible migrations useful?",
+      "answer": "Old and new application versions may run at the same time during deployment. Additive changes let both versions continue operating while the rollout completes.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": null,
+      "audio": false
+    }
+  ],
+  "lessons": [
+    {
+      "id": "37440c41-76cd-4cbd-bcea-76f806f5bae1",
+      "title": "Relational databases"
+    },
+    {
+      "id": "f576a27b-32bc-46ec-a8a9-5bb7a829755b",
+      "title": "Primary keys"
+    },
+    {
+      "id": "2b1ceef1-66db-4e18-b1e2-6f1a0a0b7127",
+      "title": "Integrity constraints"
+    },
+    {
+      "id": "3e067e54-cde8-41e9-ac86-834f1e3a0ef5",
+      "title": "Defining and evolving a schema"
+    }
+  ]
+}

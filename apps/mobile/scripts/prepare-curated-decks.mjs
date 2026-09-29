@@ -7,8 +7,18 @@ import { promisify } from "node:util";
 
 const run = promisify(execFile);
 const root = process.cwd();
-const sources = path.join(root, "data", "decks");
-const output = path.resolve(root, "..", "..", "flashcard-reels-decks.zip");
+
+/** @param {string} name @param {string} fallback */
+function option(name, fallback) {
+  const prefix = `--${name}=`;
+  const argument = process.argv.slice(2).find((value) => value.startsWith(prefix));
+  return argument ? argument.slice(prefix.length) : fallback;
+}
+
+// Prod decks by default; `decks:dev:prepare` passes the dev deck folders.
+const sources = path.resolve(root, option("source", "data/decks"));
+const packagesDirectory = path.resolve(root, option("packages", "build/curated-decks"));
+const output = path.resolve(root, "..", "..", option("output", "flashcard-reels-decks.zip"));
 const archive = {};
 /** @type {Map<string, string>} */
 const usedIds = new Map();
@@ -32,7 +42,7 @@ for (const directory of sourceEntries
   .toSorted()) {
   const source = path.join(sources, directory);
   const deck = parseDeck(JSON.parse(await readFile(path.join(source, "deck.json"), "utf8")));
-  const packagePath = path.join(root, "build", "curated-decks", `${deck.id}.fcrdeck`);
+  const packagePath = path.join(packagesDirectory, `${deck.id}.fcrdeck`);
   const { stdout } = await run(
     process.execPath,
     [path.join(root, "scripts", "generate-deck-package.mjs"), source, packagePath],
@@ -59,7 +69,7 @@ for (const directory of sourceEntries
 }
 
 if (Object.keys(archive).length === 0) {
-  throw new Error("No curated deck sources found");
+  throw new Error(`No deck sources found in ${path.relative(root, sources)}`);
 }
 await writeFile(output, zipSync(archive, { level: 0 }));
 console.log(

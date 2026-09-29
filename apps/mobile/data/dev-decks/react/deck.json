@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "id": "d79bde4f-6fba-4dd1-8300-88682000b7e7",
+  "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+  "revision": 1,
+  "title": "React (dev)",
+  "description": "Small test deck for development.",
+  "createdAt": "2026-09-29T00:00:00.000Z",
+  "updatedAt": "2026-09-29T00:00:00.000Z",
+  "cards": [
+    {
+      "id": "5d85f94a-a2e7-4b88-b3cd-5b2ad8170cc9",
+      "question": "What is the practical purpose of React’s declarative model?",
+      "answer": "Code describes the UI that corresponds to current state. React computes the host changes needed to make the screen match that description instead of requiring manual step-by-step DOM updates.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "f9ae92bc-4bed-41a7-b1e7-a28793e86396",
+      "question": "What is a React component?",
+      "answer": "A component is a JavaScript function that receives props and returns React elements, usually written as JSX.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "87fc679a-bbb4-4b3c-9b7d-1668e6012a60",
+      "question": "What is JSX?",
+      "answer": "JSX is syntax that describes React element trees using markup-like notation inside JavaScript. Build tooling transforms it into JavaScript calls that create element descriptions.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "d5c9761a-075a-426d-bef8-1034c4c7a295",
+      "question": "What is a React element?",
+      "answer": "A React element is an immutable description of what should appear in the UI, including a type, props, and children. It is not itself a DOM node.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "d573d8f2-eb46-4b57-bb2c-a00aee9a968d",
+      "question": "What are props in React?",
+      "answer": "Props are read-only inputs passed from a parent component to a child. A component uses them to decide what UI to return.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "ea8a0f70-0ea6-4b26-8aa4-d5e460486a90",
+      "question": "What is conditional rendering?",
+      "answer": "Conditional rendering returns different element trees depending on current props or state, using normal JavaScript conditions.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "audio": false
+    },
+    {
+      "id": "42ff3a0f-9ad4-42ec-817b-35a11e4e75fa",
+      "question": "What is state in React?",
+      "answer": "State is data retained by React between renders for a particular component instance. Updating it requests a new render.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "c57f862d-33cd-4eb9-8a8e-fd286242f7a2",
+      "question": "What is `useState` for?",
+      "answer": "`useState` gives a component a retained value and a setter that queues updates and future renders.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "faece3bb-8ffb-4286-b033-acb92187ad8c",
+      "question": "Why does setting state not change the current render’s variable?",
+      "answer": "Each render receives a snapshot of state values. Calling a setter queues an update for a future render; it does not mutate variables captured by the current render.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "5ae6a24e-3b04-417c-b3b8-0ffca9f22d66",
+      "question": "What problem does a functional state update solve?",
+      "answer": "Passing a function such as `setCount(c => c + 1)` calculates the next value from the latest queued state, avoiding stale snapshot values when multiple updates depend on previous state.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "e07d933e-af32-4552-98d8-5024abe73130",
+      "question": "What does React batching do?",
+      "answer": "React groups multiple state updates and processes them together before committing the next UI, avoiding unnecessary intermediate renders.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "63a6bbb3-81a9-4168-97af-6293577af33e",
+      "question": "Why should React state be treated as immutable?",
+      "answer": "Replacing changed objects and arrays gives React and memoization tools a reliable identity signal. Mutating existing state can make changes invisible to shallow comparisons and corrupt prior render snapshots.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "audio": false
+    },
+    {
+      "id": "9cae04c6-0267-45a1-9138-c14b1e8ba064",
+      "question": "What does rendering mean in React?",
+      "answer": "Rendering means React calls components to compute the next element tree. React then commits the necessary host updates, such as DOM changes, afterward.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "4da32826-9dfe-46e8-8ff6-f168d9193d27",
+      "question": "What causes a component to render again?",
+      "answer": "A component can render again when its own state updates, when its parent renders and includes it, or when consumed context changes.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "c02e662b-69d8-4c8c-ac5b-dd1176d3bac3",
+      "question": "What is the render phase?",
+      "answer": "During render, React calls components and computes the next UI. Render code should be pure because React may run it more than once or abandon the result.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "bcfa29dd-aebb-469a-9209-90adcb487018",
+      "question": "What is the commit phase?",
+      "answer": "During commit, React applies the chosen changes to the host environment, updates refs, and runs layout-related effects as appropriate.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "a6fa5169-f443-4422-b515-78365da1ccfd",
+      "question": "What does it mean for a component to be pure?",
+      "answer": "Given the same props, state, and context, a pure component returns the same UI description and does not change external state during render.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "11d8e593-5431-4d36-ba4b-c09e54120d41",
+      "question": "Why are side effects unsafe during render?",
+      "answer": "React may render more than once or discard a render. A side effect performed during render can therefore happen without a corresponding committed UI or happen multiple times.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "audio": false
+    },
+    {
+      "id": "d3c8f219-d8c1-4f10-ac70-034f77c3ca6c",
+      "question": "What is reconciliation?",
+      "answer": "Reconciliation is React’s process for comparing a newly rendered element tree with the previous one to decide which component instances and host nodes can be reused.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "a56902be-8512-4655-8567-40f51b9aa55e",
+      "audio": false
+    },
+    {
+      "id": "36c179da-febb-4770-ae63-3461ef0cb675",
+      "question": "How does tree position affect state preservation?",
+      "answer": "React associates local state with a component type and position in the rendered tree. Keeping the same component at the same position usually preserves its state.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": null,
+      "audio": false
+    }
+  ],
+  "lessons": [
+    {
+      "id": "5a8aa0a1-0352-49b9-aeb4-8ad580d25cdf",
+      "title": "Describing UI with components"
+    },
+    {
+      "id": "d0a17df0-1242-4e67-a1c4-b37f686f349c",
+      "title": "Component state"
+    },
+    {
+      "id": "da5484d9-3d13-4741-9d31-422fb8ec317b",
+      "title": "Render and commit"
+    },
+    {
+      "id": "a56902be-8512-4655-8567-40f51b9aa55e",
+      "title": "How reconciliation preserves state"
+    }
+  ]
+}

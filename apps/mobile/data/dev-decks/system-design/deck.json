@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "id": "9fc104d9-0ccc-4fe9-8b06-cb9e9e05efb5",
+  "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+  "revision": 1,
+  "title": "System Design (dev)",
+  "description": "Small test deck for development.",
+  "createdAt": "2026-09-29T00:00:00.000Z",
+  "updatedAt": "2026-09-29T00:00:00.000Z",
+  "cards": [
+    {
+      "id": "b243d688-789d-45b2-abf2-6618f13829d1",
+      "question": "Why should system design start with workload and requirements?",
+      "answer": "Architecture depends on read/write ratios, data size, latency, consistency, growth, and failure tolerance. Without those constraints, technology choices are mostly guesses.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "553f6a6c-0926-4bc6-8dc2-059c4308826f",
+      "question": "What is scalability?",
+      "answer": "Scalability is a system’s ability to handle more load by adding resources without unacceptable loss of latency, throughput, or reliability.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "238f8f3d-25cc-412b-a626-ec08aa75c2ab",
+      "question": "What is vertical scaling?",
+      "answer": "Vertical scaling gives one machine more CPU, memory, or storage. It is simple but eventually hits hardware limits and can leave a large failure domain.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "eaaea6c2-2d1c-474e-9425-983f29a51d0d",
+      "question": "What is horizontal scaling?",
+      "answer": "Horizontal scaling adds more machines or service instances and distributes work across them. It can increase capacity and redundancy but requires coordination and partitioning.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "5bdcb0af-6a6e-4843-800e-ff869198f057",
+      "question": "What is throughput?",
+      "answer": "Throughput is the amount of work a system completes per unit time, such as requests per second or messages per second.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "ba669010-4ca7-45b0-baf4-718c7efbd8c6",
+      "question": "What is latency?",
+      "answer": "Latency is the elapsed time for one operation to complete from the caller’s perspective.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "02edb8d3-3279-427b-b374-7f75d3d74f14",
+      "question": "Why are percentile latencies more useful than averages?",
+      "answer": "Percentiles show how slow requests are for the tail of users. An average can hide a small but important group of extremely slow requests.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "audio": false
+    },
+    {
+      "id": "9fe1faf1-eba7-4a16-8cb6-5fdd7d31d692",
+      "question": "What is availability?",
+      "answer": "Availability is the fraction of time or requests for which a service can successfully perform its intended function.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "audio": false
+    },
+    {
+      "id": "bc8907f1-a49c-478e-ae02-de0d543ff660",
+      "question": "What is reliability?",
+      "answer": "Reliability is the ability to produce correct results consistently over time, including under expected failures and load.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "audio": false
+    },
+    {
+      "id": "f487719d-2d79-4955-9b32-34955ea6f1a2",
+      "question": "What is durability?",
+      "answer": "Durability is the guarantee that acknowledged data remains stored despite failures within the system’s stated fault model.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "audio": false
+    },
+    {
+      "id": "dec2293b-ac35-4b18-b8f1-c20e26c3c80d",
+      "question": "What is a service-level objective?",
+      "answer": "An SLO is a target for a measurable reliability indicator, such as 99.9% successful requests under a latency threshold over a defined period.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "audio": false
+    },
+    {
+      "id": "970cf70f-29a0-4998-a6a3-b50b8414c59c",
+      "question": "What is an error budget?",
+      "answer": "An error budget is the amount of unreliability allowed by an SLO. Teams can spend it on changes while slowing releases when reliability falls too far.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "audio": false
+    },
+    {
+      "id": "23c0d44d-5266-4c9c-a6f7-5ba5ca0d0579",
+      "question": "What is a single point of failure?",
+      "answer": "It is one component whose failure can make the whole service unavailable. Redundancy and failover are common ways to remove it.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "audio": false
+    },
+    {
+      "id": "ca796c8d-d7b8-42e9-acbc-86846122e5cf",
+      "question": "What is redundancy?",
+      "answer": "Redundancy keeps multiple components able to provide the same critical function so one failure does not necessarily stop the service.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "audio": false
+    },
+    {
+      "id": "68c4c9da-5cde-4381-8d1b-d25495db65f5",
+      "question": "What is failover?",
+      "answer": "Failover switches traffic or responsibility from a failed component to a healthy replacement, either automatically or manually.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "audio": false
+    },
+    {
+      "id": "ef4a6c2d-d18a-4b05-93ac-d09cb44e6f12",
+      "question": "What is fault tolerance?",
+      "answer": "Fault tolerance is the ability to continue providing acceptable service when some components fail.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "audio": false
+    },
+    {
+      "id": "78838ee3-dc45-4ad1-9ec9-4cd3cde02b57",
+      "question": "What is graceful degradation?",
+      "answer": "Graceful degradation keeps core functionality available while disabling or reducing nonessential features under failure or overload.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "audio": false
+    },
+    {
+      "id": "0f23ef16-897f-4040-9233-5d0ee8a7a26e",
+      "question": "What is a load balancer?",
+      "answer": "A load balancer distributes requests across multiple backend instances and can remove unhealthy instances from rotation.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "57057d16-0b2b-4d6d-923d-3c75f208f983",
+      "audio": false
+    },
+    {
+      "id": "16596e03-df44-4b38-ad03-6b0235d07016",
+      "question": "What problem does health checking solve?",
+      "answer": "Health checks let routing systems avoid instances that cannot safely serve traffic, reducing requests sent to failed or unready nodes.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": "57057d16-0b2b-4d6d-923d-3c75f208f983",
+      "audio": false
+    },
+    {
+      "id": "375ccd99-d404-4505-bba1-27aec3f97d69",
+      "question": "What is round-robin load balancing?",
+      "answer": "Round robin sends successive requests to backends in rotation. It is simple but ignores differences in request cost and backend load.",
+      "createdAt": "2026-09-29T00:00:00.000Z",
+      "updatedAt": "2026-09-29T00:00:00.000Z",
+      "lessonId": null,
+      "audio": false
+    }
+  ],
+  "lessons": [
+    {
+      "id": "1b62a945-7551-46fa-86ff-a6f17e8a6f4f",
+      "title": "Scale and performance metrics"
+    },
+    {
+      "id": "f00f568d-3304-4b4c-ad5a-065861d66017",
+      "title": "Reliability metrics"
+    },
+    {
+      "id": "93369f76-110c-4351-9981-a8fa9a40594b",
+      "title": "Fault tolerance and redundancy"
+    },
+    {
+      "id": "57057d16-0b2b-4d6d-923d-3c75f208f983",
+      "title": "Load balancing and service discovery"
+    }
+  ]
+}

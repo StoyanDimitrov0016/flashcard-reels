@@ -21,6 +21,7 @@
     "decks:packages": "node scripts/generate-demo-deck-package.mjs",
     "decks:generate": "node scripts/generate-deck-package.mjs",
     "decks:curated:prepare": "node scripts/prepare-curated-decks.mjs",
+    "decks:dev:prepare": "node scripts/prepare-curated-decks.mjs --source=data/dev-decks --packages=build/dev-decks --output=flashcard-reels-dev-decks.zip",
     "decks:inspect": "node scripts/inspect-deck-package.mjs",
     "decks:test:generate": "node scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
