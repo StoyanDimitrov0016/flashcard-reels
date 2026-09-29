@@ -4,12 +4,13 @@ import type {
   DeckPackageFileReader,
   DeckPackageInstallationTransaction,
   DeckPackageReader,
-  InstalledDeckRevisionRepository,
+  InstalledDeckIdentityRepository,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
 import {
+  DeckPackageAuthorError,
   DeckPackageRevisionError,
   type DeckInstallResult,
   type DeckInstaller,
@@ -24,7 +25,7 @@ export class DeckInstallerImpl implements DeckInstaller {
   private readonly audioStorage: DeckAudioStorage;
   private readonly clock: Clock;
   private readonly fileReader: DeckPackageFileReader;
-  private readonly revisionRepository: InstalledDeckRevisionRepository;
+  private readonly identityRepository: InstalledDeckIdentityRepository;
   private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
@@ -33,7 +34,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     audioStorage: DeckAudioStorage,
     clock: Clock,
     fileReader: DeckPackageFileReader,
-    revisionRepository: InstalledDeckRevisionRepository,
+    identityRepository: InstalledDeckIdentityRepository,
     sessionSettlement: StudySessionSettlement | null = null
   ) {
     this.reader = reader;
@@ -41,7 +42,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     this.audioStorage = audioStorage;
     this.clock = clock;
     this.fileReader = fileReader;
-    this.revisionRepository = revisionRepository;
+    this.identityRepository = identityRepository;
     this.sessionSettlement = sessionSettlement;
   }
 
@@ -56,7 +57,11 @@ export class DeckInstallerImpl implements DeckInstaller {
 
   private async install(deckPackage: DeckPackage): Promise<DeckInstallResult> {
     const deck = deckPackage.deck;
-    const installedRevision = await this.revisionRepository.findRevision(deck.id);
+    const installed = await this.identityRepository.findInstalledIdentity(deck.id);
+    if (installed && installed.authorId !== deck.authorId) {
+      throw new DeckPackageAuthorError(`Deck ${deck.id} cannot change author ID across revisions`);
+    }
+    const installedRevision = installed?.revision ?? null;
     if (installedRevision === deck.revision) {
       return { deckId: deck.id, status: "no-op", revision: installedRevision };
     }

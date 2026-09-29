@@ -346,6 +346,50 @@ describe("deck package installation", () => {
     expect(audio.activeVersions.has(`${TEST_DECK_ID}:2`)).toBe(false);
   });
 
+  it.each([1, 2])(
+    "rejects a changed author at revision %s without settling an active review or touching audio",
+    async (revision) => {
+      database = new NodeSqliteDatabase();
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const first = card(testId(31), 0);
+      const { importer, audio } = createImporter(
+        database,
+        clock,
+        undefined,
+        undefined,
+        graph.study
+      );
+      await importer.installFromBytes(validArchive(1, [first]));
+      const sessionId = await reviewCard(graph, database, first.id, false);
+      const attemptsBefore = await graph.study.listReviewAttemptsInReelPositionRange(
+        sessionId,
+        0,
+        0
+      );
+      const audioBefore = [...audio.activeVersions];
+      const stagedBefore = audio.staged.length;
+
+      await expect(
+        importer.installFromBytes(
+          archive(
+            { ...deck(revision, [first]), authorId: "a5f43c1e-7890-4abc-8def-1234567890ab" },
+            { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) }
+          )
+        )
+      ).rejects.toThrow("cannot change author ID");
+
+      const retainedSession = await graph.sessions.findById(sessionId);
+      expect(retainedSession?.completedAt).toBeNull();
+      expect(await graph.study.listReviewAttemptsInReelPositionRange(sessionId, 0, 0)).toEqual(
+        attemptsBefore
+      );
+      expect(await graph.memoryStates.findByFlashcardId(first.id)).toBeNull();
+      expect([...audio.activeVersions]).toEqual(audioBefore);
+      expect(audio.staged).toHaveLength(stagedBefore);
+    }
+  );
+
   it("installs cards and audio, then updates content without losing learner history", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();

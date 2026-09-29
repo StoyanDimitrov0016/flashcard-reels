@@ -1,6 +1,9 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import type { DeckRepository } from "@/features/decks/domain/deck.repository";
+import type {
+  DeckRepository,
+  InstalledDeckIdentity,
+} from "@/features/decks/domain/deck.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
@@ -53,6 +56,15 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       .where(eq(decks.id, id))
       .limit(1);
     return rows[0]?.revision ?? null;
+  }
+
+  async findInstalledIdentity(id: DeckId): Promise<InstalledDeckIdentity | null> {
+    const rows = await this.database
+      .select({ authorId: decks.authorId, revision: decks.revision })
+      .from(decks)
+      .where(eq(decks.id, id))
+      .limit(1);
+    return rows[0] ?? null;
   }
 
   private toModel(row: typeof decks.$inferSelect): Deck {

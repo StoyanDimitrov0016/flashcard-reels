@@ -1,5 +1,7 @@
 import type { DeckPackage } from "@flashcard-reels/deck-contract";
 
+import type { InstalledDeckIdentity } from "@/features/decks/domain/deck.repository";
+
 import type { DeckInstallResult, DeckPackageFile } from "../index";
 
 export type { DeckPackage };
@@ -16,8 +18,8 @@ export interface DeckPackageInstallationTransaction {
   install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult>;
 }
 
-export interface InstalledDeckRevisionRepository {
-  findRevision(deckId: string): Promise<number | null>;
+export interface InstalledDeckIdentityRepository {
+  findInstalledIdentity(deckId: string): Promise<InstalledDeckIdentity | null>;
 }
 
 export type StagedDeckAudio = Readonly<{ deckId: string; token: string; revision: number }>;

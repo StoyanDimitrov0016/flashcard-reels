@@ -46,6 +46,11 @@ export class SQLiteDeckPackageInstallationTransaction<
         .limit(1)
         .all()[0];
 
+      if (existingDeck && existingDeck.authorId !== deck.authorId) {
+        throw new DeckPackageAuthorError(
+          `Deck ${deck.id} cannot change author ID across revisions`
+        );
+      }
       if (existingDeck && existingDeck.revision === deck.revision) {
         return {
           deckId: deck.id,
@@ -56,11 +61,6 @@ export class SQLiteDeckPackageInstallationTransaction<
       if (existingDeck && existingDeck.revision > deck.revision) {
         throw new DeckPackageRevisionError(
           `Deck ${deck.id} revision ${deck.revision} is older than installed revision ${existingDeck.revision}`
-        );
-      }
-      if (existingDeck && existingDeck.authorId !== deck.authorId) {
-        throw new DeckPackageAuthorError(
-          `Deck ${deck.id} cannot change author ID across revisions`
         );
       }
 
