@@ -16,7 +16,7 @@ import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-de
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
-import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-mode";
+import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-href";
 import {
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
@@ -24,6 +24,8 @@ import {
 import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
+import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
+import { summarizeReviews } from "@/features/flashcard-progress/presentation/review-summary";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   FOCUS_HOLD_DURATION_MS,
@@ -55,6 +57,7 @@ type DeckRowProps = Readonly<{
   onChooseProgress: () => void;
   onFocus: () => void;
   onViewCards: () => void;
+  reviewedCount: number;
 }>;
 
 function DeckRow({
@@ -64,6 +67,7 @@ function DeckRow({
   onChooseProgress,
   onFocus,
   onViewCards,
+  reviewedCount,
 }: DeckRowProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
@@ -151,7 +155,9 @@ function DeckRow({
             <Text numberOfLines={2} style={styles.deckTitle}>
               {deck.title}
             </Text>
-            <Text style={styles.cardCount}>{cardCount} cards</Text>
+            <Text style={styles.cardCount}>
+              {reviewedCount} / {cardCount} reviewed
+            </Text>
           </View>
           <Text numberOfLines={2} style={styles.description}>
             {deck.description}
@@ -177,11 +183,11 @@ function DeckRow({
   );
 }
 
-function LibrarySkeleton() {
+function DecksSkeleton() {
   const styles = createStyles(useAppTheme().colors);
 
   return (
-    <View accessibilityLabel="Loading deck library" style={styles.skeletonList}>
+    <View accessibilityLabel="Loading decks" style={styles.skeletonList}>
       {["first", "second", "third"].map((key) => (
         <View key={key} style={[styles.deck, styles.skeletonDeck]}>
           <View style={styles.skeletonAccent} />
@@ -196,7 +202,7 @@ function LibrarySkeleton() {
   );
 }
 
-function EmptyLibrarySearch() {
+function EmptyDeckSearch() {
   return (
     <EmptyState
       icon={{ android: "search_off", ios: "magnifyingglass", web: "search_off" }}
@@ -206,23 +212,34 @@ function EmptyLibrarySearch() {
   );
 }
 
-function EmptyLibrary() {
+function EmptyDecks() {
   return (
     <EmptyState
       icon={{ android: "library_books", ios: "books.vertical", web: "library_books" }}
       message="Import a deck from Flashcard Reels on the web or a .fcrdeck file."
-      title="Your library is empty"
+      title="No decks yet"
     />
   );
 }
 
-export default function LibraryScreen() {
+export default function DecksScreen() {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
+  const { refresh: refreshProgress, rows: progressRows } = useFlashcardProgressList();
+  const reviewSummary = summarizeReviews(progressRows);
+
+  useFocusEffect(
+    useCallback(
+      function refreshProgressWhenFocused() {
+        refreshProgress();
+      },
+      [refreshProgress]
+    )
+  );
   const { savedProgressService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
   const { invalidateLearningProgress } = useLearningProgressRevision();
@@ -382,7 +399,8 @@ export default function LibraryScreen() {
         }
       }}
       onFocus={() => openFocusedFeed(item.deck.id, null)}
-      onViewCards={() => router.push(getDeckDetailsHref(item.deck.id, "library"))}
+      onViewCards={() => router.push(getDeckDetailsHref(item.deck.id))}
+      reviewedCount={reviewSummary.reviewedByDeckId.get(item.deck.id) ?? 0}
     />
   );
 
@@ -390,7 +408,7 @@ export default function LibraryScreen() {
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <ScreenHeader>
         <Text accessibilityRole="header" style={styles.screenTitle}>
-          Library
+          Decks
         </Text>
         <Pressable
           accessibilityLabel="Import deck package"
@@ -411,6 +429,11 @@ export default function LibraryScreen() {
         </Pressable>
       </ScreenHeader>
       <View style={styles.body}>
+        {reviewSummary.cardCount > 0 && (
+          <Text style={styles.description}>
+            {reviewSummary.reviewedCount} of {reviewSummary.cardCount} cards reviewed
+          </Text>
+        )}
         {pendingProgress.map((progress) => (
           <Pressable
             key={progress.deckId}
@@ -426,14 +449,14 @@ export default function LibraryScreen() {
           </Pressable>
         ))}
         <SearchField
-          accessibilityLabel="Search deck library"
+          accessibilityLabel="Search decks"
           clearLabel="Clear deck search"
           onChangeText={setQuery}
           placeholder="Search decks…"
           value={query}
         />
         {loading ? (
-          <LibrarySkeleton />
+          <DecksSkeleton />
         ) : (
           <FlatList
             contentContainerStyle={[
@@ -443,7 +466,7 @@ export default function LibraryScreen() {
             data={visibleEntries}
             keyboardShouldPersistTaps="handled"
             keyExtractor={({ deck }) => deck.id}
-            ListEmptyComponent={query.trim() ? EmptyLibrarySearch : EmptyLibrary}
+            ListEmptyComponent={query.trim() ? EmptyDeckSearch : EmptyDecks}
             renderItem={renderItem}
             style={styles.listView}
           />

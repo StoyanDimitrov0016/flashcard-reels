@@ -146,7 +146,7 @@ export default function FocusedFeedScreen() {
   const showRecovery = !isReady && hasRestorationError;
   const showLoading = !isReady && !hasRestorationError && focusRestoring;
   const showEmpty = !isReady && !hasRestorationError && !focusRestoring;
-  const chooseDeck = () => router.navigate("../library");
+  const chooseDeck = () => router.navigate("../decks");
   const contentInsetTop = useStudyFeedContentInset();
 
   return (

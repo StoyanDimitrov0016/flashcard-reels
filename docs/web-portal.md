@@ -20,7 +20,7 @@ retried. All caches are local to the server instance and disappear when it resta
 ## Phone transfer
 
 1. Open a deck in the portal and choose **Send to phone**.
-2. In the app, choose **Library → Import → Scan QR code**.
+2. In the app, choose **Decks → Import → Scan QR code**.
 3. Grant camera access and scan the code.
 
 The QR code contains a signed transfer URL that expires after 10 minutes; the dialog shows a new code when it does. The portal redirects the phone to a short-lived Cloudflare R2 download, and the mobile app performs its normal package validation and installation.

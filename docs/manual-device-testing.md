@@ -5,7 +5,7 @@ Use a preview APK and a physical Android device. Mark each item after verifying 
 ## Fresh install
 
 - [ ] Install a fresh APK and launch Flashcard Reels.
-- [ ] Confirm the built-in demo deck appears in Library.
+- [ ] Confirm the built-in demo deck appears in Decks.
 - [ ] Study demo cards, including reveal/rating behavior.
 - [ ] Play a demo card with audio and confirm it is audible.
 - [ ] Close and reopen the app; confirm the demo deck and learner state persist.
@@ -13,7 +13,7 @@ Use a preview APK and a physical Android device. Mark each item after verifying 
 ## External deck import
 
 - [ ] Place a valid `.fcrdeck` file in Android Downloads.
-- [ ] In Library, tap Import and select the file.
+- [ ] In Decks, tap Import and select the file.
 - [ ] Confirm concise success feedback appears and the deck is listed.
 - [ ] Study imported cards and verify audio where present.
 - [ ] Restart the app; confirm the imported deck and learner state remain.
@@ -23,7 +23,7 @@ Use a preview APK and a physical Android device. Mark each item after verifying 
 - [ ] Sign in to the internal [web deck portal](https://flashcard-reels.vercel.app/).
 - [ ] Search for a deck, open its details, and verify card search and reveal/hide behavior.
 - [ ] Show the deck's phone-transfer QR code.
-- [ ] In the app, choose Library → Import → Scan QR code and grant camera access.
+- [ ] In the app, choose Decks → Import → Scan QR code and grant camera access.
 - [ ] Scan the QR code; confirm the app reports download/import progress and concise success feedback.
 - [ ] Confirm the imported deck, audio, version, and learner-history behavior match a local-file import.
 - [ ] Retry with an expired or invalid code; confirm no partial deck or permanent audio is left behind.
@@ -41,7 +41,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 
 - [ ] Study an imported deck, remove the deck, then open Settings → Archived progress. Confirm the deck and estimated storage size appear.
 - [ ] Restart the app and confirm the archived entry remains while the deck's cards stay out of study feeds.
-- [ ] Import the same deck again. Confirm its cards remain paused until choosing Continue or Start fresh, including when tapping or holding its Library row.
+- [ ] Import the same deck again. Confirm its cards remain paused until choosing Continue or Start fresh, including when tapping or holding its Decks row.
 - [ ] Choose Continue. Confirm the previous learning state returns and study resumes.
 - [ ] Remove and import the deck again, then choose Start fresh. Confirm the previous learning state and review history are cleared.
 - [ ] Remove the deck again and delete its entry from Archived progress. Confirm it disappears and a later import starts fresh.
@@ -50,7 +50,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 ## Invalid package
 
 - [ ] Try to import a deliberately invalid `.fcrdeck` file.
-- [ ] Confirm concise invalid-package feedback, app stability, and no partial deck in Library.
+- [ ] Confirm concise invalid-package feedback, app stability, and no partial deck in Decks.
 
 ## Progress backup and transfer
 
@@ -63,7 +63,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 ## Phase 0 runtime stabilization smoke sequence
 
 - [ ] Launch in both dark and light/device theme.
-- [ ] Vertically page cards and horizontally page all five primary tabs; confirm the gestures do not conflict.
+- [ ] Vertically page cards and horizontally page all five destinations; confirm the gestures do not conflict.
 - [ ] Hold a Discover card to enter Focus and confirm the revealed side and selected rating carry over once.
 - [ ] Swipe from Discover to Focus to Reading. Confirm the header underline follows the swipe, the header is not tappable, and it is gone on Reading. Confirm the Study icon stays active on both feeds.
 - [ ] Background Focus past its inactivity timeout, resume, and confirm it opens the replacement session without replaying handoff state.

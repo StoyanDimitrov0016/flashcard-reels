@@ -11,7 +11,7 @@ appId: com.flashcardreels.app
 - waitForAnimationToEnd
 - assertNotVisible: "Flashcard answer: .*"
 - assertVisible: "Flashcard question: .*"
-- tapOn: Library tab
+- tapOn: Decks tab
 - tapOn: Versioned Test Deck
 - tapOn: Delete Versioned Test Deck
 - assertVisible: "Delete Versioned Test Deck?"

@@ -10,13 +10,8 @@ import { useFlashcardAudioSource } from "@/features/audio/presentation/controlle
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
-import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import {
-  resolveDeckDetailsMode,
-  showsLearningProgress,
-} from "@/features/decks/presentation/deck-details-mode";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
@@ -44,21 +39,16 @@ type CardRowProps = Readonly<{
   /** Fits the deck's largest card number, so numbers line up and never wrap. */
   numberWidth: number;
   position: "first" | "middle" | "last" | "only";
-  showProgress: boolean;
 }>;
 
 /** One row of the grouped card list: rows share a card, split by inset dividers. */
-function CardRow({ card, numberWidth, onPress, position, showProgress }: CardRowProps) {
+function CardRow({ card, numberWidth, onPress, position }: CardRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
   return (
     <Pressable
-      accessibilityHint={
-        showProgress
-          ? "Opens question, answer, audio, and progress"
-          : "Opens question, answer, and audio"
-      }
+      accessibilityHint="Opens question, answer, audio, and progress"
       accessibilityLabel={`Card ${card.order + 1}: ${toSpokenFlashcardText(card.question)}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -119,12 +109,7 @@ export default function DeckDetailsScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { deckId, mode: modeParameter } = useLocalSearchParams<{
-    deckId: string;
-    mode?: string | string[];
-  }>();
-  const mode = resolveDeckDetailsMode(modeParameter);
-  const showProgress = showsLearningProgress(mode);
+  const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
   const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
   const resetDeckProgress = useResetDeckProgress();
@@ -146,7 +131,6 @@ export default function DeckDetailsScreen() {
       onPress={() => setSelectedCard(item)}
       numberWidth={numberWidth}
       position={getRowPosition(index, visibleCards.length)}
-      showProgress={showProgress}
     />
   );
   const audioSource = useFlashcardAudioSource(deck, selectedCard);
@@ -171,9 +155,9 @@ export default function DeckDetailsScreen() {
   if (!loading && !deck) {
     return (
       <ErrorState
-        title="This deck is no longer in your library"
+        title="This deck is no longer installed"
         message="It may have been deleted. You can import it again."
-        actions={[{ label: "Go to Library", onPress: () => router.dismissTo("/(tabs)/library") }]}
+        actions={[{ label: "Go to Decks", onPress: () => router.dismissTo("/(tabs)/decks") }]}
       />
     );
   }
@@ -182,7 +166,7 @@ export default function DeckDetailsScreen() {
     <SafeAreaView style={styles.screen}>
       <SubScreenHeader
         actions={
-          showProgress ? (
+          <>
             <Pressable
               accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
               accessibilityRole="button"
@@ -200,7 +184,6 @@ export default function DeckDetailsScreen() {
                 tintColor={colors.error}
               />
             </Pressable>
-          ) : (
             <Pressable
               accessibilityLabel={`Delete ${deck?.title ?? "deck"}`}
               accessibilityRole="button"
@@ -215,9 +198,9 @@ export default function DeckDetailsScreen() {
                 tintColor={colors.error}
               />
             </Pressable>
-          )
+          </>
         }
-        backLabel={`Back to ${showProgress ? "Progress" : "Library"}`}
+        backLabel="Back to Decks"
         onBack={() => router.back()}
       />
       <View style={styles.body}>
@@ -277,60 +260,48 @@ export default function DeckDetailsScreen() {
         progress={progress}
         visible={showDeckInfo}
       />
-      {showProgress ? (
-        <FlashcardProgressSheet
-          accentColor={accentColor}
-          audioSource={audioSource}
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)}
-          progress={selectedCard ? (progress.get(selectedCard.id) ?? null) : null}
-        />
-      ) : (
-        <FlashcardDetailsSheet
-          audioSource={audioSource}
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)}
-        />
-      )}
-      {showProgress && (
-        <ResetProgressSheet
-          busy={resetting}
-          error={resetError}
-          isPresented={resetPresented}
-          onCancel={() => {
-            if (!resetting) {
-              setResetPresented(false);
-            }
-          }}
-          onConfirm={confirmReset}
-          scope={`${deck?.title ?? "deck"} progress`}
-        />
-      )}
-      {!showProgress && (
-        <DeleteDeckSheet
-          busy={deleting}
-          deck={deletePresented ? deck : null}
-          error={deleteError}
-          onCancel={() => {
-            if (!deleting) {
-              clearDeleteError();
+      <FlashcardProgressSheet
+        accentColor={accentColor}
+        audioSource={audioSource}
+        card={selectedCard}
+        onClose={() => setSelectedCard(null)}
+        progress={selectedCard ? (progress.get(selectedCard.id) ?? null) : null}
+      />
+      <ResetProgressSheet
+        busy={resetting}
+        error={resetError}
+        isPresented={resetPresented}
+        onCancel={() => {
+          if (!resetting) {
+            setResetPresented(false);
+          }
+        }}
+        onConfirm={confirmReset}
+        scope={`${deck?.title ?? "deck"} progress`}
+      />
+      <DeleteDeckSheet
+        busy={deleting}
+        deck={deletePresented ? deck : null}
+        error={deleteError}
+        onCancel={() => {
+          if (!deleting) {
+            clearDeleteError();
+            setDeletePresented(false);
+          }
+        }}
+        onConfirm={() => {
+          if (!deck) {
+            return;
+          }
+          void deleteDeck(deck.id).then((deleted) => {
+            if (deleted) {
               setDeletePresented(false);
+              router.dismissTo("/(tabs)/decks");
+              showSuccessToast("Deck deleted.");
             }
-          }}
-          onConfirm={() => {
-            if (!deck) {
-              return;
-            }
-            void deleteDeck(deck.id).then((deleted) => {
-              if (deleted) {
-                setDeletePresented(false);
-                router.dismissTo("/(tabs)/library");
-                showSuccessToast("Deck deleted.");
-              }
-            });
-          }}
-        />
-      )}
+          });
+        }}
+      />
     </SafeAreaView>
   );
 }
