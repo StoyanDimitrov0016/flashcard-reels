@@ -3,7 +3,7 @@ appId: com.flashcardreels.app
 - longPressOn: Versioned Test Deck
 - assertVisible: "Flashcard question: .*"
 - doubleTapOn: "Flashcard question: .*"
-- tapOn: "Recall level: Good"
+- tapOn: "Recall rating: Good"
 - swipe:
     start: "50%, 78%"
     end: "50%, 22%"
