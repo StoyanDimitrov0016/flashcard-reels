@@ -213,7 +213,7 @@ describe("progress backup", () => {
     expect(retained.flashcardProgress[0]?.reviewCount).toBe(1);
   });
 
-  it("transfers an exported JSON document to another installed deck without changing it on retry", async () => {
+  it("transfers learning to another device, keeps retries idempotent, and resumes studying", async () => {
     const source = createDatabase();
     const flashcardId = testId(1);
     await seedDeck(source, TEST_DECK_ID, [flashcardId]);
@@ -277,6 +277,29 @@ describe("progress backup", () => {
     }
     expect(await targetBackup.restore(retry)).toBe(false);
     expect(await targetQuery.readSafetyCopyFileName()).toBe(safetyCopyFileName);
+
+    targetClock.advance(24 * 60 * 60 * 1000);
+    const opened = await targetGraph.study.openSession("focus", TEST_DECK_ID, false);
+    const newAttemptId = await targetGraph.study.startAttempt(flashcardId, 0, opened.session.id);
+    await targetGraph.study.rateAttempt(newAttemptId, "easy");
+    await targetGraph.study.completeSession(opened.session.id);
+    await targetBackup.exportProgress();
+    const continued = importedFiles.shared;
+    if (!continued) {
+      throw new Error("Expected an export after continuing study");
+    }
+    expect(continued.flashcardReviewEvents).toHaveLength(2);
+    expect(continued.flashcardReviewEvents).toEqual(
+      expect.arrayContaining(exported.flashcardReviewEvents)
+    );
+    expect(continued.flashcardProgress).toMatchObject([
+      { flashcardId, reviewCount: 2, goodCount: 1, easyCount: 1 },
+    ]);
+    expect(continued.flashcardMemoryStates).toHaveLength(1);
+    expect(firstRow(continued.flashcardMemoryStates).reps).toBe(
+      firstRow(exported.flashcardMemoryStates).reps + 1
+    );
+    expect(continued.deckProgress).toHaveLength(1);
   });
 
   it("closes an active session and drains progress beyond the foreground batch limit", async () => {
