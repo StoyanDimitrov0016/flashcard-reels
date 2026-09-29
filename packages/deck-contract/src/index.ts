@@ -1,6 +1,7 @@
 export { parseDeck } from "./validation/parse-deck.ts";
 export { parseDeckPackage } from "./package/parse-deck-package.ts";
 export { DECK_PACKAGE_LIMITS, DECK_SCHEMA_CONSTRAINTS } from "./deck.constants.ts";
+export { DeckChannelSchema, deckChannelPrefix, type DeckChannel } from "./deck-channels.ts";
 export { DeckContractError } from "./errors/deck-contract-error.ts";
 export { DeckParseError } from "./errors/deck-parse-error.ts";
 export { DeckPackageParseError } from "./errors/deck-package-parse-error.ts";

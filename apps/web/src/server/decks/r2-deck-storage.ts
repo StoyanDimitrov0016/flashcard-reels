@@ -1,9 +1,9 @@
 import "server-only";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { deckChannelPrefix, type DeckChannel } from "@flashcard-reels/deck-contract";
 
 import {
-  DeckObjectPrefix,
   deckFileName,
   type DeckDownload,
   type DeckStorage,
@@ -13,8 +13,9 @@ import { getR2Environment } from "@/server/env";
 
 const DOWNLOAD_TTL_SECONDS = 15 * 60;
 
-export function createR2DeckStorage(): DeckStorage {
+export function createR2DeckStorage(channel: DeckChannel): DeckStorage {
   const environment = getR2Environment();
+  const prefix = deckChannelPrefix(channel);
   const client = new S3Client({
     credentials: {
       accessKeyId: environment.R2_ACCESS_KEY_ID,
@@ -36,7 +37,7 @@ export function createR2DeckStorage(): DeckStorage {
           new ListObjectsV2Command({
             Bucket: bucket,
             ContinuationToken: continuationToken,
-            Prefix: DeckObjectPrefix,
+            Prefix: prefix,
           })
         );
         for (const object of page.Contents ?? []) {

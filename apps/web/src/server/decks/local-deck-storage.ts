@@ -3,7 +3,6 @@ import { open, readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import {
-  DeckObjectPrefix,
   deckFileName,
   type DeckDownload,
   type DeckStorage,
@@ -29,7 +28,7 @@ export function createLocalDeckStorage(directory: string): DeckStorage {
         names.map(async (name) => {
           const details = await stat(path.join(root, name));
           return {
-            key: DeckObjectPrefix + name,
+            key: name,
             revision: `${details.size}:${details.mtimeMs}`,
             size: details.size,
           };

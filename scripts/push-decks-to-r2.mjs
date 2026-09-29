@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { DeckChannelSchema, deckChannelPrefix } from "@flashcard-reels/deck-contract";
 import { unzipSync } from "fflate";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -20,13 +21,29 @@ import {
 import { getR2Environment } from "../apps/web/src/server/env.ts";
 
 const ConfirmationWord = "publish";
-const PublishedKeyPrefix = "decks/";
+// Written by `decks:curated:prepare` and `decks:dev:prepare`.
+const DefaultArchives = { prod: "flashcard-reels-decks.zip", dev: "flashcard-reels-dev-decks.zip" };
+const ChannelArgumentPrefix = "--channel=";
 
 const argumentsList = process.argv.slice(2);
 const dryRun = argumentsList.includes("--dry-run");
+const channelArgument = argumentsList.find((argument) =>
+  argument.startsWith(ChannelArgumentPrefix)
+);
+const channelResult = DeckChannelSchema.safeParse(
+  channelArgument?.slice(ChannelArgumentPrefix.length)
+);
+if (!channelResult.success) {
+  console.error(
+    "Choose a channel: --channel=dev for test decks or --channel=prod for daily decks."
+  );
+  process.exit(1);
+}
+const channel = channelResult.data;
+const publishedKeyPrefix = deckChannelPrefix(channel);
 const sourcePaths = argumentsList.filter((argument) => !argument.startsWith("--"));
 if (sourcePaths.length === 0) {
-  sourcePaths.push("flashcard-reels-decks.zip");
+  sourcePaths.push(DefaultArchives[channel]);
 }
 
 function sha256(bytes) {
@@ -68,7 +85,7 @@ function createPublishedDeckStore(client, bucket) {
           new ListObjectsV2Command({
             Bucket: bucket,
             ContinuationToken: continuationToken,
-            Prefix: PublishedKeyPrefix,
+            Prefix: publishedKeyPrefix,
           })
         );
         for (const object of page.Contents ?? []) {
@@ -199,9 +216,11 @@ const client = new S3Client({
 });
 const review = await reviewDeckPublication({
   candidates,
+  channel,
   reader: new ContractDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),
 });
+console.log(`Channel: ${channel} (${publishedKeyPrefix})`);
 printReview(review);
 
 if (!canPublish(review)) {

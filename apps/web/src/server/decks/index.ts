@@ -18,7 +18,7 @@ export function getDeckStorage(): DeckStorage {
     storage =
       environment.kind === "local"
         ? createLocalDeckStorage(environment.directory)
-        : createR2DeckStorage();
+        : createR2DeckStorage(environment.channel);
   }
   return storage;
 }

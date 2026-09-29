@@ -101,7 +101,12 @@ function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore
 }
 
 function review(store: PublishedDeckStore, ...candidates: DeckPublicationCandidate[]) {
-  return reviewDeckPublication({ candidates, reader: new ContractDeckPackageReader(), store });
+  return reviewDeckPublication({
+    candidates,
+    channel: "prod",
+    reader: new ContractDeckPackageReader(),
+    store,
+  });
 }
 
 function editedCards(answer: string) {
@@ -315,5 +320,20 @@ describe("deck publication review", () => {
 
       expect(result.blocks).toEqual([expect.stringContaining(`Lesson ${lessonId}`)]);
     });
+  });
+
+  it("uploads a new deck under the dev channel prefix", async () => {
+    const newDeck = candidate(deckDocument());
+
+    const result = await reviewDeckPublication({
+      candidates: [newDeck],
+      channel: "dev",
+      reader: new ContractDeckPackageReader(),
+      store: storeWith(),
+    });
+
+    expect(publicationUploads(result, [newDeck]).map((upload) => upload.key)).toEqual([
+      "dev/decks/Scaling.fcrdeck",
+    ]);
   });
 });

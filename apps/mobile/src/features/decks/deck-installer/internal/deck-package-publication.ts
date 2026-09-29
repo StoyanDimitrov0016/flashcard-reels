@@ -1,4 +1,11 @@
-import type { Deck, DeckPackage, Flashcard, Lesson } from "@flashcard-reels/deck-contract";
+import {
+  deckChannelPrefix,
+  type Deck,
+  type DeckChannel,
+  type DeckPackage,
+  type Flashcard,
+  type Lesson,
+} from "@flashcard-reels/deck-contract";
 
 import type { DeckPackageReader } from "./deck-package.model.ts";
 
@@ -102,6 +109,8 @@ export type DeckPublicationUpload = Readonly<{
 }>;
 
 type ReviewOptions = Readonly<{
+  /** The published channel to compare with and upload to. */
+  channel: DeckChannel;
   candidates: readonly DeckPublicationCandidate[];
   store: PublishedDeckStore;
   reader: DeckPackageReader;
@@ -133,13 +142,12 @@ type DeckComparison = Pick<
   | "warnings"
 >;
 
-const publishedKeyPrefix = "decks/";
-
 /**
  * Reads every candidate and every relevant published package before deciding anything, so a
  * store failure rejects the whole review and nothing can be uploaded from a partial comparison.
  */
 export async function reviewDeckPublication({
+  channel,
   candidates,
   store,
   reader,
@@ -148,6 +156,7 @@ export async function reviewDeckPublication({
     candidate,
     deck: toPublicationDeckPackage(reader.read(candidate.bytes)),
   }));
+  const keyPrefix = deckChannelPrefix(channel);
   const publishedEntries = await store.listPublishedDecks();
   const publishedByDeckId = new Map(publishedEntries.map((entry) => [entry.deckId, entry]));
   const catalogBlocks: string[] = [];
@@ -198,6 +207,7 @@ export async function reviewDeckPublication({
     return reviewDeck({
       candidate,
       deck,
+      keyPrefix,
       published,
       publishedDeck:
         published && published.sha256 !== candidate.sha256
@@ -249,6 +259,7 @@ export function publicationUploads(
 type ReviewDeckOptions = Readonly<{
   candidate: DeckPublicationCandidate;
   deck: PublicationDeckPackage;
+  keyPrefix: string;
   published: PublishedDeckEntry | null;
   publishedDeck: PublicationDeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
@@ -257,11 +268,12 @@ type ReviewDeckOptions = Readonly<{
 function reviewDeck({
   candidate,
   deck,
+  keyPrefix,
   published,
   publishedDeck,
   publishedEntries,
 }: ReviewDeckOptions): DeckPublicationChange {
-  const key = `${publishedKeyPrefix}${candidate.fileName}`;
+  const key = `${keyPrefix}${candidate.fileName}`;
   const base = {
     deckId: deck.id,
     fileName: candidate.fileName,

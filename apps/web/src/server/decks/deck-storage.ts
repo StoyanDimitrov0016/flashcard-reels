@@ -13,8 +13,6 @@ export interface DeckStorage {
   createDownload(key: string): Promise<DeckDownload>;
 }
 
-export const DeckObjectPrefix = "decks/";
-
 export function deckFileName(key: string): string {
   return key.slice(key.lastIndexOf("/") + 1);
 }

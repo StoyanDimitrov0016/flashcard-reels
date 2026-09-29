@@ -1,4 +1,5 @@
 import "server-only";
+import { DeckChannelSchema, type DeckChannel } from "@flashcard-reels/deck-contract";
 import * as z from "zod";
 
 function isSecureOrPrivateOrigin(value: string): boolean {
@@ -51,20 +52,24 @@ const LocalDeckStorageEnvironmentSchema = z.compile(
   })
 );
 
+const DeckChannelEnvironmentSchema = z.compile(z.object({ DECK_CHANNEL: DeckChannelSchema }));
+
 export type DeckStorageEnvironment =
   | Readonly<{ kind: "local"; directory: string }>
-  | Readonly<{ kind: "r2" }>;
+  | Readonly<{ kind: "r2"; channel: DeckChannel }>;
 
 /**
  * Development can serve `.fcrdeck` files from a local folder instead of R2. Production always
- * uses R2, so a stray `LOCAL_DECKS_DIR` cannot replace the published catalog.
+ * uses R2, so a stray `LOCAL_DECKS_DIR` cannot replace the published catalog. R2 reads one
+ * channel, which must be set explicitly so a preview never serves prod by accident.
  */
 export function getDeckStorageEnvironment(): DeckStorageEnvironment {
   const { LOCAL_DECKS_DIR } = LocalDeckStorageEnvironmentSchema.parse(process.env);
   if (LOCAL_DECKS_DIR && process.env.NODE_ENV !== "production") {
     return { directory: LOCAL_DECKS_DIR, kind: "local" };
   }
-  return { kind: "r2" };
+  const { DECK_CHANNEL } = DeckChannelEnvironmentSchema.parse(process.env);
+  return { channel: DECK_CHANNEL, kind: "r2" };
 }
 
 export function getInternalPasswordEnvironment() {
