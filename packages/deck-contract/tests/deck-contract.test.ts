@@ -59,6 +59,57 @@ function findZipEndRecord(bytes: Uint8Array): number {
 }
 
 describe("deck contract", () => {
+  it("allows multiple cards to reference one generated section and optional links", () => {
+    const deck = createDeck();
+    deck.schema = 2;
+    const card = deck.cards[0];
+    if (!card) {
+      throw new Error("Missing fixture card");
+    }
+    card.lessonSectionId = "vertical-scaling";
+    deck.cards.push({ ...card, id: "55555555-5555-4555-8555-555555555555", audio: false });
+    deck.cards.push({
+      ...card,
+      id: "66666666-6666-4666-8666-666666666666",
+      audio: false,
+      lessonSectionId: null,
+    });
+    const files = createPackageFiles();
+    files["deck.json"] = strToU8(JSON.stringify(deck));
+    files[`lessons/${lessonId}.md`] = strToU8("# Lesson\n## Vertical scaling\nMore resources.");
+    expect(
+      parseDeckPackage(zipSync(files)).deck.cards.map((entry) => entry.lessonSectionId)
+    ).toEqual(["vertical-scaling", "vertical-scaling", null]);
+    expect(() => parseDeck(createDeck())).not.toThrow();
+  });
+
+  it("rejects a supplied section without a lesson or under the old schema", () => {
+    const deck = createDeck();
+    const card = deck.cards[0];
+    if (!card) {
+      throw new Error("Missing fixture card");
+    }
+    card.lessonSectionId = "vertical-scaling";
+    expect(() => parseDeck(deck)).toThrow("requires a lesson and package schema 2");
+    deck.schema = 2;
+    card.lessonId = null;
+    expect(() => parseDeck(deck)).toThrow("requires a lesson and package schema 2");
+  });
+
+  it("rejects a renamed or missing section with the card and lesson identified", () => {
+    const deck = createDeck();
+    deck.schema = 2;
+    const card = deck.cards[0];
+    if (!card) {
+      throw new Error("Missing fixture card");
+    }
+    card.lessonSectionId = "vertical-scaling";
+    const files = createPackageFiles();
+    files["deck.json"] = strToU8(JSON.stringify(deck));
+    expect(() => parseDeckPackage(zipSync(files))).toThrow(
+      `Card ${cardId} references missing section vertical-scaling in lesson ${lessonId}`
+    );
+  });
   it("reads a complete package through its public entry point", () => {
     const archive = zipSync(createPackageFiles());
 
@@ -123,7 +174,7 @@ describe("deck contract", () => {
   });
 
   it("rejects a manifest with the wrong schema version", () => {
-    expect(() => parseDeck({ ...createDeck(), schema: 2 })).toThrow(DeckParseError);
+    expect(() => parseDeck({ ...createDeck(), schema: 99 })).toThrow(DeckParseError);
   });
 
   it("accepts a deck without optional assets", () => {

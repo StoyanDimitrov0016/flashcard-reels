@@ -11,6 +11,7 @@ const FlashcardSchema = z.compile(
     question: z.string().min(CONSTRAINTS.minTextLength),
     answer: z.string().min(CONSTRAINTS.minTextLength),
     lessonId: IdSchema.nullable(),
+    lessonSectionId: z.string().min(1).max(512).nullable().optional(),
     audio: z.boolean(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
@@ -24,10 +25,10 @@ const LessonSchema = z.compile(
   })
 );
 
-/** Schema 1 describes a published deck manifest; draft validation can be less strict. */
+/** Schema 2 adds optional section references; schema 1 packages remain readable. */
 export const DeckSchema = z.compile(
   z.strictObject({
-    schema: z.literal(DECK_SCHEMA_VERSION),
+    schema: z.union([z.literal(1), z.literal(DECK_SCHEMA_VERSION)]),
     id: IdSchema,
     authorId: IdSchema,
     revision: z.number().int().min(CONSTRAINTS.minRevision),

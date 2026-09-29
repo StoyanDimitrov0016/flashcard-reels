@@ -29,6 +29,15 @@ export function validateDeckRelationships(deck: Deck): void {
   }
 
   for (const [index, flashcard] of deck.cards.entries()) {
+    if (
+      (flashcard.lessonSectionId ?? null) !== null &&
+      (flashcard.lessonId === null || deck.schema === 1)
+    ) {
+      issues.push({
+        message: "A section reference requires a lesson and package schema 2",
+        path: ["cards", index, "lessonSectionId"],
+      });
+    }
     if (flashcard.lessonId !== null && !lessonIds.has(flashcard.lessonId)) {
       issues.push({
         message: `Flashcard ${flashcard.id} references a lesson outside this deck: ${flashcard.lessonId}`,

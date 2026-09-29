@@ -1,4 +1,4 @@
-export const DECK_SCHEMA_VERSION = 1;
+export const DECK_SCHEMA_VERSION = 2;
 
 export const DECK_SCHEMA_CONSTRAINTS = {
   minRevision: 1,

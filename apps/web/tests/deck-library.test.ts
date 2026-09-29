@@ -109,6 +109,36 @@ class MemoryStorage implements DeckStorage {
 }
 
 describe("deck library", () => {
+  it("resolves section-linked packages without audio and rejects broken destinations", async () => {
+    const storage = new MemoryStorage();
+    const files = unzipSync(
+      deckPackage({ id: scalingId, title: "Scaling", withLesson: true, audioBytes: 400_000 })
+    );
+    const manifest = parseDeck(JSON.parse(strFromU8(files["deck.json"] ?? new Uint8Array())));
+    manifest.schema = 2;
+    for (const card of manifest.cards) {
+      card.lessonId = lessonId;
+      card.lessonSectionId = "vertical-scaling";
+    }
+    files[`lessons/${lessonId}.md`] = strToU8(
+      "# Why scale\n\n## Vertical scaling\nMore resources."
+    );
+    files["deck.json"] = strToU8(JSON.stringify(manifest));
+    storage.put("decks/scaling.fcrdeck", zipSync(files));
+    const content = await createDeckLibrary({ storage }).getDeckContent(scalingId);
+    expect(content?.cards.map((card) => card.lessonSectionId)).toEqual([
+      "vertical-scaling",
+      "vertical-scaling",
+    ]);
+    expect(storage.bytesRead).toBeLessThan(80_000);
+
+    files[`lessons/${lessonId}.md`] = strToU8("# Why scale\n\n## Renamed section\nMore resources.");
+    storage.put("decks/scaling.fcrdeck", zipSync(files), "r2");
+    await expect(createDeckLibrary({ storage }).getDeckContent(scalingId)).rejects.toThrow(
+      "missing section vertical-scaling"
+    );
+  });
+
   it("lists published decks by title with their card, lesson, and audio counts", async () => {
     const storage = new MemoryStorage();
     storage.put(

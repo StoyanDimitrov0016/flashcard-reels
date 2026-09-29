@@ -1,3 +1,8 @@
+export { parseLessonMarkdown, withoutRepeatedTitle } from "./lessons/lesson-markdown.ts";
+export type { LessonBlock, LessonInline } from "./lessons/lesson-markdown.ts";
+export { parseLessonDocument } from "./lessons/lesson-document.ts";
+export type { LessonDocument, LessonSection } from "./lessons/lesson-document.ts";
+export { validateLessonReferences } from "./lessons/validate-lesson-references.ts";
 export { parseDeck } from "./validation/parse-deck.ts";
 export { parseDeckPackage } from "./package/parse-deck-package.ts";
 export { DECK_PACKAGE_LIMITS, DECK_SCHEMA_CONSTRAINTS } from "./deck.constants.ts";

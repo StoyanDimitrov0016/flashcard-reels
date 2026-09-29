@@ -1,4 +1,9 @@
-import { parseDeck, type Deck, type Flashcard } from "@flashcard-reels/deck-contract";
+import {
+  parseDeck,
+  validateLessonReferences,
+  type Deck,
+  type Flashcard,
+} from "@flashcard-reels/deck-contract";
 import { strFromU8 } from "fflate";
 
 import type { ZipRangeReader } from "@/server/decks/zip-range-reader";
@@ -83,6 +88,10 @@ export async function readDeckContent(
       }
       return { id: lesson.id, markdown, title: lesson.title };
     })
+  );
+  validateLessonReferences(
+    document,
+    new Map(lessons.map((lesson) => [lesson.id, lesson.markdown]))
   );
   return {
     ...summarize(document, key, sizeBytes),

@@ -2,6 +2,7 @@ import { strFromU8 } from "fflate";
 
 import type { Deck } from "../deck.schemas.ts";
 
+import { validateLessonReferences } from "../lessons/validate-lesson-references.ts";
 import { rejectDeckPackage } from "./reject-deck-package.ts";
 
 export type DeckAssets = Readonly<{
@@ -42,6 +43,8 @@ export function readDeckAssets(deck: Deck, files: Record<string, Uint8Array>): D
     }
     lessonFiles.set(lesson.id, markdown);
   }
+
+  validateLessonReferences(deck, lessonFiles);
 
   for (const path of Object.keys(files)) {
     if (!expected.has(path)) {
