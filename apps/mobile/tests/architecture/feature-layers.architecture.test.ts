@@ -1,9 +1,14 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const sourceRoot = path.join(process.cwd(), "src");
+const config = ts.readConfigFile(path.join(process.cwd(), "tsconfig.json"), (file) =>
+  ts.sys.readFile(file)
+);
+const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd());
+const resolutionCache = ts.createModuleResolutionCache(process.cwd(), (file) => file, options);
 const CoreLayerPattern = /\/(domain|application)\//;
 const AdapterLayerPattern = /\/(infrastructure|internal|presentation)\//;
 const NativeDependencyPattern =
@@ -60,22 +65,13 @@ function imports(file: string): string[] {
 }
 
 function resolveLocal(file: string, specifier: string): string | undefined {
-  let target: string | undefined;
-  if (specifier.startsWith("@/")) {
-    target = path.join(sourceRoot, specifier.slice(2));
-  } else if (specifier.startsWith(".")) {
-    target = path.resolve(path.dirname(file), specifier);
+  const resolved = ts.resolveModuleName(specifier, file, options, ts.sys, resolutionCache)
+    .resolvedModule?.resolvedFileName;
+  if (!resolved) {
+    return undefined;
   }
-  return (
-    target &&
-    [
-      target,
-      `${target}.ts`,
-      `${target}.tsx`,
-      path.join(target, "index.ts"),
-      path.join(target, "index.tsx"),
-    ].find((candidate) => /\.tsx?$/.test(candidate) && existsSync(candidate))
-  );
+  const target = path.normalize(resolved);
+  return target.startsWith(sourceRoot + path.sep) ? target : undefined;
 }
 
 describe("feature responsibility boundaries", () => {
