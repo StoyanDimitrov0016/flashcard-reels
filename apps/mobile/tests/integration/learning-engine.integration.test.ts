@@ -4,7 +4,10 @@ import type { FlashcardMemoryState } from "@/features/learning-engine/domain/fla
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import {
+  createFeedComposer,
+  createLearningScheduler,
+} from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
@@ -369,7 +372,7 @@ describe("SQLite learning-engine commit", () => {
       recordingMemoryStates,
       createLearningScheduler(),
       new TestClock(),
-      () => 0
+      createFeedComposer(() => 0)
     );
     const prepared = await feed.prepareFeed([card], "discover", null, false, null);
     const attemptId = await graph.study.startAttempt(card.id, 0, prepared.studySessionId);

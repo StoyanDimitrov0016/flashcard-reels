@@ -8,7 +8,10 @@ import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-pro
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import {
+  createFeedComposer,
+  createLearningScheduler,
+} from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
@@ -62,7 +65,13 @@ export function createScenarioGraph(
   );
   return {
     attempts,
-    feed: new ReelFeedServiceImpl(study, memoryStates, scheduler, clock, random),
+    feed: new ReelFeedServiceImpl(
+      study,
+      memoryStates,
+      scheduler,
+      clock,
+      createFeedComposer(random)
+    ),
     memoryStates,
     items,
     flashcardProgress: new FlashcardProgressServiceImpl(

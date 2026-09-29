@@ -14,7 +14,7 @@ import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrast
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import {
   deckProgress,

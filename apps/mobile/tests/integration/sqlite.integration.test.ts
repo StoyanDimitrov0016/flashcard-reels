@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";

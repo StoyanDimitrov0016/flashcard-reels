@@ -4,7 +4,7 @@ import type { FlashcardProgressAggregationTransaction } from "@/features/flashca
 
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
+import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";

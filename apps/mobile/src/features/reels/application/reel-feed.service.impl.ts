@@ -15,36 +15,34 @@ import type { StudySessionScope } from "@/features/study/domain/study-session.mo
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 
-import { createFeedComposer } from "@/features/learning-engine/application/learning-engine-factories";
 import {
   rememberCard,
   type FeedCandidate,
+  type FeedComposer,
   type FeedState,
 } from "@/features/learning-engine/domain/feed-composer";
 import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
-
-type RandomSource = () => number;
 
 export class ReelFeedServiceImpl implements ReelFeedService {
   private readonly studyService: StudyService;
   private readonly memoryStateRepository: FlashcardMemoryStateRepository;
   private readonly scheduler: LearningScheduler;
   private readonly clock: Clock;
-  private readonly feedComposer: ReturnType<typeof createFeedComposer>;
+  private readonly feedComposer: FeedComposer;
 
   constructor(
     studyService: StudyService,
     memoryStateRepository: FlashcardMemoryStateRepository,
     scheduler: LearningScheduler,
     clock: Clock,
-    random: RandomSource = Math.random
+    feedComposer: FeedComposer
   ) {
     this.studyService = studyService;
     this.memoryStateRepository = memoryStateRepository;
     this.scheduler = scheduler;
     this.clock = clock;
-    this.feedComposer = createFeedComposer(random);
+    this.feedComposer = feedComposer;
   }
 
   async prepareFeed(

@@ -7,7 +7,7 @@ import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import {
   createFeedComposer,
   createLearningScheduler,
-} from "@/features/learning-engine/application/learning-engine-factories";
+} from "@/features/learning-engine/infrastructure/learning-engine-factories";
 
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
 

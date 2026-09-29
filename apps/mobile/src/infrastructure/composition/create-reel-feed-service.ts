@@ -3,6 +3,7 @@ import type { LearningScheduler } from "@/features/learning-engine/domain/learni
 import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 
+import { createFeedComposer } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 
 type CreateReelFeedServiceOptions = Readonly<{
@@ -22,6 +23,7 @@ export function createReelFeedService({
     studyService,
     flashcardMemoryStateRepository,
     learningScheduler,
-    clock
+    clock,
+    createFeedComposer()
   );
 }
