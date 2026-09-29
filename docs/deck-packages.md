@@ -75,22 +75,36 @@ The reader supports headings, paragraphs, bold, italic, bulleted and numbered li
 code, and fenced code blocks. Other syntax shows as plain text, links and images keep only their
 text, and nothing loads from the network.
 
+## Channels
+
+Published decks live in one R2 bucket, split into two channels:
+
+| Channel | R2 prefix    | Sources                      | Used for                                |
+| ------- | ------------ | ---------------------------- | --------------------------------------- |
+| prod    | `decks/`     | `apps/mobile/data/decks`     | Daily study                             |
+| dev     | `dev/decks/` | `apps/mobile/data/dev-decks` | Testing features with three small decks |
+
+The portal reads one channel, set by `DECK_CHANNEL`. The prod prefix never matches dev objects.
+Dev decks are subsets of the prod decks with their own IDs, so both can be installed together.
+
 ## Authoring
 
-Deck sources live in `apps/mobile/data/decks/<deck-name>/` with the package layout. Audio is
-generated with the sibling `audiofier-tts` repository; the generator also takes combined audio
-from `data/technical_flashcard_library/audio` for matching card IDs. From `apps/mobile`:
+Deck sources live in `apps/mobile/data/decks/<deck-name>/` and
+`apps/mobile/data/dev-decks/<deck-name>/` with the package layout. Audio is generated with the
+sibling `audiofier-tts` repository; the generator also takes combined audio from
+`data/technical_flashcard_library/audio` for matching card IDs. From `apps/mobile`:
 
 ```powershell
 npm.cmd run decks:generate -- data/decks/<deck-name>   # one package in build/decks
 npm.cmd run decks:inspect -- build/decks/<deck-id>.fcrdeck
-npm.cmd run decks:curated:prepare                     # every deck, checked together
+npm.cmd run decks:curated:prepare                     # every prod deck, checked together
+npm.cmd run decks:dev:prepare                         # every dev deck, checked together
 ```
 
-`decks:curated:prepare` generates every source in `data/decks`, validates each package, checks
-that no deck, card, or lesson ID overlaps across decks, and writes the packages to
-`apps/mobile/build/curated-decks` and `flashcard-reels-decks.zip` at the repository root. Both
-outputs are ignored by Git.
+Each prepare command generates every source in its folder, validates each package, checks that
+no deck, card, or lesson ID overlaps across decks, and writes a ZIP at the repository root:
+`flashcard-reels-decks.zip` for prod and `flashcard-reels-dev-decks.zip` for dev. Packages and
+ZIPs are ignored by Git.
 
 The bundled demo lives in `data/demo-deck` and ships only as the generated package in
 `assets/decks`. After changing it, run `decks:packages` and `decks:check`. On startup the app
@@ -101,15 +115,16 @@ installs the demo only when it is missing or older than the bundled revision.
 
 ## Publishing
 
-From the repository root:
+From the repository root, always naming the channel:
 
 ```powershell
-npm run r2:push-decks -- --dry-run   # compare flashcard-reels-decks.zip with R2
-npm run r2:push-decks                # upload after review
+npm run r2:push-decks -- --channel=dev --dry-run   # compare the dev ZIP with dev/decks/
+npm run r2:push-decks -- --channel=dev             # upload after review
 ```
 
-The publish check compares each package with the published deck of the same ID and reports
-added, changed, and removed cards and lessons. It blocks the whole publish when:
+Without `--channel`, the publisher refuses to run. Without a path, it uses the channel's ZIP.
+The publish check compares each package only with published decks in the same channel, and
+reports added, changed, and removed cards and lessons. It blocks the whole publish when:
 
 - content changed without a higher revision, or the revision went down;
 - a published deck would move to another file name;
@@ -120,5 +135,6 @@ A removed card re-added with identical text produces a warning, because a new ID
 progress. When R2 cannot be read, nothing uploads. Uploading requires typing `publish` in an
 interactive terminal, so an agent can prepare a review but cannot confirm it.
 
-The publisher also stops while R2 still holds packages in the earlier format. Removing them is
-a separate cutover step (G6 in the [functional requirements](functional-requirements.md)).
+The prod channel still holds packages in the earlier format, and the publisher stops on them.
+Prod switches to schema 1 when `phase-0` merges (G6 in the
+[functional requirements](functional-requirements.md)).

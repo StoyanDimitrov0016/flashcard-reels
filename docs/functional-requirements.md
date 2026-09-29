@@ -17,8 +17,8 @@ loses progress.
   its layout, then implementation.
 - **Scoped work:** each task is one pull request that states its scope in one sentence and
   names the requirement or gap it serves. Its review is a written list of findings, and each
-  one is fixed or rejected with a reason before merge. No pull request rewrites more than one
-  area at once.
+  one is fixed or rejected with a reason before merge. It adds or updates tests for the
+  behavior it changes. No pull request rewrites more than one area at once.
 - **No legacy before release:** until Phase 0 closes, fix the design instead of adding
   workarounds or compatibility code for earlier builds. This includes regenerating the database
   baseline and changing the backup format directly. From the first daily-use APK onward, database
@@ -173,12 +173,16 @@ marked _proposed_ are starting values for the owner to adjust.
 
 - Q1. **Gaps closed.** The gap list is empty, and each closed gap names the commit that closed
   it.
-- Q2. **Content.** The daily decks are named below. Each one:
-  - is published at its latest revision, so the publish check reports it unchanged;
+- Q2. **Content.** Each daily deck:
+  - is published to the prod channel at its latest revision, so the publish check reports it
+    unchanged;
   - passes `decks:inspect`;
-  - has lessons, and every card links to a lesson section.
+  - has lessons.
 
-  Daily decks: _to be named by the owner._
+  Daily decks: **System Design** and **React** first, then **Databases** and **Computer
+  Science**. A **Networking** deck is still to be written. Refining their content, section
+  links, and the Networking deck happens in the week of daily use after Phase 0. During Phase 0,
+  features are tested with small dev decks instead.
 
 - Q3. **Code review.** Every feature folder and the web app has a review note that lists its
   findings, and each finding is fixed or rejected with a reason. Each module passes these
@@ -194,9 +198,7 @@ marked _proposed_ are starting values for the owner to adjust.
     backup files, QR links, route params, stored preferences, and portal requests. Parsed
     outside data is never cast with `as`.
   - **Complexity:** no loop over cards, lessons, or reviews nested inside another such loop on
-    the study path. Lookups by ID use a `Map` or `Set`. _Proposed:_ with 5,000 installed cards,
-    Discover shows its first card within 1 second of launch on the owner's phone, and a swipe
-    to the next card never visibly stalls.
+    the study path. Lookups by ID use a `Map` or `Set`.
   - **Deep modules:** code outside a feature uses it only through its application service or
     its controller hooks. Completing one learner action takes one call into the feature, not a
     sequence of calls the caller must get right.
@@ -217,6 +219,9 @@ marked _proposed_ are starting values for the owner to adjust.
     device, and date recorded.
   - Update test: rate cards on build N, install build N+1 over it, and the review counts,
     lesson reads, and due cards are unchanged.
+  - Speed, measured once at the end on the release APK: from tapping the app icon, Discover
+    shows its first card within 1 second. That still holds with a 5,000-card stress library
+    installed, and the performance monitor stays above 55 fps while swiping through 30 cards.
 
 ## Gap list
 
@@ -237,9 +242,13 @@ Differences between these requirements and the app. Q1 passes when this list is 
   Controls to Settings and the "For you" label to Discover, and rename code to match. Needs a
   spec for the Decks list and deck page layout. Best done together with G3, which also changes
   what the deck screens show.
-- G6. **R2 catalog cutover.** The schema 1 publisher stops while old-format packages remain in
-  R2. Remove the old catalog and publish the schema 1 decks, so the portal and QR transfer serve
-  only the new format.
+- G6. **Deck channels.** Built on `p0/deck-channels`: R2 holds a **prod** channel under `decks/`
+  and a **dev** channel under `dev/decks/`, the portal reads the one set by `DECK_CHANNEL`, and
+  the publisher requires `--channel`. Dev holds three 20-card test decks from
+  `apps/mobile/data/dev-decks/`. Prod keeps serving the current `main` portal and APK. Owner
+  steps: set `DECK_CHANNEL` in Vercel (prod for Production, dev for Preview) and in
+  `apps/web/.env.local`, then publish the dev decks. Closes when `phase-0` merges and prod
+  switches to the schema 1 daily decks.
 
 ### Accepted design direction
 

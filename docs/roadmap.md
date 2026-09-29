@@ -20,11 +20,12 @@ because Git cannot hold both `phase-0` and `phase-0/<topic>`.
 
 1. **Deck packages, schema 1** (`feat/curated-deck-packages-v1`, merged). Closes G2 and
    the lesson-level half of G1.
-2. **Docs** (committed on `phase-0`). The principles, requirements, roadmap, and consolidated docs, with
-   `deck-packages.md` updated to schema 1.
+2. **Docs** (done on `phase-0`). The principles, requirements, roadmap, and consolidated docs,
+   with `deck-packages.md` updated to schema 1.
 3. **Migration baseline** (done on `phase-0`). The migrations are squashed into one `0000`
    baseline, and the database file is `flashcard-reels-v3.db`.
-4. **R2 catalog cutover** (G6). Remove the old-format packages and publish the schema 1 decks.
+4. **Deck channels** (`p0/deck-channels`, G6). A prod and a dev channel in R2, small dev decks,
+   and a Vercel Preview portal on the dev channel. Prod stays untouched until `phase-0` merges.
 5. **Presentation foundation** (`p0/presentation-foundation`). Bring every existing screen and
    component in line with [codebase preferences](codebase-preferences.md) §14–16. It is done
    when:
@@ -41,13 +42,17 @@ because Git cannot hold both `phase-0` and `phase-0/<topic>`.
 8. **Code review (Q3)** of the modules step 7 did not rebuild, such as the learning engine,
    deck installer, backups, and audio. Done when each has a review note and passes the Q3
    checks.
-9. **Content (Q2).** Update the daily decks with section links once G1 fixes the format.
-10. **Release checks (Q4, Q5)** on the final release APK, then merge `phase-0` into `main`.
+9. **Content (Q2).** Publish the daily decks in schema 1, ready for the prod channel.
+10. **Release checks (Q4, Q5)** on the final release APK, then merge `phase-0` into `main` and
+    switch prod to the schema 1 daily decks.
 
 ## Phase 0.1
 
-Worth doing after the Phase 0 gaps close. These do not block Phase 0.
+Right after Phase 0 closes. These do not block Phase 0.
 
+- **A week of daily use.** Seven days of daily study on the release APK. The time goes into
+  refining the daily decks: their content, links from every card to a lesson section, and a new
+  Networking deck.
 - **Device voice.** Listen to the same 20 cards on the phone with the device's built-in
   text-to-speech and with `audiofier-tts`. If the owner prefers the device voice or cannot tell
   them apart, decks drop audio files and become much smaller.

@@ -23,9 +23,10 @@ pages and API routes, and sensitive route handlers check the session again.
 
 ## Deck storage
 
-Every object under `decks/` in the R2 bucket that ends in `.fcrdeck` appears in the catalog.
-The deck ID comes from the package. Packages are read by byte range, so rendering a page never
-downloads audio. A package that fails validation is skipped and logged.
+The portal lists every `.fcrdeck` object under its channel's prefix: `decks/` for prod and
+`dev/decks/` for dev (see [deck channels](deck-packages.md#channels)). The deck ID comes from
+the package. Packages are read by byte range, so rendering a page never downloads audio. A
+package that fails validation is skipped and logged.
 
 Each server instance caches parsed summaries and previews in memory: at most 32 entries each,
 30 minutes each, with an 8 MiB content budget for previews. The storage listing is reused for
@@ -52,10 +53,13 @@ R2_ACCOUNT_ID
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME
+DECK_CHANNEL
 ```
 
 Never give them a `NEXT_PUBLIC_` prefix. The Vercel project root is `apps/web`.
 
+- `DECK_CHANNEL`: `prod` in the Vercel Production environment, `dev` in Preview and locally.
+  The portal refuses to read R2 without it, so a preview never serves prod by accident.
 - `DECK_TRANSFER_ORIGIN`: leave unset on Vercel, so links use the request's HTTPS origin. Set
   it only for a fixed public URL or a private development host. Public plain HTTP is rejected.
 - `LOCAL_DECKS_DIR`: points a development server at a local folder of packages instead of R2.
