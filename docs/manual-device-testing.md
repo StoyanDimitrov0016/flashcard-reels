@@ -39,7 +39,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 
 ## Archived deck progress
 
-- [ ] Study an imported deck, remove the deck, then open Controls → Archived progress. Confirm the deck and estimated storage size appear.
+- [ ] Study an imported deck, remove the deck, then open Settings → Archived progress. Confirm the deck and estimated storage size appear.
 - [ ] Restart the app and confirm the archived entry remains while the deck's cards stay out of study feeds.
 - [ ] Import the same deck again. Confirm its cards remain paused until choosing Continue or Start fresh, including when tapping or holding its Library row.
 - [ ] Choose Continue. Confirm the previous learning state returns and study resumes.
@@ -54,7 +54,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 
 ## Progress backup and transfer
 
-- [ ] Rate cards in Discover and Focus, then open Controls → Progress backup → Export progress. Save the shared JSON file to device storage. Confirm study resumes with a fresh session and the exported file includes the latest ratings.
+- [ ] Rate cards in Discover and Focus, then open Settings → Progress backup → Export progress. Save the shared JSON file to device storage. Confirm study resumes with a fresh session and the exported file includes the latest ratings.
 - [ ] Reset learning progress, then import that file. Confirm the preview shows the backup and device counts, the confirmation replaces progress, and matching installed decks resume with their imported progress immediately.
 - [ ] Confirm the previous local progress backup can be shared after import. Import an invalid or damaged JSON file and confirm existing progress remains unchanged.
 - [ ] Import a backup containing a removed deck on a device without that deck. Confirm the progress appears in Archived progress. Install the deck and confirm the existing Continue / Start fresh choice appears.
@@ -65,7 +65,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 - [ ] Launch in both dark and light/device theme.
 - [ ] Vertically page cards and horizontally page all five primary tabs; confirm the gestures do not conflict.
 - [ ] Hold a Discover card to enter Focus and confirm the revealed side and selected rating carry over once.
-- [ ] Swipe from For you to Focus to Reading. Confirm the header underline follows the swipe, the header is not tappable, and it is gone on Reading. Confirm the Study icon stays active on both feeds.
+- [ ] Swipe from Discover to Focus to Reading. Confirm the header underline follows the swipe, the header is not tappable, and it is gone on Reading. Confirm the Study icon stays active on both feeds.
 - [ ] Background Focus past its inactivity timeout, resume, and confirm it opens the replacement session without replaying handoff state.
 - [ ] Verify the Study Island in left, right, and bottom layouts.
 - [ ] Open deck details, appearance, preferences, and reset flows and confirm their native bottom sheets present and dismiss correctly.

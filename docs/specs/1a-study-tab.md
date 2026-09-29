@@ -1,6 +1,6 @@
-# 1a - Study feeds with a For you and Focus header
+# 1a - Study feeds with a Discover and Focus header
 
-Status: implemented; verified on the Android emulator in Expo Go.
+Status: implemented. Names follow [3 - Naming alignment](3-naming-alignment.md).
 
 ## Problem and value
 
@@ -11,15 +11,15 @@ the two feeds share one bottom-bar item so the bar has room for Reading.
 
 ## Functional requirements
 
-1. Horizontal swipes move through the destinations in this order: For you (the Discover scope),
-   Focus, Reading, Library, Progress, and You.
-2. A fixed header over the two feeds shows **For you** and **Focus**. It is not interactive. Its
+1. Horizontal swipes move through the destinations in this order: Discover,
+   Focus, Reading, Library, Progress, and Settings.
+2. A fixed header over the two feeds shows **Discover** and **Focus**. It is not interactive. Its
    underline and emphasis follow the swipe, and it fades out while swiping on to Reading.
-3. The bottom bar has five items: Study, Reading, Library, Progress, and You. Study is active on
-   both feeds and opens For you when tapped.
+3. The bottom bar has five items: Study, Reading, Library, Progress, and Settings. Study is active on
+   both feeds and opens Discover when tapped.
 4. Cards run full-bleed under the status bar and header, with their content starting below the
    header.
-5. Existing ways into Focus still work: holding a deck in Library, holding a For you card, and
+5. Existing ways into Focus still work: holding a deck in Library, holding a Discover card, and
    tapping a card's deck label.
 
 ## Non-functional requirements
@@ -40,7 +40,7 @@ None. This is a navigation change.
 
 ## Acceptance
 
-1. Swiping from For you reaches Focus and then Reading, with the header underline following and
+1. Swiping from Discover reaches Focus and then Reading, with the header underline following and
    the header gone on Reading.
 2. Holding a Library deck opens Focus on that deck.
 3. Focus with no chosen deck shows its empty state.

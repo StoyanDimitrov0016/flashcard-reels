@@ -1,13 +1,17 @@
 # Progress backups
 
-**Controls → Progress backup** exports and imports learning progress as one readable JSON file. The
+**Settings → Progress backup** exports and imports learning progress as one readable JSON file. The
 file contains `deck_progress`, `flashcard_progress`, `flashcard_memory_states`, and
-`review_events`. It excludes downloaded deck content, audio, deck appearance, app preferences,
+`flashcard_review_events`. It excludes downloaded deck content, audio, deck appearance, app preferences,
 and study/feed sessions. This is a whole-library backup and transfer format; import replaces all
 local learning progress rather than merging histories.
 
 The portable document has `format: "flashcard-reels-progress"`, `version: 1`, an `exportedAt`
-timestamp, and arrays named for the four exported models. This version is independent of SQLite
+timestamp, and `deckProgress`, `flashcardProgress`, `flashcardMemoryStates`, and
+`flashcardReviewEvents` arrays. Deck progress uses `status`; review events use `committedAt`.
+Deck progress, flashcard progress, and memory rows omit their database IDs; restore generates
+new IDs. Review events retain their IDs. Earlier development backups with the old field names
+are rejected without changing local progress. This version is independent of SQLite
 table names and app version. Once a backup is exported, a future app update must either read its
 version or explain that it cannot. Timestamps use UTC ISO strings with milliseconds because the
 local database compares them as text. Backup files are unencrypted and can reveal deck titles
@@ -15,7 +19,7 @@ and review history.
 
 ## Export
 
-Export completes any active Discover and Focus sessions, finalizes rated attempts, and drains all
+Export completes any active Discover and Focus sessions, commits rated attempts, and drains all
 remaining progress aggregation, including batches below the usual threshold. It then reads the
 four progress tables in one SQLite transaction and opens the device share sheet for the JSON
 file. The screen refreshes its study state when the operation finishes, including when sharing
@@ -24,7 +28,7 @@ fails after sessions have already closed.
 ## Import
 
 The file picker copies a selected file to cache. The app bounds its size, parses and validates
-the entire document, and previews the incoming and local finalized review counts before any
+the entire document, and previews the incoming and local committed review counts before any
 learning data changes. Confirmation completes active sessions and aggregation, saves the current
 progress under a unique filename in `progress-backups/` in app documents, and replaces the
 progress tables in one SQLite transaction. That transaction also records which safety copy belongs
@@ -40,7 +44,7 @@ the unsupported version are attached only as diagnostic context.
 
 Downloaded decks stay installed. Imported progress for installed deck IDs becomes active
 immediately, using the installed deck's current title and package version. Imported progress for
-deck IDs absent from the device is archived, regardless of its former resolution. Stable
+deck IDs absent from the device is archived, regardless of its former status. Stable
 flashcard IDs preserve state across package versions; progress for cards absent from an installed
 package remains stored. A later deck reinstall follows the existing archived-progress choice.
 

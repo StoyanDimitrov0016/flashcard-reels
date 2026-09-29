@@ -8,7 +8,7 @@ The mobile app is organized by feature slices—study, reels, decks, audio, flas
 
 SQLite and Drizzle persist decks, sessions, review history, preferences, and learner summaries. The deck installer validates `.fcrdeck` archives, manages versioned audio, and updates deck content without discarding existing learning history.
 
-Study sessions persist their feed position and use a bounded materialized window. Discover and Focus share the same memory-aware feed composer, while the learning engine applies FSRS when reviews are finalized. Moving backwards through a feed does not reopen completed reviews.
+Study sessions persist their feed position and use a bounded materialized window. Discover and Focus share the same memory-aware feed composer, while the learning engine applies FSRS when reviews are committed. Moving backwards through a feed does not reopen completed reviews.
 
 ## Web portal
 

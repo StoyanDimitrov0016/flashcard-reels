@@ -1,6 +1,6 @@
 # Visual system
 
-Recovery UI uses one contextual title, a short explanation, and relevant actions. Technical details remain collapsed. Use subheadings only to separate genuinely distinct groups; avoid decorative pills, dot-separated labels, nested headings, and repeated explanations. Controls groups related settings and places reset alongside other data actions.
+Recovery UI uses one contextual title, a short explanation, and relevant actions. Technical details remain collapsed. Use subheadings only to separate genuinely distinct groups; avoid decorative pills, dot-separated labels, nested headings, and repeated explanations. Settings groups related settings and places reset alongside other data actions.
 
 Flashcard Reels separates application chrome from deck content.
 
@@ -12,7 +12,7 @@ Reel cards use a consistent header, body, and footer structure. The Study Island
 
 The web portal uses the same product identity through the shared design-token package while adapting the layout for catalog browsing and card inspection.
 
-Study feeds run full-bleed: the deck background extends under the status bar and the For you and
+Study feeds run full-bleed: the deck background extends under the status bar and the Discover and
 Focus header, which is a non-interactive indicator that follows the horizontal pager. Settings and
 reading lists use grouped rows: one raised card per section, hairline dividers inset past the
 icon, and rows of at least 52 points. Destructive rows keep the same shape and use the error color.

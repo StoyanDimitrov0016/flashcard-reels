@@ -13,7 +13,7 @@ without an account, network connection, web portal, or cloud service.
 - Horizontal swipes move between primary app destinations; vertical swipes move
   through reels. Holding a Discover reel enters Focus while preserving the current
   study moment.
-- Recent review state is provisional; finalized review attempts are durable
+- Recent review state is provisional; committed review attempts are durable
   learning history. Keep long-running presentation/feed state bounded without
   compacting durable review history.
 - Stable deck and card IDs preserve learning identity across deck updates.
@@ -29,7 +29,7 @@ without an account, network connection, web portal, or cloud service.
 - Do not leak Expo, SQLite, filesystem, or archive details into public
   domain/application APIs.
 - Preserve the distinction between current reel position and monotonic furthest
-  reel position; commit/finalization semantics depend on it.
+  reel position; commit semantics depend on it.
 - Treat `drizzle/` as generated output from
   `src/infrastructure/sqlite/schema.ts`. Phase 0 uses one canonical database
   baseline rather than compatibility migrations for discarded development
@@ -38,7 +38,7 @@ without an account, network connection, web portal, or cloud service.
 ## Testing and native behavior
 
 - Pure deterministic policies belong in unit tests. Persistence, session
-  lifecycle, FSRS, recurrence, finalization, reset, and compaction behavior should
+  lifecycle, FSRS, recurrence, commit, reset, and compaction behavior should
   use the real SQLite-backed integration graph.
 - Do not recreate the study system as a large in-memory behavioral fake.
 - Actual gestures, native presentation, background/resume behavior, and release

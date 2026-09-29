@@ -80,6 +80,6 @@ revision, and validate the converted packages before replacing the objects at th
 Keep the backup until device testing passes. Older app and portal builds need updating to read the
 schema 1 catalog.
 
-The combined theme and package schema uses the fresh `flashcard-reels-v4.db` development database
+The combined theme and package schema uses the fresh `flashcard-reels-v5.db` development database
 and one generated migration baseline. Existing development databases are left separate; the
 new app starts with fresh local study state.

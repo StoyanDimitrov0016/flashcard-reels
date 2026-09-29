@@ -2,15 +2,15 @@
 
 Flashcard Reels keeps app preferences separate from deck content. Preferences cover:
 
-- Light, Dark, or Device appearance;
+- Light, Dark, or Device color mode;
 - Study Island position and rating direction;
 - contextual audio placement and audio enabled/disabled;
 - contextual reading placement and reading enabled/disabled;
 - haptics enabled/disabled.
 
-Preferences are stored locally and validated when loaded. Missing or invalid values fall back to the app defaults.
+Preferences use the local `flashcard-reels.preferences.v2` storage key and are validated when loaded. Missing or invalid values fall back to the app defaults.
 
-## Appearance
+## Color mode
 
 The application theme controls navigation, sheets, settings, controls, overlays, and status-bar treatment. Decks use their own selected appearance preset, with paired light and dark variants, so changing the app theme does not change deck identity.
 
