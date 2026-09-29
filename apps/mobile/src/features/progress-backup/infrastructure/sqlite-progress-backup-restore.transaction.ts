@@ -6,6 +6,7 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 import {
   deckProgress,
   decks,
+  flashcards,
   flashcardMemoryStates,
   flashcardProgress,
   progressBackupState,
@@ -33,6 +34,27 @@ export class SQLiteProgressBackupRestoreTransaction<
         .from(decks)
         .all();
       const installedById = new Map(installedDecks.map((deck) => [deck.id, deck]));
+
+      // Backup identities must agree with installed content before any learner state is removed.
+      const installedCardOwners = new Map(
+        transaction
+          .select({ id: flashcards.id, deckId: flashcards.deckId })
+          .from(flashcards)
+          .all()
+          .map((card) => [card.id, card.deckId])
+      );
+      for (const rows of [
+        document.flashcardProgress,
+        document.flashcardMemoryStates,
+        document.flashcardReviewEvents,
+      ]) {
+        for (const row of rows) {
+          const owner = installedCardOwners.get(row.flashcardId);
+          if (owner !== undefined && owner !== row.deckId) {
+            throw new Error(`Flashcard ${row.flashcardId} already belongs to deck ${owner}`);
+          }
+        }
+      }
 
       // Removing sessions first cascades through attempts, items, and recurrences.
       transaction.delete(studySessions).run();

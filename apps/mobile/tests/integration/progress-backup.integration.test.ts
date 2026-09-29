@@ -28,6 +28,7 @@ import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, seedDeck } from "../support/sqlite-study-scenario";
 import {
   makeSession,
+  OTHER_DECK_ID,
   SequenceIdGenerator,
   TEST_DECK_ID,
   TestClock,
@@ -756,5 +757,42 @@ describe("progress backup", () => {
     ).rejects.toThrow();
     const remainingEvents = await target.drizzle.select().from(flashcardReviewEvents);
     expect(remainingEvents.map((event) => event.id)).toEqual([testId(950)]);
+  });
+
+  it("rejects a backup that assigns an installed card to another deck and preserves local learning", async () => {
+    const database = createDatabase();
+    const incoming = loadDeviceFixture();
+    const cardId = firstRow(incoming.flashcardProgress).flashcardId;
+    await seedDeck(database, OTHER_DECK_ID, [cardId]);
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("focus", OTHER_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(cardId, 0, session.id);
+    await graph.study.rateAttempt(attemptId, "easy");
+    await graph.study.completeSession(session.id);
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const before = await query.read(clock.now());
+    const files = new MemoryBackupFiles();
+    files.picked = JSON.stringify(incoming);
+    const backup = new ProgressBackupServiceImpl(
+      graph.study,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+      files,
+      clock
+    );
+    const prepared = await backup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Expected a prepared restore");
+    }
+
+    await expect(backup.restore(prepared)).rejects.toMatchObject({
+      code: "PROGRESS_BACKUP_RESTORE_FAILED",
+    });
+    expect(await query.read(before.exportedAt)).toEqual(before);
+    const retainedSession = await graph.sessions.findById(session.id);
+    expect(retainedSession?.completedAt).not.toBeNull();
+    expect(await backup.hasSafetyCopy()).toBe(false);
+    expect(files.copies.size).toBe(0);
   });
 });
