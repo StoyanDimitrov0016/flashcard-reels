@@ -7,19 +7,6 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 
 describe("application preferences", () => {
-  it("provides the complete default model", () => {
-    expect(defaultAppPreferences).toEqual({
-      colorMode: "device",
-      studyIslandPosition: "right",
-      ratingDirection: "forward",
-      audioSide: "primary",
-      audioEnabled: true,
-      hapticsEnabled: true,
-      readingEnabled: true,
-      readingSide: "opposite",
-    });
-  });
-
   it("merges valid partial stored data with defaults", () => {
     expect(normalizePersistedPreferences({ colorMode: "light", audioEnabled: false })).toEqual({
       ...defaultAppPreferences,

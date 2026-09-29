@@ -1,14 +1,13 @@
 import type { Rating } from "@/features/learning-engine/domain/rating";
 import type {
   AppPreferences,
-  AudioSide,
   ControlSide,
   RatingDirection,
   StudyIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
 
-export type StudyControlOrientation = "horizontal" | "vertical";
-export type StudyControlAudioPosition = "left" | "right" | "above" | "below";
+type StudyControlOrientation = "horizontal" | "vertical";
+type StudyControlAudioPosition = "left" | "right" | "above" | "below";
 export type StudyControlPlacement = StudyControlAudioPosition;
 
 export type ResolvedStudyControlLayout = Readonly<{
@@ -24,11 +23,11 @@ export type ResolvedStudyControlLayout = Readonly<{
 const canonicalRatingOrder: readonly Rating[] = ["again", "hard", "good", "easy"];
 const reverseRatingOrder: readonly Rating[] = ["easy", "good", "hard", "again"];
 
-export function deriveIslandOrientation(position: StudyIslandPosition): StudyControlOrientation {
+function deriveIslandOrientation(position: StudyIslandPosition): StudyControlOrientation {
   return position === "bottom" ? "horizontal" : "vertical";
 }
 
-export function deriveRatingOrder(direction: RatingDirection): readonly Rating[] {
+function deriveRatingOrder(direction: RatingDirection): readonly Rating[] {
   return direction === "forward" ? canonicalRatingOrder : reverseRatingOrder;
 }
 
@@ -41,13 +40,6 @@ export function deriveControlPlacement(
     return side === "primary" ? "left" : "right";
   }
   return side === "primary" ? "above" : "below";
-}
-
-export function deriveAudioPosition(
-  islandPosition: StudyIslandPosition,
-  audioSide: AudioSide
-): StudyControlAudioPosition {
-  return deriveControlPlacement(islandPosition, audioSide);
 }
 
 export function isBeforeRatings(placement: StudyControlPlacement): boolean {
@@ -67,7 +59,7 @@ export function resolveStudyControlLayout(
 ): ResolvedStudyControlLayout {
   return {
     audioEnabled: preferences.audioEnabled,
-    audioPosition: deriveAudioPosition(preferences.studyIslandPosition, preferences.audioSide),
+    audioPosition: deriveControlPlacement(preferences.studyIslandPosition, preferences.audioSide),
     orientation: deriveIslandOrientation(preferences.studyIslandPosition),
     position: preferences.studyIslandPosition,
     ratingOrder: deriveRatingOrder(preferences.ratingDirection),
@@ -96,8 +88,4 @@ export function getControlSideLabel(islandPosition: StudyIslandPosition, side: C
     return side === "primary" ? "Left" : "Right";
   }
   return side === "primary" ? "Top" : "Bottom";
-}
-
-export function getAudioSideLabel(islandPosition: StudyIslandPosition, audioSide: AudioSide) {
-  return getControlSideLabel(islandPosition, audioSide);
 }
