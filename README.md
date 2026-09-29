@@ -21,14 +21,19 @@ The Vercel site is currently for internal use and requires the shared team passw
 
 ## Run locally
 
-You need Node.js 24, npm 11+, and the Expo Go app or a supported simulator.
+You need the Node.js and npm versions pinned by the repository (`24.15.0` and `12.0.2`), plus the
+Expo Go app or a supported simulator for mobile development.
 
 ```bash
-npm install
+npm ci
 npm run dev:mobile
 ```
 
-Scan the QR code with Expo Go, or press `a`, `i`, or `w` to open Android, iOS, or the mobile web target.
+Scan the QR code with Expo Go, or press `a` or `i` to open Android or iOS. The Expo browser target
+currently has an SDK 57 `expo-sqlite` worker-bundling issue documented in the local setup guide.
+
+See [Local setup](docs/setup.md) for complete dependency installation, web environment setup,
+physical-device instructions, and Android/iOS emulator installation.
 
 To run the Vercel portal locally, configure its server-only environment variables first, then run:
 
@@ -57,6 +62,7 @@ manual device checklist.
 - [Architecture](docs/architecture.md)
 - [Deck package format](docs/deck-packages.md)
 - [Development guide](docs/development.md)
+- [Local setup](docs/setup.md)
 - [Audio generation](docs/audio-generation.md)
 - [Android manual testing](docs/manual-device-testing.md)
 
