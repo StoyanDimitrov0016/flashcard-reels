@@ -1,6 +1,6 @@
 # Maestro Android device testing on this machine
 
-The scenarios live in `apps/mobile/.maestro`. Three cover continuing saved progress after reinstalling a deck, deleting saved progress to start fresh, and deleting progress from the archive. A fourth checks the full app data reset confirmation sheet and cancels it without resetting data. A fifth imports a progress backup and opens the native export share sheet. The versioned test deck includes an audio fixture, so the flows need no audio generation.
+The scenarios live in `apps/mobile/.maestro`. Three cover continuing saved progress after reinstalling a deck, deleting saved progress to start fresh, and deleting progress from the archive. A fourth checks the full app data reset confirmation sheet and cancels it without resetting data. A fifth imports a progress backup and opens the native export share sheet. A sixth checks archived and continued progress across cold app launches. The versioned test deck includes an audio fixture, so the flows need no audio generation.
 
 ## Working local setup (September 23, 2026)
 
@@ -26,7 +26,7 @@ $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 ./apps/mobile/scripts/run-maestro.ps1 -ApkPath ./apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-The runner boots the emulator, installs the APK, generates the deck package, copies it and the progress backup fixture to Android Downloads, and runs all five flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
+The runner boots the emulator, installs the APK, generates the deck package, copies it and the progress backup fixture to Android Downloads, and runs all six flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
 
 ## Findings from the first device runs
 
@@ -37,3 +37,7 @@ The runner boots the emulator, installs the APK, generates the deck package, cop
 - A default upward swipe did not reliably advance the feed. The study subflow now swipes from `78%` to `22%` over 650 ms and checks that the next question face appears.
 
 All five flows passed on September 24. The native pager dependency had been removed after the first device run because static dead-code analysis did not see its indirect native use; it is now a direct dependency again and explicitly exempted from that check. The reset confirmation initially appeared to fail after Cancel because its unescaped `?` selector also matched the page's reset button; the sheet itself closed correctly, and the corrected assertion passed. A system theme provider now covers the root startup and recovery screens so their reset sheet can render before preferences initialize.
+
+## October 1 integration review
+
+The rating selector is now `Recall rating: Good`, and the runner includes the new cold-launch scenario. These changes need a fresh device run. The review environment could export the Android bundle and pass Expo Doctor, but had no Android SDK, Java, Maestro, or the documented emulator. The September results above describe the earlier five flows only.
