@@ -217,7 +217,7 @@ describe("archived deck progress", () => {
     await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     expect(
       await new SQLiteDismissedBundledDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)
-    ).toBe(true);
+    ).toBe(false);
     await new SQLiteDeckPackageInstallationTransaction(
       database.drizzle,
       new SequenceIdGenerator()

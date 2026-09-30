@@ -6,6 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
+import bundledDeckRegistry from "@/infrastructure/bundled-deck-registry.json";
 import {
   deckThemeSelections,
   decks,
@@ -29,11 +30,13 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
 
   async remove(id: DeckId): Promise<void> {
     this.database.transaction((transaction) => {
-      transaction
-        .insert(dismissedBundledDecks)
-        .values({ id: this.idGenerator.generate(), deckId: id })
-        .onConflictDoNothing()
-        .run();
+      if (bundledDeckRegistry.some((deck) => deck.id === id)) {
+        transaction
+          .insert(dismissedBundledDecks)
+          .values({ id: this.idGenerator.generate(), deckId: id })
+          .onConflictDoNothing()
+          .run();
+      }
       new SQLiteDeckLearnerData(transaction).archive(id);
       const cardIds = transaction
         .select({ id: flashcards.id })
