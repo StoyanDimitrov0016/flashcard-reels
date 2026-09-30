@@ -297,6 +297,55 @@ describe("deck publication review", () => {
         { [lessonId]: markdown }
       );
 
+    function withSectionLink(sectionId: string, revision = 1) {
+      return candidate(
+        deckDocument({
+          schema: 2,
+          lessons,
+          revision,
+          cards: deckCards().map((card, index) =>
+            Object.assign(card, {
+              lessonId,
+              lessonSectionId: index === 0 ? sectionId : null,
+            })
+          ),
+        }),
+        "Scaling.fcrdeck",
+        {},
+        {
+          [lessonId]:
+            "# Why scale\n## Vertical scaling\nAdd resources.\n## Horizontal scaling\nAdd machines.",
+        }
+      );
+    }
+
+    it("reports a card as changed when its lesson section link changes", async () => {
+      const result = await review(
+        storeWith(withSectionLink("vertical-scaling")),
+        withSectionLink("horizontal-scaling", 2)
+      );
+
+      expect(result.decks[0]).toMatchObject({
+        changedCards: [{ id: cardIds[0], question: "What is vertical scaling?" }],
+        changedLessons: [],
+        status: "updated",
+      });
+      expect(canPublish(result)).toBe(true);
+    });
+
+    it("does not report a card as changed when its lesson section link is unchanged", async () => {
+      const result = await review(
+        storeWith(withSectionLink("vertical-scaling")),
+        withSectionLink("vertical-scaling")
+      );
+
+      expect(result.decks[0]).toMatchObject({
+        changedCards: [],
+        changedLessons: [],
+        status: "unchanged",
+      });
+    });
+
     it("blocks edited lesson content that keeps the published revision", async () => {
       const result = await review(storeWith(withLesson("Original")), withLesson("Edited"));
 
