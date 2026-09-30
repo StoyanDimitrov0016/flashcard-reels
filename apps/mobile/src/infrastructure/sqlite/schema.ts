@@ -48,6 +48,7 @@ export const flashcards = sqliteTable(
     question: text("question").notNull(),
     answer: text("answer").notNull(),
     lessonId: text("lesson_id"),
+    lessonSectionId: text("lesson_section_id"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },

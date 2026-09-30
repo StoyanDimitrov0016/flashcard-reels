@@ -49,6 +49,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
       .values({
         answer: flashcard.answer,
         lessonId: flashcard.lessonId,
+        lessonSectionId: flashcard.lessonSectionId ?? null,
         createdAt: flashcard.createdAt,
         deckId: flashcard.deckId,
         order: flashcard.order,
@@ -62,6 +63,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
         set: {
           answer: flashcard.answer,
           lessonId: flashcard.lessonId,
+          lessonSectionId: flashcard.lessonSectionId ?? null,
           deckId: flashcard.deckId,
           order: flashcard.order,
           active: flashcard.active,
@@ -75,6 +77,7 @@ export class SQLiteFlashcardRepository<TRunResult = unknown> implements Flashcar
     return new Flashcard({
       answer: row.answer,
       lessonId: row.lessonId,
+      lessonSectionId: row.lessonSectionId ?? null,
       createdAt: row.createdAt,
       deckId: row.deckId,
       order: row.order,

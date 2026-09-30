@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "dc729a84-593a-44ab-b347-509ab7a34532",
+  "id": "93c6ed61-adb7-43d0-af1d-df29b4ac7e92",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_progress": {
@@ -790,6 +790,13 @@
         },
         "lesson_id": {
           "name": "lesson_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lesson_section_id": {
+          "name": "lesson_section_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -13,7 +13,7 @@ import { AppError } from "@/shared/errors/app-error";
 
 import migrations from "../../../drizzle/migrations";
 
-export const DATABASE_NAME = "flashcard-reels-v5.db";
+export const DATABASE_NAME = "flashcard-reels-v6.db";
 
 type StartupPhase =
   | "configuring the database"

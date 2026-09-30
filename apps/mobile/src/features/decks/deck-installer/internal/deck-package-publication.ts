@@ -20,6 +20,7 @@ function toPublicationDeckPackage(deckPackage: DeckPackage): PublicationDeckPack
       question: card.question,
       answer: card.answer,
       lessonId: card.lessonId,
+      lessonSectionId: card.lessonSectionId ?? null,
       audio: card.audio,
       createdAt: card.createdAt,
       updatedAt: card.updatedAt,
@@ -371,7 +372,8 @@ function compareDecks(
       ({ card, publishedCard }) =>
         card.question !== publishedCard.question ||
         card.answer !== publishedCard.answer ||
-        card.lessonId !== publishedCard.lessonId
+        card.lessonId !== publishedCard.lessonId ||
+        (card.lessonSectionId ?? null) !== (publishedCard.lessonSectionId ?? null)
     )
     .map(({ card }) => card);
   const reorderedCardCount = keptCards.filter(

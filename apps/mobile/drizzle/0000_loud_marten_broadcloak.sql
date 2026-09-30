@@ -125,6 +125,7 @@ CREATE TABLE `flashcards` (
 	`question` text NOT NULL,
 	`answer` text NOT NULL,
 	`lesson_id` text,
+	`lesson_section_id` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,

@@ -9,6 +9,7 @@ export type FlashcardFields = Readonly<{
   question: string;
   answer: string;
   lessonId: Uuid | null;
+  lessonSectionId?: string | null;
   createdAt: string;
   updatedAt: string;
 }>;
@@ -23,6 +24,7 @@ export class Flashcard {
   public readonly question: string;
   public readonly answer: string;
   public readonly lessonId: Uuid | null;
+  public readonly lessonSectionId: string | null;
   public readonly createdAt: string;
   public readonly updatedAt: string;
 
@@ -34,6 +36,7 @@ export class Flashcard {
     this.question = fields.question;
     this.answer = fields.answer;
     this.lessonId = fields.lessonId;
+    this.lessonSectionId = fields.lessonSectionId ?? null;
     this.createdAt = fields.createdAt;
     this.updatedAt = fields.updatedAt;
   }

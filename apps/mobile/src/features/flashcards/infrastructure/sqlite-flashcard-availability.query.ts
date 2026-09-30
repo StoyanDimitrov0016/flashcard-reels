@@ -52,6 +52,7 @@ function toModel(row: typeof flashcards.$inferSelect): Flashcard {
   return new Flashcard({
     answer: row.answer,
     lessonId: row.lessonId,
+    lessonSectionId: row.lessonSectionId ?? null,
     createdAt: row.createdAt,
     deckId: row.deckId,
     order: row.order,
