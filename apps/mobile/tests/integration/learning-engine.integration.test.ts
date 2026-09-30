@@ -83,8 +83,8 @@ describe("SQLite learning-engine commit", () => {
     const attempt = await createAttempt(901);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
 
-    await rating.rateAttempt(attempt.id, "again", RATED_AT_AGAIN, null, null);
-    await rating.rateAttempt(attempt.id, "hard", RATED_AT_HARD, null, null);
+    await rating.rateAttempt(attempt.id, "again", RATED_AT_AGAIN);
+    await rating.rateAttempt(attempt.id, "hard", RATED_AT_HARD);
 
     expect(await memoryStates.findByFlashcardId(attempt.flashcardId)).toBeNull();
 
@@ -113,7 +113,7 @@ describe("SQLite learning-engine commit", () => {
   it("is idempotent and preserves all persisted FSRS fields across reconstruction", async () => {
     const attempt = await createAttempt(903);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await rating.rateAttempt(attempt.id, "good", RATED_AT_AGAIN, null, null);
+    await rating.rateAttempt(attempt.id, "good", RATED_AT_AGAIN);
 
     await expect(commit.commitAttempt(attempt.id, COMMITTED_AT, COMMITTED_AT)).resolves.toBe(true);
     const first = await memoryStates.findByFlashcardId(attempt.flashcardId);
@@ -129,7 +129,7 @@ describe("SQLite learning-engine commit", () => {
   it("commits rated attempts when a study session completes", async () => {
     const attempt = await createAttempt(904);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await rating.rateAttempt(attempt.id, "easy", RATED_AT_AGAIN, null, null);
+    await rating.rateAttempt(attempt.id, "easy", RATED_AT_AGAIN);
 
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     await graph.study.completeSession(testId(900));
@@ -145,11 +145,11 @@ describe("SQLite learning-engine commit", () => {
   it("carries a committed Again into the next FSRS lapse transition", async () => {
     const firstAttempt = await createAttempt(905);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await rating.rateAttempt(firstAttempt.id, "good", RATED_AT_AGAIN, null, null);
+    await rating.rateAttempt(firstAttempt.id, "good", RATED_AT_AGAIN);
     await commit.commitAttempt(firstAttempt.id, COMMITTED_AT, COMMITTED_AT);
 
     const secondAttempt = await createAttempt(906);
-    await rating.rateAttempt(secondAttempt.id, "again", "2026-01-02T00:01:00.000Z", null, null);
+    await rating.rateAttempt(secondAttempt.id, "again", "2026-01-02T00:01:00.000Z");
     await commit.commitAttempt(
       secondAttempt.id,
       "2026-01-02T00:02:00.000Z",
@@ -230,8 +230,8 @@ describe("SQLite learning-engine commit", () => {
     const laterRatingAt = "2026-01-01T00:01:00.000Z";
     const earlierRatingAt = "2026-01-01T00:02:00.000Z";
 
-    await rating.rateAttempt(laterReelAttempt.id, "good", laterRatingAt, null, null);
-    await rating.rateAttempt(earlierReelAttempt.id, "again", earlierRatingAt, null, null);
+    await rating.rateAttempt(laterReelAttempt.id, "good", laterRatingAt);
+    await rating.rateAttempt(earlierReelAttempt.id, "again", earlierRatingAt);
 
     const scheduler = createLearningScheduler();
     const firstExpected = scheduler.review(
@@ -260,9 +260,9 @@ describe("SQLite learning-engine commit", () => {
     const secondRatingAt = "2026-01-01T00:02:00.000Z";
     const thirdRatingAt = "2026-01-01T00:03:00.000Z";
 
-    await rating.rateAttempt(thirdReelAttempt.id, "good", firstRatingAt, null, null);
-    await rating.rateAttempt(firstReelAttempt.id, "hard", secondRatingAt, null, null);
-    await rating.rateAttempt(secondReelAttempt.id, "easy", thirdRatingAt, null, null);
+    await rating.rateAttempt(thirdReelAttempt.id, "good", firstRatingAt);
+    await rating.rateAttempt(firstReelAttempt.id, "hard", secondRatingAt);
+    await rating.rateAttempt(secondReelAttempt.id, "easy", thirdRatingAt);
 
     const scheduler = createLearningScheduler();
     const afterGood = scheduler.review(
@@ -288,8 +288,8 @@ describe("SQLite learning-engine commit", () => {
     const laterRatingAt = "2026-01-01T00:01:00.000Z";
     const earlierRatingAt = "2026-01-01T00:02:00.000Z";
 
-    await rating.rateAttempt(laterReelAttempt.id, "good", laterRatingAt, null, null);
-    await rating.rateAttempt(earlierReelAttempt.id, "again", earlierRatingAt, null, null);
+    await rating.rateAttempt(laterReelAttempt.id, "good", laterRatingAt);
+    await rating.rateAttempt(earlierReelAttempt.id, "again", earlierRatingAt);
 
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     await graph.study.updateSessionReelPosition(testId(900), 5);
@@ -322,8 +322,8 @@ describe("SQLite learning-engine commit", () => {
     const firstAttempt = await createAttempt(914, 0);
     const secondAttempt = await createAttempt(915, 1);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await rating.rateAttempt(firstAttempt.id, "good", "2026-01-01T00:01:00.000Z", null, null);
-    await rating.rateAttempt(secondAttempt.id, "hard", "2026-01-01T00:02:00.000Z", null, null);
+    await rating.rateAttempt(firstAttempt.id, "good", "2026-01-01T00:01:00.000Z");
+    await rating.rateAttempt(secondAttempt.id, "hard", "2026-01-01T00:02:00.000Z");
     const trackingCommit = new TrackingCommitTransaction(
       new SQLiteReviewAttemptCommitTransaction(
         database.drizzle,
@@ -398,7 +398,7 @@ describe("SQLite learning-engine commit", () => {
     const skippedAttempt = await createAttempt(916, 0);
     const ratedAttempt = await createAttempt(917, 1);
     const rating = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await rating.rateAttempt(ratedAttempt.id, "good", "2026-01-01T00:01:00.000Z", null, null);
+    await rating.rateAttempt(ratedAttempt.id, "good", "2026-01-01T00:01:00.000Z");
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
 
     await graph.study.updateSessionReelPosition(testId(900), 5);

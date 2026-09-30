@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
 
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
 import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
@@ -7,6 +7,14 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { isFirstReviewOnLocalDay } from "@/features/learning-engine/domain/review-day";
 import {
+  calculateRecurrenceTarget,
+  findNextFreeRecurrenceSlot,
+  type RandomSource,
+} from "@/features/study/domain/recurrences";
+import {
+  studySessions,
+  studySessionRecurrences,
+  studySessionReels,
   deckProgress,
   decks,
   flashcardMemoryStates,
@@ -32,7 +40,12 @@ export class SQLiteReviewAttemptCommitTransaction<
     this.scheduler = scheduler;
   }
 
-  async commitAttempt(attemptId: string, committedAt: string, updatedAt: string): Promise<boolean> {
+  async commitAttempt(
+    attemptId: string,
+    committedAt: string,
+    updatedAt: string,
+    random: RandomSource = Math.random
+  ): Promise<boolean> {
     return this.database.transaction((transaction) => {
       const rows = transaction
         .select()
@@ -130,6 +143,58 @@ export class SQLiteReviewAttemptCommitTransaction<
             },
           })
           .run();
+      }
+
+      if (attempt.rating !== null) {
+        const proposed = calculateRecurrenceTarget(attempt.reelPosition, attempt.rating, random);
+        if (proposed !== null) {
+          const session = transaction
+            .select({ furthest: studySessions.furthestReelPosition })
+            .from(studySessions)
+            .where(eq(studySessions.id, attempt.studySessionId))
+            .get();
+          if (!session) {
+            throw new Error(`Missing study session ${attempt.studySessionId} for review commit`);
+          }
+          const minimumTarget = Math.max(proposed, session.furthest + 1);
+          const recurrences = transaction
+            .select({ position: studySessionRecurrences.targetReelPosition })
+            .from(studySessionRecurrences)
+            .where(
+              and(
+                eq(studySessionRecurrences.studySessionId, attempt.studySessionId),
+                isNull(studySessionRecurrences.consumedAt),
+                gte(studySessionRecurrences.targetReelPosition, minimumTarget)
+              )
+            )
+            .all();
+          const reels = transaction
+            .select({ position: studySessionReels.reelPosition })
+            .from(studySessionReels)
+            .where(
+              and(
+                eq(studySessionReels.studySessionId, attempt.studySessionId),
+                gte(studySessionReels.reelPosition, minimumTarget)
+              )
+            )
+            .all();
+          const targetReelPosition = findNextFreeRecurrenceSlot(
+            minimumTarget,
+            new Set([...recurrences, ...reels].map((row) => row.position))
+          );
+          transaction
+            .insert(studySessionRecurrences)
+            .values({
+              id: this.idGenerator.generate(),
+              studySessionId: attempt.studySessionId,
+              flashcardId: attempt.flashcardId,
+              flashcardReviewAttemptId: attempt.id,
+              targetReelPosition,
+              createdAt: committedAt,
+              consumedAt: null,
+            })
+            .run();
+        }
       }
 
       const committed = transaction

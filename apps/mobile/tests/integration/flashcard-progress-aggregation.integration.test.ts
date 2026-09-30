@@ -92,20 +92,8 @@ describe("SQLite flashcard-progress aggregation", () => {
     await createAttempt(session.id, 4, null, "2026-01-01T00:05:00.000Z");
     const editable = await createAttempt(session.id, 5, null, null);
     const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "again",
-      "2026-01-01T00:06:00.000Z",
-      null,
-      null
-    );
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "good",
-      "2026-01-01T00:07:00.000Z",
-      null,
-      null
-    );
+    await ratingTransaction.rateAttempt(editable.id, "again", "2026-01-01T00:06:00.000Z");
+    await ratingTransaction.rateAttempt(editable.id, "good", "2026-01-01T00:07:00.000Z");
     await commit.commitAttempt(editable.id, "2026-01-01T00:08:00.000Z", "2026-01-01T00:08:00.000Z");
 
     await expect(aggregation.aggregate(session.id, 5, "2026-01-01T00:09:00.000Z")).resolves.toEqual(
@@ -193,20 +181,8 @@ describe("SQLite flashcard-progress aggregation", () => {
     await sessions.create(session);
     const editable = await createAttempt(session.id, 0, null, null);
     const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "again",
-      "2026-01-01T00:01:00.000Z",
-      null,
-      null
-    );
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "good",
-      "2026-01-01T00:02:00.000Z",
-      null,
-      null
-    );
+    await ratingTransaction.rateAttempt(editable.id, "again", "2026-01-01T00:01:00.000Z");
+    await ratingTransaction.rateAttempt(editable.id, "good", "2026-01-01T00:02:00.000Z");
     expect(await attempts.findById(editable.id)).toMatchObject({
       ratedAt: "2026-01-01T00:02:00.000Z",
       rating: "good",
@@ -229,9 +205,7 @@ describe("SQLite flashcard-progress aggregation", () => {
     await new SQLiteReviewAttemptTransaction(database.drizzle).rateAttempt(
       later.id,
       "easy",
-      "2026-01-01T00:06:00.000Z",
-      null,
-      null
+      "2026-01-01T00:06:00.000Z"
     );
     await new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,

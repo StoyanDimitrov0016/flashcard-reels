@@ -72,6 +72,54 @@ describe("SQLite study sessions", () => {
 
   afterEach(() => database.close());
 
+  it.each(["again", "hard", "good", "easy"] as const)(
+    "schedules recurrences only when %s commits",
+    async (rating) => {
+      const { session } = await graph.study.openSession("focus", TEST_DECK_ID, false);
+      const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, session.id);
+      await graph.study.rateAttempt(attemptId, rating);
+      expect(await graph.recurrences.listBySessionId(session.id)).toEqual([]);
+      await graph.study.commitAttempt(attemptId);
+      const scheduled = await graph.recurrences.listBySessionId(session.id);
+      expect(scheduled).toHaveLength(rating === "again" || rating === "hard" ? 1 : 0);
+      if (scheduled[0]) {
+        expect(scheduled[0].targetReelPosition).toBe(rating === "again" ? 6 : 12);
+        expect(scheduled[0].targetReelPosition).toBeGreaterThan(session.furthestReelPosition);
+      }
+      await graph.study.commitAttempt(attemptId);
+      expect(await graph.recurrences.listBySessionId(session.id)).toEqual(scheduled);
+    }
+  );
+
+  it("schedules none after Again changes to Good inside the editable window", async () => {
+    const { session } = await graph.study.openSession("focus", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, session.id);
+    await graph.study.rateAttempt(attemptId, "again");
+    expect(await graph.recurrences.listBySessionId(session.id)).toEqual([]);
+    await graph.study.rateAttempt(attemptId, "good");
+    expect(await graph.recurrences.listBySessionId(session.id)).toEqual([]);
+    await graph.study.commitAttempt(attemptId);
+    expect(await graph.recurrences.listBySessionId(session.id)).toEqual([]);
+    const committed = await graph.attempts.findById(attemptId);
+    expect(committed?.rating).toBe("good");
+    expect(typeof committed?.committedAt).toBe("string");
+  });
+
+  it("places committed recurrences after the furthest reel even after backtracking", async () => {
+    const { session } = await graph.study.openSession("focus", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(at(focusCards, 0).id, 0, session.id);
+    await graph.study.rateAttempt(attemptId, "again");
+    await graph.study.updateSessionReelPosition(session.id, 40);
+    await graph.study.updateSessionReelPosition(session.id, 1);
+    await graph.study.commitAttemptsOutsideEditableWindow(session.id);
+    const recurrence = at(await graph.recurrences.listBySessionId(session.id), 0);
+    expect(recurrence.targetReelPosition).toBe(41);
+    expect(await graph.sessions.findById(session.id)).toMatchObject({
+      currentReelPosition: 1,
+      furthestReelPosition: 40,
+    });
+  });
+
   it("preserves a Focus journey through recurrence, aggregation, and restart", async () => {
     const opened = await graph.feed.prepareFeed(focusCards, "focus", TEST_DECK_ID, false, null);
     expect(opened.occurrences.map((item) => item.reelPosition)).toEqual([0, 1, 2, 3, 4, 5]);
@@ -89,6 +137,7 @@ describe("SQLite study sessions", () => {
     expect(await graph.study.rateAttempt(again, "again")).toBe(true);
     expect(await graph.study.rateAttempt(good, "good")).toBe(true);
 
+    await graph.study.commitAttempt(again);
     const recurrence = at(await graph.recurrences.listBySessionId(opened.studySessionId), 0);
     expect(recurrence.targetReelPosition).toBe(6);
     await graph.feed.extendFeed(focusCards, opened.studySessionId);
@@ -134,6 +183,7 @@ describe("SQLite study sessions", () => {
     const pendingCard = at(focusCards, 1);
     const firstAttempt = await graph.study.startAttempt(firstCard.id, 0, opened.studySessionId);
     await graph.study.rateAttempt(firstAttempt, "again");
+    await graph.study.commitAttempt(firstAttempt);
     const initialRecurrences = await graph.recurrences.listBySessionId(opened.studySessionId);
     const consumedRecurrence = at(initialRecurrences, 0);
     await graph.study.consumeRecurrence(consumedRecurrence.id);
@@ -144,6 +194,7 @@ describe("SQLite study sessions", () => {
       opened.studySessionId
     );
     await graph.study.rateAttempt(pendingAttempt, "again");
+    await graph.study.commitAttempt(pendingAttempt);
     const scheduledRecurrences = await graph.recurrences.listBySessionId(opened.studySessionId);
     const pendingRecurrence = at(
       scheduledRecurrences.filter(

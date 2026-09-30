@@ -415,9 +415,9 @@ describe("SQLite study persistence", () => {
     ).commitAttempt(attempt.id, "2026-01-01T00:01:00.000Z", "2026-01-01T00:01:00.000Z");
 
     const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-    expect(
-      await transaction.rateAttempt(attempt.id, "good", "2026-01-01T00:02:00.000Z", null, null)
-    ).toBe(false);
+    expect(await transaction.rateAttempt(attempt.id, "good", "2026-01-01T00:02:00.000Z")).toBe(
+      false
+    );
     const committedAttempt = await attempts.findById(attempt.id);
     expect(committedAttempt?.rating).toBeNull();
   });
@@ -477,7 +477,7 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
   });
 
-  it("rolls back the rating when its recurrence write fails", async () => {
+  it("rolls back the review commit when its recurrence write fails", async () => {
     const session = makeSession(testId(235), "discover");
     await sessions.create(session);
     const attempt = new FlashcardReviewAttempt({
@@ -491,29 +491,28 @@ describe("SQLite study persistence", () => {
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
     await attemptTransaction.createAttempt(attempt);
-    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-
+    await attemptTransaction.rateAttempt(attempt.id, "again", "2026-01-01T00:01:00.000Z");
+    await database.runAsync(
+      "CREATE TRIGGER reject_recurrences BEFORE INSERT ON study_session_recurrences BEGIN SELECT RAISE(ABORT, 'recurrence write failed'); END"
+    );
+    const transaction = new SQLiteReviewAttemptCommitTransaction(
+      database.drizzle,
+      createLearningScheduler(),
+      database.rowIds
+    );
     await expect(
-      transaction.rateAttempt(
+      transaction.commitAttempt(
         attempt.id,
-        "again",
-        "2026-01-01T00:01:00.000Z",
-        new StudySessionRecurrence({
-          consumedAt: null,
-          createdAt: "2026-01-01T00:01:00.000Z",
-          flashcardId: attempt.flashcardId,
-          id: testId(237),
-          flashcardReviewAttemptId: testId(238),
-          studySessionId: session.id,
-          targetReelPosition: 8,
-        }),
-        8
+        "2026-01-01T00:02:00.000Z",
+        "2026-01-01T00:02:00.000Z",
+        () => 0.4
       )
-    ).rejects.toThrow();
-
+    ).rejects.toThrow("recurrence write failed");
     const rolledBackAttempt = await attempts.findById(attempt.id);
-    expect(rolledBackAttempt?.rating).toBeNull();
+    expect(rolledBackAttempt).toMatchObject({ rating: "again", committedAt: null });
     expect(await recurrences.listBySessionId(session.id)).toEqual([]);
+    expect(await database.getAllAsync("SELECT * FROM flashcard_review_events")).toEqual([]);
+    expect(await database.getAllAsync("SELECT * FROM flashcard_memory_states")).toEqual([]);
   });
 
   it("moves recurrence targets past committed base reels without changing them", async () => {
@@ -542,19 +541,21 @@ describe("SQLite study persistence", () => {
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
     await attemptTransaction.createAttempt(attempt);
-    const recurrence = new StudySessionRecurrence({
-      consumedAt: null,
-      createdAt: "2026-01-01T00:01:00.000Z",
-      flashcardId: attempt.flashcardId,
-      id: testId(353),
-      flashcardReviewAttemptId: attempt.id,
-      studySessionId: session.id,
-      targetReelPosition: 8,
-    });
-
-    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
     expect(
-      await transaction.rateAttempt(attempt.id, "again", "2026-01-01T00:01:00.000Z", recurrence, 8)
+      await attemptTransaction.rateAttempt(attempt.id, "again", "2026-01-01T00:01:00.000Z")
+    ).toBe(true);
+    const transaction = new SQLiteReviewAttemptCommitTransaction(
+      database.drizzle,
+      createLearningScheduler(),
+      database.rowIds
+    );
+    expect(
+      await transaction.commitAttempt(
+        attempt.id,
+        "2026-01-01T00:02:00.000Z",
+        "2026-01-01T00:02:00.000Z",
+        () => 0.4
+      )
     ).toBe(true);
 
     const shiftedRecurrences = await recurrences.listBySessionId(session.id);
@@ -675,42 +676,25 @@ describe("SQLite study persistence", () => {
     await attemptTransaction.createAttempt(firstAttempt);
     await attemptTransaction.createAttempt(secondAttempt);
 
-    const firstRecurrence = new StudySessionRecurrence({
-      consumedAt: null,
-      createdAt: "2026-01-01T00:00:00.000Z",
-      flashcardId: firstAttempt.flashcardId,
-      id: testId(250),
-      flashcardReviewAttemptId: firstAttempt.id,
-      studySessionId: session.id,
-      targetReelPosition: 8,
-    });
-    const secondRecurrence = new StudySessionRecurrence({
-      consumedAt: null,
-      createdAt: "2026-01-01T00:00:00.000Z",
-      flashcardId: secondAttempt.flashcardId,
-      id: testId(251),
-      flashcardReviewAttemptId: secondAttempt.id,
-      studySessionId: session.id,
-      targetReelPosition: 8,
-    });
-
-    const transaction = new SQLiteReviewAttemptTransaction(database.drizzle);
+    const transaction = new SQLiteReviewAttemptCommitTransaction(
+      database.drizzle,
+      createLearningScheduler(),
+      database.rowIds
+    );
     expect(
-      await transaction.rateAttempt(
+      await transaction.commitAttempt(
         firstAttempt.id,
-        "again",
         "2026-01-01T00:01:00.000Z",
-        firstRecurrence,
-        8
+        "2026-01-01T00:01:00.000Z",
+        () => 0.4
       )
     ).toBe(true);
     expect(
-      await transaction.rateAttempt(
+      await transaction.commitAttempt(
         secondAttempt.id,
-        "again",
         "2026-01-01T00:01:00.000Z",
-        secondRecurrence,
-        8
+        "2026-01-01T00:01:00.000Z",
+        () => 0.2
       )
     ).toBe(true);
     const storedRecurrences = await recurrences.listBySessionId(session.id);

@@ -10,8 +10,10 @@ import type {
 } from "@/features/study/application/study-session-lifecycle-transaction";
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+import type { RandomSource } from "@/features/study/domain/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
+import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
@@ -27,7 +29,6 @@ import {
   orderReviewAttemptsForCommit,
 } from "@/features/study/application/review-attempt-commit-order";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
@@ -36,7 +37,6 @@ import {
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
-import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 
 export type OpenStudySession = OpenStudySessionResult;
@@ -441,31 +441,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     }
 
     const updatedAt = this.clock.now();
-    const proposedTargetReelPosition = calculateRecurrenceTarget(
-      attempt.reelPosition,
-      rating,
-      this.random
-    );
-    const recurrence =
-      proposedTargetReelPosition === null
-        ? null
-        : new StudySessionRecurrence({
-            consumedAt: null,
-            createdAt: updatedAt,
-            flashcardId: attempt.flashcardId,
-            id: this.idGenerator.generate(),
-            flashcardReviewAttemptId: attempt.id,
-            studySessionId: attempt.studySessionId,
-            targetReelPosition: proposedTargetReelPosition,
-          });
-
-    return this.reviewAttemptTransaction.rateAttempt(
-      attemptId,
-      rating,
-      updatedAt,
-      recurrence,
-      proposedTargetReelPosition
-    );
+    return this.reviewAttemptTransaction.rateAttempt(attemptId, rating, updatedAt);
   }
 
   async consumeRecurrence(recurrenceId: string): Promise<boolean> {
@@ -566,7 +542,12 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
 
   private async commitAttemptNow(attemptId: string): Promise<boolean> {
     const committedAt = this.clock.now();
-    return this.reviewAttemptCommitTransaction.commitAttempt(attemptId, committedAt, committedAt);
+    return this.reviewAttemptCommitTransaction.commitAttempt(
+      attemptId,
+      committedAt,
+      committedAt,
+      this.random
+    );
   }
 
   private async serializeCommit(
