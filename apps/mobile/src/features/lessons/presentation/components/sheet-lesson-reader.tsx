@@ -121,7 +121,6 @@ export function SheetLessonReader({
           <LessonMarkdownView
             blocks={blocks}
             targetSection={targetSection}
-            markerColor={accent}
             onTargetLayout={setTargetY}
             onDocumentLayout={setDocumentY}
           />
