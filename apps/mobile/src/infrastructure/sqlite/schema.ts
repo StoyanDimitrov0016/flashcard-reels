@@ -29,10 +29,7 @@ export const dismissedBundledDecks = sqliteTable("dismissed_bundled_decks", {
 
 export const deckThemeSelections = sqliteTable("deck_theme_selections", {
   id: text("id").primaryKey().notNull(),
-  deckId: text("deck_id")
-    .notNull()
-    .unique()
-    .references(() => decks.id, { onDelete: "cascade" }),
+  deckId: text("deck_id").notNull().unique(),
   theme: text("theme").notNull(),
 });
 

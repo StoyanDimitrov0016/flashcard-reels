@@ -8,7 +8,6 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import bundledDeckRegistry from "@/infrastructure/bundled-deck-registry.json";
 import {
-  deckThemeSelections,
   decks,
   flashcardReviewAttempts,
   flashcards,
@@ -61,7 +60,6 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
       }
       transaction.delete(flashcards).where(eq(flashcards.deckId, id)).run();
       transaction.delete(lessons).where(eq(lessons.deckId, id)).run();
-      transaction.delete(deckThemeSelections).where(eq(deckThemeSelections.deckId, id)).run();
       transaction.delete(decks).where(eq(decks.id, id)).run();
     });
   }

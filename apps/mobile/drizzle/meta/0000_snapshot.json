@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "93c6ed61-adb7-43d0-af1d-df29b4ac7e92",
+  "id": "c89d5ac3-5b23-452d-b1de-eccef2eceed9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_progress": {
@@ -98,21 +98,7 @@
           "isUnique": true
         }
       },
-      "foreignKeys": {
-        "deck_theme_selections_deck_id_decks_id_fk": {
-          "name": "deck_theme_selections_deck_id_decks_id_fk",
-          "tableFrom": "deck_theme_selections",
-          "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}

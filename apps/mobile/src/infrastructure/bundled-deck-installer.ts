@@ -42,16 +42,19 @@ export async function installBundledDecks(
     if (!shouldInstallBundledDeck(installedRevision, definition.revision)) {
       continue;
     }
+    const existingTheme = await themeSelectionRepository.findByDeckId(definition.id);
     const result = await installBundledPackage(await readBundledDeckPackage(definition));
     if (!shouldApplyBundledAppearance(result.status)) {
       continue;
     }
-    await themeSelectionRepository.save(
-      new DeckThemeSelection({
-        deckId: definition.id,
-        theme: definition.appearance.theme,
-      })
-    );
+    if (!existingTheme) {
+      await themeSelectionRepository.save(
+        new DeckThemeSelection({
+          deckId: definition.id,
+          theme: definition.appearance.theme,
+        })
+      );
+    }
     await deckRepository.updateCoverAsset(definition.id, definition.appearance.coverAsset);
   }
 }

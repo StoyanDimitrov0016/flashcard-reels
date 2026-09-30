@@ -11,8 +11,7 @@ CREATE UNIQUE INDEX `deck_progress_deck_id_unique` ON `deck_progress` (`deck_id`
 CREATE TABLE `deck_theme_selections` (
 	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
-	`theme` text NOT NULL,
-	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade
+	`theme` text NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `deck_theme_selections_deck_id_unique` ON `deck_theme_selections` (`deck_id`);--> statement-breakpoint

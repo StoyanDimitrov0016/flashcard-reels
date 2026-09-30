@@ -4,6 +4,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import {
   deckProgress,
+  deckThemeSelections,
   flashcardMemoryStates,
   flashcardProgress,
   flashcardReviewEvents,
@@ -59,5 +60,11 @@ export class SQLiteDeckLearnerData<TRunResult = unknown> {
 
   deleteLearnerData(deckId?: string): void {
     this.deleteLearningProgress(deckId);
+    const deletion = this.transaction.delete(deckThemeSelections);
+    if (deckId === undefined) {
+      deletion.run();
+    } else {
+      deletion.where(eq(deckThemeSelections.deckId, deckId)).run();
+    }
   }
 }

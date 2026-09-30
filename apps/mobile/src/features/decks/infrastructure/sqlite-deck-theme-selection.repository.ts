@@ -61,12 +61,9 @@ export class SQLiteDeckThemeSelectionRepository<
   }
 
   private toModel(row: typeof deckThemeSelections.$inferSelect): DeckThemeSelection {
-    if (!isDeckThemeId(row.theme)) {
-      throw new Error(`Unknown deck theme ${row.theme}`);
-    }
     return new DeckThemeSelection({
       deckId: row.deckId,
-      theme: row.theme,
+      theme: isDeckThemeId(row.theme) ? row.theme : "graphite",
     });
   }
 }
