@@ -9,7 +9,7 @@ import { useAppTheme } from "@/shared/presentation/theme";
 const MAX_HEIGHT_RATIO = 0.88;
 
 /** The tallest a sheet grows, for content such as a lesson that should fill it from the start. */
-export function useSheetMaxHeight(): number {
+function useSheetMaxHeight(): number {
   return useWindowDimensions().height * MAX_HEIGHT_RATIO;
 }
 
