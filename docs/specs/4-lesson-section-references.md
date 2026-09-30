@@ -25,8 +25,11 @@ section. Authors should write ordinary Markdown without custom anchors or manual
    Many cards may share a destination. With no section reference, open the lesson at its start.
 5. Opening either the card answer or its reading button opens the sheet at the referenced heading.
    Mark the related section with a continuous left border spanning its heading, content, and
-   subsections. Stop the border at the section boundary without coloring its background.
+   subsections in the deck accent. Stop the border at the section boundary without coloring its background.
    Reading can continue through the rest of the lesson.
+   Both the reader and this deck's lesson list use 60% of the app window height. The reading
+   progress bar is an overlay at the article bottom, hidden until a finger scroll. It stays visible
+   through momentum and disappears one second after scrolling stops, without shifting content.
 6. Opening another reference in the same lesson changes the destination. Close, back, and next
    lesson clear the previous reference. Automatic positioning happens once per opening after
    content layout is ready; it does not repeatedly override the learner's scrolling.

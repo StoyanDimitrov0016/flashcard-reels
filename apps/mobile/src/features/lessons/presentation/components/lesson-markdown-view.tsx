@@ -14,6 +14,7 @@ const listMarkerWidth = 26;
 type LessonMarkdownViewProps = Readonly<{
   blocks: readonly LessonBlock[];
   targetSection?: LessonSection;
+  sectionColor?: string;
   onTargetLayout?: (y: number) => void;
   onDocumentLayout?: (y: number) => void;
 }>;
@@ -21,6 +22,7 @@ type LessonMarkdownViewProps = Readonly<{
 export function LessonMarkdownView({
   blocks,
   targetSection,
+  sectionColor,
   onTargetLayout,
   onDocumentLayout,
 }: LessonMarkdownViewProps) {
@@ -39,7 +41,11 @@ export function LessonMarkdownView({
           )}
           <View
             onLayout={(event) => onTargetLayout?.(event.nativeEvent.layout.y)}
-            style={[styles.document, styles.relatedSection]}
+            style={[
+              styles.document,
+              styles.relatedSection,
+              sectionColor && { borderLeftColor: sectionColor },
+            ]}
           >
             <Text accessibilityLabel="Related section starts here" style={styles.relatedLabel}>
               Related section

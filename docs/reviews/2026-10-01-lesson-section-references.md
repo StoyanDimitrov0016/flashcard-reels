@@ -20,6 +20,11 @@ old reference; another card opening gets a fresh reader even within the same les
 
 The reader header contains its title and close control. A fixed bottom row opens this deck's
 lesson list on the left and the next lesson on the right; the final lesson has only the list button.
+Both reader and catalog use a shared 60% window-height setting. The section border uses the deck
+accent. The article's progress bar is hidden at rest and on the automatic section jump; a finger
+scroll reveals it through momentum and for one second after scrolling stops. It overlays the
+article's bottom edge, above the navigation buttons, rather than changing the content height
+when it appears.
 
 The generated demo has 20 cards, five lessons, and the original six audio recordings. Existing
 deck, lesson, and card IDs are preserved; added content uses new IDs and demo revision 2. The
@@ -28,7 +33,7 @@ cards share its vertical-scaling destination. Caching includes another shared de
 
 ## Validation
 
-- `npm run verify`: passed. Formatting, custom lint rules, lint, TypeScript, 420 Vitest tests
+- Initial feature `npm run verify`: passed. Formatting, custom lint rules, lint, TypeScript, 420 Vitest tests
   (349 mobile, 40 web, 31 contract), dead-code check, and web production build.
 - Mobile `npm run db:check` and `npm run check:android`: passed, including bundled-package checks
   and Android JavaScript/assets export.
@@ -73,6 +78,9 @@ Try both opening gestures. Scroll away from the marker and check that the reader
 back. Close the sheet and check that the same card remains. Go back to the lesson list and open
 the lesson normally: the old marker should disappear. Relaunch the app and try linked cards again.
 Check light/dark appearance, larger text, long sections, and targets near the document bottom.
+Switch between the lesson and its catalog to check that the sheet keeps its height. The progress
+bar should remain hidden on opening, appear during a finger scroll, and disappear one second
+after the scroll settles. Restart scrolling during that delay to check it stays visible.
 
 For a native test build with Maestro configured, run from `apps/mobile`:
 

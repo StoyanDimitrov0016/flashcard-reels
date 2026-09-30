@@ -13,7 +13,8 @@ import {
   useReadingProgress,
 } from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
-import { useSheetMaxHeight } from "@/shared/presentation/components/app-bottom-sheet";
+import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
+import { useReadingProgressVisibility } from "@/features/lessons/presentation/controllers/use-reading-progress-visibility";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
@@ -44,7 +45,7 @@ export function SheetLessonReader({
   onOpenLesson,
 }: SheetLessonReaderProps) {
   const { colors, resolvedScheme } = useAppTheme();
-  const height = useSheetMaxHeight();
+  const height = useLessonSheetHeight();
   const { blocks, sections, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
   const { themeSelections } = useDeckThemeSelections([deckId]);
   const themeSelection = themeSelections.get(deckId);
@@ -52,6 +53,8 @@ export function SheetLessonReader({
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
+  const { visible: progressVisible, scrollViewProps: progressVisibilityProps } =
+    useReadingProgressVisibility();
   const scrollRef = useRef<ScrollView>(null);
   const positioned = useRef(false);
   const [targetY, setTargetY] = useState<number | null>(null);
@@ -84,40 +87,52 @@ export function SheetLessonReader({
   return (
     <View accessibilityViewIsModal style={[styles.reader, { height }]}>
       <SheetHeader closeLabel="Close lesson" onClose={onClose} title={lesson.title} />
-      <ReadingProgressBar color={accent} scrollableHeight={scrollableHeight} scrollY={scrollY} />
-      {loading && <LoadingState />}
-      {!loading && !loadedLesson && (
-        <View style={styles.missing}>
-          <EmptyState
-            icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
-            message="Its deck was removed or updated without it."
-            title="This lesson is no longer available"
-          />
-        </View>
-      )}
-      {!loading && loadedLesson && (
-        <Animated.ScrollView
-          contentContainerStyle={styles.content}
-          style={styles.scrollView}
-          {...scrollViewProps}
-          ref={scrollRef}
-          onContentSizeChange={(width, contentHeight) => {
-            scrollViewProps.onContentSizeChange(width, contentHeight);
-            setContentReady(contentHeight > 0);
-          }}
-          onLayout={(event) => {
-            scrollViewProps.onLayout(event);
-            setViewportReady(event.nativeEvent.layout.height > 0);
-          }}
-        >
-          <LessonMarkdownView
-            blocks={blocks}
-            targetSection={targetSection}
-            onTargetLayout={setTargetY}
-            onDocumentLayout={setDocumentY}
-          />
-        </Animated.ScrollView>
-      )}
+      <View style={styles.article}>
+        {loading && <LoadingState />}
+        {!loading && !loadedLesson && (
+          <View style={styles.missing}>
+            <EmptyState
+              icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
+              message="Its deck was removed or updated without it."
+              title="This lesson is no longer available"
+            />
+          </View>
+        )}
+        {!loading && loadedLesson && (
+          <Animated.ScrollView
+            contentContainerStyle={styles.content}
+            style={styles.scrollView}
+            {...scrollViewProps}
+            {...progressVisibilityProps}
+            ref={scrollRef}
+            onContentSizeChange={(width, contentHeight) => {
+              scrollViewProps.onContentSizeChange(width, contentHeight);
+              setContentReady(contentHeight > 0);
+            }}
+            onLayout={(event) => {
+              scrollViewProps.onLayout(event);
+              setViewportReady(event.nativeEvent.layout.height > 0);
+            }}
+          >
+            <LessonMarkdownView
+              blocks={blocks}
+              targetSection={targetSection}
+              sectionColor={accent}
+              onTargetLayout={setTargetY}
+              onDocumentLayout={setDocumentY}
+            />
+          </Animated.ScrollView>
+        )}
+        {progressVisible && scrollableHeight > 0 && (
+          <View pointerEvents="none" style={styles.progressOverlay}>
+            <ReadingProgressBar
+              color={accent}
+              scrollableHeight={scrollableHeight}
+              scrollY={scrollY}
+            />
+          </View>
+        )}
+      </View>
       <LessonSheetNavigation
         nextLesson={!loading && loadedLesson ? nextLesson : undefined}
         onBack={onBack}
@@ -128,6 +143,8 @@ export function SheetLessonReader({
 }
 
 const styles = StyleSheet.create({
+  article: { flex: 1 },
+  progressOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 1 },
   content: {
     gap: sizes.spacing.large,
     paddingBottom: sizes.spacing.spacious,

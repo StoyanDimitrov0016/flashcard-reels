@@ -1,6 +1,6 @@
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type {
@@ -12,6 +12,7 @@ import type {
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
 import { SheetLessonReader } from "@/features/lessons/presentation/components/sheet-lesson-reader";
+import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
 import { useLessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
 import { reportError } from "@/shared/errors/report-error";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
@@ -23,9 +24,6 @@ type DeckLessonsContextValue = Readonly<{
   hasLesson: (deckId: DeckId, lessonId: LessonId) => boolean;
   openLesson: (deckId: DeckId, lessonId: LessonId, sectionId?: string | null) => void;
 }>;
-
-// The list stays short over the card being studied; a lesson opened from it fills the sheet.
-const LIST_MAX_HEIGHT_RATIO = 0.5;
 
 const DeckLessonsContext = createContext<DeckLessonsContextValue | null>(null);
 
@@ -132,7 +130,7 @@ function DeckLessonsSheet({
   readingList,
 }: DeckLessonsSheetProps) {
   const { colors } = useAppTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const height = useLessonSheetHeight();
   const styles = createStyles(colors);
   const lessons = readingList?.lessons ?? [];
 
@@ -151,16 +149,13 @@ function DeckLessonsSheet({
         />
       )}
       {!lesson && (
-        <View accessibilityViewIsModal style={styles.sheet}>
+        <View accessibilityViewIsModal style={[styles.sheet, { height }]}>
           <SheetHeader
             closeLabel="Close lessons"
             onClose={onClose}
             title={readingList?.deckTitle ?? "Lessons"}
           />
-          <BottomSheetScrollView
-            contentContainerStyle={styles.content}
-            style={[styles.scrollView, { maxHeight: windowHeight * LIST_MAX_HEIGHT_RATIO }]}
-          >
+          <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
             <LessonList lessons={lessons} onOpen={onOpenLesson} />
           </BottomSheetScrollView>
         </View>
@@ -172,7 +167,7 @@ function DeckLessonsSheet({
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     content: { paddingBottom: sizes.spacing.spacious, paddingHorizontal: sizes.spacing.content },
-    scrollView: { flexShrink: 1 },
+    scrollView: { flex: 1 },
     sheet: { backgroundColor: colors.surfaceRaised, flexShrink: 1 },
   });
 }
