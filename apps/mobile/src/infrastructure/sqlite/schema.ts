@@ -95,6 +95,7 @@ export const flashcards = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    check("flashcards_active_check", sql`${table.active} IN (0, 1)`),
     check("flashcards_has_audio_check", sql`${table.hasAudio} IN (0, 1)`),
     check("flashcards_order_check", sql`${table.order} >= 0`),
     index("flashcards_deck_id_idx").on(table.deckId),
@@ -181,6 +182,10 @@ export const flashcardMemoryStates = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    check(
+      "flashcard_memory_states_state_check",
+      sql`${table.state} IN ('new', 'learning', 'review', 'relearning')`
+    ),
     check("flashcard_memory_states_elapsed_days_check", sql`${table.elapsedDays} >= 0`),
     check("flashcard_memory_states_scheduled_days_check", sql`${table.scheduledDays} >= 0`),
     check("flashcard_memory_states_reps_check", sql`${table.reps} >= 0`),
@@ -201,19 +206,29 @@ export const flashcardReviewEvents = sqliteTable(
     committedAt: text("committed_at").notNull(),
   },
   (table) => [
+    check(
+      "flashcard_review_events_rating_check",
+      sql`${table.rating} IN ('again', 'hard', 'good', 'easy')`
+    ),
     index("flashcard_review_events_deck_id_idx").on(table.deckId),
     index("flashcard_review_events_flashcard_id_idx").on(table.flashcardId),
   ]
 );
 
-export const deckProgress = sqliteTable("deck_progress", {
-  id: text("id").primaryKey().notNull(),
-  deckId: text("deck_id").notNull().unique(),
-  title: text("title").notNull(),
-  revision: integer("revision").notNull(),
-  lastReviewedAt: text("last_reviewed_at").notNull(),
-  status: text("status", { enum: ["active", "archived", "pending"] }).notNull(),
-});
+export const deckProgress = sqliteTable(
+  "deck_progress",
+  {
+    id: text("id").primaryKey().notNull(),
+    deckId: text("deck_id").notNull().unique(),
+    title: text("title").notNull(),
+    revision: integer("revision").notNull(),
+    lastReviewedAt: text("last_reviewed_at").notNull(),
+    status: text("status", { enum: ["active", "archived", "pending"] }).notNull(),
+  },
+  (table) => [
+    check("deck_progress_status_check", sql`${table.status} IN ('active', 'archived', 'pending')`),
+  ]
+);
 
 export const progressBackupState = sqliteTable("progress_backup_state", {
   id: integer("id").primaryKey(),
@@ -237,6 +252,7 @@ export const studySessions = sqliteTable(
     feedState: text("feed_state").notNull(),
   },
   (table) => [
+    check("study_sessions_scope_check", sql`${table.scope} IN ('discover', 'focus')`),
     check(
       "study_sessions_scope_deck_check",
       sql`(${table.scope} = 'discover' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focus' AND ${table.deckId} IS NOT NULL)`

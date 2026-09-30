@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8ca5039a-cca7-445d-9d24-90ac0b5b7590",
+  "id": "c95ee54b-3542-42f9-9828-a3b07833600c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_progress": {
@@ -62,7 +62,12 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "deck_progress_status_check": {
+          "name": "deck_progress_status_check",
+          "value": "\"deck_progress\".\"status\" IN ('active', 'archived', 'pending')"
+        }
+      }
     },
     "deck_theme_selections": {
       "name": "deck_theme_selections",
@@ -338,6 +343,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "flashcard_memory_states_state_check": {
+          "name": "flashcard_memory_states_state_check",
+          "value": "\"flashcard_memory_states\".\"state\" IN ('new', 'learning', 'review', 'relearning')"
+        },
         "flashcard_memory_states_elapsed_days_check": {
           "name": "flashcard_memory_states_elapsed_days_check",
           "value": "\"flashcard_memory_states\".\"elapsed_days\" >= 0"
@@ -726,7 +735,12 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "flashcard_review_events_rating_check": {
+          "name": "flashcard_review_events_rating_check",
+          "value": "\"flashcard_review_events\".\"rating\" IN ('again', 'hard', 'good', 'easy')"
+        }
+      }
     },
     "flashcards": {
       "name": "flashcards",
@@ -845,6 +859,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "flashcards_active_check": {
+          "name": "flashcards_active_check",
+          "value": "\"flashcards\".\"active\" IN (0, 1)"
+        },
         "flashcards_has_audio_check": {
           "name": "flashcards_has_audio_check",
           "value": "\"flashcards\".\"has_audio\" IN (0, 1)"
@@ -1438,6 +1456,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "study_sessions_scope_check": {
+          "name": "study_sessions_scope_check",
+          "value": "\"study_sessions\".\"scope\" IN ('discover', 'focus')"
+        },
         "study_sessions_scope_deck_check": {
           "name": "study_sessions_scope_deck_check",
           "value": "(\"study_sessions\".\"scope\" = 'discover' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focus' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"

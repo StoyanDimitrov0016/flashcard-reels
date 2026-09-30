@@ -4,7 +4,8 @@ CREATE TABLE `deck_progress` (
 	`title` text NOT NULL,
 	`revision` integer NOT NULL,
 	`last_reviewed_at` text NOT NULL,
-	`status` text NOT NULL
+	`status` text NOT NULL,
+	CONSTRAINT "deck_progress_status_check" CHECK("deck_progress"."status" IN ('active', 'archived', 'pending'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `deck_progress_deck_id_unique` ON `deck_progress` (`deck_id`);--> statement-breakpoint
@@ -49,6 +50,7 @@ CREATE TABLE `flashcard_memory_states` (
 	`last_review_at` text,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
+	CONSTRAINT "flashcard_memory_states_state_check" CHECK("flashcard_memory_states"."state" IN ('new', 'learning', 'review', 'relearning')),
 	CONSTRAINT "flashcard_memory_states_elapsed_days_check" CHECK("flashcard_memory_states"."elapsed_days" >= 0),
 	CONSTRAINT "flashcard_memory_states_scheduled_days_check" CHECK("flashcard_memory_states"."scheduled_days" >= 0),
 	CONSTRAINT "flashcard_memory_states_reps_check" CHECK("flashcard_memory_states"."reps" >= 0),
@@ -111,7 +113,8 @@ CREATE TABLE `flashcard_review_events` (
 	`flashcard_id` text NOT NULL,
 	`rating` text NOT NULL,
 	`reviewed_at` text NOT NULL,
-	`committed_at` text NOT NULL
+	`committed_at` text NOT NULL,
+	CONSTRAINT "flashcard_review_events_rating_check" CHECK("flashcard_review_events"."rating" IN ('again', 'hard', 'good', 'easy'))
 );
 --> statement-breakpoint
 CREATE INDEX `flashcard_review_events_deck_id_idx` ON `flashcard_review_events` (`deck_id`);--> statement-breakpoint
@@ -129,6 +132,7 @@ CREATE TABLE `flashcards` (
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "flashcards_active_check" CHECK("flashcards"."active" IN (0, 1)),
 	CONSTRAINT "flashcards_has_audio_check" CHECK("flashcards"."has_audio" IN (0, 1)),
 	CONSTRAINT "flashcards_order_check" CHECK("flashcards"."order" >= 0)
 );
@@ -219,6 +223,7 @@ CREATE TABLE `study_sessions` (
 	`last_active_at` text NOT NULL,
 	`feed_state` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "study_sessions_scope_check" CHECK("study_sessions"."scope" IN ('discover', 'focus')),
 	CONSTRAINT "study_sessions_scope_deck_check" CHECK(("study_sessions"."scope" = 'discover' AND "study_sessions"."deck_id" IS NULL) OR ("study_sessions"."scope" = 'focus' AND "study_sessions"."deck_id" IS NOT NULL)),
 	CONSTRAINT "study_sessions_current_reel_position_check" CHECK("study_sessions"."current_reel_position" >= 0),
 	CONSTRAINT "study_sessions_furthest_reel_position_check" CHECK("study_sessions"."furthest_reel_position" >= "study_sessions"."current_reel_position"),
