@@ -15,6 +15,9 @@ const deckThemeIds = [
 
 export type DeckThemeId = (typeof deckThemeIds)[number];
 
+/** The theme a deck uses until the learner picks one, and when a stored theme is unknown. */
+export const DEFAULT_DECK_THEME_ID: DeckThemeId = "graphite";
+
 export function isDeckThemeId(value: string): value is DeckThemeId {
   return (deckThemeIds as readonly string[]).includes(value);
 }

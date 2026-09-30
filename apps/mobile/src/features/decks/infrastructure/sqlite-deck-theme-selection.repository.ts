@@ -6,6 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import {
+  DEFAULT_DECK_THEME_ID,
   DeckThemeSelection,
   isDeckThemeId,
 } from "@/features/decks/domain/deck-theme-selection.model";
@@ -63,7 +64,7 @@ export class SQLiteDeckThemeSelectionRepository<
   private toModel(row: typeof deckThemeSelections.$inferSelect): DeckThemeSelection {
     return new DeckThemeSelection({
       deckId: row.deckId,
-      theme: isDeckThemeId(row.theme) ? row.theme : "graphite",
+      theme: isDeckThemeId(row.theme) ? row.theme : DEFAULT_DECK_THEME_ID,
     });
   }
 }

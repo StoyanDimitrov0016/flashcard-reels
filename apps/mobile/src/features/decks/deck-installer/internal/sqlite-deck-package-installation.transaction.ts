@@ -12,6 +12,7 @@ import {
   DeckPackageRevisionError,
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
+import { DEFAULT_DECK_THEME_ID } from "@/features/decks/domain/deck-theme-selection.model";
 import {
   decks,
   deckThemeSelections,
@@ -127,7 +128,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .values({
             id: this.idGenerator.generate(),
             deckId: deck.id,
-            theme: "graphite",
+            theme: DEFAULT_DECK_THEME_ID,
           })
           .onConflictDoNothing()
           .run();
