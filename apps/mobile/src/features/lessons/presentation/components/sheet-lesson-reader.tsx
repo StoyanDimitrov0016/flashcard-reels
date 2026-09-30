@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, type ScrollView, StyleSheet, Text, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
@@ -22,6 +23,7 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 
 type SheetLessonReaderProps = Readonly<{
   deckId: DeckId;
+  sectionId: string | null;
   lesson: LessonSummary;
   nextLesson: LessonSummary | undefined;
   onBack: () => void;
@@ -35,6 +37,7 @@ type SheetLessonReaderProps = Readonly<{
  */
 export function SheetLessonReader({
   deckId,
+  sectionId,
   lesson,
   nextLesson,
   onBack,
@@ -44,13 +47,41 @@ export function SheetLessonReader({
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const height = useSheetMaxHeight();
-  const { blocks, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
+  const { blocks, sections, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
   const { themeSelections } = useDeckThemeSelections([deckId]);
   const themeSelection = themeSelections.get(deckId);
   const accent = themeSelection
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
+  const scrollRef = useRef<ScrollView>(null);
+  const positioned = useRef(false);
+  const [targetY, setTargetY] = useState<number | null>(null);
+  const [documentY, setDocumentY] = useState<number | null>(null);
+  const [contentReady, setContentReady] = useState(false);
+  const [viewportReady, setViewportReady] = useState(false);
+  const targetBlock = sections.find((section) => section.id === sectionId)?.startBlock;
+
+  useEffect(
+    function positionRelatedSection() {
+      if (
+        positioned.current ||
+        targetY === null ||
+        documentY === null ||
+        !contentReady ||
+        !viewportReady ||
+        !scrollRef.current
+      ) {
+        return;
+      }
+      positioned.current = true;
+      scrollRef.current.scrollTo({
+        y: Math.min(Math.max(documentY + targetY - sizes.spacing.medium, 0), scrollableHeight),
+        animated: false,
+      });
+    },
+    [targetY, documentY, contentReady, viewportReady, scrollableHeight]
+  );
 
   return (
     <View accessibilityViewIsModal style={[styles.reader, { height }]}>
@@ -77,8 +108,23 @@ export function SheetLessonReader({
           contentContainerStyle={styles.content}
           style={styles.scrollView}
           {...scrollViewProps}
+          ref={scrollRef}
+          onContentSizeChange={(width, contentHeight) => {
+            scrollViewProps.onContentSizeChange(width, contentHeight);
+            setContentReady(contentHeight > 0);
+          }}
+          onLayout={(event) => {
+            scrollViewProps.onLayout(event);
+            setViewportReady(event.nativeEvent.layout.height > 0);
+          }}
         >
-          <LessonMarkdownView blocks={blocks} />
+          <LessonMarkdownView
+            blocks={blocks}
+            targetBlock={targetBlock}
+            markerColor={accent}
+            onTargetLayout={setTargetY}
+            onDocumentLayout={setDocumentY}
+          />
           {!!nextLesson && (
             <Pressable
               accessibilityLabel={`Next lesson: ${nextLesson.title}`}

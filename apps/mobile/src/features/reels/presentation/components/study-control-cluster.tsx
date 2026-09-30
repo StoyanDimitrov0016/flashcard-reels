@@ -19,6 +19,7 @@ type StudyControlClusterProps = Readonly<{
   audioSource: AudioReference;
   deckId: DeckId;
   lessonId: LessonId | null;
+  lessonSectionId?: string | null;
   isActive: boolean;
   onRate: (rating: Rating) => void;
   ratingEnabled: boolean;
@@ -30,6 +31,7 @@ export function StudyControlCluster({
   audioSource,
   deckId,
   lessonId,
+  lessonSectionId,
   isActive,
   onRate,
   ratingEnabled,
@@ -48,7 +50,14 @@ export function StudyControlCluster({
   }
   if (readingEnabled && lessonId && hasLesson(deckId, lessonId)) {
     // Reading sits outside audio when both share a side, so audio stays next to the ratings.
-    const reading = <ReadingButton deckId={deckId} key="reading" lessonId={lessonId} />;
+    const reading = (
+      <ReadingButton
+        deckId={deckId}
+        key="reading"
+        lessonId={lessonId}
+        sectionId={lessonSectionId}
+      />
+    );
     if (isBeforeRatings(readingPosition)) {
       before.unshift(reading);
     } else {

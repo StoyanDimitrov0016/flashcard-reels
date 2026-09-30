@@ -9,18 +9,58 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 const monospaceFamily = Platform.select({ android: "monospace", default: "Menlo" });
 const listMarkerWidth = 26;
 
-type LessonMarkdownViewProps = Readonly<{ blocks: readonly LessonBlock[] }>;
+type LessonMarkdownViewProps = Readonly<{
+  blocks: readonly LessonBlock[];
+  targetBlock?: number;
+  markerColor?: string;
+  onTargetLayout?: (y: number) => void;
+  onDocumentLayout?: (y: number) => void;
+}>;
 
-export function LessonMarkdownView({ blocks }: LessonMarkdownViewProps) {
+export function LessonMarkdownView({
+  blocks,
+  targetBlock,
+  markerColor,
+  onTargetLayout,
+  onDocumentLayout,
+}: LessonMarkdownViewProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
   return (
-    <View style={styles.document}>
+    <View
+      style={styles.document}
+      onLayout={(event) => onDocumentLayout?.(event.nativeEvent.layout.y)}
+    >
       {blocks.map((block, index) => (
         // Blocks have no identity beyond their position in an immutable lesson.
-        // oxlint-disable-next-line react/no-array-index-key
-        <LessonBlockView block={block} colors={colors} key={index} />
+        <View
+          // oxlint-disable-next-line react/no-array-index-key
+          key={index}
+          onLayout={
+            index === targetBlock
+              ? (event) => onTargetLayout?.(event.nativeEvent.layout.y)
+              : undefined
+          }
+        >
+          {index === targetBlock && (
+            <View
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: markerColor ?? colors.textSecondary,
+                paddingLeft: sizes.spacing.medium,
+              }}
+            >
+              <Text
+                accessibilityLabel="Related section starts here"
+                style={{ color: colors.textSecondary }}
+              >
+                Related section
+              </Text>
+            </View>
+          )}
+          <LessonBlockView block={block} colors={colors} />
+        </View>
       ))}
     </View>
   );
@@ -32,7 +72,9 @@ function LessonBlockView({ block, colors }: LessonBlockViewProps) {
   const styles = createStyles(colors);
 
   if (block.type === "heading") {
-    const headingStyle = [styles.heading1, styles.heading2, styles.heading3][block.level - 1];
+    const headingStyle = [styles.heading1, styles.heading2, styles.heading3][
+      Math.min(block.level, 3) - 1
+    ];
     return (
       <Text accessibilityRole="header" style={[styles.heading, headingStyle]}>
         <InlineText colors={colors} content={block.content} />

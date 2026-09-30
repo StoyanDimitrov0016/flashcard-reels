@@ -8,10 +8,14 @@ import { useDeckLessons } from "@/features/lessons/presentation/context/deck-les
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
-type ReadingButtonProps = Readonly<{ deckId: DeckId; lessonId: LessonId }>;
+type ReadingButtonProps = Readonly<{
+  deckId: DeckId;
+  lessonId: LessonId;
+  sectionId?: string | null;
+}>;
 
 /** Opens the lesson connected to a flashcard. */
-export function ReadingButton({ deckId, lessonId }: ReadingButtonProps) {
+export function ReadingButton({ deckId, lessonId, sectionId }: ReadingButtonProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const { openLesson } = useDeckLessons();
@@ -22,7 +26,7 @@ export function ReadingButton({ deckId, lessonId }: ReadingButtonProps) {
       accessibilityLabel="Read connected lesson"
       accessibilityRole="button"
       hitSlop={4}
-      onPress={() => openLesson(deckId, lessonId)}
+      onPress={() => openLesson(deckId, lessonId, sectionId)}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
       <SymbolView

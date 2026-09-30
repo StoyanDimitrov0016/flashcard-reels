@@ -21,7 +21,7 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 
 type DeckLessonsContextValue = Readonly<{
   hasLesson: (deckId: DeckId, lessonId: LessonId) => boolean;
-  openLesson: (deckId: DeckId, lessonId: LessonId) => void;
+  openLesson: (deckId: DeckId, lessonId: LessonId, sectionId?: string | null) => void;
 }>;
 
 // The list stays short over the card being studied; a lesson opened from it fills the sheet.
@@ -41,6 +41,8 @@ export function DeckLessonsProvider({ children }: DeckLessonsProviderProps) {
   const [readingLists, setReadingLists] = useState<ReadonlyMap<DeckId, DeckReadingList>>(
     () => new Map()
   );
+  const [sectionId, setSectionId] = useState<string | null>(null);
+  const [opening, setOpening] = useState(0);
   const [openDeckId, setOpenDeckId] = useState<DeckId | null>(null);
   const [openLesson, setOpenLesson] = useState<LessonSummary | null>(null);
 
@@ -68,11 +70,13 @@ export function DeckLessonsProvider({ children }: DeckLessonsProviderProps) {
   const value: DeckLessonsContextValue = {
     hasLesson: (deckId, lessonId) =>
       readingLists.get(deckId)?.lessons.some((lesson) => lesson.id === lessonId) ?? false,
-    openLesson: (deckId, lessonId) => {
+    openLesson: (deckId, lessonId, target = null) => {
       const lesson = readingLists.get(deckId)?.lessons.find((item) => item.id === lessonId);
       if (!lesson) {
         return;
       }
+      setSectionId(target);
+      setOpening((count) => count + 1);
       setOpenDeckId(deckId);
       setOpenLesson(lesson);
     },
@@ -84,11 +88,17 @@ export function DeckLessonsProvider({ children }: DeckLessonsProviderProps) {
       {children}
       <DeckLessonsSheet
         lesson={openLesson}
+        sectionId={sectionId}
+        opening={opening}
         onClose={() => {
+          setSectionId(null);
           setOpenDeckId(null);
           setOpenLesson(null);
         }}
-        onOpenLesson={setOpenLesson}
+        onOpenLesson={(lesson) => {
+          setSectionId(null);
+          setOpenLesson(lesson);
+        }}
         readingList={openList}
       />
     </DeckLessonsContext.Provider>
@@ -106,12 +116,21 @@ export function useDeckLessons(): DeckLessonsContextValue {
 type DeckLessonsSheetProps = Readonly<{
   /** The lesson being read in the sheet, or null while it lists the deck's lessons. */
   lesson: LessonSummary | null;
+  sectionId: string | null;
+  opening: number;
   onClose: () => void;
   onOpenLesson: (lesson: LessonSummary | null) => void;
   readingList: DeckReadingList | null;
 }>;
 
-function DeckLessonsSheet({ lesson, onClose, onOpenLesson, readingList }: DeckLessonsSheetProps) {
+function DeckLessonsSheet({
+  lesson,
+  sectionId,
+  opening,
+  onClose,
+  onOpenLesson,
+  readingList,
+}: DeckLessonsSheetProps) {
   const { colors } = useAppTheme();
   const { height: windowHeight } = useWindowDimensions();
   const styles = createStyles(colors);
@@ -122,7 +141,8 @@ function DeckLessonsSheet({ lesson, onClose, onOpenLesson, readingList }: DeckLe
       {!!readingList && !!lesson && (
         <SheetLessonReader
           deckId={readingList.deckId}
-          key={lesson.id}
+          key={`${lesson.id}:${opening}:${sectionId ?? ""}`}
+          sectionId={sectionId}
           lesson={lesson}
           nextLesson={lessons[lessons.findIndex((item) => item.id === lesson.id) + 1]}
           onBack={() => onOpenLesson(null)}

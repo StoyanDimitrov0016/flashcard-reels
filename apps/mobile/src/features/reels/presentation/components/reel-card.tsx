@@ -239,7 +239,7 @@ export function ReelCard({
       openLessonTimer.current = setTimeout(() => {
         openLessonTimer.current = null;
         lastTapAt.current = 0;
-        openLesson(card.deckId, lessonId);
+        openLesson(card.deckId, lessonId, card.lessonSectionId);
       }, DOUBLE_TAP_WINDOW_MS);
     }
   };
@@ -377,6 +377,7 @@ export function ReelCard({
                   audioSource={audioSource}
                   deckId={card.deckId}
                   lessonId={card.lessonId}
+                  lessonSectionId={card.lessonSectionId}
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}
