@@ -2,12 +2,12 @@ import { useRecyclingState } from "@shopify/flash-list";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
-import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Rating } from "@/features/learning-engine/domain/rating";
 
+import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
@@ -74,7 +74,6 @@ function CardPage({ backgroundColor, children, contentInsetTop, height, width }:
 }
 
 type ReelCardProps = Readonly<{
-  audioSource: AudioReference;
   card: Flashcard;
   contentInsetTop: number;
   deck: Deck;
@@ -94,7 +93,6 @@ type ReelCardProps = Readonly<{
 }>;
 
 export function ReelCard({
-  audioSource,
   card,
   contentInsetTop,
   deck,
@@ -113,6 +111,7 @@ export function ReelCard({
   width,
 }: ReelCardProps) {
   const haptics = useHaptics();
+  const audioSource = useFlashcardAudioSource(deck, card);
   const { resolvedScheme } = useAppTheme();
   const styles = createStyles();
   const deckTheme = resolveDeckTheme(themeSelection.theme, resolvedScheme);
