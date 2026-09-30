@@ -28,6 +28,7 @@ describe("deck package tooling independence", () => {
     );
   });
 
+  // Builds the demo twice in separate Node processes, so it needs more time under a parallel run.
   it("generates the demo from its isolated authoring source", async () => {
     const project = await temporaryProject();
     await mkdir(path.join(project, "data"), { recursive: true });
@@ -65,7 +66,7 @@ describe("deck package tooling independence", () => {
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
       revision: 2,
     });
-  }, 10_000);
+  }, 30_000);
 
   it("verifies runtime packages in a project with no authoring data", async () => {
     const project = await temporaryProject();
