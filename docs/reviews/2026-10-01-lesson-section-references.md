@@ -18,6 +18,9 @@ its subsections, and a “Related section” label marks the start. Subsequent
 scrolling remains under learner control. Close, lesson-list selection, and next lesson clear the
 old reference; another card opening gets a fresh reader even within the same lesson.
 
+The reader header contains its title and close control. A fixed bottom row opens this deck's
+lesson list on the left and the next lesson on the right; the final lesson has only the list button.
+
 The generated demo has 20 cards, five lessons, and the original six audio recordings. Existing
 deck, lesson, and card IDs are preserved; added content uses new IDs and demo revision 2. The
 added cards have no audio. Scaling contains nested benefits, limitations, and an example; two

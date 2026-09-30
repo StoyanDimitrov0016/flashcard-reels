@@ -1,6 +1,5 @@
-import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, type ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, type ScrollView, StyleSheet, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
@@ -8,6 +7,7 @@ import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
+import { LessonSheetNavigation } from "@/features/lessons/presentation/components/lesson-sheet-navigation";
 import {
   ReadingProgressBar,
   useReadingProgress,
@@ -18,8 +18,7 @@ import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
-import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { useAppTheme } from "@/shared/presentation/theme";
 
 type SheetLessonReaderProps = Readonly<{
   deckId: DeckId;
@@ -45,7 +44,6 @@ export function SheetLessonReader({
   onOpenLesson,
 }: SheetLessonReaderProps) {
   const { colors, resolvedScheme } = useAppTheme();
-  const styles = createStyles(colors);
   const height = useSheetMaxHeight();
   const { blocks, sections, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
   const { themeSelections } = useDeckThemeSelections([deckId]);
@@ -85,18 +83,12 @@ export function SheetLessonReader({
 
   return (
     <View accessibilityViewIsModal style={[styles.reader, { height }]}>
-      <SheetHeader
-        back={{ label: "Back to lessons", onPress: onBack }}
-        closeLabel="Close lesson"
-        onClose={onClose}
-        title={lesson.title}
-      />
+      <SheetHeader closeLabel="Close lesson" onClose={onClose} title={lesson.title} />
       <ReadingProgressBar color={accent} scrollableHeight={scrollableHeight} scrollY={scrollY} />
       {loading && <LoadingState />}
       {!loading && !loadedLesson && (
         <View style={styles.missing}>
           <EmptyState
-            action={{ label: "Back to lessons", onPress: onBack }}
             icon={{ android: "menu_book", ios: "book", web: "menu_book" }}
             message="Its deck was removed or updated without it."
             title="This lesson is no longer available"
@@ -124,65 +116,25 @@ export function SheetLessonReader({
             onTargetLayout={setTargetY}
             onDocumentLayout={setDocumentY}
           />
-          {!!nextLesson && (
-            <Pressable
-              accessibilityLabel={`Next lesson: ${nextLesson.title}`}
-              accessibilityRole="button"
-              onPress={() => onOpenLesson(nextLesson)}
-              style={({ pressed }) => [styles.next, pressed && styles.pressed]}
-            >
-              <View style={styles.nextCopy}>
-                <Text style={styles.nextLabel}>Next lesson</Text>
-                <Text numberOfLines={2} style={styles.nextTitle}>
-                  {nextLesson.title}
-                </Text>
-              </View>
-              <SymbolView
-                name={{ android: "arrow_forward", ios: "arrow.right", web: "arrow_forward" }}
-                size={sizes.icon.medium}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          )}
         </Animated.ScrollView>
       )}
+      <LessonSheetNavigation
+        nextLesson={!loading && loadedLesson ? nextLesson : undefined}
+        onBack={onBack}
+        onOpenLesson={onOpenLesson}
+      />
     </View>
   );
 }
 
-function createStyles(colors: AppColors) {
-  return StyleSheet.create({
-    content: {
-      gap: sizes.spacing.large,
-      paddingBottom: sizes.spacing.spacious,
-      paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.xLarge,
-    },
-    missing: { flex: 1, justifyContent: "center" },
-    next: {
-      alignItems: "center",
-      borderColor: colors.borderStrong,
-      borderRadius: sizes.radius.row,
-      borderWidth: sizes.border,
-      flexDirection: "row",
-      gap: sizes.spacing.large,
-      marginTop: sizes.spacing.xLarge,
-      padding: sizes.spacing.xLarge,
-    },
-    nextCopy: { flex: 1, gap: sizes.spacing.xSmall },
-    nextLabel: {
-      color: colors.textTertiary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.semibold,
-    },
-    nextTitle: {
-      color: colors.textPrimary,
-      fontSize: fontSize.bodyLarge,
-      fontWeight: fontWeight.bold,
-      lineHeight: lineHeight.bodyLarge,
-    },
-    pressed: { backgroundColor: colors.surfaceHover },
-    reader: { flexShrink: 1 },
-    scrollView: { flex: 1 },
-  });
-}
+const styles = StyleSheet.create({
+  content: {
+    gap: sizes.spacing.large,
+    paddingBottom: sizes.spacing.spacious,
+    paddingHorizontal: sizes.spacing.content,
+    paddingTop: sizes.spacing.xLarge,
+  },
+  missing: { flex: 1, justifyContent: "center" },
+  reader: { flexShrink: 1 },
+  scrollView: { flex: 1 },
+});

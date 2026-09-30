@@ -59,6 +59,8 @@ vi.mock("@/shared/presentation/components/sheet-header", async () => {
 // exercising the real provider, reading button, and lesson list transitions.
 vi.mock("@/features/lessons/presentation/components/sheet-lesson-reader", async () => {
   const { createElement: element } = await import("react");
+  const { LessonSheetNavigation } =
+    await import("@/features/lessons/presentation/components/lesson-sheet-navigation");
   type ReaderProps = Readonly<{
     lesson: { title: string };
     sectionId: string | null;
@@ -81,8 +83,7 @@ vi.mock("@/features/lessons/presentation/components/sheet-lesson-reader", async 
       element("h1", null, current.title),
       element("p", null, sectionId ?? "Lesson beginning"),
       element("button", { onClick: onClose }, "Close lesson"),
-      element("button", { onClick: onBack }, "Back to lessons"),
-      next && element("button", { onClick: () => onOpenLesson(next) }, "Next lesson")
+      element(LessonSheetNavigation, { nextLesson: next, onBack, onOpenLesson })
     );
   }
   return { SheetLessonReader };
@@ -141,8 +142,10 @@ describe("card lesson destinations", () => {
       within(screen.getByRole("region", { name: "Lesson reader" })).getByText("Lesson beginning")
     ).toBeTruthy();
     await openCard("Vertical card");
-    fireEvent.click(screen.getByRole("button", { name: "Next lesson" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next lesson: Caching" }));
     expect(screen.getByRole("heading", { name: "Caching" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Next lesson:/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Back to lessons" })).toBeTruthy();
     expect(
       within(screen.getByRole("region", { name: "Lesson reader" })).getByText("Lesson beginning")
     ).toBeTruthy();
