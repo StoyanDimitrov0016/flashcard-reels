@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
@@ -152,7 +151,6 @@ export default function DeckDetailsScreen() {
   // Opened once the actions sheet has closed, so two sheets never animate at once.
   const [queuedAction, setQueuedAction] = useState<DeckAction | null>(null);
   const [themePresented, setThemePresented] = useState(false);
-  const [themeOverride, setThemeOverride] = useState<DeckThemeSelection | null>(null);
   const [showDeckInfo, setShowDeckInfo] = useState(false);
   const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
@@ -160,11 +158,8 @@ export default function DeckDetailsScreen() {
   const [resetError, setResetError] = useState<string | null>(null);
   const lessons = readingLists.find((list) => list.deckId === deckId)?.lessons ?? [];
   const activeTab: DeckPageTab = lessons.length > 0 ? tab : "cards";
-  const currentThemeSelection = themeOverride ?? themeSelection;
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
-  const deckColors = currentThemeSelection
-    ? resolveDeckTheme(currentThemeSelection.theme, resolvedScheme)
-    : null;
+  const deckColors = themeSelection ? resolveDeckTheme(themeSelection.theme, resolvedScheme) : null;
   const accentColor = deckColors?.accent ?? colors.actionPrimary;
   const numberWidth = getNumberWidth(cards.length);
   const renderCard: ListRenderItem<Flashcard> = ({ index, item }) => (
@@ -212,11 +207,7 @@ export default function DeckDetailsScreen() {
     }
   };
   const selectTheme = (preset: DeckTheme) => {
-    void savePreset(deckId, preset).then((saved) => {
-      if (saved) {
-        setThemeOverride(saved);
-      }
-    });
+    void savePreset(deckId, preset);
   };
 
   if (!loading && !deck) {
@@ -331,7 +322,7 @@ export default function DeckDetailsScreen() {
         }}
         onSelect={selectTheme}
         pendingPreset={pendingPreset}
-        themeSelection={currentThemeSelection}
+        themeSelection={themeSelection}
       />
       <DeckInfoSheet
         cards={cards}

@@ -5,7 +5,6 @@ import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
-import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckThemeSelectionSheet } from "@/features/decks/presentation/components/deck-theme-selection-sheet";
@@ -300,18 +299,10 @@ export default function DecksScreen() {
   const [confirmStartFresh, setConfirmStartFresh] = useState(false);
   const [progressBusy, setProgressBusy] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
-  const [themeSelectionOverrides, setThemeSelectionOverrides] = useState(
-    () => new Map<string, DeckThemeSelection>()
-  );
-  const visibleEntries = entries
-    .filter(({ deck }) => matchesDeckSearch(deck, query))
-    .map((entry) => ({
-      themeSelection: themeSelectionOverrides.get(entry.deck.id) ?? entry.themeSelection,
-      cardCount: entry.cardCount,
-      deck: entry.deck,
-    }));
+  const visibleEntries = entries.filter(({ deck }) => matchesDeckSearch(deck, query));
+  // The catalog reloads after a theme is saved, so the selected entry is read from it.
   const sheetThemeSelection = selectedEntry
-    ? (themeSelectionOverrides.get(selectedEntry.deck.id) ?? selectedEntry.themeSelection)
+    ? (entries.find(({ deck }) => deck.id === selectedEntry.deck.id)?.themeSelection ?? null)
     : null;
 
   const refreshPendingProgress = useCallback(() => {
@@ -411,12 +402,7 @@ export default function DecksScreen() {
     if (!selectedEntry) {
       return;
     }
-    const deckId = selectedEntry.deck.id;
-    void savePreset(deckId, preset).then((themeSelection) => {
-      if (themeSelection) {
-        setThemeSelectionOverrides((current) => new Map(current).set(deckId, themeSelection));
-      }
-    });
+    void savePreset(selectedEntry.deck.id, preset);
   };
 
   const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (

@@ -4,6 +4,7 @@ import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-sele
 import type { Deck } from "@/features/decks/domain/deck.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+import { useDeckThemeSelectionRevision } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { OperationError } from "@/shared/errors/operation-error";
@@ -25,6 +26,7 @@ const initialState: DeckCatalogState = { entries: [], error: null, loading: true
 export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
   const { deckService, flashcardService } = useDecks();
   const { revision: contentRevision } = useDeckContentRevision();
+  const { themeSelectionRevision } = useDeckThemeSelectionRevision();
   const [state, setState] = useState<DeckCatalogState>(initialState);
   const [revision, setRevision] = useState(0);
 
@@ -79,7 +81,7 @@ export function useDeckCatalog(): DeckCatalogState & { refresh: () => void } {
         active = false;
       };
     },
-    [contentRevision, deckService, flashcardService, revision]
+    [contentRevision, deckService, flashcardService, revision, themeSelectionRevision]
   );
 
   if (state.error) {

@@ -6,6 +6,7 @@ import type { FlashcardProgress } from "@/features/flashcard-progress/domain/fla
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+import { useDeckThemeSelectionRevision } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
@@ -22,6 +23,7 @@ type DeckDetailsState = Readonly<{
 export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
   const { deckService, flashcardService, flashcardProgressService } = useDecks();
   const { revision } = useDeckContentRevision();
+  const { themeSelectionRevision } = useDeckThemeSelectionRevision();
   const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<DeckDetailsState>({
     themeSelection: null,
@@ -94,6 +96,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
       flashcardProgressService,
       progressRevision,
       revision,
+      themeSelectionRevision,
     ]
   );
 

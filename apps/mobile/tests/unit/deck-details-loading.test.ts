@@ -30,6 +30,9 @@ vi.mock("@/infrastructure/app-services", () => ({
 vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
   useDeckContentRevision: () => ({ revision: 1 }),
 }));
+vi.mock("@/features/decks/presentation/context/deck-theme-selection-context", () => ({
+  useDeckThemeSelectionRevision: () => ({ themeSelectionRevision: 1 }),
+}));
 vi.mock(
   "@/features/flashcard-progress/presentation/context/learning-progress-revision-context",
   () => ({
