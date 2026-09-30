@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c89d5ac3-5b23-452d-b1de-eccef2eceed9",
+  "id": "f47d07b7-057a-491e-b132-832f0b658278",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_progress": {
@@ -844,6 +844,127 @@
         }
       }
     },
+    "learner_preferences": {
+      "name": "learner_preferences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color_mode": {
+          "name": "color_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_island_position": {
+          "name": "study_island_position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rating_direction": {
+          "name": "rating_direction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "audio_enabled": {
+          "name": "audio_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "audio_side": {
+          "name": "audio_side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reading_enabled": {
+          "name": "reading_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reading_side": {
+          "name": "reading_side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "haptics_enabled": {
+          "name": "haptics_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "learner_preferences_singleton_idx": {
+          "name": "learner_preferences_singleton_idx",
+          "columns": [
+            "(1)"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "learner_preferences_color_mode_check": {
+          "name": "learner_preferences_color_mode_check",
+          "value": "\"learner_preferences\".\"color_mode\" IN ('light', 'dark', 'device')"
+        },
+        "learner_preferences_study_island_position_check": {
+          "name": "learner_preferences_study_island_position_check",
+          "value": "\"learner_preferences\".\"study_island_position\" IN ('left', 'bottom', 'right')"
+        },
+        "learner_preferences_rating_direction_check": {
+          "name": "learner_preferences_rating_direction_check",
+          "value": "\"learner_preferences\".\"rating_direction\" IN ('forward', 'reverse')"
+        },
+        "learner_preferences_audio_enabled_check": {
+          "name": "learner_preferences_audio_enabled_check",
+          "value": "\"learner_preferences\".\"audio_enabled\" IN (0, 1)"
+        },
+        "learner_preferences_audio_side_check": {
+          "name": "learner_preferences_audio_side_check",
+          "value": "\"learner_preferences\".\"audio_side\" IN ('primary', 'opposite')"
+        },
+        "learner_preferences_reading_enabled_check": {
+          "name": "learner_preferences_reading_enabled_check",
+          "value": "\"learner_preferences\".\"reading_enabled\" IN (0, 1)"
+        },
+        "learner_preferences_reading_side_check": {
+          "name": "learner_preferences_reading_side_check",
+          "value": "\"learner_preferences\".\"reading_side\" IN ('primary', 'opposite')"
+        },
+        "learner_preferences_haptics_enabled_check": {
+          "name": "learner_preferences_haptics_enabled_check",
+          "value": "\"learner_preferences\".\"haptics_enabled\" IN (0, 1)"
+        }
+      }
+    },
     "lessons": {
       "name": "lessons",
       "columns": {
@@ -1333,6 +1454,14 @@
     "columns": {}
   },
   "internal": {
-    "indexes": {}
+    "indexes": {
+      "learner_preferences_singleton_idx": {
+        "columns": {
+          "(1)": {
+            "isExpression": true
+          }
+        }
+      }
+    }
   }
 }

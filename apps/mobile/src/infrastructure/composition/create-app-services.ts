@@ -11,6 +11,7 @@ import type { DeckService } from "@/features/decks/domain/deck.service";
 import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { LessonService } from "@/features/lessons/domain/lesson.service";
+import type { PreferencesService } from "@/features/preferences/application/preferences.service";
 import type { ProgressBackupService } from "@/features/progress-backup/application/progress-backup.service";
 import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudyService } from "@/features/study/domain/study.service";
@@ -21,6 +22,7 @@ import { createFlashcardProgressService } from "@/infrastructure/composition/cre
 import { createFlashcardService } from "@/infrastructure/composition/create-flashcard-service";
 import { createLearningEngineServices } from "@/infrastructure/composition/create-learning-engine-services";
 import { createLessonService } from "@/infrastructure/composition/create-lesson-service";
+import { createPreferencesService } from "@/infrastructure/composition/create-preferences-service";
 import { createProgressBackupService } from "@/infrastructure/composition/create-progress-backup-service";
 import { createReelFeedService } from "@/infrastructure/composition/create-reel-feed-service";
 import { createStudyService } from "@/infrastructure/composition/create-study-service";
@@ -28,6 +30,7 @@ import { SystemClock } from "@/infrastructure/system-clock";
 import { UuidGenerator } from "@/infrastructure/uuid-generator";
 
 export type AppServices = Readonly<{
+  preferencesService: PreferencesService;
   flashcardAudioService: FlashcardAudioService;
   deckInstaller: DeckInstaller;
   deckPackageDownloader: DeckPackageDownloader;
@@ -59,6 +62,7 @@ export function createAppServices(sqliteDatabase: SQLiteDatabase): AppServices {
 
   return {
     ...decks,
+    preferencesService: createPreferencesService({ database, clock, idGenerator }),
     flashcardService,
     flashcardProgressService: createFlashcardProgressService({
       idGenerator,

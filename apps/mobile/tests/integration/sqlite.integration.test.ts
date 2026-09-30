@@ -790,6 +790,7 @@ describe("SQLite study persistence", () => {
       { name: "flashcard_review_attempts" },
       { name: "flashcard_review_events" },
       { name: "flashcards" },
+      { name: "learner_preferences" },
       { name: "lessons" },
       { name: "progress_backup_state" },
       { name: "study_session_recurrences" },

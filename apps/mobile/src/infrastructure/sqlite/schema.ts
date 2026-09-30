@@ -10,6 +10,50 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+export const learnerPreferences = sqliteTable(
+  "learner_preferences",
+  {
+    id: text("id").primaryKey().notNull(),
+    colorMode: text("color_mode", { enum: ["light", "dark", "device"] }).notNull(),
+    studyIslandPosition: text("study_island_position", {
+      enum: ["left", "bottom", "right"],
+    }).notNull(),
+    ratingDirection: text("rating_direction", { enum: ["forward", "reverse"] }).notNull(),
+    audioEnabled: integer("audio_enabled", { mode: "boolean" }).notNull(),
+    audioSide: text("audio_side", { enum: ["primary", "opposite"] }).notNull(),
+    readingEnabled: integer("reading_enabled", { mode: "boolean" }).notNull(),
+    readingSide: text("reading_side", { enum: ["primary", "opposite"] }).notNull(),
+    hapticsEnabled: integer("haptics_enabled", { mode: "boolean" }).notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("learner_preferences_singleton_idx").on(sql`(1)`),
+    check(
+      "learner_preferences_color_mode_check",
+      sql`${table.colorMode} IN ('light', 'dark', 'device')`
+    ),
+    check(
+      "learner_preferences_study_island_position_check",
+      sql`${table.studyIslandPosition} IN ('left', 'bottom', 'right')`
+    ),
+    check(
+      "learner_preferences_rating_direction_check",
+      sql`${table.ratingDirection} IN ('forward', 'reverse')`
+    ),
+    check("learner_preferences_audio_enabled_check", sql`${table.audioEnabled} IN (0, 1)`),
+    check(
+      "learner_preferences_audio_side_check",
+      sql`${table.audioSide} IN ('primary', 'opposite')`
+    ),
+    check("learner_preferences_reading_enabled_check", sql`${table.readingEnabled} IN (0, 1)`),
+    check(
+      "learner_preferences_reading_side_check",
+      sql`${table.readingSide} IN ('primary', 'opposite')`
+    ),
+    check("learner_preferences_haptics_enabled_check", sql`${table.hapticsEnabled} IN (0, 1)`),
+  ]
+);
+
 export const decks = sqliteTable("decks", {
   id: text("id").primaryKey().notNull(),
   authorId: text("author_id").notNull(),
@@ -326,6 +370,7 @@ export const studySessionRecurrences = sqliteTable(
 );
 
 export const databaseSchema = {
+  learnerPreferences,
   progressBackupState,
   decks,
   dismissedBundledDecks,

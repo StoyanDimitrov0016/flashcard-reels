@@ -133,6 +133,28 @@ CREATE TABLE `flashcards` (
 --> statement-breakpoint
 CREATE INDEX `flashcards_deck_id_idx` ON `flashcards` (`deck_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `flashcards_order_unique` ON `flashcards` (`deck_id`,`order`);--> statement-breakpoint
+CREATE TABLE `learner_preferences` (
+	`id` text PRIMARY KEY NOT NULL,
+	`color_mode` text NOT NULL,
+	`study_island_position` text NOT NULL,
+	`rating_direction` text NOT NULL,
+	`audio_enabled` integer NOT NULL,
+	`audio_side` text NOT NULL,
+	`reading_enabled` integer NOT NULL,
+	`reading_side` text NOT NULL,
+	`haptics_enabled` integer NOT NULL,
+	`updated_at` text NOT NULL,
+	CONSTRAINT "learner_preferences_color_mode_check" CHECK("learner_preferences"."color_mode" IN ('light', 'dark', 'device')),
+	CONSTRAINT "learner_preferences_study_island_position_check" CHECK("learner_preferences"."study_island_position" IN ('left', 'bottom', 'right')),
+	CONSTRAINT "learner_preferences_rating_direction_check" CHECK("learner_preferences"."rating_direction" IN ('forward', 'reverse')),
+	CONSTRAINT "learner_preferences_audio_enabled_check" CHECK("learner_preferences"."audio_enabled" IN (0, 1)),
+	CONSTRAINT "learner_preferences_audio_side_check" CHECK("learner_preferences"."audio_side" IN ('primary', 'opposite')),
+	CONSTRAINT "learner_preferences_reading_enabled_check" CHECK("learner_preferences"."reading_enabled" IN (0, 1)),
+	CONSTRAINT "learner_preferences_reading_side_check" CHECK("learner_preferences"."reading_side" IN ('primary', 'opposite')),
+	CONSTRAINT "learner_preferences_haptics_enabled_check" CHECK("learner_preferences"."haptics_enabled" IN (0, 1))
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `learner_preferences_singleton_idx` ON `learner_preferences` ((1));--> statement-breakpoint
 CREATE TABLE `lessons` (
 	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,

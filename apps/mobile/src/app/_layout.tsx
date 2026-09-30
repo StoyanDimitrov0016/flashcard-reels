@@ -16,8 +16,7 @@ import { PreferencesProvider } from "@/features/preferences/presentation/control
 import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
 import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
-import { AppServicesProvider } from "@/infrastructure/app-services";
-import { preferencesService } from "@/infrastructure/preferences-services";
+import { AppServicesProvider, useAppServices } from "@/infrastructure/app-services";
 import {
   DATABASE_NAME,
   handleSQLiteProviderError,
@@ -117,6 +116,18 @@ function AppNavigation() {
   );
 }
 
+function AppPreferences() {
+  const { preferencesService } = useAppServices();
+
+  return (
+    <PreferencesProvider service={preferencesService}>
+      <PreferencesThemeProvider>
+        <AppNavigation />
+      </PreferencesThemeProvider>
+    </PreferencesProvider>
+  );
+}
+
 function RootLayoutContent() {
   const [prepared, setPrepared] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
@@ -158,13 +169,9 @@ function RootLayoutContent() {
           <DeckContentProvider>
             <DeckThemeSelectionProvider>
               <LearningProgressRevisionProvider>
-                <PreferencesProvider service={preferencesService}>
-                  <PreferencesThemeProvider>
-                    <AppServicesProvider>
-                      <AppNavigation />
-                    </AppServicesProvider>
-                  </PreferencesThemeProvider>
-                </PreferencesProvider>
+                <AppServicesProvider>
+                  <AppPreferences />
+                </AppServicesProvider>
               </LearningProgressRevisionProvider>
             </DeckThemeSelectionProvider>
           </DeckContentProvider>
