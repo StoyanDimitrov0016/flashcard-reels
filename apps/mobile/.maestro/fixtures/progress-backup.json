@@ -1,5 +1,5 @@
 {
-  "format": "flashcard-reels-progress",
+  "format": "flashcard-reels-learner-data",
   "version": 1,
   "exportedAt": "2026-01-02T00:00:00.000Z",
   "deckProgress": [
@@ -54,5 +54,17 @@
       "reviewedAt": "2026-01-01T12:00:00.000Z",
       "committedAt": "2026-01-01T12:00:00.000Z"
     }
-  ]
+  ],
+  "learnerPreferences": {
+    "colorMode": "device",
+    "studyIslandPosition": "right",
+    "ratingDirection": "forward",
+    "audioEnabled": true,
+    "audioSide": "primary",
+    "readingEnabled": true,
+    "readingSide": "opposite",
+    "hapticsEnabled": true,
+    "updatedAt": "2026-01-02T00:00:00.000Z"
+  },
+  "deckThemeSelections": []
 }

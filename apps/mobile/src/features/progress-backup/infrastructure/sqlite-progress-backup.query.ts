@@ -4,7 +4,10 @@ import type { ProgressBackupQuery } from "@/features/progress-backup/application
 import type { ProgressBackupDocument } from "@/features/progress-backup/contracts/progress-backup.schema";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
+import { defaultAppPreferences } from "@/features/preferences/domain/app-preferences";
 import {
+  learnerPreferences,
+  deckThemeSelections,
   deckProgress,
   decks,
   flashcardMemoryStates,
@@ -46,9 +49,28 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
         row.createdAt = new Date(row.createdAt).toISOString();
       }
       return {
-        format: "flashcard-reels-progress" as const,
+        format: "flashcard-reels-learner-data" as const,
         version: 1 as const,
         exportedAt,
+        learnerPreferences: transaction
+          .select({
+            colorMode: learnerPreferences.colorMode,
+            studyIslandPosition: learnerPreferences.studyIslandPosition,
+            ratingDirection: learnerPreferences.ratingDirection,
+            audioEnabled: learnerPreferences.audioEnabled,
+            audioSide: learnerPreferences.audioSide,
+            readingEnabled: learnerPreferences.readingEnabled,
+            readingSide: learnerPreferences.readingSide,
+            hapticsEnabled: learnerPreferences.hapticsEnabled,
+            updatedAt: learnerPreferences.updatedAt,
+          })
+          .from(learnerPreferences)
+          .get() ?? { ...defaultAppPreferences, updatedAt: exportedAt },
+        deckThemeSelections: transaction
+          .select({ deckId: deckThemeSelections.deckId, theme: deckThemeSelections.theme })
+          .from(deckThemeSelections)
+          .orderBy(asc(deckThemeSelections.deckId))
+          .all(),
         deckProgress: transaction
           .select({
             deckId: deckProgress.deckId,

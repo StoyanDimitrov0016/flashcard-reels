@@ -3,8 +3,12 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ProgressBackupFileGateway } from "@/features/progress-backup/application/progress-backup-file.gateway";
 
+import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { defaultAppPreferences } from "@/features/preferences/domain/app-preferences";
+import { SQLitePreferencesRepository } from "@/features/preferences/infrastructure/sqlite-preferences.repository";
 import { ProgressBackupServiceImpl } from "@/features/progress-backup/application/progress-backup.service.impl";
 import {
   ProgressBackupDocumentSchema,
@@ -103,6 +107,147 @@ describe("progress backup", () => {
     databases.push(database);
     return database;
   }
+
+  it("round trips preferences and themes with progress, replacing the target learner data", async () => {
+    const source = createDatabase();
+    const clock = new TestClock();
+    await seedDeck(source, TEST_DECK_ID, [testId(1)]);
+    const preferences = {
+      colorMode: "light" as const,
+      studyIslandPosition: "left" as const,
+      ratingDirection: "reverse" as const,
+      audioEnabled: false,
+      audioSide: "opposite" as const,
+      readingEnabled: false,
+      readingSide: "primary" as const,
+      hapticsEnabled: false,
+    };
+    await new SQLitePreferencesRepository(source.drizzle, clock, source.rowIds).save(preferences);
+    const themes = new SQLiteDeckThemeSelectionRepository(source.drizzle, source.rowIds);
+    await themes.save(new DeckThemeSelection({ deckId: TEST_DECK_ID, theme: "cyan" }));
+    await themes.save(new DeckThemeSelection({ deckId: OTHER_DECK_ID, theme: "rose" }));
+    const graph = createScenarioGraph(source, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("focus", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(testId(1), 0, session.id);
+    await graph.study.rateAttempt(attemptId, "good");
+    const files = new MemoryBackupFiles();
+    await new ProgressBackupServiceImpl(
+      graph.study,
+      new SQLiteProgressBackupQuery(source.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
+      files,
+      clock
+    ).exportProgress();
+    const exported = files.shared;
+    if (!exported) {
+      throw new Error("Missing exported learner data");
+    }
+    expect(exported.learnerPreferences).toMatchObject(preferences);
+    expect(exported.learnerPreferences).not.toHaveProperty("id");
+    expect(exported.deckThemeSelections).toEqual([
+      { deckId: TEST_DECK_ID, theme: "cyan" },
+      { deckId: OTHER_DECK_ID, theme: "rose" },
+    ]);
+    const target = createDatabase();
+    await seedDeck(target, TEST_DECK_ID, [testId(1)]);
+    await new SQLitePreferencesRepository(target.drizzle, clock, target.rowIds).save(
+      defaultAppPreferences
+    );
+    await new SQLiteDeckThemeSelectionRepository(target.drizzle, target.rowIds).save(
+      new DeckThemeSelection({ deckId: testId(999), theme: "gold" })
+    );
+    const targetGraph = createScenarioGraph(target, clock, new SequenceIdGenerator());
+    const query = new SQLiteProgressBackupQuery(target.drizzle);
+    const backup = new ProgressBackupServiceImpl(
+      targetGraph.study,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
+      files,
+      clock
+    );
+    files.picked = JSON.stringify(exported);
+    const prepared = await backup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Missing prepared learner data restore");
+    }
+    await backup.restore(prepared);
+    expect(
+      await new SQLitePreferencesRepository(target.drizzle, clock, target.rowIds).load()
+    ).toEqual(preferences);
+    expect(await query.read(exported.exportedAt)).toEqual(exported);
+  });
+
+  it.each(["missing preferences", "old format", "duplicate themes"])(
+    "rejects %s without altering learner data",
+    async (invalidCase) => {
+      const database = createDatabase();
+      const original = loadDeviceFixture();
+      const query = new SQLiteProgressBackupQuery(database.drizzle);
+      await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+        original
+      );
+      const before = await query.read(original.exportedAt);
+      const invalid: Record<string, unknown> = { ...before };
+      if (invalidCase === "missing preferences") {
+        delete invalid.learnerPreferences;
+      } else if (invalidCase === "old format") {
+        invalid.format = "flashcard-reels-progress";
+      } else {
+        invalid.deckThemeSelections = [
+          { deckId: TEST_DECK_ID, theme: "cyan" },
+          { deckId: TEST_DECK_ID, theme: "rose" },
+        ];
+      }
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const files = new MemoryBackupFiles();
+      files.picked = JSON.stringify(invalid);
+      const backup = new ProgressBackupServiceImpl(
+        graph.study,
+        query,
+        new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+        files,
+        clock
+      );
+      await expect(backup.prepareRestore()).rejects.toBeInstanceOf(ProgressBackupValidationError);
+      expect(await query.read(original.exportedAt)).toEqual(before);
+    }
+  );
+
+  it.each([
+    ["colorMode", "sepia"],
+    ["studyIslandPosition", "top"],
+    ["ratingDirection", "sideways"],
+    ["audioSide", "left"],
+    ["readingSide", "right"],
+    ["audioEnabled", 2],
+    ["readingEnabled", 2],
+    ["hapticsEnabled", 2],
+  ])("rejects invalid backup preference %s", async (key, value) => {
+    const database = createDatabase();
+    const original = loadDeviceFixture();
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const before = await query.read(original.exportedAt);
+    const files = new MemoryBackupFiles();
+    files.picked = JSON.stringify({
+      ...before,
+      learnerPreferences: { ...before.learnerPreferences, [key]: value },
+    });
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const backup = new ProgressBackupServiceImpl(
+      graph.study,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+      files,
+      clock
+    );
+    await expect(backup.prepareRestore()).rejects.toBeInstanceOf(ProgressBackupValidationError);
+    expect(await query.read(original.exportedAt)).toEqual(before);
+  });
 
   it("keeps the device import fixture compatible with the backup format", () => {
     const document = loadDeviceFixture();
@@ -447,7 +592,9 @@ describe("progress backup", () => {
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const emptyBackup: ProgressBackupDocument = {
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: clock.now(),
       deckProgress: [],
@@ -509,7 +656,7 @@ describe("progress backup", () => {
   it("reports an unsupported backup version before changing local progress", async () => {
     const database = createDatabase();
     const files = new MemoryBackupFiles();
-    files.picked = '{"format":"flashcard-reels-progress","version":99}';
+    files.picked = '{"format":"flashcard-reels-learner-data","version":99}';
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
@@ -665,7 +812,9 @@ describe("progress backup", () => {
     const before = await query.read(original.exportedAt);
     const files = new MemoryBackupFiles();
     files.picked = JSON.stringify({
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: original.exportedAt,
       deckProgress: [],
@@ -751,7 +900,9 @@ describe("progress backup", () => {
       committedAt: timestamp,
     });
     const invalid: ProgressBackupDocument = {
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: timestamp,
       deckProgress: [],

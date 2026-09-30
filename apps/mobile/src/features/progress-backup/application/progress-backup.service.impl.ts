@@ -192,7 +192,7 @@ function parseIncomingBackup(value: unknown) {
     typeof value === "object" &&
     value !== null &&
     "format" in value &&
-    value.format === "flashcard-reels-progress" &&
+    value.format === "flashcard-reels-learner-data" &&
     "version" in value &&
     typeof value.version === "number" &&
     value.version !== 1

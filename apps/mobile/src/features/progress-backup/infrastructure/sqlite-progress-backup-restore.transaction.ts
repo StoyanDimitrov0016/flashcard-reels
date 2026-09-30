@@ -5,6 +5,8 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import {
+  learnerPreferences,
+  deckThemeSelections,
   deckProgress,
   decks,
   flashcards,
@@ -60,6 +62,27 @@ export class SQLiteProgressBackupRestoreTransaction<
       // Removing sessions first cascades through attempts, items, and recurrences.
       transaction.delete(studySessions).run();
       new SQLiteDeckLearnerData(transaction).deleteLearnerData();
+      transaction
+        .insert(learnerPreferences)
+        .values({
+          id: this.idGenerator.generate(),
+          ...document.learnerPreferences,
+        })
+        .run();
+      for (
+        let offset = 0;
+        offset < document.deckThemeSelections.length;
+        offset += INSERT_CHUNK_SIZE
+      ) {
+        transaction
+          .insert(deckThemeSelections)
+          .values(
+            document.deckThemeSelections
+              .slice(offset, offset + INSERT_CHUNK_SIZE)
+              .map((row) => Object.assign({ id: this.idGenerator.generate() }, row))
+          )
+          .run();
+      }
 
       for (let offset = 0; offset < document.deckProgress.length; offset += INSERT_CHUNK_SIZE) {
         const rows = document.deckProgress.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => {

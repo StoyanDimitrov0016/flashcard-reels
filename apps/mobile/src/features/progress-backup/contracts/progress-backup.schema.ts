@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { AppPreferencesSchema } from "@/features/preferences/application/normalize-preferences";
+
 const ProgressBackupIdSchema = z.uuid();
 // SQLite compares these timestamps as text, so backups must keep the app's UTC form.
 const ProgressBackupTimestampSchema = z.iso
@@ -8,6 +10,13 @@ const ProgressBackupTimestampSchema = z.iso
     (value) => new Date(value).toISOString() === value,
     "Expected a UTC timestamp with milliseconds"
   );
+const LearnerPreferencesSchema = AppPreferencesSchema.extend({
+  updatedAt: ProgressBackupTimestampSchema,
+}).strict();
+const DeckThemeSelectionSchema = z
+  .object({ deckId: ProgressBackupIdSchema, theme: z.string().min(1) })
+  .strict();
+
 const ProgressBackupCountSchema = z.number().int().nonnegative();
 
 const DeckProgressSchema = z
@@ -80,9 +89,11 @@ const ReviewEventSchema = z
 
 const ProgressBackupDocumentUncompiledSchema = z
   .object({
-    format: z.literal("flashcard-reels-progress"),
+    format: z.literal("flashcard-reels-learner-data"),
     version: z.literal(1),
     exportedAt: ProgressBackupTimestampSchema,
+    learnerPreferences: LearnerPreferencesSchema,
+    deckThemeSelections: z.array(DeckThemeSelectionSchema),
     deckProgress: z.array(DeckProgressSchema),
     flashcardProgress: z.array(FlashcardProgressSchema),
     flashcardMemoryStates: z.array(FlashcardMemoryStateSchema),
@@ -90,6 +101,17 @@ const ProgressBackupDocumentUncompiledSchema = z
   })
   .strict()
   .superRefine((document, context) => {
+    const themeDeckIds = new Set<string>();
+    for (const [index, row] of document.deckThemeSelections.entries()) {
+      if (themeDeckIds.has(row.deckId)) {
+        context.addIssue({
+          code: "custom",
+          path: ["deckThemeSelections", index, "deckId"],
+          message: "Duplicate deck theme selection",
+        });
+      }
+      themeDeckIds.add(row.deckId);
+    }
     const cardDecks = new Map<string, string>();
     const studiedDeckIds = new Set(document.deckProgress.map((row) => row.deckId));
     const checkOwnership = (flashcardId: string, deckId: string, path: (string | number)[]) => {
