@@ -25,6 +25,8 @@ accent. The article's progress bar is hidden at rest and on the automatic sectio
 scroll reveals it through momentum and for one second after scrolling stops. It overlays the
 article's bottom edge, above the navigation buttons, rather than changing the content height
 when it appears.
+After the idle delay it fades out over 250 ms. Starting another finger scroll cancels that fade
+and restores the bar immediately.
 
 The generated demo has 20 cards, five lessons, and the original six audio recordings. Existing
 deck, lesson, and card IDs are preserved; added content uses new IDs and demo revision 2. The

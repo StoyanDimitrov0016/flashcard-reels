@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, type ScrollView, StyleSheet, View } from "react-native";
+import { Animated, Easing, type ScrollView, StyleSheet, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
@@ -20,6 +20,8 @@ import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme } from "@/shared/presentation/theme";
+
+const PROGRESS_FADE_DURATION_MS = 250;
 
 type SheetLessonReaderProps = Readonly<{
   deckId: DeckId;
@@ -55,6 +57,7 @@ export function SheetLessonReader({
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
   const { visible: progressVisible, scrollViewProps: progressVisibilityProps } =
     useReadingProgressVisibility();
+  const progressOpacity = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
   const positioned = useRef(false);
   const [targetY, setTargetY] = useState<number | null>(null);
@@ -62,6 +65,23 @@ export function SheetLessonReader({
   const [contentReady, setContentReady] = useState(false);
   const [viewportReady, setViewportReady] = useState(false);
   const targetSection = sections.find((section) => section.id === sectionId);
+
+  useEffect(
+    function animateProgressVisibility() {
+      const animation = Animated.timing(progressOpacity, {
+        toValue: progressVisible ? 1 : 0,
+        duration: progressVisible ? 0 : PROGRESS_FADE_DURATION_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+        isInteraction: false,
+      });
+      animation.start();
+      return function stopProgressFade() {
+        animation.stop();
+      };
+    },
+    [progressOpacity, progressVisible]
+  );
 
   useEffect(
     function positionRelatedSection() {
@@ -123,14 +143,17 @@ export function SheetLessonReader({
             />
           </Animated.ScrollView>
         )}
-        {progressVisible && scrollableHeight > 0 && (
-          <View pointerEvents="none" style={styles.progressOverlay}>
+        {scrollableHeight > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.progressOverlay, { opacity: progressOpacity }]}
+          >
             <ReadingProgressBar
               color={accent}
               scrollableHeight={scrollableHeight}
               scrollY={scrollY}
             />
-          </View>
+          </Animated.View>
         )}
       </View>
       <LessonSheetNavigation
