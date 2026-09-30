@@ -63,7 +63,7 @@ describe("deck package tooling independence", () => {
     expect(generated).toEqual(checkedIn);
     expect(parseDeckPackage(generated).deck).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-      revision: 1,
+      revision: 2,
     });
   }, 10_000);
 

@@ -1,12 +1,12 @@
 {
-  "schema": 1,
+  "schema": 2,
   "id": "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 1,
+  "revision": 2,
   "title": "Flashcard Reels Demo",
-  "description": "A compact JavaScript sampler for trying reveal, rating, study, and audio.",
+  "description": "A 20-card sampler of JavaScript, scaling, caching, and reliable requests, with connected lesson sections.",
   "createdAt": "2026-09-09T00:00:00.000Z",
-  "updatedAt": "2026-09-25T00:00:00.000Z",
+  "updatedAt": "2026-10-01T00:00:00Z",
   "cards": [
     {
       "id": "328c777f-291d-40de-8f4e-c2f972c35b7a",
@@ -15,52 +15,198 @@
       "createdAt": "2026-09-06T13:26:00Z",
       "updatedAt": "2026-09-06T13:26:00Z",
       "lessonId": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": null
     },
     {
       "id": "93d9ae79-4430-41b8-8887-2fad13106621",
       "question": "What is the difference between a primitive and an object in JavaScript?",
       "answer": "Primitives are immutable values such as strings and numbers. Objects are mutable collections with identity, so two separate objects can contain the same data but still not be equal by reference.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z",
       "lessonId": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": "why-it-matters"
     },
     {
       "id": "6aa00cb7-32ec-49bf-a3df-5a5ae74bdbec",
       "question": "What does `undefined` mean in JavaScript?",
       "answer": "`undefined` is the primitive value commonly produced when a variable or property has no assigned value, or when a function returns nothing explicitly.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z",
       "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": "undefined"
     },
     {
       "id": "c6d9a71b-4762-47a9-b6f6-5b1ca651b93f",
       "question": "What is `null` used for?",
       "answer": "`null` is an explicit primitive value typically used to represent an intentional absence of an object or value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z",
       "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": "null"
     },
     {
       "id": "d3c1d193-002c-4563-9645-329a117ceb7c",
       "question": "What is the practical difference between `null` and `undefined`?",
       "answer": "Both represent missing values, but `undefined` often means no value was supplied or produced, while `null` is usually assigned deliberately to mean no value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z",
       "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": "the-practical-difference"
     },
     {
       "id": "2cd1e4af-2da3-4c58-a174-039e9c29fe9b",
       "question": "What does `typeof` report for `null`?",
       "answer": "It reports `\"object\"`. This is a long-standing language quirk, so `value === null` is the reliable null check.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z",
       "lessonId": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
-      "audio": true
+      "audio": true,
+      "lessonSectionId": "a-famous-quirk"
+    },
+    {
+      "id": "fe679ba7-ebc4-4ca0-8b56-10c146823d0b",
+      "question": "What is vertical scaling?",
+      "answer": "Giving one machine more resources, such as CPU or RAM, to handle more work.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "vertical-scaling",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "9ca55703-e485-47f8-86ef-098e007ade3e",
+      "question": "Can more CPU cores fix every performance bottleneck?",
+      "answer": "No. They help work that can run in parallel, but do not automatically fix slow queries or waiting on another service.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "vertical-scaling",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "4631c8ec-e234-4840-8995-1d44a840281b",
+      "question": "Why can vertical scaling be operationally simpler?",
+      "answer": "It can retain a deployment with fewer machines and less distributed coordination.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "vertical-scaling/benefits",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "61438b24-e0c9-4a69-8ba6-42ee4fa8d772",
+      "question": "What limits vertical scaling?",
+      "answer": "A finite hardware ceiling and potentially increasing cost; a larger single machine also does not by itself improve availability.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "vertical-scaling/limitations",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "ca0ba38d-ebcd-4241-89eb-1094adf56f9f",
+      "question": "What is horizontal scaling?",
+      "answer": "Adding machines or instances and distributing work among them.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "horizontal-scaling",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "867f17f4-212e-4f73-8bee-15c5c0085ac1",
+      "question": "Why does private session state complicate horizontal scaling?",
+      "answer": "A request routed to another instance cannot rely on state held only in the original instance.",
+      "lessonId": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "lessonSectionId": "horizontal-scaling/state-and-coordination",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "d091d6b8-f07b-4fde-8aef-2c78c64a96f6",
+      "question": "What happens on a cache-aside miss?",
+      "answer": "The application reads the source of truth and caches the result for later reads.",
+      "lessonId": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
+      "lessonSectionId": "cache-aside",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "fa5531bf-c210-4f74-8d1b-6ae6bf13ba25",
+      "question": "Does a cache miss mean the data does not exist?",
+      "answer": "No. The value may exist in the source of truth and simply not be cached.",
+      "lessonId": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
+      "lessonSectionId": "cache-aside",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "9601771a-d1eb-4323-89a5-6f216ad28a2d",
+      "question": "Does a TTL guarantee that cached data is current?",
+      "answer": "No. It limits entry lifetime; the source may change before the cached entry expires.",
+      "lessonId": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
+      "lessonSectionId": "expiration-and-invalidation",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "e0874a40-4a75-41b3-81f9-bcbc1e86a98d",
+      "question": "What is a cache stampede?",
+      "answer": "Many requests miss the same key together and repeat its expensive load.",
+      "lessonId": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
+      "lessonSectionId": "cache-stampedes",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "5afb96c8-9504-4119-89ff-f0ea7bbd83fa",
+      "question": "Does a request timeout prove that the server did nothing?",
+      "answer": "No. The operation may have completed even though the response was not received.",
+      "lessonId": "39877304-de1b-47f6-86af-a2030f958ee1",
+      "lessonSectionId": "timeouts",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "0ea6ba79-cf98-41e9-82d6-a2ac590c39ca",
+      "question": "Why should retries be bounded and safe?",
+      "answer": "Retries add load and can repeat side effects; use time and attempt limits and ensure repetition is safe.",
+      "lessonId": "39877304-de1b-47f6-86af-a2030f958ee1",
+      "lessonSectionId": "retries/safe-retries",
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "f3bdf0c2-a54a-4045-8bd8-179f0b809c9b",
+      "question": "What is an idempotent operation?",
+      "answer": "An operation whose intended effect is the same when repeated as when performed once.",
+      "lessonId": "39877304-de1b-47f6-86af-a2030f958ee1",
+      "lessonSectionId": null,
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
+    },
+    {
+      "id": "590376c3-5595-4a79-86a9-75dea225a335",
+      "question": "What should you measure before scaling a service?",
+      "answer": "Identify the resource limiting useful throughput and measure end-to-end behavior before and after a change.",
+      "lessonId": null,
+      "lessonSectionId": null,
+      "audio": false,
+      "createdAt": "2026-10-01T00:00:00Z",
+      "updatedAt": "2026-10-01T00:00:00Z"
     }
   ],
   "lessons": [
@@ -71,6 +217,18 @@
     {
       "id": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
       "title": "null and undefined"
+    },
+    {
+      "id": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
+      "title": "Scaling systems"
+    },
+    {
+      "id": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
+      "title": "Caching and freshness"
+    },
+    {
+      "id": "39877304-de1b-47f6-86af-a2030f958ee1",
+      "title": "Reliable requests"
     }
   ]
 }

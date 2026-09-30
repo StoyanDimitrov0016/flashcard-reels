@@ -29,3 +29,4 @@ learning history, or the study flow.
 - [1b - Reading tab and lessons](1b-reading-tab.md)
 - [2 - Deck themes and deck theme selections](2-deck-theme-selections.md)
 - [3 - Naming alignment before the next release](3-naming-alignment.md)
+- [4 - Lesson section references](4-lesson-section-references.md)
