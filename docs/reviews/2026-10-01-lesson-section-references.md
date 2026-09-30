@@ -13,7 +13,8 @@ Schema 2 optionally links cards to derived sections; schema 1 remains readable. 
 validation and portal content loading reject unresolved destinations. The mobile installer stores
 the reference alongside the existing lesson link, and both answer taps and the reading button
 carry it to the sheet. The reader waits for content, viewport, document, and target layout before
-positioning once per opening. A short line and “Related section” label mark the start. Subsequent
+positioning once per opening. A continuous left border spans the referenced section, including
+its subsections, and a “Related section” label marks the start. Subsequent
 scrolling remains under learner control. Close, lesson-list selection, and next lesson clear the
 old reference; another card opening gets a fresh reader even within the same lesson.
 

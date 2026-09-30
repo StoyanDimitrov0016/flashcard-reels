@@ -60,7 +60,7 @@ export function SheetLessonReader({
   const [documentY, setDocumentY] = useState<number | null>(null);
   const [contentReady, setContentReady] = useState(false);
   const [viewportReady, setViewportReady] = useState(false);
-  const targetBlock = sections.find((section) => section.id === sectionId)?.startBlock;
+  const targetSection = sections.find((section) => section.id === sectionId);
 
   useEffect(
     function positionRelatedSection() {
@@ -120,7 +120,7 @@ export function SheetLessonReader({
         >
           <LessonMarkdownView
             blocks={blocks}
-            targetBlock={targetBlock}
+            targetSection={targetSection}
             markerColor={accent}
             onTargetLayout={setTargetY}
             onDocumentLayout={setDocumentY}

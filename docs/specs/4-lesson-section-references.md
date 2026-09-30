@@ -24,7 +24,8 @@ section. Authors should write ordinary Markdown without custom anchors or manual
 4. Keep lesson references nullable. A section reference is also nullable and requires a lesson.
    Many cards may share a destination. With no section reference, open the lesson at its start.
 5. Opening either the card answer or its reading button opens the sheet at the referenced heading.
-   Mark the section start with a restrained line or arrow rather than coloring the entire section.
+   Mark the related section with a continuous left border spanning its heading, content, and
+   subsections. Stop the border at the section boundary without coloring its background.
    Reading can continue through the rest of the lesson.
 6. Opening another reference in the same lesson changes the destination. Close, back, and next
    lesson clear the previous reference. Automatic positioning happens once per opening after
