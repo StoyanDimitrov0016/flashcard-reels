@@ -4,12 +4,8 @@ import type { SavedProgressDeletionTransaction } from "@/features/decks/applicat
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
-import {
-  flashcardProgress,
-  deckProgress,
-  flashcardMemoryStates,
-  flashcardReviewEvents,
-} from "@/infrastructure/sqlite/schema";
+import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
+import { deckProgress } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteSavedProgressDeletionTransaction<
   TRunResult = unknown,
@@ -30,10 +26,7 @@ export class SQLiteSavedProgressDeletionTransaction<
       if (record?.status === "active") {
         throw new Error(`Deck ${id} must be archived or pending before deleting saved progress`);
       }
-      transaction.delete(flashcardReviewEvents).where(eq(flashcardReviewEvents.deckId, id)).run();
-      transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
-      transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
-      transaction.delete(deckProgress).where(eq(deckProgress.deckId, id)).run();
+      new SQLiteDeckLearnerData(transaction).deleteLearnerData(id);
     });
   }
 }

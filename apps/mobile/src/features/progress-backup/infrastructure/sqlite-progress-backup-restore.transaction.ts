@@ -3,6 +3,7 @@ import type { ProgressBackupDocument } from "@/features/progress-backup/contract
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import {
   deckProgress,
   decks,
@@ -58,10 +59,7 @@ export class SQLiteProgressBackupRestoreTransaction<
 
       // Removing sessions first cascades through attempts, items, and recurrences.
       transaction.delete(studySessions).run();
-      transaction.delete(flashcardReviewEvents).run();
-      transaction.delete(flashcardProgress).run();
-      transaction.delete(flashcardMemoryStates).run();
-      transaction.delete(deckProgress).run();
+      new SQLiteDeckLearnerData(transaction).deleteLearnerData();
 
       for (let offset = 0; offset < document.deckProgress.length; offset += INSERT_CHUNK_SIZE) {
         const rows = document.deckProgress.slice(offset, offset + INSERT_CHUNK_SIZE).map((row) => {

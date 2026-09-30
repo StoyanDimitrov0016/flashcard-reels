@@ -5,12 +5,10 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import {
-  flashcardProgress,
   deckThemeSelections,
-  deckProgress,
   decks,
-  flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
   lessons,
@@ -36,20 +34,7 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
         .values({ id: this.idGenerator.generate(), deckId: id })
         .onConflictDoNothing()
         .run();
-      const savedProgress = transaction
-        .select({ deckId: deckProgress.deckId })
-        .from(deckProgress)
-        .where(eq(deckProgress.deckId, id))
-        .get();
-      transaction
-        .update(deckProgress)
-        .set({ status: "archived" })
-        .where(eq(deckProgress.deckId, id))
-        .run();
-      if (!savedProgress) {
-        transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
-        transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
-      }
+      new SQLiteDeckLearnerData(transaction).archive(id);
       const cardIds = transaction
         .select({ id: flashcards.id })
         .from(flashcards)

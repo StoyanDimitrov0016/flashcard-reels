@@ -5,6 +5,7 @@ import type { LearningProgressResetTransaction } from "@/features/flashcard-prog
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import {
   deckProgress,
   flashcardMemoryStates,
@@ -77,17 +78,8 @@ export class SQLiteLearningProgressResetTransaction<
         .from(flashcards)
         .where(eq(flashcards.deckId, deckId))
         .all();
-      transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, deckId)).run();
+      new SQLiteDeckLearnerData(transaction).deleteLearningProgress(deckId);
       this.resetCardsProgress(transaction, cards, resetAt);
-      transaction
-        .delete(flashcardMemoryStates)
-        .where(eq(flashcardMemoryStates.deckId, deckId))
-        .run();
-      transaction
-        .delete(flashcardReviewEvents)
-        .where(eq(flashcardReviewEvents.deckId, deckId))
-        .run();
-      transaction.delete(deckProgress).where(eq(deckProgress.deckId, deckId)).run();
       this.deleteActiveSessionsForDeck(transaction, deckId);
     });
   }
@@ -98,11 +90,8 @@ export class SQLiteLearningProgressResetTransaction<
         .select({ createdAt: flashcards.createdAt, deckId: flashcards.deckId, id: flashcards.id })
         .from(flashcards)
         .all();
-      transaction.delete(flashcardProgress).run();
+      new SQLiteDeckLearnerData(transaction).deleteLearningProgress();
       this.resetCardsProgress(transaction, cards, resetAt);
-      transaction.delete(flashcardMemoryStates).run();
-      transaction.delete(flashcardReviewEvents).run();
-      transaction.delete(deckProgress).run();
       transaction.delete(studySessions).where(isNull(studySessions.completedAt)).run();
     });
   }
