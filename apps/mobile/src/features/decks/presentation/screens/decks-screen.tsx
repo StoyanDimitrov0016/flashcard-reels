@@ -4,16 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import type { PendingDeckProgress } from "@/features/decks/domain/archived-deck-progress";
-
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
 import { DeckThemeSelectionSheet } from "@/features/decks/presentation/components/deck-theme-selection-sheet";
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
 import { SavedProgressChoiceSheet } from "@/features/decks/presentation/components/saved-progress-choice-sheet";
-import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useArchivedProgress } from "@/features/decks/presentation/controllers/use-archived-progress";
 import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
+import { usePausedDeckProgress } from "@/features/decks/presentation/controllers/use-paused-deck-progress";
 import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-href";
@@ -22,8 +20,6 @@ import {
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
 import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
-import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
 import { summarizeReviews } from "@/features/flashcard-progress/presentation/review-summary";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
@@ -41,7 +37,6 @@ import {
   hideFlashcardToast,
   showFocusedToast,
   showHoldToast,
-  showErrorToast,
   showSuccessToast,
 } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
@@ -275,9 +270,6 @@ export default function DecksScreen() {
       [refreshArchived, refreshProgress]
     )
   );
-  const { savedProgressService } = useDecks();
-  const invalidateDeckContent = useInvalidateDeckContent();
-  const { invalidateLearningProgress } = useLearningProgressRevision();
   const {
     cancelDownload,
     clearImportError,
@@ -292,98 +284,12 @@ export default function DecksScreen() {
   const [query, setQuery] = useState("");
   const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
-  const [pendingProgress, setPendingProgress] = useState<PendingDeckProgress[]>([]);
-  const promptedProgress = useRef(new Set<string>());
-  const pendingLoadSequence = useRef(0);
-  const [selectedPending, setSelectedPending] = useState<PendingDeckProgress | null>(null);
-  const [confirmStartFresh, setConfirmStartFresh] = useState(false);
-  const [progressBusy, setProgressBusy] = useState(false);
-  const [progressError, setProgressError] = useState<string | null>(null);
+  const pausedProgress = usePausedDeckProgress({ suspendPrompt: importSheetPresented });
   const visibleEntries = entries.filter(({ deck }) => matchesDeckSearch(deck, query));
   // The catalog reloads after a theme is saved, so the selected entry is read from it.
   const sheetThemeSelection = selectedEntry
     ? (entries.find(({ deck }) => deck.id === selectedEntry.deck.id)?.themeSelection ?? null)
     : null;
-
-  const refreshPendingProgress = useCallback(() => {
-    const sequence = ++pendingLoadSequence.current;
-    void savedProgressService
-      .listPendingProgress()
-      .then((progress) => {
-        if (sequence === pendingLoadSequence.current) {
-          setPendingProgress(progress);
-        }
-      })
-      .catch(() => {
-        if (sequence === pendingLoadSequence.current) {
-          setProgressError("Could not load saved progress. Try again.");
-        }
-      });
-  }, [savedProgressService]);
-
-  useFocusEffect(
-    useCallback(
-      function refreshPendingProgressWhenFocused() {
-        refreshPendingProgress();
-        return function cancelPendingProgressLoad() {
-          pendingLoadSequence.current += 1;
-        };
-      },
-      [refreshPendingProgress]
-    )
-  );
-
-  useEffect(
-    function announceProgressFailure() {
-      // Inside the sheet the error shows next to its buttons.
-      if (progressError && !selectedPending) {
-        showErrorToast(progressError);
-      }
-    },
-    [progressError, selectedPending]
-  );
-
-  useEffect(
-    function offerUnresolvedProgressChoice() {
-      if (importSheetPresented || selectedPending) {
-        return;
-      }
-      const unprompted = pendingProgress.find(
-        (progress) => !promptedProgress.current.has(progress.deckId)
-      );
-      if (unprompted) {
-        promptedProgress.current.add(unprompted.deckId);
-        setSelectedPending(unprompted);
-      }
-    },
-    [importSheetPresented, pendingProgress, selectedPending]
-  );
-
-  const resolveProgress = async (startFresh: boolean) => {
-    if (!selectedPending || progressBusy) {
-      return;
-    }
-    setProgressBusy(true);
-    setProgressError(null);
-    try {
-      if (startFresh) {
-        await savedProgressService.deleteProgress(selectedPending.deckId);
-      } else {
-        await savedProgressService.continueProgress(selectedPending.deckId);
-      }
-      invalidateDeckContent();
-      invalidateLearningProgress();
-      setSelectedPending(null);
-      setConfirmStartFresh(false);
-      refreshPendingProgress();
-      showSuccessToast(startFresh ? "Starting fresh with this deck." : "Saved progress continued.");
-    } catch {
-      setProgressError("Could not update saved progress. Try again.");
-      setConfirmStartFresh(false);
-    } finally {
-      setProgressBusy(false);
-    }
-  };
 
   const handleImport = async (
     importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
@@ -392,7 +298,7 @@ export default function DecksScreen() {
     if (result) {
       showSuccessToast(getDeckImportResultFeedback(result).message);
       refresh();
-      refreshPendingProgress();
+      pausedProgress.refresh();
       return true;
     }
     return false;
@@ -408,18 +314,12 @@ export default function DecksScreen() {
   const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (
     <DeckRow
       entry={item}
-      paused={pendingProgress.some((progress) => progress.deckId === item.deck.id)}
+      paused={pausedProgress.isPaused(item.deck.id)}
       onThemeSelection={() => {
         clearSaveError();
         setSelectedEntry(item);
       }}
-      onChooseProgress={() => {
-        const progress = pendingProgress.find((candidate) => candidate.deckId === item.deck.id);
-        if (progress) {
-          setProgressError(null);
-          setSelectedPending(progress);
-        }
-      }}
+      onChooseProgress={() => pausedProgress.open(item.deck.id)}
       onFocus={() => openFocusedFeed(item.deck.id, null)}
       onViewCards={() => router.push(getDeckDetailsHref(item.deck.id))}
       reviewedCount={reviewSummary.reviewedByDeckId.get(item.deck.id) ?? 0}
@@ -456,14 +356,11 @@ export default function DecksScreen() {
             {reviewSummary.reviewedCount} of {reviewSummary.cardCount} cards reviewed
           </Text>
         )}
-        {pendingProgress.map((progress) => (
+        {pausedProgress.paused.map((progress) => (
           <Pressable
             key={progress.deckId}
             accessibilityRole="button"
-            onPress={() => {
-              setProgressError(null);
-              setSelectedPending(progress);
-            }}
+            onPress={() => pausedProgress.open(progress.deckId)}
             style={styles.pendingBanner}
           >
             <Text style={styles.pendingTitle}>Choose progress for {progress.title}</Text>
@@ -533,27 +430,23 @@ export default function DecksScreen() {
         visible={importSheetPresented}
       />
       <SavedProgressChoiceSheet
-        busy={progressBusy}
-        error={progressError}
-        progress={confirmStartFresh ? null : selectedPending}
-        onClose={() => {
-          if (!confirmStartFresh) {
-            setSelectedPending(null);
-          }
-        }}
-        onContinue={() => void resolveProgress(false)}
-        onStartFresh={() => setConfirmStartFresh(true)}
+        busy={pausedProgress.busy}
+        error={pausedProgress.error}
+        progress={pausedProgress.confirmingStartFresh ? null : pausedProgress.selected}
+        onClose={pausedProgress.close}
+        onContinue={pausedProgress.continueProgress}
+        onStartFresh={pausedProgress.askToStartFresh}
       />
       <DestructiveConfirmationSheet
         actionLabel="Delete saved progress"
-        busy={progressBusy}
-        error={progressError}
+        busy={pausedProgress.busy}
+        error={pausedProgress.error}
         icon={{ android: "delete", ios: "trash.fill", web: "delete" }}
         message="All saved reviews and learning progress for this deck will be permanently deleted."
-        onCancel={() => setConfirmStartFresh(false)}
-        onConfirm={() => void resolveProgress(true)}
-        title={`Start ${selectedPending?.title ?? "deck"} fresh?`}
-        visible={confirmStartFresh}
+        onCancel={pausedProgress.cancelStartFresh}
+        onConfirm={pausedProgress.startFresh}
+        title={`Start ${pausedProgress.selected?.title ?? "deck"} fresh?`}
+        visible={pausedProgress.confirmingStartFresh}
       />
     </SafeAreaView>
   );
