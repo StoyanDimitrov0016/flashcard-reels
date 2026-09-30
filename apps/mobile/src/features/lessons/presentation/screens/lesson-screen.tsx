@@ -10,6 +10,7 @@ import {
   useReadingProgress,
 } from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
+import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
@@ -26,6 +27,10 @@ export default function LessonScreen() {
   const router = useRouter();
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
+  const { readingLists } = useReadingLists();
+  const lessonCount = lesson
+    ? (readingLists.find((list) => list.deckId === lesson.deckId)?.lessons.length ?? 0)
+    : 0;
   const { themeSelections } = useDeckThemeSelections(lesson ? [lesson.deckId] : []);
   const themeSelection = lesson ? themeSelections.get(lesson.deckId) : undefined;
   const accent = themeSelection
@@ -56,6 +61,11 @@ export default function LessonScreen() {
           />
           <Animated.ScrollView contentContainerStyle={styles.content} {...scrollViewProps}>
             <View style={styles.column}>
+              {lessonCount > 0 && (
+                <Text style={styles.lessonPosition}>
+                  Lesson {lesson.order + 1} of {lessonCount}
+                </Text>
+              )}
               <Text accessibilityRole="header" style={styles.title}>
                 {lesson.title}
               </Text>
@@ -70,6 +80,11 @@ export default function LessonScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    lessonPosition: {
+      color: colors.textTertiary,
+      fontSize: fontSize.footnote,
+      fontWeight: fontWeight.bold,
+    },
     column: {
       alignSelf: "center",
       gap: sizes.spacing.large,

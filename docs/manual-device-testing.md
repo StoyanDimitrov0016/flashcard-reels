@@ -39,7 +39,7 @@ Use `data/test-decks/versioned/v1/deck.json` and `v2/deck.json` with the test-de
 
 ## Archived deck progress
 
-- [ ] Study an imported deck, remove the deck, then open Settings → Archived progress. Confirm the deck and estimated storage size appear.
+- [ ] Study an imported deck, remove the deck, then open Decks → Archived deck progress. Confirm the deck and estimated storage size appear.
 - [ ] Restart the app and confirm the archived entry remains while the deck's cards stay out of study feeds.
 - [ ] Import the same deck again. Confirm its cards remain paused until choosing Continue or Start fresh, including when tapping or holding its Decks row.
 - [ ] Choose Continue. Confirm the previous learning state returns and study resumes.

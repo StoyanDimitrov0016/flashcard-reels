@@ -21,3 +21,14 @@ export function summarizeReviews(rows: readonly ReviewedRow[]): ReviewSummary {
   }
   return { cardCount: rows.length, reviewedCount, reviewedByDeckId };
 }
+
+/** How many of a deck's cards have at least one committed review. */
+export function countReviewedCards(progress: Iterable<Readonly<{ reviewCount: number }>>): number {
+  let reviewed = 0;
+  for (const cardProgress of progress) {
+    if (cardProgress.reviewCount > 0) {
+      reviewed += 1;
+    }
+  }
+  return reviewed;
+}

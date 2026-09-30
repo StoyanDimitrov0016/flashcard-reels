@@ -13,11 +13,14 @@ appId: com.flashcardreels.app
 - assertVisible: "Flashcard question: .*"
 - tapOn: Decks tab
 - tapOn: Versioned Test Deck
-- tapOn: Delete Versioned Test Deck
+- tapOn: More actions for Versioned Test Deck
+- tapOn: Delete deck
 - assertVisible: "Delete Versioned Test Deck?"
 - tapOn: Delete deck
 - assertNotVisible: Versioned Test Deck
-- tapOn: Settings tab
+- tapOn: Decks tab
+- scrollUntilVisible:
+    element: Archived deck progress
 - tapOn: Archived deck progress
 - assertVisible: Archived progress
 - assertVisible: Versioned Test Deck

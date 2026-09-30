@@ -7,7 +7,9 @@ appId: com.flashcardreels.app
 # The archive must survive process restart without its package being installed.
 - stopApp
 - launchApp
-- tapOn: Settings tab
+- tapOn: Decks tab
+- scrollUntilVisible:
+    element: Archived deck progress
 - tapOn: Archived deck progress
 - assertVisible: Versioned Test Deck
 - assertVisible: "1 review.*"

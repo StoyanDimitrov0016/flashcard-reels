@@ -1,37 +1,65 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItem,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
-import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import {
+  DeckActionsSheet,
+  type DeckAction,
+} from "@/features/decks/presentation/components/deck-actions-sheet";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
+import { DeckProfileHeader } from "@/features/decks/presentation/components/deck-profile-header";
+import { DeckThemeSelectionSheet } from "@/features/decks/presentation/components/deck-theme-selection-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
+import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
+import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
 import { useResetDeckProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-deck-progress";
+import { countReviewedCards } from "@/features/flashcard-progress/presentation/review-summary";
 import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
+import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
+import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
+import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { reportError } from "@/shared/errors/report-error";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SearchField } from "@/shared/presentation/components/search-field";
+import { SegmentedControl } from "@/shared/presentation/components/segmented-control";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+
+type DeckPageTab = "lessons" | "cards";
+
+const deckPageTabs = [
+  { label: "Lessons", value: "lessons" },
+  { label: "Cards", value: "cards" },
+] as const;
 
 type CardRowProps = Readonly<{
   card: Flashcard;
@@ -110,19 +138,33 @@ export default function DeckDetailsScreen() {
   const styles = createStyles(colors);
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
+  const openFocusedFeed = useOpenFocusedFeed();
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
   const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
+  const { readingLists } = useReadingLists();
+  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckThemeSelection();
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
+  const [tab, setTab] = useState<DeckPageTab>("lessons");
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
+  const [actionsPresented, setActionsPresented] = useState(false);
+  // Opened once the actions sheet has closed, so two sheets never animate at once.
+  const [queuedAction, setQueuedAction] = useState<DeckAction | null>(null);
+  const [themePresented, setThemePresented] = useState(false);
+  const [themeOverride, setThemeOverride] = useState<DeckThemeSelection | null>(null);
   const [showDeckInfo, setShowDeckInfo] = useState(false);
   const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const lessons = readingLists.find((list) => list.deckId === deckId)?.lessons ?? [];
+  const activeTab: DeckPageTab = lessons.length > 0 ? tab : "cards";
+  const currentThemeSelection = themeOverride ?? themeSelection;
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
-  const deckColors = themeSelection ? resolveDeckTheme(themeSelection.theme, resolvedScheme) : null;
+  const deckColors = currentThemeSelection
+    ? resolveDeckTheme(currentThemeSelection.theme, resolvedScheme)
+    : null;
   const accentColor = deckColors?.accent ?? colors.actionPrimary;
   const numberWidth = getNumberWidth(cards.length);
   const renderCard: ListRenderItem<Flashcard> = ({ index, item }) => (
@@ -151,6 +193,31 @@ export default function DeckDetailsScreen() {
       })
       .finally(() => setResetting(false));
   };
+  const openAction = (action: DeckAction) => {
+    switch (action) {
+      case "theme":
+        clearSaveError();
+        setThemePresented(true);
+        break;
+      case "info":
+        setShowDeckInfo(true);
+        break;
+      case "reset":
+        setResetError(null);
+        setResetPresented(true);
+        break;
+      case "delete":
+        setDeletePresented(true);
+        break;
+    }
+  };
+  const selectTheme = (preset: DeckTheme) => {
+    void savePreset(deckId, preset).then((saved) => {
+      if (saved) {
+        setThemeOverride(saved);
+      }
+    });
+  };
 
   if (!loading && !deck) {
     return (
@@ -166,93 +233,106 @@ export default function DeckDetailsScreen() {
     <SafeAreaView style={styles.screen}>
       <SubScreenHeader
         actions={
-          <>
-            <Pressable
-              accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
-              accessibilityRole="button"
-              disabled={deck === null || resetting}
-              hitSlop={4}
-              onPress={() => {
-                setResetError(null);
-                setResetPresented(true);
-              }}
-              style={styles.resetButton}
-            >
-              <SymbolView
-                name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-                size={sizes.icon.medium}
-                tintColor={colors.error}
-              />
-            </Pressable>
-            <Pressable
-              accessibilityLabel={`Delete ${deck?.title ?? "deck"}`}
-              accessibilityRole="button"
-              disabled={deck === null || deleting}
-              hitSlop={4}
-              onPress={() => setDeletePresented(true)}
-              style={styles.headerActionButton}
-            >
-              <SymbolView
-                name={{ android: "delete", ios: "trash.fill", web: "delete" }}
-                size={sizes.icon.medium}
-                tintColor={colors.error}
-              />
-            </Pressable>
-          </>
+          <Pressable
+            accessibilityLabel={`More actions for ${deck?.title ?? "this deck"}`}
+            accessibilityRole="button"
+            disabled={deck === null}
+            hitSlop={4}
+            onPress={() => setActionsPresented(true)}
+            style={styles.moreButton}
+          >
+            <SymbolView
+              name={{ android: "more_horiz", ios: "ellipsis.circle", web: "more_horiz" }}
+              size={sizes.icon.medium}
+              tintColor={colors.textSecondary}
+            />
+          </Pressable>
         }
         backLabel="Back to Decks"
         onBack={() => router.back()}
       />
       <View style={styles.body}>
-        <View style={styles.header}>
-          {!!deck && <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />}
-          <View style={styles.headingCopy}>
-            <Text accessibilityRole="header" numberOfLines={2} style={styles.title}>
-              {deck?.title ?? "Deck cards"}
-            </Text>
-            <Text style={styles.count}>{loading ? "Loading cards…" : `${cards.length} cards`}</Text>
-          </View>
-          <Pressable
-            accessibilityLabel="Open deck information"
-            accessibilityRole="button"
-            accessibilityState={{ expanded: showDeckInfo }}
-            onPress={() => setShowDeckInfo(true)}
-            style={styles.infoButton}
-          >
-            <SymbolView
-              name={{ android: "info", ios: "info.circle", web: "info" }}
-              size={sizes.icon.medium}
-              tintColor={colors.textSecondary}
-            />
-          </Pressable>
-        </View>
-        <View style={styles.search}>
-          <SearchField
-            accessibilityLabel="Search cards in deck"
-            clearLabel="Clear card search"
-            onChangeText={setQuery}
-            placeholder="Search cards…"
-            value={query}
-          />
-        </View>
-        {loading ? (
-          <LoadingState accessibilityLabel="Loading deck cards" />
+        {loading || !deck ? (
+          <LoadingState accessibilityLabel="Loading deck" />
         ) : (
-          <FlatList
-            contentContainerStyle={styles.list}
-            data={visibleCards}
-            keyExtractor={(card) => card.id}
-            ListEmptyComponent={EmptyCardList}
-            initialNumToRender={12}
-            maxToRenderPerBatch={8}
-            removeClippedSubviews
-            renderItem={renderCard}
-            style={styles.listView}
-            updateCellsBatchingPeriod={32}
-            windowSize={7}
-          />
+          <>
+            <DeckProfileHeader
+              accentColor={accentColor}
+              cardCount={cards.length}
+              deck={deck}
+              lessonCount={lessons.length}
+              onStudy={() => openFocusedFeed(deck.id, null)}
+              reviewedCount={countReviewedCards(progress.values())}
+            />
+            {lessons.length > 0 && (
+              <View style={styles.tabs}>
+                <SegmentedControl onChange={setTab} options={deckPageTabs} selected={activeTab} />
+              </View>
+            )}
+            {activeTab === "lessons" ? (
+              <ScrollView contentContainerStyle={styles.lessons} style={styles.listView}>
+                <LessonList
+                  lessons={lessons}
+                  onOpen={(lesson) => router.push(getLessonHref(lesson.id))}
+                />
+              </ScrollView>
+            ) : (
+              <>
+                <View style={styles.search}>
+                  <SearchField
+                    accessibilityLabel="Search cards in deck"
+                    clearLabel="Clear card search"
+                    onChangeText={setQuery}
+                    placeholder="Search cards…"
+                    value={query}
+                  />
+                </View>
+                <FlatList
+                  contentContainerStyle={styles.list}
+                  data={visibleCards}
+                  keyExtractor={(card) => card.id}
+                  ListEmptyComponent={EmptyCardList}
+                  initialNumToRender={12}
+                  maxToRenderPerBatch={8}
+                  removeClippedSubviews
+                  renderItem={renderCard}
+                  style={styles.listView}
+                  updateCellsBatchingPeriod={32}
+                  windowSize={7}
+                />
+              </>
+            )}
+          </>
         )}
       </View>
+      <DeckActionsSheet
+        deckTitle={deck?.title ?? "Deck"}
+        onClose={() => {
+          setActionsPresented(false);
+          if (queuedAction) {
+            setQueuedAction(null);
+            openAction(queuedAction);
+          }
+        }}
+        onSelect={(action) => {
+          setQueuedAction(action);
+          setActionsPresented(false);
+        }}
+        visible={actionsPresented}
+      />
+      <DeckThemeSelectionSheet
+        deck={deck}
+        error={saveError}
+        isPresented={themePresented}
+        onDismiss={() => {
+          if (!pendingPreset) {
+            setThemePresented(false);
+          }
+        }}
+        onSelect={selectTheme}
+        pendingPreset={pendingPreset}
+        themeSelection={currentThemeSelection}
+      />
       <DeckInfoSheet
         cards={cards}
         deck={deck}
@@ -342,45 +422,27 @@ function createStyles(colors: AppColors) {
       position: "absolute",
       right: 0,
     },
-    count: { color: colors.textTertiary, fontSize: fontSize.footnote },
-    header: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      paddingBottom: sizes.spacing.section,
+    lessons: {
+      paddingBottom: sizes.spacing.content,
       paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.small,
-    },
-    headingCopy: { flex: 1 },
-    infoButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
     },
     list: {
       paddingBottom: sizes.spacing.content,
       paddingHorizontal: sizes.spacing.content,
     },
     listView: { flex: 1 },
+    moreButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     position: {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
       textAlign: "center",
-    },
-    headerActionButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
-    resetButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
     },
     question: {
       color: colors.textPrimary,
@@ -391,6 +453,6 @@ function createStyles(colors: AppColors) {
     },
     screen: { backgroundColor: colors.canvas, flex: 1 },
     search: { paddingHorizontal: sizes.spacing.content },
-    title: { color: colors.textPrimary, ...textStyles.screenTitle },
+    tabs: { paddingHorizontal: sizes.spacing.content },
   });
 }

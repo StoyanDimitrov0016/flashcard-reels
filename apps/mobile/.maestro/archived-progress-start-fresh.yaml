@@ -12,6 +12,8 @@ appId: com.flashcardreels.app
 - assertVisible: "Start Versioned Test Deck fresh?"
 - tapOn: Delete saved progress
 - assertNotVisible: "Choose progress for Versioned Test Deck"
-- tapOn: Settings tab
+- tapOn: Decks tab
+- scrollUntilVisible:
+    element: Archived deck progress
 - tapOn: Archived deck progress
 - assertVisible: No archived progress yet.

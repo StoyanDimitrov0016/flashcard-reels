@@ -12,6 +12,7 @@ import { DeckThemeSelectionSheet } from "@/features/decks/presentation/component
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
 import { SavedProgressChoiceSheet } from "@/features/decks/presentation/components/saved-progress-choice-sheet";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
+import { useArchivedProgress } from "@/features/decks/presentation/controllers/use-archived-progress";
 import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
 import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
@@ -183,6 +184,39 @@ function DeckRow({
   );
 }
 
+type ArchivedProgressRowProps = Readonly<{ count: number; onPress: () => void }>;
+
+/** Removed decks whose learning progress is kept, under the installed decks. */
+function ArchivedProgressRow({ count, onPress }: ArchivedProgressRowProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+  const countLabel = count === 1 ? "1 removed deck" : `${count} removed decks`;
+
+  return (
+    <Pressable
+      accessibilityHint="Opens the progress kept from removed decks"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.archivedRow, pressed && styles.archivedRowPressed]}
+    >
+      <SymbolView
+        name={{ android: "archive", ios: "archivebox", web: "archive" }}
+        size={sizes.icon.small}
+        tintColor={colors.textSecondary}
+      />
+      <View style={styles.archivedCopy}>
+        <Text style={styles.archivedTitle}>Archived deck progress</Text>
+        <Text style={styles.cardCount}>{countLabel}</Text>
+      </View>
+      <SymbolView
+        name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
+        size={sizes.icon.small}
+        tintColor={colors.textTertiary}
+      />
+    </Pressable>
+  );
+}
+
 function DecksSkeleton() {
   const styles = createStyles(useAppTheme().colors);
 
@@ -230,14 +264,16 @@ export default function DecksScreen() {
   const openFocusedFeed = useOpenFocusedFeed();
   const { entries, loading, refresh } = useDeckCatalog();
   const { refresh: refreshProgress, rows: progressRows } = useFlashcardProgressList();
+  const { refresh: refreshArchived, rows: archivedRows } = useArchivedProgress();
   const reviewSummary = summarizeReviews(progressRows);
 
   useFocusEffect(
     useCallback(
       function refreshProgressWhenFocused() {
         refreshProgress();
+        refreshArchived();
       },
-      [refreshProgress]
+      [refreshArchived, refreshProgress]
     )
   );
   const { savedProgressService } = useDecks();
@@ -467,6 +503,14 @@ export default function DecksScreen() {
             keyboardShouldPersistTaps="handled"
             keyExtractor={({ deck }) => deck.id}
             ListEmptyComponent={query.trim() ? EmptyDeckSearch : EmptyDecks}
+            ListFooterComponent={
+              archivedRows.length > 0 ? (
+                <ArchivedProgressRow
+                  count={archivedRows.length}
+                  onPress={() => router.push("../archived-progress")}
+                />
+              ) : null
+            }
             renderItem={renderItem}
             style={styles.listView}
           />
@@ -531,6 +575,26 @@ export default function DecksScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    archivedCopy: { flex: 1, gap: sizes.spacing.xSmall },
+    archivedRow: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.borderSubtle,
+      borderRadius: sizes.radius.row,
+      borderWidth: sizes.border,
+      flexDirection: "row",
+      gap: sizes.spacing.xLarge,
+      marginTop: sizes.spacing.medium,
+      minHeight: sizes.input.standard + sizes.spacing.xSmall,
+      paddingHorizontal: sizes.spacing.xLarge,
+      paddingVertical: sizes.spacing.medium,
+    },
+    archivedRowPressed: { backgroundColor: colors.surfaceHover },
+    archivedTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.semibold,
+    },
     accent: { alignSelf: "stretch", width: 4 },
     actions: {
       alignItems: "center",

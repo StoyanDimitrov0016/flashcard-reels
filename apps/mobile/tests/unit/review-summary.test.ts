@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizeReviews } from "@/features/flashcard-progress/presentation/review-summary";
+import {
+  countReviewedCards,
+  summarizeReviews,
+} from "@/features/flashcard-progress/presentation/review-summary";
 
 function row(deckId: string, reviewCount: number) {
   return { deck: { id: deckId }, explanation: { reviewCount } };
@@ -21,5 +24,11 @@ describe("review summary", () => {
 
     expect(summary.reviewedCount).toBe(0);
     expect(summary.reviewedByDeckId.has("react")).toBe(false);
+  });
+
+  it("counts only cards with at least one review", () => {
+    expect(countReviewedCards([{ reviewCount: 3 }, { reviewCount: 0 }, { reviewCount: 1 }])).toBe(
+      2
+    );
   });
 });

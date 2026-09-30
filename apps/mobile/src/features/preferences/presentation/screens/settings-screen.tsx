@@ -116,11 +116,6 @@ export default function SettingsScreen() {
               title="Progress backup"
             />
             <PreferenceRow
-              icon={{ android: "archive", ios: "archivebox", web: "archive" }}
-              onPress={() => router.push("../archived-progress")}
-              title="Archived deck progress"
-            />
-            <PreferenceRow
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               iconColor={colors.error}
               onPress={() => {
