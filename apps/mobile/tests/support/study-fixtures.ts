@@ -18,6 +18,7 @@ export function makeFlashcard(
 ): Flashcard {
   return new Flashcard({
     active: true,
+    hasAudio: false,
     answer: `Answer ${index}`,
     createdAt: "2026-01-01T00:00:00.000Z",
     deckId,

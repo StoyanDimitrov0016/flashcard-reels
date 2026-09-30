@@ -154,6 +154,7 @@ describe("SQLite flashcard progress", () => {
 
   async function insertFlashcard(card: ReturnType<typeof makeFlashcard>): Promise<void> {
     await database.drizzle.insert(flashcards).values({
+      hasAudio: false,
       answer: card.answer,
       createdAt: card.createdAt,
       deckId: card.deckId,

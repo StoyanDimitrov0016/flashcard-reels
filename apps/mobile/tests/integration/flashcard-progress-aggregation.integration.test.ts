@@ -53,6 +53,7 @@ describe("SQLite flashcard-progress aggregation", () => {
     });
     await database.drizzle.insert(flashcards).values(
       [makeFlashcard(1), makeFlashcard(2)].map((card) => ({
+        hasAudio: card.hasAudio,
         answer: card.answer,
         createdAt: card.createdAt,
         deckId: card.deckId,

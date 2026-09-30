@@ -165,6 +165,7 @@ describe("learning-engine feed composer", () => {
 function candidate(id: string, overrides: Partial<FeedCandidate> = {}): FeedCandidate {
   const card = new Flashcard({
     active: true,
+    hasAudio: false,
     answer: `Answer ${id}`,
     createdAt: REVIEWED_AT,
     deckId: "deck-1",

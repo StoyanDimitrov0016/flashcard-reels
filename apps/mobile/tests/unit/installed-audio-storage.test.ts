@@ -95,7 +95,7 @@ describe("installed audio lookup", () => {
     const repository = { findSourceForFlashcard: vi.fn(() => ({ uri: "installed.mp3" })) };
     const service = new FlashcardAudioServiceImpl(repository);
 
-    expect(service.findSourceForFlashcard("deck", 7, "card")).toEqual({
+    expect(service.findSourceForFlashcard("deck", 7, "card", true)).toEqual({
       uri: "installed.mp3",
     });
     expect(repository.findSourceForFlashcard).toHaveBeenCalledWith("deck", 7, "card");

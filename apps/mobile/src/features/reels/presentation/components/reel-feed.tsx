@@ -116,7 +116,8 @@ export function ReelFeed({
         audioSource={flashcardAudioService.findSourceForFlashcard(
           item.card.deckId,
           deck.revision,
-          item.card.id
+          item.card.id,
+          item.card.hasAudio
         )}
         card={item.card}
         contentInsetTop={contentInsetTop}

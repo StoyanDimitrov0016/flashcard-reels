@@ -70,6 +70,7 @@ describe("SQLite study persistence", () => {
         makeFlashcard(2, TEST_DECK_ID, 0),
         makeFlashcard(3, OTHER_DECK_ID),
       ].map((card) => ({
+        hasAudio: card.hasAudio,
         answer: card.answer,
         createdAt: card.createdAt,
         deckId: card.deckId,
@@ -205,7 +206,7 @@ describe("SQLite study persistence", () => {
 
     await expect(
       database.runAsync(
-        'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at, has_audio) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
         testId(270),
         TEST_DECK_ID,
         0,
@@ -217,7 +218,7 @@ describe("SQLite study persistence", () => {
     ).rejects.toThrow();
     await expect(
       database.runAsync(
-        'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO flashcards (id, deck_id, "order", question, answer, created_at, updated_at, has_audio) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
         testId(271),
         TEST_DECK_ID,
         -1,

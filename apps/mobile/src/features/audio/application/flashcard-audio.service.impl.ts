@@ -9,7 +9,15 @@ export class FlashcardAudioServiceImpl implements FlashcardAudioService {
     this.flashcardAudioRepository = flashcardAudioRepository;
   }
 
-  findSourceForFlashcard(deckId: string, revision: number, flashcardId: string): AudioReference {
+  findSourceForFlashcard(
+    deckId: string,
+    revision: number,
+    flashcardId: string,
+    hasAudio: boolean
+  ): AudioReference {
+    if (!hasAudio) {
+      return null;
+    }
     return this.flashcardAudioRepository.findSourceForFlashcard(deckId, revision, flashcardId);
   }
 }

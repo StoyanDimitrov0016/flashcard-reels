@@ -57,6 +57,7 @@ function toModel(row: typeof flashcards.$inferSelect): Flashcard {
     deckId: row.deckId,
     order: row.order,
     active: row.active,
+    hasAudio: row.hasAudio,
     id: row.id,
     question: row.question,
     updatedAt: row.updatedAt,

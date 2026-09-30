@@ -121,6 +121,7 @@ CREATE TABLE `flashcards` (
 	`deck_id` text NOT NULL,
 	`order` integer NOT NULL,
 	`active` integer DEFAULT true NOT NULL,
+	`has_audio` integer NOT NULL,
 	`question` text NOT NULL,
 	`answer` text NOT NULL,
 	`lesson_id` text,
@@ -128,6 +129,7 @@ CREATE TABLE `flashcards` (
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "flashcards_has_audio_check" CHECK("flashcards"."has_audio" IN (0, 1)),
 	CONSTRAINT "flashcards_order_check" CHECK("flashcards"."order" >= 0)
 );
 --> statement-breakpoint

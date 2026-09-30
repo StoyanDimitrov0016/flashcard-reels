@@ -31,6 +31,7 @@ function cards(deckId: string, count: number, firstId: number): Flashcard[] {
         lessonId: null,
         question: `Question ${position}`,
         active: true,
+        hasAudio: false,
         updatedAt: "2026-01-01T00:00:00.000Z",
       })
   );

@@ -234,6 +234,7 @@ describe("SQLite learning progress reset transaction", () => {
   async function insertCard(index: number, deckId: string): Promise<void> {
     const card = makeFlashcard(index, deckId);
     await database.drizzle.insert(flashcards).values({
+      hasAudio: false,
       answer: card.answer,
       createdAt: card.createdAt,
       deckId,

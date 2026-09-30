@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f47d07b7-057a-491e-b132-832f0b658278",
+  "id": "8ca5039a-cca7-445d-9d24-90ac0b5b7590",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "deck_progress": {
@@ -760,6 +760,13 @@
           "autoincrement": false,
           "default": true
         },
+        "has_audio": {
+          "name": "has_audio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "question": {
           "name": "question",
           "type": "text",
@@ -838,6 +845,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "flashcards_has_audio_check": {
+          "name": "flashcards_has_audio_check",
+          "value": "\"flashcards\".\"has_audio\" IN (0, 1)"
+        },
         "flashcards_order_check": {
           "name": "flashcards_order_check",
           "value": "\"flashcards\".\"order\" >= 0"

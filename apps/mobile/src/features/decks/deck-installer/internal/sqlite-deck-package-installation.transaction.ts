@@ -172,6 +172,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             .update(flashcards)
             .set({
               active: true,
+              hasAudio: card.audio,
               answer: card.answer,
               lessonId: card.lessonId,
               lessonSectionId: card.lessonSectionId ?? null,
@@ -186,6 +187,7 @@ export class SQLiteDeckPackageInstallationTransaction<
             .insert(flashcards)
             .values({
               active: true,
+              hasAudio: card.audio,
               answer: card.answer,
               lessonId: card.lessonId,
               lessonSectionId: card.lessonSectionId ?? null,

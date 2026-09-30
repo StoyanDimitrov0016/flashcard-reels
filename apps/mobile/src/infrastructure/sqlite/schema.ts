@@ -86,6 +86,7 @@ export const flashcards = sqliteTable(
       .references(() => decks.id, { onDelete: "cascade" }),
     order: integer("order").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    hasAudio: integer("has_audio", { mode: "boolean" }).notNull(),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
     lessonId: text("lesson_id"),
@@ -94,6 +95,7 @@ export const flashcards = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    check("flashcards_has_audio_check", sql`${table.hasAudio} IN (0, 1)`),
     check("flashcards_order_check", sql`${table.order} >= 0`),
     index("flashcards_deck_id_idx").on(table.deckId),
     unique("flashcards_order_unique").on(table.deckId, table.order),

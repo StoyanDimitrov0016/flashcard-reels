@@ -110,6 +110,7 @@ export async function seedDeck(
   });
   await database.drizzle.insert(flashcards).values(
     cardIds.map((cardId, order) => ({
+      hasAudio: false,
       answer: `Answer ${order}`,
       createdAt: timestamp,
       deckId,

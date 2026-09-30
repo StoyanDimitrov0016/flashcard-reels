@@ -54,6 +54,7 @@ describe("SQLite learning-engine commit", () => {
       updatedAt: RATED_AT_AGAIN,
     });
     await database.drizzle.insert(flashcards).values({
+      hasAudio: false,
       answer: card.answer,
       createdAt: card.createdAt,
       deckId: card.deckId,

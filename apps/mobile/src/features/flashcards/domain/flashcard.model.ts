@@ -6,6 +6,7 @@ export type FlashcardFields = Readonly<{
   deckId: DeckId;
   order: number;
   active: boolean;
+  hasAudio: boolean;
   question: string;
   answer: string;
   lessonId: Uuid | null;
@@ -21,6 +22,7 @@ export class Flashcard {
   public readonly deckId: DeckId;
   public readonly order: number;
   public readonly active: boolean;
+  public readonly hasAudio: boolean;
   public readonly question: string;
   public readonly answer: string;
   public readonly lessonId: Uuid | null;
@@ -33,6 +35,7 @@ export class Flashcard {
     this.deckId = fields.deckId;
     this.order = fields.order;
     this.active = fields.active;
+    this.hasAudio = fields.hasAudio;
     this.question = fields.question;
     this.answer = fields.answer;
     this.lessonId = fields.lessonId;

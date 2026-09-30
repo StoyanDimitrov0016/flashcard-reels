@@ -12,6 +12,7 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
@@ -282,6 +283,38 @@ describe("deck package installation", () => {
   let database: NodeSqliteDatabase | null = null;
 
   afterEach(() => database?.close());
+
+  it.each([false, true])(
+    "offers audio according to the persisted package flag %s",
+    async (hasAudio) => {
+      database = new NodeSqliteDatabase();
+      const cardId = testId(990);
+      const manifest = deck(1, [card(cardId, 0)]);
+      manifest.cards = manifest.cards.map((row) => ({ ...row, audio: hasAudio }));
+      const files = hasAudio ? { [`audio/${cardId}.mp3`]: new Uint8Array([1, 2, 3]) } : {};
+      const { importer } = createImporter(database, new TestClock());
+      await importer.installFromBytes(archive(manifest, files));
+      const stored = await new SQLiteFlashcardRepository(database.drizzle).findById(cardId);
+      expect(stored?.hasAudio).toBe(hasAudio);
+      if (!stored) {
+        throw new Error("Missing installed card");
+      }
+      let lookups = 0;
+      const service = new FlashcardAudioServiceImpl({
+        findSourceForFlashcard(deckId, revision, id) {
+          lookups += 1;
+          return { uri: `deck-audio/${deckId}/${revision}/${id}.mp3` };
+        },
+      });
+      expect(service.findSourceForFlashcard(TEST_DECK_ID, 1, stored.id, stored.hasAudio)).toEqual(
+        hasAudio ? { uri: `deck-audio/${TEST_DECK_ID}/1/${cardId}.mp3` } : null
+      );
+      expect(lookups).toBe(hasAudio ? 1 : 0);
+      await expect(
+        database.runAsync("UPDATE flashcards SET has_audio = 2 WHERE id = ?", cardId)
+      ).rejects.toThrow();
+    }
+  );
 
   it("stores schema and author while deriving card order from the manifest array", async () => {
     database = new NodeSqliteDatabase();
