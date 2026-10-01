@@ -31,3 +31,4 @@ learning history, or the study flow.
 - [3 - Naming alignment before the next release](3-naming-alignment.md)
 - [4 - Lesson section references](4-lesson-section-references.md)
 - [5 - Learner data completion before the release](5-learner-data-completion.md)
+- [6 - Deep modules and robustness](6-deep-modules-and-robustness.md)
