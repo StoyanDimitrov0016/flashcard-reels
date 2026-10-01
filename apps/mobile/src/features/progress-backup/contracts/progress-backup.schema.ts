@@ -1,5 +1,9 @@
+export const PROGRESS_BACKUP_FORMAT = "flashcard-reels-learner-data";
+export const PROGRESS_BACKUP_VERSION = 1;
 import { z } from "zod";
 
+import { memoryStateValues } from "@/features/learning-engine/domain/flashcard-memory-state";
+import { ratingValues } from "@/features/learning-engine/domain/rating";
 import { AppPreferencesSchema } from "@/features/preferences/application/normalize-preferences";
 
 const ProgressBackupIdSchema = z.uuid();
@@ -61,7 +65,7 @@ const FlashcardMemoryStateSchema = z
   .object({
     flashcardId: ProgressBackupIdSchema,
     deckId: ProgressBackupIdSchema,
-    state: z.enum(["new", "learning", "review", "relearning"]),
+    state: z.enum(memoryStateValues),
     dueAt: ProgressBackupTimestampSchema,
     stability: z.number(),
     difficulty: z.number(),
@@ -81,7 +85,7 @@ const ReviewEventSchema = z
     id: ProgressBackupIdSchema,
     deckId: ProgressBackupIdSchema,
     flashcardId: ProgressBackupIdSchema,
-    rating: z.enum(["again", "hard", "good", "easy"]),
+    rating: z.enum(ratingValues),
     reviewedAt: ProgressBackupTimestampSchema,
     committedAt: ProgressBackupTimestampSchema,
   })
@@ -89,8 +93,8 @@ const ReviewEventSchema = z
 
 const ProgressBackupDocumentUncompiledSchema = z
   .object({
-    format: z.literal("flashcard-reels-learner-data"),
-    version: z.literal(1),
+    format: z.literal(PROGRESS_BACKUP_FORMAT),
+    version: z.literal(PROGRESS_BACKUP_VERSION),
     exportedAt: ProgressBackupTimestampSchema,
     learnerPreferences: LearnerPreferencesSchema,
     deckThemeSelections: z.array(DeckThemeSelectionSchema),

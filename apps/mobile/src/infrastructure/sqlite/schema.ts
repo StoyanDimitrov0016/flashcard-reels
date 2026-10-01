@@ -10,19 +10,29 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+import { memoryStateValues } from "@/features/learning-engine/domain/flashcard-memory-state";
+import { ratingValues } from "@/features/learning-engine/domain/rating";
+import {
+  controlSides,
+  ratingDirections,
+  studyIslandPositions,
+  colorModes,
+} from "@/features/preferences/domain/app-preferences";
+import { sqlValueList } from "@/infrastructure/sqlite/sql-value-list";
+
 export const learnerPreferences = sqliteTable(
   "learner_preferences",
   {
     id: text("id").primaryKey().notNull(),
-    colorMode: text("color_mode", { enum: ["light", "dark", "device"] }).notNull(),
+    colorMode: text("color_mode", { enum: colorModes }).notNull(),
     studyIslandPosition: text("study_island_position", {
-      enum: ["left", "bottom", "right"],
+      enum: studyIslandPositions,
     }).notNull(),
-    ratingDirection: text("rating_direction", { enum: ["forward", "reverse"] }).notNull(),
+    ratingDirection: text("rating_direction", { enum: ratingDirections }).notNull(),
     audioEnabled: integer("audio_enabled", { mode: "boolean" }).notNull(),
-    audioSide: text("audio_side", { enum: ["primary", "opposite"] }).notNull(),
+    audioSide: text("audio_side", { enum: controlSides }).notNull(),
     readingEnabled: integer("reading_enabled", { mode: "boolean" }).notNull(),
-    readingSide: text("reading_side", { enum: ["primary", "opposite"] }).notNull(),
+    readingSide: text("reading_side", { enum: controlSides }).notNull(),
     hapticsEnabled: integer("haptics_enabled", { mode: "boolean" }).notNull(),
     updatedAt: text("updated_at").notNull(),
   },
@@ -30,25 +40,25 @@ export const learnerPreferences = sqliteTable(
     uniqueIndex("learner_preferences_singleton_idx").on(sql`(1)`),
     check(
       "learner_preferences_color_mode_check",
-      sql`${table.colorMode} IN ('light', 'dark', 'device')`
+      sql`${table.colorMode} IN (${sqlValueList(colorModes)})`
     ),
     check(
       "learner_preferences_study_island_position_check",
-      sql`${table.studyIslandPosition} IN ('left', 'bottom', 'right')`
+      sql`${table.studyIslandPosition} IN (${sqlValueList(studyIslandPositions)})`
     ),
     check(
       "learner_preferences_rating_direction_check",
-      sql`${table.ratingDirection} IN ('forward', 'reverse')`
+      sql`${table.ratingDirection} IN (${sqlValueList(ratingDirections)})`
     ),
     check("learner_preferences_audio_enabled_check", sql`${table.audioEnabled} IN (0, 1)`),
     check(
       "learner_preferences_audio_side_check",
-      sql`${table.audioSide} IN ('primary', 'opposite')`
+      sql`${table.audioSide} IN (${sqlValueList(controlSides)})`
     ),
     check("learner_preferences_reading_enabled_check", sql`${table.readingEnabled} IN (0, 1)`),
     check(
       "learner_preferences_reading_side_check",
-      sql`${table.readingSide} IN ('primary', 'opposite')`
+      sql`${table.readingSide} IN (${sqlValueList(controlSides)})`
     ),
     check("learner_preferences_haptics_enabled_check", sql`${table.hapticsEnabled} IN (0, 1)`),
   ]
@@ -168,7 +178,7 @@ export const flashcardMemoryStates = sqliteTable(
     id: text("id").primaryKey().notNull(),
     flashcardId: text("flashcard_id").notNull().unique(),
     deckId: text("deck_id").notNull(),
-    state: text("state", { enum: ["new", "learning", "review", "relearning"] }).notNull(),
+    state: text("state", { enum: memoryStateValues }).notNull(),
     dueAt: text("due_at").notNull(),
     stability: real("stability").notNull(),
     difficulty: real("difficulty").notNull(),
@@ -184,7 +194,7 @@ export const flashcardMemoryStates = sqliteTable(
   (table) => [
     check(
       "flashcard_memory_states_state_check",
-      sql`${table.state} IN ('new', 'learning', 'review', 'relearning')`
+      sql`${table.state} IN (${sqlValueList(memoryStateValues)})`
     ),
     check("flashcard_memory_states_elapsed_days_check", sql`${table.elapsedDays} >= 0`),
     check("flashcard_memory_states_scheduled_days_check", sql`${table.scheduledDays} >= 0`),
@@ -201,14 +211,14 @@ export const flashcardReviewEvents = sqliteTable(
     id: text("id").primaryKey().notNull(),
     deckId: text("deck_id").notNull(),
     flashcardId: text("flashcard_id").notNull(),
-    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }).notNull(),
+    rating: text("rating", { enum: ratingValues }).notNull(),
     reviewedAt: text("reviewed_at").notNull(),
     committedAt: text("committed_at").notNull(),
   },
   (table) => [
     check(
       "flashcard_review_events_rating_check",
-      sql`${table.rating} IN ('again', 'hard', 'good', 'easy')`
+      sql`${table.rating} IN (${sqlValueList(ratingValues)})`
     ),
     index("flashcard_review_events_deck_id_idx").on(table.deckId),
     index("flashcard_review_events_flashcard_id_idx").on(table.flashcardId),
@@ -318,7 +328,7 @@ export const flashcardReviewAttempts = sqliteTable(
       .notNull()
       .references(() => flashcards.id, { onDelete: "cascade" }),
     reelPosition: integer("reel_position").notNull(),
-    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }),
+    rating: text("rating", { enum: ratingValues }),
     createdAt: text("created_at").notNull(),
     ratedAt: text("rated_at"),
     updatedAt: text("updated_at").notNull(),
@@ -328,7 +338,7 @@ export const flashcardReviewAttempts = sqliteTable(
     check("flashcard_review_attempts_reel_position_check", sql`${table.reelPosition} >= 0`),
     check(
       "flashcard_review_attempts_rating_check",
-      sql`${table.rating} IS NULL OR ${table.rating} IN ('again', 'hard', 'good', 'easy')`
+      sql`${table.rating} IS NULL OR ${table.rating} IN (${sqlValueList(ratingValues)})`
     ),
     check(
       "flashcard_review_attempts_rating_timestamp_check",

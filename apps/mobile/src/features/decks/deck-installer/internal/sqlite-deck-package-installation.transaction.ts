@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 
 import type {
   DeckPackage,
@@ -13,6 +13,7 @@ import {
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
 import { DEFAULT_DECK_THEME_ID } from "@/features/decks/domain/deck-theme-selection.model";
+import { activeSessionsAffectedByDeck } from "@/features/study/infrastructure/active-sessions-affected-by-deck";
 import {
   decks,
   deckThemeSelections,
@@ -263,17 +264,7 @@ export class SQLiteDeckPackageInstallationTransaction<
       const affectedSessions = transaction
         .select({ id: studySessions.id })
         .from(studySessions)
-        .where(
-          and(
-            isNull(studySessions.completedAt),
-            existingDeck
-              ? or(
-                  eq(studySessions.scope, "discover"),
-                  and(eq(studySessions.scope, "focus"), eq(studySessions.deckId, deck.id))
-                )
-              : eq(studySessions.scope, "discover")
-          )
-        )
+        .where(activeSessionsAffectedByDeck(deck.id, { includeFocus: Boolean(existingDeck) }))
         .all();
       for (const session of affectedSessions) {
         transaction

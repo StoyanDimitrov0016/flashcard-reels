@@ -68,10 +68,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   }
 
   async extendFeed(cards: readonly Flashcard[], studySessionId: string): Promise<PreparedReelFeed> {
-    const session = await this.studyService.findSession(studySessionId);
-    if (!session) {
-      throw new Error(`Missing study session ${studySessionId}`);
-    }
+    const session = await this.requireSession(studySessionId);
     await this.ensureMaterialized(
       cards,
       session,
@@ -81,10 +78,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   }
 
   async recordVisibleCard(studySessionId: string, flashcardId: string): Promise<void> {
-    const session = await this.studyService.findSession(studySessionId);
-    if (!session) {
-      throw new Error(`Missing study session ${studySessionId}`);
-    }
+    const session = await this.requireSession(studySessionId);
     const currentState = parseFeedState(session.feedState);
     const nextState = rememberCard(currentState, flashcardId);
     await this.studyService.updateSessionFeedState(studySessionId, JSON.stringify(nextState));
@@ -102,11 +96,16 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     sourceCards: readonly Flashcard[],
     studySessionId: string
   ): Promise<PreparedReelFeed> {
+    const session = await this.requireSession(studySessionId);
+    return this.buildPreparedFeed(sourceCards, session);
+  }
+
+  private async requireSession(studySessionId: string) {
     const session = await this.studyService.findSession(studySessionId);
     if (!session) {
       throw new Error(`Missing study session ${studySessionId}`);
     }
-    return this.buildPreparedFeed(sourceCards, session);
+    return session;
   }
 
   private async ensureMaterialized(
@@ -120,8 +119,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     additionalWindow: number = FEED_ENGINE_CONFIG.futureWindowSize,
     anchorFlashcardId: string | null = null
   ): Promise<void> {
-    const targetPosition =
-      Math.max(session.currentReelPosition, session.furthestReelPosition) + additionalWindow;
+    const targetPosition = leadingReelPosition(session) + additionalWindow;
     const candidates = await this.buildCandidates(sourceCards, session);
     const feedState = parseFeedState(session.feedState);
     await this.materializeUntilTarget(
@@ -264,8 +262,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   ): Promise<PreparedReelFeed> {
     const materializedThrough = await this.findMaterializedThrough(
       session.id,
-      Math.max(session.currentReelPosition, session.furthestReelPosition) +
-        FEED_ENGINE_CONFIG.futureWindowSize
+      leadingReelPosition(session) + FEED_ENGINE_CONFIG.futureWindowSize
     );
     const loadedFromReelPosition = Math.max(
       0,
@@ -394,4 +391,10 @@ function toCandidate(
     memoryState,
     retrievability,
   };
+}
+
+function leadingReelPosition(
+  session: Readonly<{ currentReelPosition: number; furthestReelPosition: number }>
+): number {
+  return Math.max(session.currentReelPosition, session.furthestReelPosition);
 }

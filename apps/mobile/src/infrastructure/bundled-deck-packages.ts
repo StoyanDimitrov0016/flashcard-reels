@@ -3,6 +3,7 @@ import { File } from "expo-file-system";
 
 import type { DeckCoverAsset, DeckId } from "@/features/decks/domain/deck.model";
 
+import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
 import {
   isDeckThemeId,
   type DeckThemeId,
@@ -28,15 +29,7 @@ const packageAssets: Readonly<Record<string, number>> = {
 };
 
 function isDeckCoverAsset(value: string): value is DeckCoverAsset {
-  return [
-    "cards",
-    "computer-science",
-    "database",
-    "javascript",
-    "operating-systems",
-    "react",
-    "system-design",
-  ].includes(value);
+  return DeckCoverAssetSchema.safeParse(value).success;
 }
 
 export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>> =

@@ -3,13 +3,13 @@ import type { ReactElement } from "react";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 
-import type {
-  AppPreferences,
-  ControlSide,
-  RatingDirection,
-  StudyIslandPosition,
+import {
+  type AppPreferences,
+  type ControlSide,
+  type RatingDirection,
+  type StudyIslandPosition,
+  studyIslandPositions,
 } from "@/features/preferences/domain/app-preferences";
-
 import { recallOptions } from "@/features/reels/presentation/recall-options";
 import {
   deriveControlPlacement,
@@ -25,7 +25,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-const positions: readonly StudyIslandPosition[] = ["left", "bottom", "right"];
+const positions: readonly StudyIslandPosition[] = studyIslandPositions;
 
 // The preview is a small card, so its island uses compact markers instead of the real 40pt ones.
 const PREVIEW_MARKER = 24;

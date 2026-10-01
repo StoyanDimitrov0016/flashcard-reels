@@ -1,11 +1,6 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
-
-export type OpenStudySessionResult = Readonly<{
-  created: boolean;
-  replacedSessionId: string | null;
-  session: StudySession;
-}>;
+import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { OpenStudySession } from "@/features/study/domain/study.service";
 
 export interface StudySessionLifecycleTransaction {
   open(
@@ -14,5 +9,5 @@ export interface StudySessionLifecycleTransaction {
     replaceExisting: boolean,
     now: string,
     sessionId: string
-  ): Promise<OpenStudySessionResult>;
+  ): Promise<OpenStudySession>;
 }

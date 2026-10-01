@@ -2,6 +2,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import { defaultDatabaseDirectory } from "expo-sqlite";
 import { Platform } from "react-native";
 
+import { DeckImportFileNamePattern } from "@/features/decks/domain/deck-import-file-name";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const RESET_MARKER = "flashcard-reels-reset-pending";
@@ -13,7 +14,7 @@ const DATABASE_FILES = [
   "flashcard-reels-v5.db",
   "flashcard-reels-v7.db",
 ];
-const DeckImportFileNamePattern = /^deck-import-.*\.fcrdeck$/;
+
 let storagePrepared = false;
 
 /** Root retries must not apply a new request while storage is already open. */

@@ -13,6 +13,7 @@ import {
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import { useRecallSession } from "@/features/reels/presentation/hooks/use-recall-session";
 import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
+import { hasRecurrence } from "@/features/study/domain/recurrences";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
@@ -330,8 +331,4 @@ export function useReelController({
     requestFeedExtension,
     ...recallSession,
   };
-}
-
-function hasRecurrence(rating: Rating | undefined): boolean {
-  return rating === "again" || rating === "hard";
 }

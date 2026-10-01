@@ -9,6 +9,8 @@ import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 
 import {
+  PROGRESS_BACKUP_FORMAT,
+  PROGRESS_BACKUP_VERSION,
   ProgressBackupDocumentSchema,
   summarizeProgressBackup,
   type ProgressBackupDocument,
@@ -192,10 +194,10 @@ function parseIncomingBackup(value: unknown) {
     typeof value === "object" &&
     value !== null &&
     "format" in value &&
-    value.format === "flashcard-reels-learner-data" &&
+    value.format === PROGRESS_BACKUP_FORMAT &&
     "version" in value &&
     typeof value.version === "number" &&
-    value.version !== 1
+    value.version !== PROGRESS_BACKUP_VERSION
   ) {
     throw new ProgressBackupVersionError(value.version);
   }

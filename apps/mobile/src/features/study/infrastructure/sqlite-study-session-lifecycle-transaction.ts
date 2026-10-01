@@ -1,10 +1,8 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type {
-  OpenStudySessionResult,
-  StudySessionLifecycleTransaction,
-} from "@/features/study/application/study-session-lifecycle-transaction";
+import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle-transaction";
+import type { OpenStudySession } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
@@ -27,7 +25,7 @@ export class SQLiteStudySessionLifecycleTransaction<
     replaceExisting: boolean,
     now: string,
     sessionId: string
-  ): Promise<OpenStudySessionResult> {
+  ): Promise<OpenStudySession> {
     return this.database.transaction((transaction) => {
       const activeRows = transaction
         .select()

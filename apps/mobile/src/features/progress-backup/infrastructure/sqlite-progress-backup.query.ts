@@ -1,10 +1,14 @@
 import { asc, eq } from "drizzle-orm";
 
 import type { ProgressBackupQuery } from "@/features/progress-backup/application/progress-backup.query";
-import type { ProgressBackupDocument } from "@/features/progress-backup/contracts/progress-backup.schema";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { defaultAppPreferences } from "@/features/preferences/domain/app-preferences";
+import {
+  type ProgressBackupDocument,
+  PROGRESS_BACKUP_FORMAT,
+  PROGRESS_BACKUP_VERSION,
+} from "@/features/progress-backup/contracts/progress-backup.schema";
 import {
   learnerPreferences,
   deckThemeSelections,
@@ -49,8 +53,8 @@ export class SQLiteProgressBackupQuery<TRunResult = unknown> implements Progress
         row.createdAt = new Date(row.createdAt).toISOString();
       }
       return {
-        format: "flashcard-reels-learner-data" as const,
-        version: 1 as const,
+        format: PROGRESS_BACKUP_FORMAT,
+        version: PROGRESS_BACKUP_VERSION,
         exportedAt,
         learnerPreferences: transaction
           .select({

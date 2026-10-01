@@ -4,10 +4,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
 import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
 import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
-import type {
-  OpenStudySessionResult,
-  StudySessionLifecycleTransaction,
-} from "@/features/study/application/study-session-lifecycle-transaction";
+import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle-transaction";
 import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { RandomSource } from "@/features/study/domain/recurrences";
@@ -18,7 +15,6 @@ import type { StudySessionRecurrenceRepository } from "@/features/study/domain/s
 import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
-import type { StudyService } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
@@ -32,14 +28,13 @@ import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review
 import {
   AGGREGATION_CHECK_INTERVAL,
   DETAILED_REVIEW_HISTORY_RETENTION,
-  EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
+  getFirstEditableReelPosition,
   FOREGROUND_AGGREGATION_CHUNK_LIMIT,
   PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
-
-export type OpenStudySession = OpenStudySessionResult;
+import { type OpenStudySession, type StudyService } from "@/features/study/domain/study.service";
 
 export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
@@ -163,56 +158,38 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       }
     }
     // oxlint-enable no-await-in-loop
-    // A completed session may need more than the foreground aggregation limit.
-    // oxlint-disable no-await-in-loop -- Each pass advances durable aggregation checkpoints.
-    while (true) {
-      const pending =
-        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(
-          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-        );
-      if (pending.length === 0) {
-        return;
-      }
-      for (const session of pending) {
-        await this.commitAndAggregateCompletedSession(session.id);
-        const updated = await this.studySessionRepository.findById(session.id);
-        if (
-          !updated ||
-          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
-        ) {
-          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
-        }
-      }
-    }
-    // oxlint-enable no-await-in-loop
+    await this.drainPendingAggregation(() =>
+      this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(
+        PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+      )
+    );
   }
 
   async settleActiveSessionsAffectedByDeck(deckId: DeckId, includeFocused: boolean): Promise<void> {
-    const mixed = await this.studySessionRepository.findActiveByScope("discover");
-    if (mixed) {
-      await this.completeSession(mixed.id);
-    }
-    if (!includeFocused) {
-      return;
-    }
-    const focused = await this.studySessionRepository.findActiveByScope("focus");
-    if (focused?.deckId === deckId) {
-      await this.completeSession(focused.id);
+    const sessions = await this.studySessionRepository.listActiveAffectedByDeck(
+      deckId,
+      includeFocused
+    );
+    for (const session of sessions) {
+      // oxlint-disable-next-line no-await-in-loop -- Each settlement commits and aggregates one session.
+      await this.completeSession(session.id);
     }
   }
 
   async settleBeforeDeckRemoval(deckId: DeckId): Promise<void> {
     await this.settleActiveSessionsAffectedByDeck(deckId, true);
+    await this.drainPendingAggregation(() =>
+      this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
+        deckId,
+        PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
+      )
+    );
+  }
 
-    // Removing cards also removes their session attempts. Finish completed
-    // sessions with pending reviews for this deck before removing its content.
-    // oxlint-disable no-await-in-loop -- The next batch depends on the committed aggregation checkpoints.
+  private async drainPendingAggregation(query: () => Promise<StudySession[]>): Promise<void> {
+    // oxlint-disable no-await-in-loop -- Each pass advances durable aggregation checkpoints.
     while (true) {
-      const pending =
-        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
-          deckId,
-          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-        );
+      const pending = await query();
       if (pending.length === 0) {
         return;
       }
@@ -475,8 +452,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
       if (!session) {
         return;
       }
-      const firstEditablePosition =
-        session.furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
+      const firstEditablePosition = getFirstEditableReelPosition(session.furthestReelPosition);
       if (firstEditablePosition > 0) {
         const attempts = await this.reviewAttemptRepository.listUncommittedBeforeReelPosition(
           studySessionId,

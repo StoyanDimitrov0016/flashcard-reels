@@ -1,3 +1,7 @@
+export function getFirstEditableReelPosition(furthestReelPosition: number): number {
+  return furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
+}
+
 export const EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE = 5;
 export const PERSISTED_SESSION_FEED_HISTORY_LIMIT = 100;
 export const SESSION_COMPACTION_INTERVAL = 25;

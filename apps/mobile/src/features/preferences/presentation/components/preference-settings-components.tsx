@@ -2,8 +2,7 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Children, isValidElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { ColorMode } from "@/features/preferences/domain/app-preferences";
-
+import { type ColorMode, colorModes } from "@/features/preferences/domain/app-preferences";
 import { AppSwitch } from "@/shared/presentation/components/app-switch";
 import {
   SegmentedControl,
@@ -25,14 +24,14 @@ const colorModeIcons: Record<ColorMode, SymbolViewProps["name"]> = {
   device: { android: "devices", ios: "iphone", web: "devices" },
 };
 
-const colorModeOptions: readonly SegmentedControlOption<ColorMode>[] = (
-  ["light", "dark", "device"] as const
-).map((colorMode) => ({
-  accessibilityLabel: `${colorModeLabels[colorMode]} color mode`,
-  icon: colorModeIcons[colorMode],
-  label: colorModeLabels[colorMode],
-  value: colorMode,
-}));
+const colorModeOptions: readonly SegmentedControlOption<ColorMode>[] = colorModes.map(
+  (colorMode) => ({
+    accessibilityLabel: `${colorModeLabels[colorMode]} color mode`,
+    icon: colorModeIcons[colorMode],
+    label: colorModeLabels[colorMode],
+    value: colorMode,
+  })
+);
 
 type ColorModeSelectorProps = Readonly<{
   onChange: (value: ColorMode) => void;

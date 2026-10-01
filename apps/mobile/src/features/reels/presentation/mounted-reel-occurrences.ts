@@ -3,8 +3,8 @@ import type {
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
 
-import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
 import { MOUNTED_REEL_HISTORY_LIMIT } from "@/features/reels/presentation/reel-runtime-config";
+import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";
 
 type MountedOccurrenceRetention = Readonly<{
   currentReelPosition: number;

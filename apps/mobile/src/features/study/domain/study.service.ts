@@ -7,7 +7,7 @@ import type { StudySessionReel } from "@/features/study/domain/study-session-ree
 import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
 import type { StudySessionPosition } from "@/features/study/domain/study-session.repository";
 
-type OpenStudySession = Readonly<{
+export type OpenStudySession = Readonly<{
   created: boolean;
   replacedSessionId: string | null;
   session: StudySession;

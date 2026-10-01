@@ -1,4 +1,4 @@
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
@@ -6,6 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
+import { activeSessionsAffectedByDeck } from "@/features/study/infrastructure/active-sessions-affected-by-deck";
 import {
   deckProgress,
   flashcardMemoryStates,
@@ -153,15 +154,7 @@ export class SQLiteLearningProgressResetTransaction<
   ): void {
     transaction
       .delete(studySessions)
-      .where(
-        and(
-          isNull(studySessions.completedAt),
-          or(
-            eq(studySessions.scope, "discover"),
-            and(eq(studySessions.scope, "focus"), eq(studySessions.deckId, deckId))
-          )
-        )
-      )
+      .where(activeSessionsAffectedByDeck(deckId, { includeFocus: true }))
       .run();
   }
 }

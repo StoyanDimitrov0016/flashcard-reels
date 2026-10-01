@@ -8,11 +8,11 @@ import type { FocusedCardState } from "@/features/reels/presentation/open-focuse
 
 import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
 import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
-import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
+import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
 import { sizes } from "@/shared/presentation/sizes";

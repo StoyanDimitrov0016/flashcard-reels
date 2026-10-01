@@ -1,10 +1,11 @@
-import type { Rating } from "@/features/learning-engine/domain/rating";
 import type {
   AppPreferences,
   ControlSide,
   RatingDirection,
   StudyIslandPosition,
 } from "@/features/preferences/domain/app-preferences";
+
+import { type Rating, ratingValues } from "@/features/learning-engine/domain/rating";
 
 type StudyControlOrientation = "horizontal" | "vertical";
 type StudyControlAudioPosition = "left" | "right" | "above" | "below";
@@ -20,8 +21,11 @@ export type ResolvedStudyControlLayout = Readonly<{
   readingEnabled: boolean;
 }>;
 
-const canonicalRatingOrder: readonly Rating[] = ["again", "hard", "good", "easy"];
-const reverseRatingOrder: readonly Rating[] = ["easy", "good", "hard", "again"];
+const canonicalRatingOrder: readonly Rating[] = ratingValues;
+const reverseRatingOrder: readonly Rating[] = ratingValues.reduce<Rating[]>((order, rating) => {
+  order.unshift(rating);
+  return order;
+}, []);
 
 function deriveIslandOrientation(position: StudyIslandPosition): StudyControlOrientation {
   return position === "bottom" ? "horizontal" : "vertical";
