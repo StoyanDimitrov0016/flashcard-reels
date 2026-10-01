@@ -37,7 +37,6 @@ export interface StudyService {
   appendSessionReels(
     sessionId: string,
     cards: readonly Flashcard[],
-    feedState: string,
     baseFeedPositionStart?: number,
     reelPositions?: number[]
   ): Promise<void>;

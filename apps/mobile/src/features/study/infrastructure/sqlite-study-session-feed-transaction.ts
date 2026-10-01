@@ -16,12 +16,20 @@ export class SQLiteStudySessionFeedTransaction<
     this.database = database;
   }
 
-  async append(
-    sessionId: string,
-    items: readonly StudySessionReel[],
-    feedState: string
-  ): Promise<void> {
+  async append(sessionId: string, items: readonly StudySessionReel[]): Promise<void> {
     this.database.transaction((transaction) => {
+      const session = transaction
+        .select({ id: studySessions.id })
+        .from(studySessions)
+        .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
+        .get();
+      if (!session) {
+        throw new OperationError({
+          code: "STUDY_SESSION_ENDED",
+          context: { sessionId },
+          message: `Could not update active study session ${sessionId}`,
+        });
+      }
       if (items.length > 0) {
         transaction
           .insert(studySessionReels)
@@ -35,20 +43,6 @@ export class SQLiteStudySessionFeedTransaction<
             }))
           )
           .run();
-      }
-
-      const updated = transaction
-        .update(studySessions)
-        .set({ feedState })
-        .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
-        .returning({ id: studySessions.id })
-        .all();
-      if (updated.length === 0) {
-        throw new OperationError({
-          code: "STUDY_SESSION_ENDED",
-          context: { sessionId },
-          message: `Could not update active study session ${sessionId}`,
-        });
       }
     });
   }

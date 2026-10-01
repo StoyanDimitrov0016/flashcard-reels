@@ -335,9 +335,7 @@ describe("SQLite study persistence", () => {
       studySessionId: session.id,
     });
 
-    await expect(
-      feedTransaction.append(session.id, [item, duplicate], '{"cursor":1}')
-    ).rejects.toThrow();
+    await expect(feedTransaction.append(session.id, [item, duplicate])).rejects.toThrow();
     expect(await items.listBySessionId(session.id)).toEqual([]);
     const rolledBackSession = await sessions.findById(session.id);
     expect(rolledBackSession?.feedState).toBe("{}");

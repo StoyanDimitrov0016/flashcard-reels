@@ -9,16 +9,24 @@ const harness = vi.hoisted(() => ({
   report: vi.fn(),
 }));
 vi.mock("react", () => ({
+  useCallback: (callback: unknown) => callback,
   useRef: (current: unknown) => ({ current }),
   useEffect: (effect: () => () => void) => {
     harness.cleanup = effect();
   },
   useState: (initial: unknown) => {
-    harness.state = initial;
+    let current = initial;
+    const observesDeleteState = typeof initial === "object";
+    if (observesDeleteState) {
+      harness.state = current;
+    }
     return [
       initial,
       (next: unknown) => {
-        harness.state = typeof next === "function" ? next(harness.state) : next;
+        current = typeof next === "function" ? next(current) : next;
+        if (observesDeleteState) {
+          harness.state = current;
+        }
       },
     ];
   },

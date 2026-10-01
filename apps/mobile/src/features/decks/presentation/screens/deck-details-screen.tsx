@@ -49,6 +49,7 @@ import { SegmentedControl } from "@/shared/presentation/components/segmented-con
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -155,7 +156,6 @@ export default function DeckDetailsScreen() {
   const [showDeckInfo, setShowDeckInfo] = useState(false);
   const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const lessons = readingLists.find((list) => list.deckId === deckId)?.lessons ?? [];
   const activeTab: DeckPageTab = lessons.length > 0 ? tab : "cards";
@@ -172,23 +172,25 @@ export default function DeckDetailsScreen() {
     />
   );
   const audioSource = useFlashcardAudioSource(deck, selectedCard);
-  const confirmReset = () => {
-    if (resetting || deckId === null) {
+  const reset = useSingleFlight(async (): Promise<void> => {
+    if (deckId === null) {
       return;
     }
-    setResetting(true);
     setResetError(null);
-    void resetDeckProgress(deckId)
-      .then(() => {
-        haptics.resetCompleted();
-        setResetPresented(false);
-      })
-      .catch((error: unknown) => {
-        reportError(error, "Deck progress reset failure");
-        setResetError(getErrorFeedback(error).message);
-      })
-      .finally(() => setResetting(false));
-  };
+    try {
+      await resetDeckProgress(deckId);
+      if (!reset.isActive()) {
+        return;
+      }
+      haptics.resetCompleted();
+      setResetPresented(false);
+    } catch (error) {
+      reportError(error, "Deck progress reset failure");
+      setResetError(getErrorFeedback(error).message);
+    }
+  });
+  const resetting = reset.busy;
+  const confirmReset = () => void reset.run();
   const openAction = (action: DeckAction) => {
     switch (action) {
       case "theme":

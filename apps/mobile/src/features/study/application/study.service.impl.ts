@@ -288,7 +288,6 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   async appendSessionReels(
     sessionId: string,
     cards: readonly Flashcard[],
-    feedState: string,
     baseFeedPositionStart = 0,
     reelPositions = cards.map((_card, index) => baseFeedPositionStart + index)
   ): Promise<void> {
@@ -305,7 +304,7 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
           studySessionId: sessionId,
         })
     );
-    await this.studySessionFeedTransaction.append(sessionId, items, feedState);
+    await this.studySessionFeedTransaction.append(sessionId, items);
   }
 
   async updateSessionFeedState(sessionId: string, feedState: string): Promise<void> {

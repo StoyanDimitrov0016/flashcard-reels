@@ -133,7 +133,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       targetPosition,
       candidates,
       feedState,
-      feedState,
       anchorFlashcardId
     );
   }
@@ -142,7 +141,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     session: Readonly<{ id: string }>,
     targetPosition: number,
     candidates: readonly FeedCandidate[],
-    persistedFeedState: FeedState,
     selectionFeedState: FeedState,
     anchorFlashcardId: string | null
   ): Promise<void> {
@@ -155,7 +153,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       session,
       targetPosition,
       candidates,
-      persistedFeedState,
       selectionFeedState,
       anchorFlashcardId
     );
@@ -164,7 +161,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
         session,
         targetPosition,
         candidates,
-        persistedFeedState,
         nextState,
         anchorFlashcardId
       );
@@ -202,7 +198,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     session: Readonly<{ id: string }>,
     targetPosition: number,
     candidates: readonly FeedCandidate[],
-    persistedFeedState: FeedState,
     initialSelectionState: FeedState,
     anchorFlashcardId: string | null
   ): Promise<FeedState | null> {
@@ -255,7 +250,6 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     await this.studyService.appendSessionReels(
       session.id,
       batchCards,
-      JSON.stringify(persistedFeedState),
       baseFeedPositionStart,
       batchReelPositions
     );

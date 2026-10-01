@@ -9,6 +9,7 @@ import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { reportError } from "@/shared/errors/report-error";
 import { showErrorToast, showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 
 type PausedDeckProgressOptions = Readonly<{
   /** While true, a newly paused deck waits before its choice opens, such as during an import. */
@@ -26,7 +27,6 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
   const [paused, setPaused] = useState<PendingDeckProgress[]>([]);
   const [selected, setSelected] = useState<PendingDeckProgress | null>(null);
   const [confirmingStartFresh, setConfirmingStartFresh] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const prompted = useRef(new Set<string>());
   const loadSequence = useRef(0);
@@ -84,11 +84,10 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
     [paused, selected, suspendPrompt]
   );
 
-  const resolve = async (startFresh: boolean) => {
-    if (!selected || busy) {
+  const resolution = useSingleFlight(async (startFresh: boolean): Promise<void> => {
+    if (!selected) {
       return;
     }
-    setBusy(true);
     setError(null);
     try {
       if (startFresh) {
@@ -98,6 +97,9 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
       }
       invalidateDeckContent();
       invalidateLearningProgress();
+      if (!resolution.isActive()) {
+        return;
+      }
       setSelected(null);
       setConfirmingStartFresh(false);
       refresh();
@@ -106,16 +108,14 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
       reportError(cause, "Paused progress resolution failure");
       setError("Could not update saved progress. Try again.");
       setConfirmingStartFresh(false);
-    } finally {
-      setBusy(false);
     }
-  };
+  });
 
   return {
     paused,
     selected,
     confirmingStartFresh,
-    busy,
+    busy: resolution.busy,
     error,
     refresh,
     isPaused: (deckId: DeckId) => paused.some((progress) => progress.deckId === deckId),
@@ -128,12 +128,15 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
     },
     close: () => {
       if (!confirmingStartFresh) {
+        if (!resolution.isActive()) {
+          return;
+        }
         setSelected(null);
       }
     },
     askToStartFresh: () => setConfirmingStartFresh(true),
     cancelStartFresh: () => setConfirmingStartFresh(false),
-    continueProgress: () => void resolve(false),
-    startFresh: () => void resolve(true),
+    continueProgress: () => void resolution.run(false),
+    startFresh: () => void resolution.run(true),
   };
 }

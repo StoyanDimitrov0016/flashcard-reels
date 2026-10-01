@@ -7,12 +7,15 @@ vi.mock("@/infrastructure/app-services", () => ({ useAppServices: () => harness.
 vi.mock("@/shared/presentation/flashcard-toast", () => ({ showErrorToast: harness.toast }));
 vi.mock("@/shared/errors/report-error", () => ({ reportError: vi.fn() }));
 
+import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
+
 import {
   LearningProgressRevisionProvider,
   useLearningProgressRevision,
 } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 
+import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, seedDeck } from "../support/sqlite-study-scenario";
 import {
@@ -24,6 +27,22 @@ import {
 } from "../support/study-fixtures";
 
 describe("mounted Discover ratings", () => {
+  it("ignores a refresh that resolves after a newer extension", async () => {
+    const { graph, mounted, occurrence, initialFeed } = await mountFeed();
+    const refresh = deferred<PreparedReelFeed>();
+    const refreshLoad = vi.spyOn(graph.feed, "refreshFeed").mockReturnValueOnce(refresh.promise);
+    act(() => mounted.result.current.onRatingSelected(occurrence, "hard"));
+    await waitFor(() => expect(refreshLoad).toHaveBeenCalledOnce());
+    await act(async () => {
+      await mounted.result.current.requestFeedExtension();
+    });
+    const newerThrough = mounted.result.current.feed.materializedThroughReelPosition;
+    expect(newerThrough).toBeGreaterThan(initialFeed.materializedThroughReelPosition);
+    await act(async () => {
+      refresh.resolve(initialFeed);
+    });
+    expect(mounted.result.current.feed.materializedThroughReelPosition).toBe(newerThrough);
+  });
   let database: NodeSqliteDatabase;
   beforeEach(() => {
     database = new NodeSqliteDatabase();

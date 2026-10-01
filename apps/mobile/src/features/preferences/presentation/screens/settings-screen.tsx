@@ -21,6 +21,7 @@ import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -47,10 +48,26 @@ export default function SettingsScreen() {
   } = usePreferences();
   const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
+  const reset = useSingleFlight(async (): Promise<void> => {
+    try {
+      await resetAllProgress();
+      if (!reset.isActive()) {
+        return;
+      }
+      haptics.resetCompleted();
+      setResetPresented(false);
+    } catch (error) {
+      reportError(error, "Learning progress reset failure");
+      setResetError(getErrorFeedback(error).message);
+      if (reset.isActive()) {
+        setResetPresented(true);
+      }
+    }
+  });
+  const resetting = reset.busy;
 
   useEffect(
     function announceStorageFailure() {
@@ -163,23 +180,7 @@ export default function SettingsScreen() {
             setResetPresented(false);
           }
         }}
-        onConfirm={() => {
-          if (resetting) {
-            return;
-          }
-          setResetting(true);
-          void resetAllProgress()
-            .then(() => {
-              haptics.resetCompleted();
-              setResetPresented(false);
-            })
-            .catch((error: unknown) => {
-              reportError(error, "Learning progress reset failure");
-              setResetError(getErrorFeedback(error).message);
-              setResetPresented(true);
-            })
-            .finally(() => setResetting(false));
-        }}
+        onConfirm={() => void reset.run()}
         scope="all learning progress"
       />
       <StudyControlsSheet

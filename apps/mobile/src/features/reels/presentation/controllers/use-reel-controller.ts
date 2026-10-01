@@ -35,6 +35,13 @@ export function useReelController({
   const { reelFeedService, studyService } = useReels();
   const { invalidateLearningProgress } = useLearningProgressRevision();
   const sessionEnded = useRef(false);
+  const feedbackActive = useRef(true);
+  useEffect(function ownRatingFeedbackLifetime() {
+    feedbackActive.current = true;
+    return function stopRatingFeedbackOnUnmount() {
+      feedbackActive.current = false;
+    };
+  }, []);
   const [feed, setFeed] = useState(initialFeed);
   const feedReference = useRef(initialFeed);
   const sourceCardsReference = useRef(sourceCards);
@@ -45,6 +52,7 @@ export function useReelController({
     [sourceCards]
   );
   const activationQueue = useRef(Promise.resolve());
+  const feedLoadSequence = useRef(0);
   const startingAttemptPromises = useRef(new Map<number, Promise<string>>());
   const pendingRatingPromises = useRef(new Set<Promise<void>>());
   const extensionInFlight = useRef<Promise<void> | null>(null);
@@ -149,16 +157,23 @@ export function useReelController({
     if (extensionInFlight.current) {
       return extensionInFlight.current;
     }
+    const sequence = ++feedLoadSequence.current;
     const extension = Promise.resolve()
       .then(() =>
         reelFeedService.extendFeed(sourceCardsReference.current, initialFeed.studySessionId)
       )
       .then((nextFeed) => {
+        if (sequence !== feedLoadSequence.current) {
+          return;
+        }
         replaceFeed(nextFeed);
         setExtensionError(null);
       });
     const trackedExtension = extension
       .catch((error: unknown) => {
+        if (sequence !== feedLoadSequence.current) {
+          return;
+        }
         if (error instanceof AppError && error.code === "STUDY_SESSION_ENDED") {
           recordCriticalFailure(error);
           return;
@@ -195,14 +210,21 @@ export function useReelController({
   }, [recordCriticalFailure]);
 
   const refreshFeed = useCallback(async () => {
+    const sequence = ++feedLoadSequence.current;
     try {
       const nextFeed = await reelFeedService.refreshFeed(
         sourceCardsReference.current,
         initialFeed.studySessionId
       );
+      if (sequence !== feedLoadSequence.current) {
+        return;
+      }
       replaceFeed(nextFeed);
       setRefreshError(null);
     } catch (error) {
+      if (sequence !== feedLoadSequence.current) {
+        return;
+      }
       if (error instanceof AppError && error.code === "STUDY_SESSION_ENDED") {
         recordCriticalFailure(error);
         return;
@@ -321,7 +343,9 @@ export function useReelController({
             if (updated.rating !== null) {
               rateCard(occurrence.reelPosition, updated.rating);
             }
-            showErrorToast("This rating is already saved.");
+            if (feedbackActive.current) {
+              showErrorToast("This rating is already saved.");
+            }
             return;
           }
           if (updated.status === "missing") {

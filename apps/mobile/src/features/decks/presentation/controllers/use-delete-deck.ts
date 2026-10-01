@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 
@@ -7,6 +7,7 @@ import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 
 type DeleteDeckState = Readonly<{ deleting: boolean; error: Error | null }>;
 
@@ -18,34 +19,22 @@ export function useDeleteDeck(): DeleteDeckState & {
   const invalidateDeckContent = useInvalidateDeckContent();
   const { invalidateLearningProgress } = useLearningProgressRevision();
   const [state, setState] = useState<DeleteDeckState>({ deleting: false, error: null });
-  const inFlight = useRef(false);
-  const mounted = useRef(true);
-
-  useEffect(function ownDeckDeleteFeedbackLifetime() {
-    mounted.current = true;
-    return function stopDeckDeleteFeedbackOnUnmount() {
-      mounted.current = false;
-    };
-  }, []);
+  const flight = useSingleFlight(deleteDeckAction);
 
   const updateDeleteState = (next: DeleteDeckState) => {
-    if (mounted.current) {
+    if (flight.isActive()) {
       setState(next);
     }
   };
 
-  const deleteDeck = async (deckId: DeckId) => {
-    if (inFlight.current || !mounted.current) {
-      return false;
-    }
-    inFlight.current = true;
+  async function deleteDeckAction(deckId: DeckId): Promise<boolean> {
     updateDeleteState({ deleting: true, error: null });
     try {
       await deckService.remove(deckId);
       invalidateDeckContent();
       invalidateLearningProgress();
       updateDeleteState({ deleting: false, error: null });
-      return mounted.current;
+      return flight.isActive();
     } catch (error) {
       const normalized = toOperationError(error, {
         code: "DECK_OPERATION_FAILED",
@@ -58,18 +47,17 @@ export function useDeleteDeck(): DeleteDeckState & {
         error: normalized,
       });
       return false;
-    } finally {
-      inFlight.current = false;
     }
-  };
+  }
 
   return {
     ...state,
     clearDeleteError: () => {
-      if (mounted.current) {
+      if (flight.isActive()) {
         setState((current) => ({ ...current, error: null }));
       }
     },
-    deleteDeck,
+    deleteDeck: async (deckId) => (await flight.run(deckId)) ?? false,
+    deleting: flight.busy,
   };
 }
