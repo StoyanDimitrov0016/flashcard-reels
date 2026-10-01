@@ -71,6 +71,6 @@ export function useFlashcardProgressList(): FlashcardProgressListState & {
     rows: state.data,
     error: state.error,
     loading: state.loading,
-    refresh: () => state.refresh(),
+    refresh: state.refresh,
   };
 }

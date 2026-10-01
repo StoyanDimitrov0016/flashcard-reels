@@ -26,6 +26,8 @@ export function useDeckCatalog() {
     [deckService, contentRevision, themeSelectionRevision, revision]
   );
   const state = useAsyncLoad({ load, initialData: emptyEntries, onError: catalogFailure });
+  // Screens refresh from focus effects, so this must keep one identity across renders.
+  const refresh = useCallback(() => setRevision((current) => current + 1), []);
   if (state.error) {
     throw state.error;
   }
@@ -34,6 +36,6 @@ export function useDeckCatalog() {
     entries: state.data,
     error: state.error,
     loading: state.loading,
-    refresh: () => setRevision((current) => current + 1),
+    refresh,
   };
 }
