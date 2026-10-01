@@ -71,7 +71,12 @@ class Boundary extends Component<Readonly<{ children: ReactNode }>, { error: Err
 }
 
 function MixedFeedProbe({ cards }: Readonly<{ cards: Flashcard[] }>) {
-  const feed = usePreparedReelFeed(cards, "discover", null, false);
+  const feed = usePreparedReelFeed({
+    cards,
+    scope: "discover",
+    deckId: null,
+    replaceExistingSession: false,
+  });
   useEffect(
     function observeMixedFeed() {
       observedFeed = feed;
@@ -245,7 +250,12 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     const cards = await flashcardService.list();
     const { result } = renderHook(
       () => ({
-        feed: usePreparedReelFeed(cards, "discover", null, false),
+        feed: usePreparedReelFeed({
+          cards,
+          scope: "discover",
+          deckId: null,
+          replaceExistingSession: false,
+        }),
         ...useLearningProgressRevision(),
       }),
       { wrapper: Providers }

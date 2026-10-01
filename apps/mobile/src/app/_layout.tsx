@@ -17,6 +17,7 @@ import {
   usePreferencesContext,
 } from "@/features/preferences/presentation/controllers/preferences-context";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
+import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { AppServicesProvider, useAppServices } from "@/infrastructure/app-services";
 import {
@@ -124,7 +125,9 @@ function AppPreferences() {
   return (
     <PreferencesProvider service={preferencesService}>
       <PreferencesThemeProvider>
-        <AppNavigation />
+        <FeedScopeProvider>
+          <AppNavigation />
+        </FeedScopeProvider>
       </PreferencesThemeProvider>
     </PreferencesProvider>
   );
