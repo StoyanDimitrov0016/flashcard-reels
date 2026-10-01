@@ -5,7 +5,9 @@ import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+import { fontSize, fontWeight } from "@/shared/presentation/typography";
+
+const PRESSED_OPACITY = 0.72;
 
 type LessonSheetNavigationProps = Readonly<{
   nextLesson: LessonSummary | undefined;
@@ -13,6 +15,7 @@ type LessonSheetNavigationProps = Readonly<{
   onOpenLesson: (lesson: LessonSummary) => void;
 }>;
 
+/** The reader's footer: back to the deck's lessons, and the next lesson as the main action. */
 export function LessonSheetNavigation({
   nextLesson,
   onBack,
@@ -28,32 +31,39 @@ export function LessonSheetNavigation({
         accessibilityHint="Opens the lessons from this deck"
         accessibilityRole="button"
         onPress={onBack}
-        style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.button,
+          styles.lessonsButton,
+          !nextLesson && styles.fill,
+          pressed && styles.pressed,
+        ]}
       >
         <SymbolView
           name={{ android: "menu_book", ios: "book", web: "menu_book" }}
-          size={sizes.icon.medium}
+          size={sizes.icon.small}
           tintColor={colors.textPrimary}
         />
-        <Text style={[styles.title, styles.deckLessons]}>Deck lessons</Text>
+        <Text style={styles.lessonsLabel}>Lessons</Text>
       </Pressable>
       {!!nextLesson && (
         <Pressable
           accessibilityLabel={`Next lesson: ${nextLesson.title}`}
           accessibilityRole="button"
           onPress={() => onOpenLesson(nextLesson)}
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.button,
+            styles.nextButton,
+            styles.fill,
+            pressed && styles.pressed,
+          ]}
         >
-          <View style={styles.copy}>
-            <Text style={styles.label}>Next lesson</Text>
-            <Text numberOfLines={2} style={styles.title}>
-              {nextLesson.title}
-            </Text>
-          </View>
+          <Text numberOfLines={1} style={styles.nextLabel}>
+            Next: {nextLesson.title}
+          </Text>
           <SymbolView
             name={{ android: "arrow_forward", ios: "arrow.right", web: "arrow_forward" }}
-            size={sizes.icon.medium}
-            tintColor={colors.textPrimary}
+            size={sizes.icon.small}
+            tintColor={colors.actionPrimaryText}
           />
         </Pressable>
       )}
@@ -69,32 +79,32 @@ function createStyles(colors: AppColors) {
       borderTopColor: colors.borderSubtle,
       borderTopWidth: sizes.border,
       paddingHorizontal: sizes.spacing.content,
-      paddingVertical: sizes.spacing.large,
+      paddingTop: sizes.spacing.xLarge,
+      paddingBottom: sizes.spacing.section,
     },
     button: {
-      flex: 1,
-      minWidth: 0,
       alignItems: "center",
-      borderColor: colors.borderStrong,
-      borderRadius: sizes.radius.row,
-      borderWidth: sizes.border,
+      borderRadius: sizes.radius.control,
       flexDirection: "row",
-      gap: sizes.spacing.medium,
-      padding: sizes.spacing.large,
+      gap: sizes.spacing.small,
+      justifyContent: "center",
+      minHeight: sizes.control.standard,
+      paddingHorizontal: sizes.spacing.section,
     },
-    copy: { flex: 1, gap: sizes.spacing.xSmall },
-    deckLessons: { flex: 1 },
-    label: {
-      color: colors.textTertiary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.semibold,
-    },
-    title: {
+    fill: { flex: 1, minWidth: 0 },
+    lessonsButton: { backgroundColor: colors.surfaceSubtle },
+    lessonsLabel: {
       color: colors.textPrimary,
-      fontSize: fontSize.bodyLarge,
+      fontSize: fontSize.body,
       fontWeight: fontWeight.bold,
-      lineHeight: lineHeight.bodyLarge,
     },
-    pressed: { backgroundColor: colors.surfaceHover },
+    nextButton: { backgroundColor: colors.actionPrimary },
+    nextLabel: {
+      color: colors.actionPrimaryText,
+      flexShrink: 1,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.bold,
+    },
+    pressed: { opacity: PRESSED_OPACITY },
   });
 }
