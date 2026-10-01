@@ -1,5 +1,5 @@
 export const memoryStateValues = ["new", "learning", "review", "relearning"] as const;
-export type MemoryState = (typeof memoryStateValues)[number];
+type MemoryState = (typeof memoryStateValues)[number];
 
 export type FlashcardMemoryState = Readonly<{
   flashcardId: string;

@@ -1,4 +1,5 @@
 import type {
+  BundledAppearance,
   DeckAudioStorage,
   DeckPackage,
   DeckPackageFileReader,
@@ -50,12 +51,18 @@ export class DeckInstallerImpl implements DeckInstaller {
     return this.installFromBytes(await this.fileReader.read(file));
   }
 
-  async installFromBytes(bytes: Uint8Array): Promise<DeckInstallResult> {
+  async installFromBytes(
+    bytes: Uint8Array,
+    appearance?: BundledAppearance
+  ): Promise<DeckInstallResult> {
     const deckPackage = this.reader.read(bytes);
-    return withDeckOperation(deckPackage.deck.id, () => this.install(deckPackage));
+    return withDeckOperation(deckPackage.deck.id, () => this.install(deckPackage, appearance));
   }
 
-  private async install(deckPackage: DeckPackage): Promise<DeckInstallResult> {
+  private async install(
+    deckPackage: DeckPackage,
+    appearance?: BundledAppearance
+  ): Promise<DeckInstallResult> {
     const deck = deckPackage.deck;
     const installed = await this.identityRepository.findInstalledIdentity(deck.id);
     if (installed && installed.authorId !== deck.authorId) {
@@ -83,7 +90,7 @@ export class DeckInstallerImpl implements DeckInstaller {
       // The storage adapter may therefore replace it as residue from an earlier failed install.
       await this.audioStorage.activate(stagedAudio);
       audioActivated = true;
-      const result = await this.installation.install(deckPackage, this.clock.now());
+      const result = await this.installation.install(deckPackage, this.clock.now(), appearance);
       if (result.status === "no-op") {
         await this.audioStorage.removeRevision(deck.id, deck.revision);
       } else {

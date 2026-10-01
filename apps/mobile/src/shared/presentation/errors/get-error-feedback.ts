@@ -93,13 +93,16 @@ export function getErrorFeedback(error: unknown): ErrorFeedback {
     case "STUDY_SESSION_ENDED":
       return { message: "This study session has ended. Reload the feed to continue." };
     case "DECK_PACKAGE_ID_CONFLICT":
-      return { message: "Could not import deck package. Try again." };
+      return {
+        message:
+          "This deck package reuses ids from another installed deck. Ask its author for a fixed package.",
+      };
     case "SAVED_PROGRESS_UNAVAILABLE":
       return { message: "Could not update saved progress. Try again." };
     case "PROGRESS_BACKUP_UNAVAILABLE":
       return { message: "Could not share the previous progress backup." };
     case "FILE_SHARING_UNAVAILABLE":
-      return { message: "Could not share the previous progress backup." };
+      return { message: "Sharing isn't available on this device." };
     default: {
       const exhaustive: never = error.code;
       return exhaustive;

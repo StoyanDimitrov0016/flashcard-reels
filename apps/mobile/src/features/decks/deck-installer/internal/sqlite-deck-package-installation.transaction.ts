@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 
 import type {
+  BundledAppearance,
   DeckPackage,
   DeckPackageInstallationTransaction,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
@@ -39,7 +40,11 @@ export class SQLiteDeckPackageInstallationTransaction<
     this.idGenerator = idGenerator;
   }
 
-  async install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult> {
+  async install(
+    deckPackage: DeckPackage,
+    now: string,
+    appearance?: BundledAppearance
+  ): Promise<DeckInstallResult> {
     const deck = deckPackage.deck;
     return this.database.transaction((transaction) => {
       const existingDeck = transaction
@@ -121,6 +126,7 @@ export class SQLiteDeckPackageInstallationTransaction<
         transaction
           .insert(decks)
           .values({
+            coverAsset: appearance?.coverAsset,
             createdAt: deck.createdAt,
             description: deck.description,
             id: deck.id,
@@ -136,7 +142,7 @@ export class SQLiteDeckPackageInstallationTransaction<
           .values({
             id: this.idGenerator.generate(),
             deckId: deck.id,
-            theme: DEFAULT_DECK_THEME_ID,
+            theme: appearance?.theme ?? DEFAULT_DECK_THEME_ID,
           })
           .onConflictDoNothing()
           .run();

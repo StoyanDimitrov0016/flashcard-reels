@@ -1,4 +1,5 @@
 import type { DeckInstaller } from "@/features/decks/deck-installer";
+import type { BundledAppearance } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
@@ -40,7 +41,8 @@ export function createDeckPackageServices({
     flashcardAudioRepository: audioStorage,
     deckAudioRemover: audioStorage,
     deckInstaller: installer as DeckInstaller,
-    installBundledPackage: (bytes: Uint8Array) => installer.installFromBytes(bytes),
+    installBundledPackage: (bytes: Uint8Array, appearance: BundledAppearance) =>
+      installer.installFromBytes(bytes, appearance),
   };
 }
 

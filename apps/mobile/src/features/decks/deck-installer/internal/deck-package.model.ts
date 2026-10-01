@@ -1,5 +1,7 @@
 import type { DeckPackage } from "@flashcard-reels/deck-contract";
 
+import type { DeckThemeId } from "@/features/decks/domain/deck-theme-selection.model";
+import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
 import type { InstalledDeckIdentity } from "@/features/decks/domain/deck.repository";
 
 import type { DeckInstallResult, DeckPackageFile } from "../index";
@@ -14,8 +16,17 @@ export interface DeckPackageFileReader {
   read(file: DeckPackageFile): Promise<Uint8Array>;
 }
 
+export type BundledAppearance = Readonly<{
+  theme: DeckThemeId;
+  coverAsset: DeckCoverAsset;
+}>;
+
 export interface DeckPackageInstallationTransaction {
-  install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult>;
+  install(
+    deckPackage: DeckPackage,
+    now: string,
+    appearance?: BundledAppearance
+  ): Promise<DeckInstallResult>;
 }
 
 export interface InstalledDeckIdentityRepository {

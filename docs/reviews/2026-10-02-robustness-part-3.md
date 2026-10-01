@@ -2,13 +2,13 @@
 
 Branch: `fix/deck-import-robustness`.
 
-| Signal | Before | After |
-| --- | ---: | ---: |
-| HTTP failure categories | 1 | 3 |
-| Retry requiring another scan for transient downloads | 1 | 0 |
-| Interrupted import file types cleaned at startup | 0 | 2 |
-| Same-revision bundled appearance repair paths | 0 | 1 |
-| Content writers sharing the per-deck queue | 1 | 2 |
+| Signal                                               | Before | After |
+| ---------------------------------------------------- | -----: | ----: |
+| HTTP failure categories                              |      1 |     3 |
+| Retry requiring another scan for transient downloads |      1 |     0 |
+| Interrupted import file types cleaned at startup     |      0 |     2 |
+| Same-revision bundled appearance repair paths        |      0 |     1 |
+| Content writers sharing the per-deck queue           |      1 |     2 |
 
 Tests first reproduced the HTTP categorization failures, missing startup cleanup, missing bundled
 appearance after an interrupted install, delayed delete cleanup removing newly installed audio,

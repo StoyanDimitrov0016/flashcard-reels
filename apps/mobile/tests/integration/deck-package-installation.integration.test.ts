@@ -318,12 +318,13 @@ describe("deck package installation", () => {
 
   afterEach(() => database?.close());
 
-  it("repairs missing bundled appearance at the same revision and preserves learner themes", async () => {
+  it("commits bundled appearance atomically and preserves learner themes on cover repair", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const ids = new SequenceIdGenerator();
     await installBundledDecks(database.drizzle, clock, ids);
-    await database.runAsync("DELETE FROM deck_theme_selections WHERE deck_id = ?", TEST_DECK_ID);
+    const themeWrite = vi.spyOn(SQLiteDeckThemeSelectionRepository.prototype, "save");
+    expect(themeWrite).not.toHaveBeenCalled();
     await database.runAsync("UPDATE decks SET cover_asset = 'cards' WHERE id = ?", TEST_DECK_ID);
     await installBundledDecks(database.drizzle, clock, ids);
     const themes = new SQLiteDeckThemeSelectionRepository(database.drizzle, ids);
@@ -335,6 +336,27 @@ describe("deck package installation", () => {
     await installBundledDecks(database.drizzle, clock, ids);
     const chosen = await themes.findByDeckId(TEST_DECK_ID);
     expect(chosen?.theme).toBe("gold");
+    themeWrite.mockRestore();
+  });
+
+  it("stores the bundled theme and cover in the installation transaction itself", async () => {
+    database = new NodeSqliteDatabase();
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
+    await installation.install(
+      new ContractDeckPackageReader().read(validArchive(1, [card(testId(1), 0)])),
+      timestamp,
+      { theme: "cyan", coverAsset: "react" }
+    );
+    const theme = await new SQLiteDeckThemeSelectionRepository(
+      database.drizzle,
+      database.rowIds
+    ).findByDeckId(TEST_DECK_ID);
+    const installed = await new SQLiteDeckRepository(database.drizzle).findById(TEST_DECK_ID);
+    expect(theme?.theme).toBe("cyan");
+    expect(installed?.coverAsset).toBe("react");
   });
 
   it("serializes deletion and import so delayed cleanup cannot remove freshly installed audio", async () => {

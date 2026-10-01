@@ -2,7 +2,7 @@ export function getFirstEditableReelPosition(furthestReelPosition: number): numb
   return furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
 }
 
-export const EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE = 5;
+const EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE = 5;
 export const PERSISTED_SESSION_FEED_HISTORY_LIMIT = 100;
 export const SESSION_COMPACTION_INTERVAL = 25;
 export const FOCUS_SESSION_INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;

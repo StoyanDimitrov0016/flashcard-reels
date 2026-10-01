@@ -34,10 +34,13 @@ describe("error feedback", () => {
     ],
     ["DATABASE_ROW_INVALID", "Some saved data could not be read. Restart the app and try again."],
     ["STUDY_SESSION_ENDED", "This study session has ended. Reload the feed to continue."],
-    ["DECK_PACKAGE_ID_CONFLICT", "Could not import deck package. Try again."],
+    [
+      "DECK_PACKAGE_ID_CONFLICT",
+      "This deck package reuses ids from another installed deck. Ask its author for a fixed package.",
+    ],
     ["SAVED_PROGRESS_UNAVAILABLE", "Could not update saved progress. Try again."],
     ["PROGRESS_BACKUP_UNAVAILABLE", "Could not share the previous progress backup."],
-    ["FILE_SHARING_UNAVAILABLE", "Could not share the previous progress backup."],
+    ["FILE_SHARING_UNAVAILABLE", "Sharing isn't available on this device."],
   ] as const)("maps %s", (code, message) => {
     expect(
       getErrorFeedback(new AppError({ name: "TestError", code, message: "Technical details" }))

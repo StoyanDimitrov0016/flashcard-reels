@@ -2,13 +2,13 @@
 
 Branch: `fix/async-races`.
 
-| Signal | Before | After |
-| --- | ---: | ---: |
-| Feed-state writes from append | 1 | 0 |
-| Unguarded feed-load replacement sites | 2 | 0 |
-| Action guards relying on rendered busy state | 3 | 0 |
-| Hand-written import/delete action lifetime guards | 2 | 0 |
-| Trailing Focus evaluations retained during a load | 0 | 1 |
+| Signal                                            | Before | After |
+| ------------------------------------------------- | -----: | ----: |
+| Feed-state writes from append                     |      1 |     0 |
+| Unguarded feed-load replacement sites             |      2 |     0 |
+| Action guards relying on rendered busy state      |      3 |     0 |
+| Hand-written import/delete action lifetime guards |      2 |     0 |
+| Trailing Focus evaluations retained during a load |      0 |     1 |
 
 Tests first reproduced a visible-card write being overwritten during materialization, a slow
 refresh replacing a newer extension, two paused-progress continuations starting before a render,
@@ -20,29 +20,29 @@ Validation: mobile check, full tests, and db:check. No migration or baseline cha
 
 ## Async controller guards
 
-| Controller | Guard |
-| --- | --- |
-| useReelController | One feed-load sequence, extension promise, activation queue, pending rating set, attempt-start map; ended-session latch; rating-toast lifetime |
-| useFocusedFeedLifecycle | Disposed effect plus one in-flight evaluation and one trailing request |
-| usePreparedReelFeed | Request identity plus effect activity flag |
-| useRecallSession | Effect activity flag and retained reel range |
-| usePausedDeckProgress | Load sequence and shared single-flight action; toast lifetime |
-| useDeleteDeck | Shared single-flight action; success result suppressed after unmount |
-| useImportDeckPackage | Shared single-flight action; AbortController; late selection/result checks |
-| useImportDeckSheet | Scan-session sequence, scan lock, retry lock, permission-effect activity flag |
-| useDeckDetails | Effect activity flag, including progress read after deck/card load |
-| useDeckCatalog | Effect activity flag |
-| useDeckCollection | Effect activity flag |
-| useDeckThemeSelections | Effect activity flag |
-| useFlashcards | Effect activity flag |
-| useFlashcardProgressList | Effect activity flag |
-| useReadingLists | Effect activity flag |
-| useLesson | Effect activity flag and request ID/revision comparison |
-| useArchivedProgress | Load sequence; screen-specific controller left outside this part |
-| useProgressBackupController | In-flight ref; availability-load activity flag; outside this part |
-| useSaveDeckThemeSelection | Existing latest-save policy retained |
-| useResetDeckProgress / useResetAllProgress | Screen uses shared single-flight action; post-write global invalidation remains |
-| Preferences provider | Load activity flag and serialized write queue |
+| Controller                                 | Guard                                                                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| useReelController                          | One feed-load sequence, extension promise, activation queue, pending rating set, attempt-start map; ended-session latch; rating-toast lifetime |
+| useFocusedFeedLifecycle                    | Disposed effect plus one in-flight evaluation and one trailing request                                                                         |
+| usePreparedReelFeed                        | Request identity plus effect activity flag                                                                                                     |
+| useRecallSession                           | Effect activity flag and retained reel range                                                                                                   |
+| usePausedDeckProgress                      | Load sequence and shared single-flight action; toast lifetime                                                                                  |
+| useDeleteDeck                              | Shared single-flight action; success result suppressed after unmount                                                                           |
+| useImportDeckPackage                       | Shared single-flight action; AbortController; late selection/result checks                                                                     |
+| useImportDeckSheet                         | Scan-session sequence, scan lock, retry lock, permission-effect activity flag                                                                  |
+| useDeckDetails                             | Effect activity flag, including progress read after deck/card load                                                                             |
+| useDeckCatalog                             | Effect activity flag                                                                                                                           |
+| useDeckCollection                          | Effect activity flag                                                                                                                           |
+| useDeckThemeSelections                     | Effect activity flag                                                                                                                           |
+| useFlashcards                              | Effect activity flag                                                                                                                           |
+| useFlashcardProgressList                   | Effect activity flag                                                                                                                           |
+| useReadingLists                            | Effect activity flag                                                                                                                           |
+| useLesson                                  | Effect activity flag and request ID/revision comparison                                                                                        |
+| useArchivedProgress                        | Load sequence; screen-specific controller left outside this part                                                                               |
+| useProgressBackupController                | In-flight ref; availability-load activity flag; outside this part                                                                              |
+| useSaveDeckThemeSelection                  | Existing latest-save policy retained                                                                                                           |
+| useResetDeckProgress / useResetAllProgress | Screen uses shared single-flight action; post-write global invalidation remains                                                                |
+| Preferences provider                       | Load activity flag and serialized write queue                                                                                                  |
 
 ## Deviations
 

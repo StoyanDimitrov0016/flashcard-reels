@@ -66,6 +66,7 @@ export function useImportDeckSheet({
   const cameraActive = visible && screenFocused && appActive;
   const [processingScan, setProcessingScan] = useState(false);
   const [scanPaused, setScanPaused] = useState(false);
+  const [hasScannedUrl, setHasScannedUrl] = useState(false);
   const scanLocked = useRef(false);
   const scanSession = useRef(0);
   const lastScannedUrl = useRef<string | null>(null);
@@ -141,6 +142,7 @@ export function useImportDeckSheet({
 
   const showChoices = () => {
     lastScannedUrl.current = null;
+    setHasScannedUrl(false);
     scanSession.current += 1;
     setMode("choices");
     setScanError(null);
@@ -158,6 +160,7 @@ export function useImportDeckSheet({
 
   const beginScanning = async () => {
     lastScannedUrl.current = null;
+    setHasScannedUrl(false);
     scanSession.current += 1;
     onClearError();
     scanLocked.current = false;
@@ -186,6 +189,7 @@ export function useImportDeckSheet({
       return;
     }
     lastScannedUrl.current = parsed.data;
+    setHasScannedUrl(true);
     await runScan(parsed.data, session);
   };
 
@@ -236,9 +240,7 @@ export function useImportDeckSheet({
     onOpenSettings: () => void openCameraSettings(),
     onRequestPermission: () => void askForCamera(),
     retryLabel:
-      canRetryDownload && lastScannedUrl.current !== null && scanError === null
-        ? "Try again"
-        : "Scan again",
+      canRetryDownload && hasScannedUrl && scanError === null ? "Try again" : "Scan again",
     onRetry: () => {
       if (scanLocked.current && processingScan) {
         return;
