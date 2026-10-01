@@ -6,6 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
 import { deckProgress } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class SQLiteSavedProgressDeletionTransaction<
   TRunResult = unknown,
@@ -24,7 +25,10 @@ export class SQLiteSavedProgressDeletionTransaction<
         .where(eq(deckProgress.deckId, id))
         .get();
       if (record?.status === "active") {
-        throw new Error(`Deck ${id} must be archived or pending before deleting saved progress`);
+        throw new OperationError({
+          code: "SAVED_PROGRESS_UNAVAILABLE",
+          message: `Deck ${id} must be archived or pending before deleting saved progress`,
+        });
       }
       new SQLiteDeckLearnerData(transaction).deleteLearnerData(id);
     });

@@ -15,6 +15,7 @@ import {
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
 type PreferencesContextValue = Readonly<{
@@ -64,7 +65,8 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
           if (!active) {
             return;
           }
-          const normalized = toOperationError(error, {
+          const normalized = new OperationError({
+            cause: error,
             code: "PREFERENCES_READ_FAILED",
             context: { operation: "preferences.load" },
             message: "Preferences could not be loaded. Using defaults.",

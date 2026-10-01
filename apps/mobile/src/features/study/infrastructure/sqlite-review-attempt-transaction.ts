@@ -6,6 +6,7 @@ import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-r
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { flashcardReviewAttempts, studySessions } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class SQLiteReviewAttemptTransaction<
   TRunResult = unknown,
@@ -25,9 +26,11 @@ export class SQLiteReviewAttemptTransaction<
         .limit(1)
         .all()[0];
       if (!activeSession) {
-        throw new Error(
-          `Cannot create a review attempt for inactive session ${attempt.studySessionId}`
-        );
+        throw new OperationError({
+          code: "STUDY_SESSION_ENDED",
+          context: { studySessionId: attempt.studySessionId },
+          message: `Cannot create a review attempt for inactive session ${attempt.studySessionId}`,
+        });
       }
 
       transaction

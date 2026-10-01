@@ -20,7 +20,7 @@ type DeckDetailsState = Readonly<{
   progress: ReadonlyMap<string, FlashcardProgress>;
 }>;
 
-export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
+export function useDeckDetails(deckId: DeckId | null, enabled = true): DeckDetailsState {
   const { deckService, flashcardService, flashcardProgressService } = useDecks();
   const { revision } = useDeckContentRevision();
   const { themeSelectionRevision } = useDeckThemeSelectionRevision();
@@ -36,7 +36,7 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
 
   useEffect(
     function loadDeckDetails() {
-      if (!enabled) {
+      if (!enabled || deckId === null) {
         return undefined;
       }
       let active = true;
@@ -100,6 +100,16 @@ export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState
     ]
   );
 
+  if (deckId === null) {
+    return {
+      themeSelection: null,
+      cards: [],
+      deck: null,
+      error: null,
+      loading: false,
+      progress: new Map(),
+    };
+  }
   if (state.error) {
     throw state.error;
   }

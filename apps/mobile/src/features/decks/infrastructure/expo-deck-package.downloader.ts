@@ -47,7 +47,10 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
       });
       const file = await task.downloadAsync();
       if (!file || controller.signal.aborted) {
-        throw new Error("Deck download was interrupted");
+        throw new OperationError({
+          code: "DECK_DOWNLOAD_FAILED",
+          message: "Deck download was interrupted",
+        });
       }
       return { uri: file.uri };
     } catch (cause) {

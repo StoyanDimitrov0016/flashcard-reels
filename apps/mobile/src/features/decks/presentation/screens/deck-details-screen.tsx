@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
@@ -28,6 +28,7 @@ import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-del
 import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
 import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
+import { useDeckRouteId } from "@/features/decks/presentation/hooks/use-deck-route-id";
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
 import { useResetDeckProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-deck-progress";
@@ -136,7 +137,7 @@ export default function DeckDetailsScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { deckId } = useLocalSearchParams<{ deckId: string }>();
+  const deckId = useDeckRouteId();
   const openFocusedFeed = useOpenFocusedFeed();
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
   const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
@@ -172,7 +173,7 @@ export default function DeckDetailsScreen() {
   );
   const audioSource = useFlashcardAudioSource(deck, selectedCard);
   const confirmReset = () => {
-    if (resetting) {
+    if (resetting || deckId === null) {
       return;
     }
     setResetting(true);
@@ -207,7 +208,9 @@ export default function DeckDetailsScreen() {
     }
   };
   const selectTheme = (preset: DeckTheme) => {
-    void savePreset(deckId, preset);
+    if (deckId !== null) {
+      void savePreset(deckId, preset);
+    }
   };
 
   if (!loading && !deck) {

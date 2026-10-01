@@ -26,6 +26,7 @@ import {
   dismissedBundledDecks,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class SQLiteDeckPackageInstallationTransaction<
   TRunResult = unknown,
@@ -84,7 +85,10 @@ export class SQLiteDeckPackageInstallationTransaction<
           : transaction.select().from(flashcards).where(inArray(flashcards.id, incomingIds)).all();
       for (const card of cardsWithMatchingIds) {
         if (card.deckId !== deck.id) {
-          throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
+          throw new OperationError({
+            code: "DECK_PACKAGE_ID_CONFLICT",
+            message: `Flashcard ${card.id} already belongs to deck ${card.deckId}`,
+          });
         }
       }
       if (incomingIds.length > 0) {
@@ -105,7 +109,10 @@ export class SQLiteDeckPackageInstallationTransaction<
           .all();
         for (const card of [...progressOwners, ...memoryOwners, ...eventOwners]) {
           if (card.deckId !== deck.id) {
-            throw new Error(`Flashcard ${card.id} already belongs to deck ${card.deckId}`);
+            throw new OperationError({
+              code: "DECK_PACKAGE_ID_CONFLICT",
+              message: `Flashcard ${card.id} already belongs to deck ${card.deckId}`,
+            });
           }
         }
       }
@@ -230,7 +237,10 @@ export class SQLiteDeckPackageInstallationTransaction<
               .all();
       for (const lesson of lessonOwners) {
         if (lesson.deckId !== deck.id) {
-          throw new Error(`Lesson ${lesson.id} already belongs to deck ${lesson.deckId}`);
+          throw new OperationError({
+            code: "DECK_PACKAGE_ID_CONFLICT",
+            message: `Lesson ${lesson.id} already belongs to deck ${lesson.deckId}`,
+          });
         }
       }
       transaction.delete(lessons).where(eq(lessons.deckId, deck.id)).run();

@@ -20,6 +20,7 @@ import {
   ProgressBackupVersionError,
 } from "@/features/progress-backup/domain/progress-backup.errors";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
 export class ProgressBackupServiceImpl implements ProgressBackupService {
@@ -146,7 +147,10 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   async shareSafetyCopy(): Promise<void> {
     const fileName = await this.query.readSafetyCopyFileName();
     if (!fileName) {
-      throw new Error("No previous progress backup is available");
+      throw new OperationError({
+        code: "PROGRESS_BACKUP_UNAVAILABLE",
+        message: "No previous progress backup is available",
+      });
     }
     await this.files.shareSafetyCopy(fileName);
   }

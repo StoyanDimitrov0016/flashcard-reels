@@ -6,6 +6,7 @@ import {
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
 import { AppError } from "@/shared/errors/app-error";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 export type DeckImportFeedback = Readonly<{
   message: string;
@@ -30,19 +31,19 @@ export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
   }
   if (error instanceof AppError && error.code === "DECK_DOWNLOAD_FAILED") {
     return {
-      message: "Couldn’t download this deck. Check your connection or get a new QR code.",
+      message: getErrorFeedback(error).message,
       tone: "error",
     };
   }
   if (error instanceof DeckPackageParseError) {
-    return { message: "That deck package is invalid or damaged.", tone: "error" };
+    return { message: getErrorFeedback(error).message, tone: "error" };
   }
   if (error instanceof DeckPackageRevisionError) {
     return { message: "That deck package is older than the installed revision.", tone: "error" };
   }
   if (error instanceof DeckPackageAuthorError) {
     return {
-      message: "That deck belongs to a different author than the installed deck.",
+      message: getErrorFeedback(error).message,
       tone: "error",
     };
   }

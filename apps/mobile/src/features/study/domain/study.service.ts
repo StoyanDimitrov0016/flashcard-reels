@@ -13,6 +13,10 @@ export type OpenStudySession = Readonly<{
   session: StudySession;
 }>;
 
+export type RateAttemptResult = Readonly<
+  { status: "rated" } | { status: "locked"; rating: Rating | null } | { status: "missing" }
+>;
+
 export interface StudyService {
   openSession(
     scope: StudySessionScope,
@@ -66,7 +70,7 @@ export interface StudyService {
     fromReelPosition: number,
     throughReelPosition: number
   ): Promise<FlashcardReviewAttempt[]>;
-  rateAttempt(attemptId: string, rating: Rating): Promise<boolean>;
+  rateAttempt(attemptId: string, rating: Rating): Promise<RateAttemptResult>;
   consumeRecurrence(recurrenceId: string): Promise<boolean>;
   commitAttempt(attemptId: string): Promise<void>;
   commitAttemptsOutsideEditableWindow(studySessionId: string): Promise<void>;

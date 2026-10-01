@@ -9,6 +9,7 @@ import {
   type DeckThemeId,
 } from "@/features/decks/domain/deck-theme-selection.model";
 import registryMetadata from "@/infrastructure/bundled-deck-registry.json";
+import { OperationError } from "@/shared/errors/operation-error";
 
 // Metro must see a static import for every bundled asset; registry metadata alone cannot
 // produce a runtime asset module through a computed path.
@@ -64,7 +65,11 @@ export async function readBundledDeckPackage(
   const asset = Asset.fromModule(definition.asset);
   await asset.downloadAsync();
   if (!asset.localUri) {
-    throw new Error(`Bundled deck package ${definition.id} did not resolve to a local file`);
+    throw new OperationError({
+      code: "BUNDLED_DECK_INSTALL_FAILED",
+      context: { deckId: definition.id },
+      message: `Bundled deck package ${definition.id} did not resolve to a local file`,
+    });
   }
   return new File(asset.localUri).bytes();
 }

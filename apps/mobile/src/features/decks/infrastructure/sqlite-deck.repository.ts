@@ -13,6 +13,7 @@ import {
   type DeckCoverAsset,
   type DeckId,
 } from "@/features/decks/domain/deck.model";
+import { parseDatabaseRow } from "@/infrastructure/sqlite/parse-database-row";
 import { decks } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepository {
@@ -72,7 +73,7 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       description: row.description,
       id: row.id,
       title: row.title,
-      coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
+      coverAsset: parseDatabaseRow(DeckCoverAssetSchema, row.coverAsset, "decks", row.id),
       revision: row.revision,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

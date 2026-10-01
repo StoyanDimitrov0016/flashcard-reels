@@ -10,6 +10,7 @@ import { type DeckId } from "@/features/decks/domain/deck.model";
 import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
 import { activeSessionsAffectedByDeck } from "@/features/study/infrastructure/active-sessions-affected-by-deck";
+import { parseDatabaseRow } from "@/infrastructure/sqlite/parse-database-row";
 import { studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRepository<TRunResult = unknown> implements StudySessionRepository {
@@ -115,7 +116,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       deckId: row.deckId,
       id: row.id,
       lastActiveAt: row.lastActiveAt,
-      scope: StudySessionScopeSchema.parse(row.scope),
+      scope: parseDatabaseRow(StudySessionScopeSchema, row.scope, "study_sessions", row.id),
       feedState: row.feedState,
     });
   }

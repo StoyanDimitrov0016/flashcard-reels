@@ -134,8 +134,8 @@ describe("SQLite study sessions", () => {
       1,
       opened.studySessionId
     );
-    expect(await graph.study.rateAttempt(again, "again")).toBe(true);
-    expect(await graph.study.rateAttempt(good, "good")).toBe(true);
+    expect(await graph.study.rateAttempt(again, "again")).toEqual({ status: "rated" });
+    expect(await graph.study.rateAttempt(good, "good")).toEqual({ status: "rated" });
 
     await graph.study.commitAttempt(again);
     const recurrence = at(await graph.recurrences.listBySessionId(opened.studySessionId), 0);

@@ -10,6 +10,7 @@ import {
   defaultAppPreferences,
   type AppPreferences,
 } from "@/features/preferences/domain/app-preferences";
+import { parseDatabaseRow } from "@/infrastructure/sqlite/parse-database-row";
 import { learnerPreferences } from "@/infrastructure/sqlite/schema";
 
 export class SQLitePreferencesRepository<TRunResult = unknown> implements PreferencesRepository {
@@ -25,7 +26,9 @@ export class SQLitePreferencesRepository<TRunResult = unknown> implements Prefer
 
   async load(): Promise<AppPreferences> {
     const row = this.database.select().from(learnerPreferences).get();
-    return row ? AppPreferencesSchema.parse(row) : defaultAppPreferences;
+    return row
+      ? parseDatabaseRow(AppPreferencesSchema, row, "learner_preferences", row.id)
+      : defaultAppPreferences;
   }
 
   async save(preferences: AppPreferences): Promise<void> {

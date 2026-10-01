@@ -7,6 +7,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
+import { reportError } from "@/shared/errors/report-error";
 import { showErrorToast, showSuccessToast } from "@/shared/presentation/flashcard-toast";
 
 type PausedDeckProgressOptions = Readonly<{
@@ -39,7 +40,8 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
           setPaused(progress);
         }
       })
-      .catch(() => {
+      .catch((cause: unknown) => {
+        reportError(cause, "Paused progress load failure");
         if (sequence === loadSequence.current) {
           setError("Could not load saved progress. Try again.");
         }
@@ -100,7 +102,8 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
       setConfirmingStartFresh(false);
       refresh();
       showSuccessToast(startFresh ? "Starting fresh with this deck." : "Saved progress continued.");
-    } catch {
+    } catch (cause) {
+      reportError(cause, "Paused progress resolution failure");
       setError("Could not update saved progress. Try again.");
       setConfirmingStartFresh(false);
     } finally {

@@ -26,7 +26,7 @@ type LoadedLessonState = Readonly<{
 
 const loadingState: LessonState = { blocks: [], sections: [], lesson: null, loading: true };
 
-type LessonOptions = Readonly<{ lessonId: LessonId }>;
+type LessonOptions = Readonly<{ lessonId: LessonId | null }>;
 
 export function useLesson({ lessonId }: LessonOptions): LessonState {
   const { lessonService } = useLessonsCapability();
@@ -42,6 +42,9 @@ export function useLesson({ lessonId }: LessonOptions): LessonState {
 
   useEffect(
     function loadLesson() {
+      if (lessonId === null) {
+        return undefined;
+      }
       let active = true;
 
       const load = async () => {
@@ -79,6 +82,9 @@ export function useLesson({ lessonId }: LessonOptions): LessonState {
     [lessonId, lessonService, revision]
   );
 
+  if (lessonId === null) {
+    return { blocks: [], sections: [], lesson: null, loading: false };
+  }
   if (state.lessonId !== lessonId || state.revision !== revision) {
     return loadingState;
   }

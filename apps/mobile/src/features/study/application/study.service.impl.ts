@@ -34,7 +34,12 @@ import {
   PERSISTED_SESSION_FEED_HISTORY_LIMIT,
 } from "@/features/study/domain/review-attempts";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
-import { type OpenStudySession, type StudyService } from "@/features/study/domain/study.service";
+import {
+  type OpenStudySession,
+  type RateAttemptResult,
+  type StudyService,
+} from "@/features/study/domain/study.service";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   private readonly reviewAttemptRepository: ReviewAttemptRepository;
@@ -372,7 +377,11 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
   ): Promise<string> {
     const session = await this.studySessionRepository.findById(studySessionId);
     if (!session || session.completedAt !== null) {
-      throw new Error(`Cannot start a review attempt for inactive session ${studySessionId}`);
+      throw new OperationError({
+        code: "STUDY_SESSION_ENDED",
+        context: { studySessionId },
+        message: `Cannot start a review attempt for inactive session ${studySessionId}`,
+      });
     }
 
     const existingAttempt = await this.reviewAttemptRepository.findBySessionAndReelPosition(
@@ -411,14 +420,24 @@ export class StudyServiceImpl implements StudyService, StudySessionSettlement {
     );
   }
 
-  async rateAttempt(attemptId: string, rating: Rating): Promise<boolean> {
+  async rateAttempt(attemptId: string, rating: Rating): Promise<RateAttemptResult> {
     const attempt = await this.reviewAttemptRepository.findById(attemptId);
-    if (!attempt || attempt.committedAt !== null) {
-      return false;
+    if (!attempt) {
+      return { status: "missing" };
     }
-
-    const updatedAt = this.clock.now();
-    return this.reviewAttemptTransaction.rateAttempt(attemptId, rating, updatedAt);
+    if (attempt.committedAt !== null) {
+      return { status: "locked", rating: attempt.rating };
+    }
+    const updated = await this.reviewAttemptTransaction.rateAttempt(
+      attemptId,
+      rating,
+      this.clock.now()
+    );
+    if (updated) {
+      return { status: "rated" };
+    }
+    const saved = await this.reviewAttemptRepository.findById(attemptId);
+    return saved ? { status: "locked", rating: saved.rating } : { status: "missing" };
   }
 
   async consumeRecurrence(recurrenceId: string): Promise<boolean> {

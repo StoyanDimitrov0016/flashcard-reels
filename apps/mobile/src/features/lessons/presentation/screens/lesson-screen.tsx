@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,6 +11,7 @@ import {
 } from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
+import { useLessonRouteId } from "@/features/lessons/presentation/hooks/use-lesson-route-id";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
@@ -25,8 +26,8 @@ export default function LessonScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
+  const lessonId = useLessonRouteId();
+  const { blocks, lesson, loading } = useLesson({ lessonId });
   const { readingLists } = useReadingLists();
   const lessonCount = lesson
     ? (readingLists.find((list) => list.deckId === lesson.deckId)?.lessons.length ?? 0)

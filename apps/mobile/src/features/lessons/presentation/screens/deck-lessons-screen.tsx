@@ -1,7 +1,8 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useDeckRouteId } from "@/features/decks/presentation/hooks/use-deck-route-id";
 import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
@@ -16,7 +17,7 @@ import { useAppTheme } from "@/shared/presentation/theme";
 export default function DeckLessonsScreen() {
   const { colors } = useAppTheme();
   const router = useRouter();
-  const { deckId } = useLocalSearchParams<{ deckId: string }>();
+  const deckId = useDeckRouteId();
   const { loading, readingLists } = useReadingLists();
   const readingList = readingLists.find((list) => list.deckId === deckId);
 

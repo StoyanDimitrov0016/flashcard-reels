@@ -23,6 +23,8 @@ import {
 } from "@/features/learning-engine/domain/feed-composer";
 import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import { OperationError } from "@/shared/errors/operation-error";
+import { reportError } from "@/shared/errors/report-error";
 
 export class ReelFeedServiceImpl implements ReelFeedService {
   private readonly studyService: StudyService;
@@ -103,7 +105,11 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   private async requireSession(studySessionId: string) {
     const session = await this.studyService.findSession(studySessionId);
     if (!session) {
-      throw new Error(`Missing study session ${studySessionId}`);
+      throw new OperationError({
+        code: "STUDY_SESSION_ENDED",
+        context: { studySessionId },
+        message: `Missing study session ${studySessionId}`,
+      });
     }
     return session;
   }
@@ -365,10 +371,19 @@ export class ReelFeedServiceImpl implements ReelFeedService {
 }
 
 function parseFeedState(rawState: string): FeedState {
+  // New sessions persist this empty sentinel before a card has been shown.
+  if (rawState === "{}") {
+    return { recentCardIds: [] };
+  }
   try {
     const parsed = FeedStateSchema.safeParse(JSON.parse(rawState));
-    return parsed.success ? parsed.data : { recentCardIds: [] };
-  } catch {
+    if (parsed.success) {
+      return parsed.data;
+    }
+    reportError(parsed.error, "Invalid persisted feed state");
+    return { recentCardIds: [] };
+  } catch (cause) {
+    reportError(cause, "Invalid persisted feed state");
     return { recentCardIds: [] };
   }
 }

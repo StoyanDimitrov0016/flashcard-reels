@@ -16,6 +16,7 @@ import {
   flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 const INSERT_CHUNK_SIZE = 25;
 
@@ -54,7 +55,10 @@ export class SQLiteProgressBackupRestoreTransaction<
         for (const row of rows) {
           const owner = installedCardOwners.get(row.flashcardId);
           if (owner !== undefined && owner !== row.deckId) {
-            throw new Error(`Flashcard ${row.flashcardId} already belongs to deck ${owner}`);
+            throw new OperationError({
+              code: "PROGRESS_BACKUP_RESTORE_FAILED",
+              message: `Flashcard ${row.flashcardId} already belongs to deck ${owner}`,
+            });
           }
         }
       }

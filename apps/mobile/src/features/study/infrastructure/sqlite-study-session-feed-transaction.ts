@@ -5,6 +5,7 @@ import type { StudySessionReel } from "@/features/study/domain/study-session-ree
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { studySessionReels, studySessions } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class SQLiteStudySessionFeedTransaction<
   TRunResult = unknown,
@@ -43,7 +44,11 @@ export class SQLiteStudySessionFeedTransaction<
         .returning({ id: studySessions.id })
         .all();
       if (updated.length === 0) {
-        throw new Error(`Could not update active study session ${sessionId}`);
+        throw new OperationError({
+          code: "STUDY_SESSION_ENDED",
+          context: { sessionId },
+          message: `Could not update active study session ${sessionId}`,
+        });
       }
     });
   }
@@ -55,7 +60,11 @@ export class SQLiteStudySessionFeedTransaction<
       .where(and(eq(studySessions.id, sessionId), isNull(studySessions.completedAt)))
       .returning({ id: studySessions.id });
     if (updated.length === 0) {
-      throw new Error(`Could not update active study session ${sessionId}`);
+      throw new OperationError({
+        code: "STUDY_SESSION_ENDED",
+        context: { sessionId },
+        message: `Could not update active study session ${sessionId}`,
+      });
     }
   }
 }
