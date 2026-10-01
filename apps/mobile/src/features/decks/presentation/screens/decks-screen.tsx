@@ -16,6 +16,7 @@ import { useSaveDeckThemeSelection } from "@/features/decks/presentation/control
 import { matchesDeckSearch } from "@/features/decks/presentation/deck-catalog-search";
 import { getDeckDetailsHref } from "@/features/decks/presentation/deck-details-href";
 import {
+  isRetryableDeckDownloadError,
   getDeckImportErrorFeedback,
   getDeckImportResultFeedback,
 } from "@/features/decks/presentation/deck-import-feedback";
@@ -413,6 +414,7 @@ export default function DecksScreen() {
         pendingPreset={pendingPreset}
       />
       <ImportDeckSheet
+        canRetryDownload={isRetryableDeckDownloadError(importError)}
         downloadProgress={downloadProgress}
         downloading={downloading}
         errorMessage={importError ? getDeckImportErrorFeedback(importError).message : null}

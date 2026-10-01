@@ -42,7 +42,9 @@ vi.mock("expo-file-system", () => {
     list() {
       return [...state.files]
         .filter((path) => path.startsWith(this.uri + "/"))
-        .map((path) => new File(path));
+        .map((path) =>
+          path.startsWith("documents/deck-audio/.tmp-") ? new Directory(path) : new File(path)
+        );
     }
   }
   return {
@@ -69,6 +71,30 @@ beforeEach(() => {
 });
 
 describe("full app recovery", () => {
+  it("removes interrupted imports on cold startup without removing installed data", async () => {
+    vi.resetModules();
+    const storage = await import("@/infrastructure/app-recovery");
+    const staged = "documents/deck-audio/.tmp-interrupted";
+    const downloaded = "cache/deck-import-123.fcrdeck";
+    for (const path of [
+      "documents/deck-audio",
+      staged,
+      "documents/deck-audio/installed",
+      "cache",
+      downloaded,
+      "cache/other.file",
+      "documents/SQLite/flashcard-reels.db",
+    ]) {
+      state.files.add(path);
+    }
+    storage.prepareAppStorage();
+    expect(state.deleted).toEqual([staged, downloaded]);
+    expect(state.files.has("documents/deck-audio/installed")).toBe(true);
+    expect(state.files.has("documents/SQLite/flashcard-reels.db")).toBe(true);
+    expect(state.files.has("cache/other.file")).toBe(true);
+    storage.prepareAppStorage();
+    expect(state.deleted).toEqual([staged, downloaded]);
+  });
   it("defers new reset requests across root retries until a cold launch", () => {
     prepareAppStorage();
     requestAppDataReset();

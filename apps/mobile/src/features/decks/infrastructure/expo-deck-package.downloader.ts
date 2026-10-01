@@ -7,6 +7,7 @@ import type {
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 
 import { buildDeckImportFileName } from "@/features/decks/domain/deck-import-file-name";
+import { getDeckDownloadErrorCode } from "@/features/decks/infrastructure/deck-download-error";
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
@@ -65,7 +66,7 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
         throw cause;
       }
       throw new OperationError({
-        code: timedOut ? "DECK_DOWNLOAD_TIMED_OUT" : "DECK_DOWNLOAD_FAILED",
+        code: timedOut ? "DECK_DOWNLOAD_TIMED_OUT" : getDeckDownloadErrorCode(cause),
         message: timedOut ? "Deck download timed out" : "Deck download failed",
         cause,
         context: { operation: "deck-download" },

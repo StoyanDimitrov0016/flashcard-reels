@@ -22,6 +22,7 @@ export function prepareAppStorage(): void {
   if (!storagePrepared) {
     try {
       applyPendingAppDataReset();
+      removeInterruptedImports();
       storagePrepared = true;
     } catch (cause) {
       throw cause instanceof RecoveryError
@@ -99,5 +100,22 @@ export function applyPendingAppDataReset(): void {
       context: { operation: "apply-pending-reset" },
       message: "The pending app-data reset could not be applied",
     });
+  }
+}
+
+function removeInterruptedImports(): void {
+  if (Platform.OS === "web") {
+    return;
+  }
+  const audio = new Directory(Paths.document, "deck-audio");
+  for (const entry of audio.exists ? audio.list() : []) {
+    if (entry instanceof Directory && entry.name.startsWith(".tmp-")) {
+      entry.delete();
+    }
+  }
+  for (const entry of Paths.cache.exists ? Paths.cache.list() : []) {
+    if (entry instanceof File && DeckImportFileNamePattern.test(entry.name)) {
+      entry.delete();
+    }
   }
 }

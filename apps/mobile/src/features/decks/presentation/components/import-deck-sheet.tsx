@@ -18,6 +18,7 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
 type ImportDeckSheetProps = Readonly<{
+  canRetryDownload: boolean;
   downloadProgress: DeckDownloadProgress | null;
   errorMessage: string | null;
   importing: boolean;
@@ -30,6 +31,7 @@ type ImportDeckSheetProps = Readonly<{
 }>;
 
 export function ImportDeckSheet({
+  canRetryDownload,
   downloadProgress,
   errorMessage,
   importing,
@@ -43,7 +45,7 @@ export function ImportDeckSheet({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const { beginScanning, browse, browseInstead, close, mode, scanner, showChoices } =
-    useImportDeckSheet({ onBrowse, onClearError, onClose, onScan, visible });
+    useImportDeckSheet({ canRetryDownload, onBrowse, onClearError, onClose, onScan, visible });
 
   return (
     <AppBottomSheet dismissible={!importing || downloading} onClose={close} visible={visible}>
@@ -191,7 +193,7 @@ function ScannerContent({
           onPress={scanner.onRetry}
           style={styles.primaryButton}
         >
-          <Text style={styles.primaryButtonText}>Scan again</Text>
+          <Text style={styles.primaryButtonText}>{scanner.retryLabel}</Text>
         </Pressable>
       </View>
     );

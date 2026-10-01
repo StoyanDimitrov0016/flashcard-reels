@@ -1,7 +1,7 @@
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
-// oxlint-disable no-await-in-loop -- Bundled packages share one SQLite transaction boundary and are installed in registry order.
+// oxlint-disable no-await-in-loop -- Bundled packages install in registry order; appearance writes are repaired on subsequent starts.
 import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
@@ -10,10 +10,7 @@ import {
   bundledDeckRegistry,
   readBundledDeckPackage,
 } from "@/infrastructure/bundled-deck-packages";
-import {
-  shouldApplyBundledAppearance,
-  shouldInstallBundledDeck,
-} from "@/infrastructure/bundled-deck-revision";
+import { shouldInstallBundledDeck } from "@/infrastructure/bundled-deck-revision";
 import {
   createDeckPackageServices,
   type AppDatabase,
@@ -39,12 +36,12 @@ export async function installBundledDecks(
       continue;
     }
     const installedRevision = await deckRepository.findRevision(definition.id);
-    if (!shouldInstallBundledDeck(installedRevision, definition.revision)) {
-      continue;
-    }
     const existingTheme = await themeSelectionRepository.findByDeckId(definition.id);
-    const result = await installBundledPackage(await readBundledDeckPackage(definition));
-    if (!shouldApplyBundledAppearance(result.status)) {
+    if (shouldInstallBundledDeck(installedRevision, definition.revision)) {
+      await installBundledPackage(await readBundledDeckPackage(definition));
+    }
+    const installedDeck = await deckRepository.findById(definition.id);
+    if (!installedDeck) {
       continue;
     }
     if (!existingTheme) {
@@ -55,6 +52,8 @@ export async function installBundledDecks(
         })
       );
     }
-    await deckRepository.updateCoverAsset(definition.id, definition.appearance.coverAsset);
+    if (installedDeck.coverAsset !== definition.appearance.coverAsset) {
+      await deckRepository.updateCoverAsset(definition.id, definition.appearance.coverAsset);
+    }
   }
 }

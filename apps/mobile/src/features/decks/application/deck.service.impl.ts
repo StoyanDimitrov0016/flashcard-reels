@@ -6,6 +6,8 @@ import type { DeckRepository } from "@/features/decks/domain/deck.repository";
 import type { DeckAudioRemover, DeckService } from "@/features/decks/domain/deck.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
+import { withDeckOperation } from "@/features/decks/application/deck-operation-queue";
+
 export class DeckServiceImpl implements DeckService {
   private readonly deckRepository: DeckRepository;
   private readonly deckRemovalTransaction: DeckRemovalTransaction;
@@ -55,12 +57,15 @@ export class DeckServiceImpl implements DeckService {
     if (!this.sessionSettlement) {
       throw new Error("Study session settlement is required before removing a deck");
     }
-    await this.sessionSettlement.settleBeforeDeckRemoval(id);
-    await this.deckRemovalTransaction.remove(id);
-    try {
-      await this.deckAudioRemover?.removeDeck(id);
-    } catch {
-      // Orphaned audio is harmless and is replaced if the deck is installed again.
-    }
+    const settlement = this.sessionSettlement;
+    await withDeckOperation(id, async () => {
+      await settlement.settleBeforeDeckRemoval(id);
+      await this.deckRemovalTransaction.remove(id);
+      try {
+        await this.deckAudioRemover?.removeDeck(id);
+      } catch {
+        // Orphaned audio is harmless and is replaced if the deck is installed again.
+      }
+    });
   }
 }

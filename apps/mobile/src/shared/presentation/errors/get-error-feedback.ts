@@ -54,9 +54,15 @@ export function getErrorFeedback(error: unknown): ErrorFeedback {
       };
     case "DECK_OPERATION_FAILED":
       return { message: "That deck change could not be completed." };
+    case "DECK_DOWNLOAD_EXPIRED":
+      return {
+        message: "This QR code has expired. Create a new one in the portal and scan it again.",
+      };
+    case "DECK_DOWNLOAD_UNAVAILABLE":
+      return { message: "The deck server is unavailable. Try again in a moment." };
     case "DECK_DOWNLOAD_FAILED":
       return {
-        message: "Couldn’t download this deck. Check your connection or get a new QR code.",
+        message: "Couldn't download the deck. Check your connection and try again.",
       };
     case "DECK_DOWNLOAD_TIMED_OUT":
       return {

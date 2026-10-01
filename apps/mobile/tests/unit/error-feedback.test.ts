@@ -12,6 +12,11 @@ describe("error feedback", () => {
   });
   it.each([
     [
+      "DECK_DOWNLOAD_EXPIRED",
+      "This QR code has expired. Create a new one in the portal and scan it again.",
+    ],
+    ["DECK_DOWNLOAD_UNAVAILABLE", "The deck server is unavailable. Try again in a moment."],
+    [
       "DECK_PACKAGE_AUTHOR_CONFLICT",
       "That deck belongs to a different author than the installed deck.",
     ],

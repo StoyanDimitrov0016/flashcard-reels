@@ -9,6 +9,7 @@ import type {
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
+import { withDeckOperation } from "@/features/decks/application/deck-operation-queue";
 import {
   DeckPackageAuthorError,
   DeckPackageRevisionError,
@@ -19,7 +20,6 @@ import {
 
 /** Internal orchestration. Consumers use only the DeckInstaller interface exported by this module. */
 export class DeckInstallerImpl implements DeckInstaller {
-  private static readonly deckImportTails = new Map<string, Promise<void>>();
   private readonly reader: DeckPackageReader;
   private readonly installation: DeckPackageInstallationTransaction;
   private readonly audioStorage: DeckAudioStorage;
@@ -52,7 +52,7 @@ export class DeckInstallerImpl implements DeckInstaller {
 
   async installFromBytes(bytes: Uint8Array): Promise<DeckInstallResult> {
     const deckPackage = this.reader.read(bytes);
-    return this.withDeckGuard(deckPackage.deck.id, () => this.install(deckPackage));
+    return withDeckOperation(deckPackage.deck.id, () => this.install(deckPackage));
   }
 
   private async install(deckPackage: DeckPackage): Promise<DeckInstallResult> {
@@ -103,24 +103,6 @@ export class DeckInstallerImpl implements DeckInstaller {
         }
       }
       throw error;
-    }
-  }
-
-  private async withDeckGuard<T>(deckId: string, operation: () => Promise<T>): Promise<T> {
-    const previous = DeckInstallerImpl.deckImportTails.get(deckId) ?? Promise.resolve();
-    let release!: () => void;
-    const current = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    DeckInstallerImpl.deckImportTails.set(deckId, current);
-    await previous.catch(() => {});
-    try {
-      return await operation();
-    } finally {
-      release();
-      if (DeckInstallerImpl.deckImportTails.get(deckId) === current) {
-        DeckInstallerImpl.deckImportTails.delete(deckId);
-      }
     }
   }
 }

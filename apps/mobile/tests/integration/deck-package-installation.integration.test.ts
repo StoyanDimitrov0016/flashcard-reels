@@ -1,7 +1,28 @@
 import { parseDeck } from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// oxlint-disable typescript/no-extraneous-class -- Native dependencies expose constructors; these mocks replace their filesystem boundary.
+vi.mock("expo-file-system", () => ({ File: class {} }));
+vi.mock("@/features/decks/deck-installer/internal/installed-audio-storage", () => ({
+  InstalledAudioStorage: class {
+    constructor() {
+      return new MemoryAudioStorage();
+    }
+  },
+}));
+// oxlint-enable typescript/no-extraneous-class
+vi.mock("@/infrastructure/bundled-deck-packages", () => ({
+  bundledDeckRegistry: {
+    fixture: {
+      id: "00000000-0000-4000-8000-000000000100",
+      revision: 1,
+      appearance: { theme: "cyan", coverAsset: "react" },
+    },
+  },
+  readBundledDeckPackage: async () => validArchive(1, [card(testId(1), 0)]),
+}));
 
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
 import type {
@@ -13,18 +34,23 @@ import type {
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
 import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
+import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import {
   deckThemeSelections,
   flashcardMemoryStates,
   flashcardReviewAttempts,
 } from "@/infrastructure/sqlite/schema";
 
+import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, type ScenarioGraph } from "../support/sqlite-study-scenario";
 import {
@@ -47,6 +73,14 @@ class MemoryAudioStorage implements DeckAudioStorage {
   readonly removedOtherVersions: string[] = [];
   readonly activeVersions = new Set<string>();
   private nextToken = 0;
+
+  async removeDeck(deckId: string): Promise<void> {
+    for (const version of this.activeVersions) {
+      if (version.startsWith(`${deckId}:`)) {
+        this.activeVersions.delete(version);
+      }
+    }
+  }
 
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     const staged = {
@@ -283,6 +317,59 @@ describe("deck package installation", () => {
   let database: NodeSqliteDatabase | null = null;
 
   afterEach(() => database?.close());
+
+  it("repairs missing bundled appearance at the same revision and preserves learner themes", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const ids = new SequenceIdGenerator();
+    await installBundledDecks(database.drizzle, clock, ids);
+    await database.runAsync("DELETE FROM deck_theme_selections WHERE deck_id = ?", TEST_DECK_ID);
+    await database.runAsync("UPDATE decks SET cover_asset = 'cards' WHERE id = ?", TEST_DECK_ID);
+    await installBundledDecks(database.drizzle, clock, ids);
+    const themes = new SQLiteDeckThemeSelectionRepository(database.drizzle, ids);
+    const restored = await themes.findByDeckId(TEST_DECK_ID);
+    expect(restored?.theme).toBe("cyan");
+    const installedDeck = await new SQLiteDeckRepository(database.drizzle).findById(TEST_DECK_ID);
+    expect(installedDeck?.coverAsset).toBe("react");
+    await database.runAsync("UPDATE deck_theme_selections SET theme = 'gold'");
+    await installBundledDecks(database.drizzle, clock, ids);
+    const chosen = await themes.findByDeckId(TEST_DECK_ID);
+    expect(chosen?.theme).toBe("gold");
+  });
+
+  it("serializes deletion and import so delayed cleanup cannot remove freshly installed audio", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const ids = new SequenceIdGenerator();
+    const graph = createScenarioGraph(database, clock, ids);
+    const audio = new MemoryAudioStorage();
+    const { importer } = createImporter(database, clock, audio);
+    await importer.installFromBytes(validArchive(1, [card(testId(1), 0)]));
+    const cleanupStarted = deferred<void>();
+    const finishCleanup = deferred<void>();
+    const repository = new SQLiteDeckRepository(database.drizzle);
+    const service = new DeckServiceImpl(
+      repository,
+      new SQLiteDeckThemeSelectionRepository(database.drizzle, ids),
+      new SQLiteDeckRemovalTransaction(database.drizzle, ids),
+      {
+        async removeDeck(deckId) {
+          cleanupStarted.resolve();
+          await finishCleanup.promise;
+          await audio.removeDeck(deckId);
+        },
+      },
+      graph.study
+    );
+    const deletion = service.remove(TEST_DECK_ID);
+    await cleanupStarted.promise;
+    const installation = importer.installFromBytes(validArchive(2, [card(testId(1), 0)]));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    finishCleanup.resolve();
+    await Promise.all([deletion, installation]);
+    expect(await repository.findRevision(TEST_DECK_ID)).toBe(2);
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:2`)).toBe(true);
+  });
 
   it.each([false, true])(
     "offers audio according to the persisted package flag %s",

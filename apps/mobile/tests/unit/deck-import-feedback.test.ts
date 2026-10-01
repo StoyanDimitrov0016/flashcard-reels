@@ -42,11 +42,11 @@ describe("deck import presentation feedback", () => {
   it.each([
     [
       new OperationError({ code: "DECK_DOWNLOAD_FAILED", message: "HTTP 404" }),
-      "Couldn’t download this deck. Check your connection or get a new QR code.",
+      "Couldn't download the deck. Check your connection and try again.",
     ],
     [
       new OperationError({ code: "DECK_DOWNLOAD_TIMED_OUT", message: "timeout" }),
-      "The download took too long. Check your connection and scan again.",
+      "The download took too long. Check your connection and try again.",
     ],
     [
       new DeckPackageParseError([{ path: [], message: "malformed ZIP" }]),
