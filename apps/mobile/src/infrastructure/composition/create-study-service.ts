@@ -6,7 +6,7 @@ import type { IdGenerator } from "@/shared/domain/id-generator";
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation.transaction";
 import { createFeedComposer } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
-import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { FeedMaterializer } from "@/features/study/application/feed-materializer";
 import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
@@ -49,7 +49,7 @@ export function createStudyService({
   const sessions = new SQLiteStudySessionRepository(database);
   const reels = new SQLiteStudySessionReelRepository(database);
   const recurrences = new SQLiteStudySessionRecurrenceRepository(database);
-  const materializer = new ReelFeedServiceImpl(
+  const materializer = new FeedMaterializer(
     operations,
     new SQLiteFlashcardMemoryStateRepository(database),
     learningScheduler,

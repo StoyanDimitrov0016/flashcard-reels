@@ -1,4 +1,4 @@
-﻿# Part 8: names and dead members
+# Part 8: names and dead members
 
 Branch: `chore/names-and-dead-members`.
 

@@ -1,5 +1,5 @@
-﻿import type { Rating } from "@/features/learning-engine/domain/rating";
-import type { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import type { Rating } from "@/features/learning-engine/domain/rating";
+import type { FeedMaterializer } from "@/features/study/application/feed-materializer";
 import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import type {
   DeckChange,
@@ -20,26 +20,30 @@ import type {
 } from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
 
-import { shouldExtendReelFeed } from "@/features/reels/application/reel-extension-policy";
-import { shouldCompactSessionRuntimeData } from "@/features/reels/application/reel-position-extension";
+import { shouldExtendReelFeed } from "@/features/study/application/feed-extension-policy";
+import { shouldCompactSessionRuntimeData } from "@/features/study/application/feed-position-extension";
+import { doesRatingRecur } from "@/features/study/domain/recurrences";
 import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";
 import { AppError } from "@/shared/errors/app-error";
 import { OperationError } from "@/shared/errors/operation-error";
 
 type StudyServiceOptions = Readonly<{
   operations: StudySessionOperations;
-  materializer: ReelFeedServiceImpl;
+  materializer: FeedMaterializer;
   attempts: ReviewAttemptRepository;
   sessions: StudySessionRepository;
   reels: StudySessionReelRepository;
   recurrences: StudySessionRecurrenceRepository;
   clock: Clock;
 }>;
+
 export class StudyServiceImpl implements StudyFeedService, StudySessionSettlement {
   private readonly options: StudyServiceOptions;
+
   constructor(options: StudyServiceOptions) {
     this.options = options;
   }
+
   async openFeed(input: OpenFeedInput): Promise<StudyFeedSnapshot> {
     const feed = await this.options.materializer.prepareFeed(
       input.cards,
@@ -50,6 +54,7 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
     );
     return this.snapshot(feed);
   }
+
   async activateCard(input: CardInput): Promise<ActivationResult> {
     const { operations, sessions, recurrences, attempts, clock, materializer } = this.options;
     const changed = await operations.serializeSession(input.sessionId, async () => {
@@ -86,7 +91,7 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
         (await this.options.reels.findMaxReelPosition(input.sessionId)) ??
         -1;
       return {
-        snapshotNeeded: consumed || pending.some((attempt) => attempt.rating !== null),
+        snapshotNeeded: consumed || pending.some((attempt) => doesRatingRecur(attempt.rating)),
         extend: shouldExtendReelFeed(input.reelPosition, through + 1),
       };
     });
@@ -106,11 +111,12 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
       extensionError: null,
     };
   }
+
   async rateCard(
     input: CardInput & Readonly<{ rating: Rating; expectedAttempt?: boolean }>
   ): Promise<RateCardResult> {
     const { operations, attempts } = this.options;
-    const status = await operations.serializeSession(input.sessionId, async () => {
+    const saved = await operations.serializeSession(input.sessionId, async () => {
       await this.requireSession(input.sessionId);
       const existing = await attempts.findBySessionAndReelPosition(
         input.sessionId,
@@ -134,10 +140,21 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
           message: "The selected rating could not be saved",
         });
       }
-      return result.status;
+      return {
+        status: result.status,
+        rating: result.status === "locked" ? result.rating : input.rating,
+        snapshotNeeded: doesRatingRecur(existing?.rating ?? null) || doesRatingRecur(input.rating),
+      };
     });
+    if (!saved.snapshotNeeded) {
+      return { status: saved.status, rating: saved.rating, snapshot: null };
+    }
     try {
-      return { status, snapshot: await this.refreshFeed(input) };
+      return {
+        status: saved.status,
+        rating: saved.rating,
+        snapshot: await this.refreshFeed(input),
+      };
     } catch (cause) {
       if (cause instanceof AppError && cause.code === "STUDY_SESSION_ENDED") {
         throw cause;
@@ -145,11 +162,12 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
       throw new OperationError({
         code: "VIEW_LOAD_FAILED",
         message: "The feed could not be refreshed",
-        context: { operation: "rated-feed.refresh", status },
+        context: { operation: "rated-feed.refresh", status: saved.status },
         cause,
       });
     }
   }
+
   async extendFeed(input: FeedInput): Promise<StudyFeedSnapshot> {
     return this.options.operations.serializeSession("feed:" + input.sessionId, async () => {
       await this.requireSession(input.sessionId);
@@ -158,13 +176,16 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
       );
     });
   }
+
   async refreshFeed(input: FeedInput): Promise<StudyFeedSnapshot> {
     await this.requireSession(input.sessionId);
     return this.snapshot(await this.options.materializer.refreshFeed(input.cards, input.sessionId));
   }
+
   async resumeFocusedSession() {
     return this.options.operations.resumeFocusedSession();
   }
+
   async settleDeckChange(change: DeckChange): Promise<void> {
     if (change.kind === "remove") {
       await this.options.operations.settleBeforeDeckRemoval(change.deckId);
@@ -175,9 +196,11 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
       );
     }
   }
+
   async settleForProgressBackup(): Promise<void> {
     await this.options.operations.settleForProgressBackup();
   }
+
   private async requireSession(id: string) {
     const session = await this.options.sessions.findById(id);
     if (!session || session.completedAt !== null) {
@@ -188,6 +211,7 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
     }
     return session;
   }
+
   private async occurrence(input: CardInput) {
     const { reels, recurrences } = this.options;
     const items = await reels.listBySessionIdInReelPositionRange(
@@ -207,6 +231,7 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
     }
     return { cardId, recurrenceId: recurrence?.consumedAt === null ? recurrence.id : null };
   }
+
   private async snapshot(feed: StudyFeedSnapshot["feed"]): Promise<StudyFeedSnapshot> {
     const attempts = await this.options.attempts.listBySessionAndReelPositionRange(
       feed.studySessionId,

@@ -9,8 +9,8 @@ import {
   createLearningScheduler,
 } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
-import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
-import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
+import { FeedMaterializer } from "@/features/study/application/feed-materializer";
+import { completeReelActivation } from "@/features/study/application/feed-position-extension";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
@@ -368,7 +368,7 @@ describe("SQLite learning-engine commit", () => {
         return states;
       },
     };
-    const feed = new ReelFeedServiceImpl(
+    const feed = new FeedMaterializer(
       graph.study,
       recordingMemoryStates,
       createLearningScheduler(),

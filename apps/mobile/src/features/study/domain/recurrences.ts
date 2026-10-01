@@ -14,6 +14,10 @@ const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<Partial<Record<Rating, Recurrenc
     hard: { baseDistance: 16, jitterMaximum: 4, jitterMinimum: -4 },
   };
 
+export function doesRatingRecur(rating: Rating | null): boolean {
+  return rating !== null && INTRA_SESSION_RECURRENCE_CONFIG[rating] !== undefined;
+}
+
 export function calculateRecurrenceTarget(
   sourceReelPosition: number,
   rating: Rating,

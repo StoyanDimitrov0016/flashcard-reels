@@ -14,7 +14,7 @@ vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove: 
 vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";

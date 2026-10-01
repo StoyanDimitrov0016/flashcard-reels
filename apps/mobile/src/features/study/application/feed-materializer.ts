@@ -3,13 +3,13 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed.transaction";
+import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import type {
   PreparedReelFeed,
   PreparedReelOccurrence,
   PreparedReelOccurrences,
-} from "@/features/reels/domain/reel-feed";
-import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed.transaction";
-import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
+} from "@/features/study/domain/study-feed";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
 import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
@@ -24,13 +24,13 @@ import {
   type FeedComposer,
   type FeedState,
 } from "@/features/learning-engine/domain/feed-composer";
-import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
-import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import { FeedStateSchema } from "@/features/study/contracts/feed-state.schema";
+import { FEED_ENGINE_CONFIG } from "@/features/study/domain/feed-engine";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
-export class ReelFeedServiceImpl {
+export class FeedMaterializer {
   private readonly studyService: Pick<StudySessionOperations, "openSession">;
   private readonly memoryStateRepository: FlashcardMemoryStateRepository;
   private readonly scheduler: LearningScheduler;

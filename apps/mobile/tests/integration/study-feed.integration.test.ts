@@ -37,6 +37,41 @@ describe("study feed intents through SQLite", () => {
       anchorFlashcardId: null,
     });
   }
+  it("saves Good without rebuilding the feed", async () => {
+    const opened = await open();
+    const input = { cards, sessionId: opened.feed.studySessionId, reelPosition: 0 };
+    const refresh = vi.spyOn(graph.feed, "refreshFeed");
+    const result = await graph.runtime.rateCard({ ...input, rating: "good" });
+    expect(result.snapshot).toBeNull();
+    expect(result.status).toBe("rated");
+    expect(result.rating).toBe("good");
+    expect(refresh).not.toHaveBeenCalled();
+    const attempt = await graph.attempts.findBySessionAndReelPosition(input.sessionId, 0);
+    expect(attempt?.rating).toBe("good");
+  });
+  it("commits Good without rebuilding the feed on activation", async () => {
+    const opened = await open();
+    const input = { cards, sessionId: opened.feed.studySessionId };
+    await graph.runtime.rateCard({ ...input, reelPosition: 0, rating: "good" });
+    await graph.runtime.extendFeed(input);
+    const refresh = vi.spyOn(graph.feed, "refreshFeed");
+    const result = await graph.runtime.activateCard({ ...input, reelPosition: 5 });
+    expect(result.snapshot).toBeNull();
+    expect(refresh).not.toHaveBeenCalled();
+    const attempt = await graph.attempts.findBySessionAndReelPosition(input.sessionId, 0);
+    expect(attempt?.rating).toBe("good");
+    expect(attempt?.committedAt).toBeTypeOf("string");
+  });
+  it("refreshes when a rating adds or removes a recurrence", async () => {
+    const opened = await open();
+    const input = { cards, sessionId: opened.feed.studySessionId, reelPosition: 0 };
+    const again = await graph.runtime.rateCard({ ...input, rating: "again" });
+    expect(again.snapshot).not.toBeNull();
+    const good = await graph.runtime.rateCard({ ...input, rating: "good" });
+    expect(good.snapshot).not.toBeNull();
+    const easy = await graph.runtime.rateCard({ ...input, rating: "easy" });
+    expect(easy.snapshot).toBeNull();
+  });
   it("persists a plain activation without rebuilding the feed", async () => {
     const opened = await open();
     const refresh = vi.spyOn(graph.feed, "refreshFeed");

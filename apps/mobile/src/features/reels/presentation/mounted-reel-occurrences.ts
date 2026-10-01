@@ -1,7 +1,7 @@
 import type {
   PreparedReelOccurrence,
   PreparedReelOccurrences,
-} from "@/features/reels/domain/reel-feed";
+} from "@/features/study/domain/study-feed";
 
 import { MOUNTED_REEL_HISTORY_LIMIT } from "@/features/reels/presentation/reel-runtime-config";
 import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";

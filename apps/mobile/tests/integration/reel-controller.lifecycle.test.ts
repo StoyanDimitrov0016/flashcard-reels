@@ -7,7 +7,7 @@ vi.mock("@/infrastructure/app-services", () => ({ useAppServices: () => harness.
 vi.mock("@/shared/presentation/flashcard-toast", () => ({ showErrorToast: harness.toast }));
 vi.mock("@/shared/errors/report-error", () => ({ reportError: vi.fn() }));
 
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 import type { StudyFeedSnapshot } from "@/features/study/domain/study.service";
 
 import {
@@ -32,6 +32,45 @@ import {
 } from "../support/study-fixtures";
 
 describe("mounted Discover ratings", () => {
+  it("applies an extension after a newer plain activation resolves", async () => {
+    const { graph, mounted, initialFeed } = await mountFeed();
+    const gate = deferred<void>();
+    const entered = deferred<void>();
+    const extend = graph.runtime.extendFeed.bind(graph.runtime);
+    vi.spyOn(graph.runtime, "extendFeed").mockImplementationOnce(async (input) => {
+      entered.resolve();
+      await gate.promise;
+      return extend(input);
+    });
+    let pending: Promise<void> | undefined;
+    act(() => {
+      pending = mounted.result.current.extend();
+    });
+    await entered.promise;
+    const activated = deferred<void>();
+    const activate = graph.runtime.activateCard.bind(graph.runtime);
+    vi.spyOn(graph.runtime, "activateCard").mockImplementationOnce(async (input) => {
+      const result = await activate(input);
+      expect(result.snapshot).toBeNull();
+      activated.resolve();
+      return result;
+    });
+    act(() => mounted.result.current.activate(1));
+    await act(async () => activated.promise);
+    await act(async () => {
+      gate.resolve();
+      await pending;
+    });
+    expect(mounted.result.current.feed.materializedThroughReelPosition).toBeGreaterThan(
+      initialFeed.materializedThroughReelPosition
+    );
+  });
+  it("updates Good recall without replacing the mounted feed", async () => {
+    const { mounted, initialFeed } = await mountFeed();
+    act(() => mounted.result.current.rate(0, "good"));
+    await waitFor(() => expect(mounted.result.current.cardState(0).rating).toBe("good"));
+    expect(mounted.result.current.feed).toBe(initialFeed);
+  });
   it("keeps the newer rating when an earlier saved-rating response arrives late", async () => {
     const { graph, mounted } = await mountFeed();
     const entered = deferred<void>();

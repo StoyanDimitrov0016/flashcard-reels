@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
+import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/study/domain/study-feed";
 
 import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";

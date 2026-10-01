@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
 import {
   completeReelActivation,
   shouldCompactSessionRuntimeData,
-} from "@/features/reels/application/reel-position-extension";
-import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
+} from "@/features/study/application/feed-position-extension";
 
 async function failIfCalled(): Promise<void> {
   throw new Error("must not run");

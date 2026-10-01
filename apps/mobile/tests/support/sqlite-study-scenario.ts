@@ -13,7 +13,7 @@ import {
   createLearningScheduler,
 } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
-import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { FeedMaterializer } from "@/features/study/application/feed-materializer";
 import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
@@ -62,7 +62,7 @@ export function createScenarioGraph(
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
   const feedTransaction = new SQLiteStudySessionFeedTransaction(database.drizzle);
-  const feed = new ReelFeedServiceImpl(
+  const feed = new FeedMaterializer(
     operations,
     memoryStates,
     scheduler,

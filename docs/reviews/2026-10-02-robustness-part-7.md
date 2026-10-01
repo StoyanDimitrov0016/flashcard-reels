@@ -1,11 +1,11 @@
-﻿# Part 7: queries that fit callers
+# Part 7: queries that fit callers
 
 Branch: `refactor/use-case-services`.
 
-Signals: DeckService members 7 â†’ 6; pass-throughs 6 â†’ 2;
-screen query protocols 3 â†’ 0; duplicated eligible load lifecycles 8 â†’ 1 shared
-definition, consumed by 7 hooks; optional settlement inputs 1 â†’ 0;
-obsolete deck loader hooks 2 â†’ 0. The dead feed member was already removed in Part 6.
+Signals: DeckService members 7 → 6; pass-throughs 6 → 2;
+screen query protocols 3 → 0; duplicated eligible load lifecycles 8 → 1 shared
+definition, consumed by 7 hooks; optional settlement inputs 1 → 0;
+obsolete deck loader hooks 2 → 0. The dead feed member was already removed in Part 6.
 
 Queries live in DeckService because deck, appearance and available-card data form
 the three existing caller needs. It takes the flashcard repository for catalog

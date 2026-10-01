@@ -1,4 +1,4 @@
-﻿import { useCallback } from "react";
+import { useCallback } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckDetails } from "@/features/decks/domain/deck.service";

@@ -1,9 +1,9 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { Rating } from "@/features/learning-engine/domain/rating";
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 import type { StudyFeedSnapshot } from "@/features/study/domain/study.service";
 
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
@@ -19,50 +19,76 @@ type ReelControllerOptions = Readonly<{
   sourceCards: readonly Flashcard[];
   initialCardState?: FocusedCardState;
 }>;
+
 export function useReelController({
   initialCardState,
   initialFeed,
   sourceCards,
 }: ReelControllerOptions) {
   const { studyService } = useReels();
+
   const { invalidateLearningProgress } = useLearningProgressRevision();
+
   const [feed, setFeed] = useState(initialFeed);
+
   const currentFeed = useRef(initialFeed);
+
   const cards = useRef(sourceCards);
+
   const sequence = useRef(0);
+
+  const applied = useRef(0);
+
   const ended = useRef(false);
+
   const activatedPositions = useRef(new Set<number>());
+
   const ratingRequests = useRef(new Map<number, number>());
+
   const active = useRef(true);
+
   const critical = useRef<Error | null>(null);
+
   const extensionInFlight = useRef<Promise<void> | null>(null);
+
   const initialPosition = initialCardState
     ? (initialFeed.occurrences.find((item) => item.card.id === initialCardState.cardId)
         ?.reelPosition ?? initialFeed.currentReelPosition)
     : initialFeed.currentReelPosition;
+
   const [ratings, setRatings] = useState<ReadonlyMap<number, Rating>>(() =>
     initialCardState?.rating ? new Map([[initialPosition, initialCardState.rating]]) : new Map()
   );
+
   const ratingsRef = useRef(ratings);
+
   const [revealed, setRevealed] = useState<ReadonlySet<number>>(() =>
     initialCardState?.revealed ? new Set([initialPosition]) : new Set()
   );
+
   const [fatal, setFatal] = useState<Error | null>(null);
+
   const [extension, setExtension] = useState<Error | null>(null);
+
   const [refresh, setRefresh] = useState<Error | null>(null);
+
   useEffect(function ownControllerLifetime() {
     active.current = true;
+    applied.current = sequence.current;
     return function releaseController() {
       active.current = false;
       sequence.current += 1;
+      applied.current = Number.POSITIVE_INFINITY;
     };
   }, []);
+
   useEffect(
     function updateSourceCards() {
       cards.current = sourceCards;
     },
     [sourceCards]
   );
+
   const fail = useCallback(
     (error: unknown) => {
       if (error instanceof AppError && error.code === "STUDY_SESSION_ENDED") {
@@ -84,12 +110,18 @@ export function useReelController({
     },
     [invalidateLearningProgress]
   );
+
   const applyRatings = useCallback((next: ReadonlyMap<number, Rating>) => {
     ratingsRef.current = next;
     setRatings(next);
   }, []);
+
   const replace = useCallback(
-    (snapshot: StudyFeedSnapshot) => {
+    (snapshot: StudyFeedSnapshot, started: number) => {
+      if (!active.current || started <= applied.current) {
+        return;
+      }
+      applied.current = started;
       const occurrences = mergeMountedReelOccurrences(
         currentFeed.current.occurrences,
         snapshot.feed.occurrences,
@@ -130,7 +162,9 @@ export function useReelController({
         )
       );
       for (const [position, rating] of snapshot.ratings) {
-        nextRatings.set(position, rating);
+        if ((ratingRequests.current.get(position) ?? 0) <= started) {
+          nextRatings.set(position, rating);
+        }
       }
       applyRatings(nextRatings);
       setRevealed(
@@ -146,6 +180,7 @@ export function useReelController({
     },
     [applyRatings]
   );
+
   useEffect(
     function loadPersistedRecall() {
       let current = true;
@@ -195,6 +230,7 @@ export function useReelController({
       fail,
     ]
   );
+
   const extend = useCallback(() => {
     if (extensionInFlight.current) {
       return extensionInFlight.current;
@@ -203,8 +239,8 @@ export function useReelController({
     const promise = studyService
       .extendFeed({ sessionId: initialFeed.studySessionId, cards: cards.current })
       .then((snapshot) => {
-        if (active.current && started === sequence.current) {
-          replace(snapshot);
+        if (active.current && started > applied.current) {
+          replace(snapshot, started);
           setExtension(null);
         }
       })
@@ -233,6 +269,7 @@ export function useReelController({
     extensionInFlight.current = promise;
     return promise;
   }, [studyService, initialFeed.studySessionId, replace, fail]);
+
   const activate = useCallback(
     (position: number) => {
       if (critical.current || ended.current) {
@@ -248,13 +285,13 @@ export function useReelController({
         })
         .then((result) => {
           activatedPositions.current.add(position);
-          if (!active.current || started !== sequence.current) {
+          if (!active.current) {
             return;
           }
           if (result.snapshot) {
-            replace(result.snapshot);
+            replace(result.snapshot, started);
           }
-          if (result.extensionError) {
+          if (result.extensionError && started === sequence.current) {
             if (
               result.extensionError instanceof AppError &&
               result.extensionError.code === "STUDY_SESSION_ENDED"
@@ -278,6 +315,7 @@ export function useReelController({
     },
     [studyService, initialFeed.studySessionId, replace, fail]
   );
+
   const rate = useCallback(
     (position: number, rating: Rating) => {
       if (critical.current || ended.current) {
@@ -298,7 +336,7 @@ export function useReelController({
           if (!active.current) {
             return;
           }
-          const saved = result.snapshot.ratings.get(position);
+          const saved = result.rating;
           const latest = ratingRequests.current.get(position) === started;
           if (saved && latest) {
             applyRatings(new Map(ratingsRef.current).set(position, saved));
@@ -306,8 +344,8 @@ export function useReelController({
           if (result.status === "locked" && latest) {
             showErrorToast("This rating is already saved.");
           }
-          if (started === sequence.current) {
-            replace(result.snapshot);
+          if (result.snapshot && started > applied.current) {
+            replace(result.snapshot, started);
             setRefresh(null);
           }
         })
@@ -337,6 +375,7 @@ export function useReelController({
     },
     [studyService, initialFeed.studySessionId, applyRatings, replace, fail]
   );
+
   const toggle = useCallback((position: number) => {
     if (
       position < currentFeed.current.loadedFromReelPosition ||
@@ -354,6 +393,7 @@ export function useReelController({
       return next;
     });
   }, []);
+
   const cardState = useCallback(
     (position: number) => ({
       rating: ratings.get(position) ?? null,
@@ -361,6 +401,7 @@ export function useReelController({
     }),
     [ratings, revealed]
   );
+
   const retryExtension = useCallback(() => {
     setExtension(null);
     void extend().catch(() => undefined);

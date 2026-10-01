@@ -1,4 +1,4 @@
-﻿import { parseLessonDocument, type LessonSection } from "@flashcard-reels/deck-contract";
+import { parseLessonDocument, type LessonSection } from "@flashcard-reels/deck-contract";
 import { useCallback } from "react";
 
 import type { LessonBlock } from "@/features/lessons/domain/lesson-markdown.parser";

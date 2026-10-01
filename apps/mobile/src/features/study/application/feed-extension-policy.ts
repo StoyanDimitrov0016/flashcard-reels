@@ -1,4 +1,4 @@
-import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import { FEED_ENGINE_CONFIG } from "@/features/study/domain/feed-engine";
 
 export function shouldExtendReelFeed(occurrenceIndex: number, occurrenceCount: number): boolean {
   return (
