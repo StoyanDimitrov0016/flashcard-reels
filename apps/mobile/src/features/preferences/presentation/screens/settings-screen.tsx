@@ -18,6 +18,7 @@ import { useHaptics } from "@/features/preferences/presentation/controllers/use-
 import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SuccessSheet } from "@/shared/presentation/components/success-sheet";
 import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
@@ -49,6 +50,7 @@ export default function SettingsScreen() {
   const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [resetCompleted, setResetCompleted] = useState(false);
   const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
   const reset = useSingleFlight(async (): Promise<void> => {
@@ -59,6 +61,7 @@ export default function SettingsScreen() {
       }
       haptics.resetCompleted();
       setResetPresented(false);
+      setResetCompleted(true);
     } catch (error) {
       reportError(error, "Learning progress reset failure");
       setResetError(getErrorFeedback(error).message);
@@ -182,6 +185,12 @@ export default function SettingsScreen() {
         }}
         onConfirm={() => void reset.run()}
         scope="all learning progress"
+      />
+      <SuccessSheet
+        message="Learning history is cleared. Your decks and cards are still here, ready to study from the start."
+        onClose={() => setResetCompleted(false)}
+        title="Progress reset"
+        visible={resetCompleted}
       />
       <StudyControlsSheet
         onAudioSideChange={setAudioSide}

@@ -1,17 +1,20 @@
 import { SymbolView } from "expo-symbols";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
 
-type AppResetScheduledSheetProps = Readonly<{
+type SuccessSheetProps = Readonly<{
+  message: string;
   onClose: () => void;
+  title: string;
   visible: boolean;
 }>;
 
-export function AppResetScheduledSheet({ onClose, visible }: AppResetScheduledSheetProps) {
+/** Confirms that a finished action worked, such as a reset, with one Done button. */
+export function SuccessSheet({ message, onClose, title, visible }: SuccessSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -26,14 +29,9 @@ export function AppResetScheduledSheet({ onClose, visible }: AppResetScheduledSh
           />
         </View>
         <Text accessibilityRole="header" style={styles.title}>
-          Reset scheduled
+          {title}
         </Text>
-        <Text style={styles.message}>
-          {Platform.OS === "android"
-            ? "Force stop the app in Android Settings, then reopen it."
-            : "Remove the app from recent apps, then reopen it."}{" "}
-          Local data will be erased and bundled decks restored when you reopen the app.
-        </Text>
+        <Text style={styles.message}>{message}</Text>
         <Pressable accessibilityRole="button" onPress={onClose} style={styles.doneButton}>
           <Text style={styles.doneLabel}>Done</Text>
         </Pressable>

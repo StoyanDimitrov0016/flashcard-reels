@@ -56,6 +56,25 @@ describe("AppResetAction recovery capability", () => {
     expect(screen.getByText("Reset scheduled")).toBeTruthy();
   });
 
+  it("keeps the action after scheduling and reminds how to finish the reset", () => {
+    const requestAppDataReset = vi.fn();
+    render(
+      createElement(AppRecoveryProvider, {
+        capability: { requestAppDataReset },
+        children: createElement(AppResetAction),
+      })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset app data" }));
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
+
+    expect(requestAppDataReset).toHaveBeenCalledOnce();
+    expect(screen.getByText("Reset scheduled")).toBeTruthy();
+    expect(screen.queryByText("Reset all app data?")).toBeNull();
+  });
+
   it("keeps the failure message visible when the injected request throws", () => {
     const requestAppDataReset = vi.fn(() => {
       throw new Error("reset unavailable");

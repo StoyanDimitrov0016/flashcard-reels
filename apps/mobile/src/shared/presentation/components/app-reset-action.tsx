@@ -3,13 +3,19 @@ import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from "rea
 
 import { toError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
-import { AppResetScheduledSheet } from "@/shared/presentation/components/app-reset-scheduled-sheet";
 import { DestructiveConfirmationSheet } from "@/shared/presentation/components/destructive-confirmation-sheet";
+import { SuccessSheet } from "@/shared/presentation/components/success-sheet";
 import { useAppRecovery } from "@/shared/presentation/context/app-recovery-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { sizes } from "@/shared/presentation/sizes";
 import { getAppColors, type AppColors } from "@/shared/presentation/theme-colors";
 import { fontSize } from "@/shared/presentation/typography";
+
+const RESET_SCHEDULED_MESSAGE = `${
+  Platform.OS === "android"
+    ? "Force stop the app in Android Settings, then reopen it."
+    : "Remove the app from recent apps, then reopen it."
+} Local data will be erased and bundled decks restored when you reopen the app.`;
 
 type AppResetActionProps = Readonly<{
   /** Renders a custom control that opens the confirmation, such as a settings row. */
@@ -33,15 +39,20 @@ export function AppResetAction({ renderTrigger }: AppResetActionProps = {}) {
     );
   }
 
+  // Once a reset is scheduled, the action stays and reminds how to finish it.
   const openConfirmation = () => {
+    if (requested) {
+      setScheduledPresented(true);
+      return;
+    }
     setFailure(null);
     setConfirmationPresented(true);
   };
 
   return (
     <>
-      {!requested && renderTrigger?.(openConfirmation)}
-      {!requested && !renderTrigger && (
+      {renderTrigger?.(openConfirmation)}
+      {!renderTrigger && (
         <View style={styles.container}>
           <Pressable accessibilityRole="button" onPress={openConfirmation} style={styles.button}>
             <Text style={styles.label}>Reset all app data</Text>
@@ -78,8 +89,10 @@ export function AppResetAction({ renderTrigger }: AppResetActionProps = {}) {
         title="Reset all app data?"
         visible={confirmationPresented}
       />
-      <AppResetScheduledSheet
+      <SuccessSheet
+        message={RESET_SCHEDULED_MESSAGE}
         onClose={() => setScheduledPresented(false)}
+        title="Reset scheduled"
         visible={scheduledPresented}
       />
     </>
