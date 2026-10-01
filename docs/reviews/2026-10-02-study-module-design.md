@@ -32,8 +32,15 @@ interface StudyService {
   findSession(id: string): Promise<Session | null>;
   findSessionByScope(scope: Scope): Promise<Session | null>;
   recoverPendingCompletedSessionAggregation(limit?: number): Promise<void>;
-  getAggregationEligibility(id: string): Promise<{ shouldCheck: boolean; safeThroughReelPosition: number } | null>;
-  appendSessionReels(id: string, cards: readonly Flashcard[], baseStart?: number, positions?: number[]): Promise<void>;
+  getAggregationEligibility(
+    id: string
+  ): Promise<{ shouldCheck: boolean; safeThroughReelPosition: number } | null>;
+  appendSessionReels(
+    id: string,
+    cards: readonly Flashcard[],
+    baseStart?: number,
+    positions?: number[]
+  ): Promise<void>;
   updateSessionFeedState(id: string, state: string): Promise<void>;
   listSessionReels(id: string): Promise<Reel[]>;
   findMaxSessionBaseFeedPosition(id: string): Promise<number | null>;
@@ -41,20 +48,37 @@ interface StudyService {
   listSessionReelsInReelPositionRange(id: string, from: number, through: number): Promise<Reel[]>;
   listSessionRecurrences(id: string): Promise<Recurrence[]>;
   listPendingRecurrenceFlashcardIdsFromTargetPosition(id: string, from: number): Promise<string[]>;
-  listSessionRecurrencesInTargetRange(id: string, from: number, through: number): Promise<Recurrence[]>;
+  listSessionRecurrencesInTargetRange(
+    id: string,
+    from: number,
+    through: number
+  ): Promise<Recurrence[]>;
   updateSessionReelPosition(id: string, position: number): Promise<Position | null>;
   startAttempt(cardId: string, position: number, sessionId: string): Promise<string>;
-  listReviewAttemptsInReelPositionRange(id: string, from: number, through: number): Promise<Attempt[]>;
+  listReviewAttemptsInReelPositionRange(
+    id: string,
+    from: number,
+    through: number
+  ): Promise<Attempt[]>;
   rateAttempt(id: string, rating: Rating): Promise<RateAttemptResult>;
   consumeRecurrence(id: string): Promise<boolean>;
   commitAttempt(id: string): Promise<void>;
   commitAttemptsOutsideEditableWindow(id: string): Promise<void>;
 }
 interface ReelFeedService {
-  prepareFeed(cards: readonly Flashcard[], scope: Scope, deckId: DeckId | null, replace: boolean, anchor: string | null): Promise<Feed>;
+  prepareFeed(
+    cards: readonly Flashcard[],
+    scope: Scope,
+    deckId: DeckId | null,
+    replace: boolean,
+    anchor: string | null
+  ): Promise<Feed>;
   extendFeed(cards: readonly Flashcard[], sessionId: string): Promise<Feed>;
   recordVisibleCard(sessionId: string, cardId: string): Promise<void>;
-  refreshOccurrences(cards: readonly Flashcard[], sessionId: string): Promise<readonly Occurrence[]>;
+  refreshOccurrences(
+    cards: readonly Flashcard[],
+    sessionId: string
+  ): Promise<readonly Occurrence[]>;
   refreshFeed(cards: readonly Flashcard[], sessionId: string): Promise<Feed>;
 }
 interface StudySessionSettlement {
@@ -62,13 +86,22 @@ interface StudySessionSettlement {
   settleBeforeDeckRemoval(deckId: DeckId): Promise<void>;
 }
 type CurrentReelController = {
-  feed: Feed; fatalError: Error | null; extensionError: Error | null; refreshError: Error | null;
-  onOccurrenceBecameActive(position: number): void; onRatingSelected(item: Occurrence, rating: Rating): void;
-  requestFeedExtension(): Promise<void>; retryFeedExtension(): void;
-  attemptIds: ReadonlyMap<number, string>; ratings: ReadonlyMap<number, Rating>;
-  revealedPositions: ReadonlySet<number>; loadError: Error | null;
-  getAttemptId(position: number): string | undefined; getRating(position: number): Rating | undefined;
-  setAttemptId(position: number, id: string): void; rateCard(position: number, rating: Rating): void;
+  feed: Feed;
+  fatalError: Error | null;
+  extensionError: Error | null;
+  refreshError: Error | null;
+  onOccurrenceBecameActive(position: number): void;
+  onRatingSelected(item: Occurrence, rating: Rating): void;
+  requestFeedExtension(): Promise<void>;
+  retryFeedExtension(): void;
+  attemptIds: ReadonlyMap<number, string>;
+  ratings: ReadonlyMap<number, Rating>;
+  revealedPositions: ReadonlySet<number>;
+  loadError: Error | null;
+  getAttemptId(position: number): string | undefined;
+  getRating(position: number): Rating | undefined;
+  setAttemptId(position: number, id: string): void;
+  rateCard(position: number, rating: Rating): void;
   toggleCard(position: number): void;
 };
 ```
@@ -79,8 +112,11 @@ type CurrentReelController = {
 type FeedInput = Readonly<{ sessionId: string; cards: readonly Flashcard[] }>;
 type CardInput = FeedInput & Readonly<{ reelPosition: number }>;
 type OpenFeedInput = Readonly<{
-  cards: readonly Flashcard[]; scope: Scope; deckId: DeckId | null;
-  replaceExisting: boolean; anchorFlashcardId: string | null;
+  cards: readonly Flashcard[];
+  scope: Scope;
+  deckId: DeckId | null;
+  replaceExisting: boolean;
+  anchorFlashcardId: string | null;
 }>;
 type StudyFeedSnapshot = Readonly<{ feed: Feed; ratings: ReadonlyMap<number, Rating> }>;
 type ActivationResult = Readonly<{ snapshot: StudyFeedSnapshot; extensionError: Error | null }>;
@@ -93,7 +129,10 @@ interface StudyFeedService {
   refreshFeed(input: FeedInput): Promise<StudyFeedSnapshot>; // refresh feed and persisted ratings
   resumeFocusedSession(): Promise<Session | null>; // existing Focus foreground lifecycle policy
 }
-type DeckChange = Readonly<{ deckId: DeckId; kind: "first-install" | "update" | "remove" | "reset" }>;
+type DeckChange = Readonly<{
+  deckId: DeckId;
+  kind: "first-install" | "update" | "remove" | "reset";
+}>;
 interface StudySessionSettlement {
   settleDeckChange(change: DeckChange): Promise<void>; // settle before a deck change
   settleForProgressBackup(): Promise<void>; // preserve backup's full drain contract
@@ -146,3 +185,59 @@ extension failure escalation; unbounded known-attempt tracking; loss of transfer
 state; and stale snapshots overwriting newer activation positions. Preserve the current queue and
 transaction boundaries, keep known-attempt state bounded to the mounted range, and test these.
 Part 5 changes runtime signal counts by zero. Part 6 requires owner approval of this document.
+
+## Review (Claude) and conditions for Part 6
+
+Recommendation: approve this design with the conditions below. The owner's go-ahead to start
+Part 6 is the approval. Do Part 5b first.
+
+### Part 5b: review follow-ups
+
+Branch `fix/robustness-review-followups` from `docs/study-module-design`, one commit:
+`fix(mobile): address robustness review follow-ups`. Part 6 then starts from this branch.
+
+1. **Root checks.** Format the five `docs/reviews/2026-10-02-*.md` files. Remove the two unused
+   exports reported by `npm run check:dead-code`: `EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE` (make it
+   module-private) and the `MemoryState` type.
+2. **Bundled appearance is still lost in the real crash case.** The installation transaction
+   inserts `DEFAULT_DECK_THEME_ID` on a fresh install (`sqlite-deck-package-installation.transaction.ts`).
+   If the app is killed after that transaction and before `installBundledDecks` saves the
+   bundled theme, the next start finds a theme row and never applies the bundled theme. The Part 3
+   test deletes the theme row, which does not reproduce this.
+   - Let the bundled install pass its appearance (theme and cover) into the installation, so the
+     transaction writes the bundled theme and cover itself, atomically.
+   - Keep the later-start repair only for the cover when a new revision changes it.
+   - Learner-chosen themes stay untouched.
+   - Test: a bundled first install commits with the bundled theme. No separate theme write is
+     needed, so a crash after the transaction cannot lose it.
+3. **Wording.**
+   - `DECK_PACKAGE_ID_CONFLICT` means the package reuses card or lesson ids that belong to
+     another installed deck, so retrying cannot succeed. Use: "This deck package reuses ids from
+     another installed deck. Ask its author for a fixed package."
+   - `FILE_SHARING_UNAVAILABLE` is not specific to backups. Use: "Sharing isn't available on this
+     device."
+4. **Retry label.** `useImportDeckSheet` reads `lastScannedUrl.current` during render to choose
+   "Try again" or "Scan again". Keep a ref for the URL itself, and drive the label from state set
+   when a scan starts and when it is cleared. Do not read refs during render.
+
+### Conditions for Part 6
+
+1. **No in-memory session state in the service.** `StudyFeedService` keeps nothing between calls
+   except the existing per-session serialization queues. It finds attempts by session and reel
+   position through SQLite (`findBySessionAndReelPosition`), not through a known-attempt map. This
+   removes the "unbounded known-attempt tracking" risk instead of bounding it.
+2. **One owner for ordering.**
+   - The service serializes activation, rating, and commit work per session; the controller's
+     activation queue and pending-rating set are removed. State this in the commit body.
+   - A rating must never wait for feed materialization. `activateCard` runs its conditional
+     extension outside the per-session queue, or after releasing it.
+   - Test that a rating made while an extension is slow is saved before the extension resolves.
+3. **No feed rebuild per swipe.**
+   - `activateCard` returns `snapshot: StudyFeedSnapshot | null`. It returns a snapshot only when
+     the activation changed the feed: an extension, a consumed recurrence, or committed ratings
+     that change what the cards show. Otherwise it returns `null`, and the controller keeps its
+     feed object, so FlashList does not re-render every card.
+   - Test that a plain activation returns `null`.
+4. **Report** the signal counts the design promises: study members 25 + 5 + 2 → 6 + 2, public
+   pass-throughs 13 → 0, controller members 17 → 8. Where the result differs, add a Deviations
+   entry.

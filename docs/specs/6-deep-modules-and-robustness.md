@@ -111,7 +111,10 @@ Each part is one branch, started from the previous part's branch. This spec live
    Lint forbids `useMemo`; the React Compiler memoizes.
 8. Leave `.vscode/settings.json` alone. Follow `AGENTS.md` and `docs/codebase-preferences.md`.
    Commands run from `apps/mobile`.
-9. **Every part ends with** `npm run check` and `npm test` passing. Its report gives:
+9. **Every part ends with** `npm run check` and `npm test` passing in `apps/mobile`, plus, from
+   the repository root, `npm run check` and `npm run check:dead-code`. The root format check also
+   covers new Markdown files, so format them before committing. The only expected root failure is
+   the owner's local `.vscode/settings.json`. Its report gives:
    - the before and after counts of the signals it targets, for example "StudyService members:
      25 → 9";
    - the "Deviations" list.
