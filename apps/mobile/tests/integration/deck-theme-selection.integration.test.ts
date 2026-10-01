@@ -7,6 +7,8 @@ import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sq
 import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { deckThemeSelections, decks } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
@@ -38,7 +40,11 @@ describe("deck theme selection persistence", () => {
     const service = new DeckServiceImpl(
       new SQLiteDeckRepository(database.drizzle),
       new SQLiteDeckThemeSelectionRepository(database.drizzle, ids),
-      new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds)
+      new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
+      null,
+      createScenarioGraph(database, new TestClock(), new SequenceIdGenerator()).runtime,
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
     );
     const selection = new DeckThemeSelection({
       deckId: TEST_DECK_ID,
@@ -47,7 +53,8 @@ describe("deck theme selection persistence", () => {
 
     await service.saveThemeSelection(selection);
 
-    expect(await service.getThemeSelection(TEST_DECK_ID)).toEqual(selection);
+    const initialDetails = await service.getDetails(TEST_DECK_ID);
+    expect(initialDetails.themeSelection).toEqual(selection);
     const stored = await database.drizzle.select().from(deckThemeSelections);
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ deckId: TEST_DECK_ID, theme: "cyan" });
@@ -55,7 +62,8 @@ describe("deck theme selection persistence", () => {
     const originalSelectionId = stored[0]?.id;
     const updatedSelection = new DeckThemeSelection({ deckId: TEST_DECK_ID, theme: "rose" });
     await service.saveThemeSelection(updatedSelection);
-    expect(await service.getThemeSelection(TEST_DECK_ID)).toEqual(updatedSelection);
+    const updatedDetails = await service.getDetails(TEST_DECK_ID);
+    expect(updatedDetails.themeSelection).toEqual(updatedSelection);
     expect(await database.drizzle.select().from(deckThemeSelections)).toEqual([
       { id: originalSelectionId, deckId: TEST_DECK_ID, theme: "rose" },
     ]);
@@ -64,7 +72,8 @@ describe("deck theme selection persistence", () => {
     expect(storedDeck?.coverAsset).toBe("cards");
 
     await database.runAsync("UPDATE deck_theme_selections SET theme = ?", "missing-theme");
-    expect(await service.getThemeSelection(TEST_DECK_ID)).toEqual(
+    const repairedDetails = await service.getDetails(TEST_DECK_ID);
+    expect(repairedDetails.themeSelection).toEqual(
       new DeckThemeSelection({ deckId: TEST_DECK_ID, theme: "graphite" })
     );
   });

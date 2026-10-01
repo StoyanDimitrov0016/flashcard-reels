@@ -4,7 +4,7 @@ import { Animated, Easing, type ScrollView, StyleSheet, View } from "react-nativ
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 
-import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import { LessonSheetNavigation } from "@/features/lessons/presentation/components/lesson-sheet-navigation";
@@ -49,7 +49,7 @@ export function SheetLessonReader({
   const { colors, resolvedScheme } = useAppTheme();
   const height = useLessonSheetHeight();
   const { blocks, sections, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
-  const { themeSelections } = useDeckThemeSelections([deckId]);
+  const { themeSelections } = useDeckMetadata([deckId], false);
   const themeSelection = themeSelections.get(deckId);
   const accent = themeSelection
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent

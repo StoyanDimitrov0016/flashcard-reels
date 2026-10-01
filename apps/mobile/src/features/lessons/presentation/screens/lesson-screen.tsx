@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import {
@@ -32,7 +32,7 @@ export default function LessonScreen() {
   const lessonCount = lesson
     ? (readingLists.find((list) => list.deckId === lesson.deckId)?.lessons.length ?? 0)
     : 0;
-  const { themeSelections } = useDeckThemeSelections(lesson ? [lesson.deckId] : []);
+  const { themeSelections } = useDeckMetadata(lesson ? [lesson.deckId] : [], false);
   const themeSelection = lesson ? themeSelections.get(lesson.deckId) : undefined;
   const accent = themeSelection
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent

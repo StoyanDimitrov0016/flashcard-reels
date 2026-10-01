@@ -16,10 +16,6 @@ export class FlashcardServiceImpl implements FlashcardService {
     this.availabilityQuery = availabilityQuery;
   }
 
-  async countFlashcardsByDeckIds(deckIds: readonly DeckId[]): Promise<ReadonlyMap<DeckId, number>> {
-    return this.flashcardRepository.countFlashcardsByDeckIds(deckIds);
-  }
-
   async findById(id: string): Promise<Flashcard | null> {
     return this.flashcardRepository.findById(id);
   }

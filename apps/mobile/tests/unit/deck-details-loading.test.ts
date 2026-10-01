@@ -1,28 +1,45 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
+import type { Deck } from "@/features/decks/domain/deck.model";
+import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+
 // Unit harness for the loader effect and its state transitions, not a React renderer.
 const harness = vi.hoisted(() => ({
   state: undefined as unknown,
   effect: undefined as (() => void | (() => void)) | undefined,
-  findDeck: vi.fn(),
-  cards: vi.fn(),
-  themeSelection: vi.fn(),
+  findDeck: vi.fn<(id: string) => Promise<Deck | null>>(),
+  cards: vi.fn<(id: string) => Promise<Flashcard[]>>(),
+  themeSelection: vi.fn<(id: string) => Promise<DeckThemeSelection | null>>(),
   progress: vi.fn(),
 }));
 vi.mock("react", () => ({
+  useCallback: (callback: unknown) => callback,
   useEffect: (effect: () => void | (() => void)) => {
     harness.effect = effect;
   },
-  useState: (initial: unknown) => [
-    harness.state ?? initial,
-    (next: unknown) => {
-      harness.state = next;
-    },
-  ],
+  useState: (initial: unknown) =>
+    typeof initial === "number"
+      ? [initial, () => undefined]
+      : [
+          harness.state ?? initial,
+          (next: unknown) => {
+            harness.state = next;
+          },
+        ],
 }));
 vi.mock("@/infrastructure/app-services", () => ({
   useAppServices: () => ({
-    deckService: { findById: harness.findDeck, getThemeSelection: harness.themeSelection },
+    deckService: {
+      getDetails: async (id: string) => {
+        const [deck, cards, themeSelection] = await Promise.all([
+          harness.findDeck(id),
+          harness.cards(id),
+          harness.themeSelection(id),
+        ]);
+        return { deck, cards, themeSelection };
+      },
+    },
     flashcardService: { listByDeckId: harness.cards },
     flashcardProgressService: { findByFlashcardIds: harness.progress },
   }),
@@ -57,7 +74,7 @@ describe("deck detail loading after content changes", () => {
     useDeckDetails("deleted-deck");
     harness.effect?.();
     await vi.waitFor(() =>
-      expect(harness.state).toMatchObject({ loading: false, deck: null, error: null })
+      expect(harness.state).toMatchObject({ loading: false, data: { deck: null }, error: null })
     );
     expect(() => useDeckDetails("deleted-deck")).not.toThrow();
     expect(harness.progress).not.toHaveBeenCalled();

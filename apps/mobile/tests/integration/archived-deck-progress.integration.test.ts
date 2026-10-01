@@ -14,6 +14,7 @@ import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrast
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import {
@@ -199,7 +200,9 @@ describe("archived deck progress", () => {
       new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
       new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
       null,
-      graph.runtime
+      graph.runtime,
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
     );
     await service.remove(TEST_DECK_ID);
 

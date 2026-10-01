@@ -1,72 +1,35 @@
-import { useEffect, useState } from "react";
+﻿import { useCallback } from "react";
 
 import type { DeckReadingList } from "@/features/lessons/domain/lesson.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useLessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
 import { toOperationError } from "@/shared/errors/normalize-error";
-
-type ReadingListsState = Readonly<{
-  readingLists: readonly DeckReadingList[];
-  loading: boolean;
-}>;
-
-type LoadedReadingListsState = Readonly<{
-  readingLists: readonly DeckReadingList[];
-  error: Error | null;
-  revision: number | null;
-}>;
-
-const loadingState: ReadingListsState = { loading: true, readingLists: [] };
-
-export function useReadingLists(): ReadingListsState {
+import { useAsyncLoad } from "@/shared/presentation/hooks/use-async-load";
+const emptyLists: readonly DeckReadingList[] = [];
+function readingFailure(error: unknown) {
+  return toOperationError(error, {
+    code: "VIEW_LOAD_FAILED",
+    context: { operation: "lessons.list" },
+    message: "Could not load lessons",
+  });
+}
+export function useReadingLists() {
   const { lessonService } = useLessonsCapability();
   const { revision } = useDeckContentRevision();
-  const [state, setState] = useState<LoadedReadingListsState>({
-    error: null,
-    readingLists: [],
-    revision: null,
-  });
-
-  useEffect(
-    function loadReadingLists() {
-      let active = true;
-
-      const load = async () => {
-        try {
-          const readingLists = await lessonService.listReadingLists();
-          if (active) {
-            setState({ error: null, readingLists, revision });
-          }
-        } catch (error) {
-          if (active) {
-            setState({
-              error: toOperationError(error, {
-                code: "VIEW_LOAD_FAILED",
-                context: { operation: "lessons.list" },
-                message: "Could not load lessons",
-              }),
-              readingLists: [],
-              revision,
-            });
-          }
-        }
-      };
-
-      void load();
-      return function cancelReadingListLoad() {
-        active = false;
-      };
-    },
+  const load = useCallback(
+    (_revision = revision) => lessonService.listReadingLists(),
     [lessonService, revision]
   );
-
-  // Gate during render: replacement effects have not run yet when deck content changes.
-  if (state.revision !== revision) {
-    return loadingState;
-  }
+  const state = useAsyncLoad({
+    load,
+    initialData: emptyLists,
+    onError: readingFailure,
+    gate: true,
+  });
   if (state.error) {
     throw state.error;
   }
-  return { loading: false, readingLists: state.readingLists };
+
+  return { readingLists: state.data, loading: state.loading };
 }

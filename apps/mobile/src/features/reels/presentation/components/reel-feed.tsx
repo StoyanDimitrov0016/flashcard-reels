@@ -6,8 +6,7 @@ import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
 
-import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
-import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
@@ -63,17 +62,14 @@ export function ReelFeed({
     ? activeReelPosition
     : undefined;
   const deckIds = [...new Set(sourceCards.map((card) => card.deckId))];
-  const { themeSelections, loading: themeSelectionsLoading } = useDeckThemeSelections(deckIds);
-  const { decks, loading: decksLoading } = useDeckCollection(deckIds);
+  const { themeSelections, decks, loading: metadataLoading } = useDeckMetadata(deckIds);
   const cardCountsByDeckId = new Map<Flashcard["deckId"], number>();
   for (const card of sourceCards) {
     cardCountsByDeckId.set(card.deckId, (cardCountsByDeckId.get(card.deckId) ?? 0) + 1);
   }
 
   const metadataReady =
-    !themeSelectionsLoading &&
-    !decksLoading &&
-    deckIds.every((deckId) => themeSelections.has(deckId) && decks.has(deckId));
+    !metadataLoading && deckIds.every((deckId) => themeSelections.has(deckId) && decks.has(deckId));
 
   useEffect(
     function announceRefreshFailure() {

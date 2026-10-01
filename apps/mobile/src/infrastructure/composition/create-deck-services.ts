@@ -15,6 +15,8 @@ import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastruct
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createDeckPackageServices } from "@/infrastructure/deck-package-services";
 
 type CreateDeckServicesOptions = Readonly<{
@@ -49,7 +51,9 @@ export function createDeckServices({
       new SQLiteDeckThemeSelectionRepository(database, idGenerator),
       new SQLiteDeckRemovalTransaction(database, idGenerator),
       deckAudioRemover,
-      studyService
+      studyService,
+      new SQLiteFlashcardRepository(database),
+      new SQLiteFlashcardAvailabilityQuery(database)
     ),
     savedProgressService: new SavedProgressServiceImpl(
       new SQLiteArchivedProgressQuery(database),

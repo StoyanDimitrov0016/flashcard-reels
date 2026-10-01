@@ -381,7 +381,9 @@ describe("deck package installation", () => {
           await audio.removeDeck(deckId);
         },
       },
-      graph.runtime
+      graph.runtime,
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
     );
     const deletion = service.remove(TEST_DECK_ID);
     await cleanupStarted.promise;

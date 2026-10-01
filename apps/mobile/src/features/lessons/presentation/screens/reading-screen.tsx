@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { DeckReadingList } from "@/features/lessons/domain/lesson.model";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { useDeckThemeSelections } from "@/features/decks/presentation/controllers/use-deck-theme-selections";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getDeckLessonsHref } from "@/features/lessons/presentation/lesson-href";
@@ -23,7 +23,10 @@ export default function ReadingScreen() {
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();
   const { loading, readingLists } = useReadingLists();
-  const { themeSelections } = useDeckThemeSelections(readingLists.map((list) => list.deckId));
+  const { themeSelections } = useDeckMetadata(
+    readingLists.map((list) => list.deckId),
+    false
+  );
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
