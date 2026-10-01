@@ -1,10 +1,10 @@
-# Part 2 ? typed expected failures
+# Part 2 — typed expected failures
 
 Branch: `fix/typed-expected-failures`.
 
-Signals: fatal locked-rating paths 1 ? 0; fatal ended-session rating paths 1 ? 0;
-unwrapped row parsers 3 ? 0; missing shared message cases 7 ? 0;
-unvalidated route ID sites 3 ? 0; silent corrupt-feed fallback sites 2 ? 0.
+Signals: fatal locked-rating paths 1 → 0; fatal ended-session rating paths 1 → 0;
+unwrapped row parsers 3 → 0; missing shared message cases 7 → 0;
+unvalidated route ID sites 3 → 0; silent corrupt-feed fallback sites 2 → 0.
 
 The mounted Discover tests first failed for committed ratings and reset sessions.
 Row-corruption tests first failed with raw Zod errors. They now retain table, row ID, and cause.
@@ -61,9 +61,10 @@ are excluded. Each site is listed; expected failures now use an AppError subclas
 | `infrastructure/bundled-deck-packages.ts:43` | Invariant | Internal consistency or programmer contract; stays plain. |
 | `infrastructure/bundled-deck-packages.ts:46` | Invariant | Internal consistency or programmer contract; stays plain. |
 | `infrastructure/bundled-deck-packages.ts:67` | Expected | `BUNDLED_DECK_INSTALL_FAILED` |
-| `shared/errors/normalize-error.ts:8` | Invariant | Internal consistency or programmer contract; stays plain. |
+| `shared/errors/normalize-error.ts:8` | Normalization helper, not a throw site | Constructs a fallback for an unknown value; classification belongs to its caller. |
 
-Plain Error sites audited: 39; expected 18 ? 0 plain sites; invariants 21 unchanged.
+Plain Error construction sites audited: 39 (38 throw sites plus the normalization helper).
+Expected throw sites: 18 → 0 plain sites; invariant throw sites: 20 unchanged.
 
 ## Deviations
 
