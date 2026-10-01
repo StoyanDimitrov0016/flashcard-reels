@@ -1,3 +1,10 @@
+import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
+
+import {
+  explainFlashcardProgress,
+  toRecallPercentage,
+} from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
+
 type ReviewedRow = Readonly<{
   deck: Readonly<{ id: string }>;
   explanation: Readonly<{ reviewCount: number }>;
@@ -31,4 +38,38 @@ export function countReviewedCards(progress: Iterable<Readonly<{ reviewCount: nu
     }
   }
   return reviewed;
+}
+
+export type DeckReviewMetrics = Readonly<{
+  cardCount: number;
+  newCount: number;
+  reviewCount: number;
+  /** Mean recall across reviewed cards, or null before the first review. */
+  recallPercentage: number | null;
+}>;
+
+/** The headline numbers of a deck's information sheet. */
+export function summarizeDeckReviews(
+  cards: readonly Readonly<{ id: string }>[],
+  progress: ReadonlyMap<string, FlashcardProgress>
+): DeckReviewMetrics {
+  let reviewedCount = 0;
+  let reviewCount = 0;
+  let recallScoreTotal = 0;
+  for (const card of cards) {
+    const cardProgress = progress.get(card.id);
+    const { averageRecallScore } = explainFlashcardProgress(cardProgress ?? null);
+    if (cardProgress && averageRecallScore !== null) {
+      reviewedCount += 1;
+      reviewCount += cardProgress.reviewCount;
+      recallScoreTotal += averageRecallScore;
+    }
+  }
+  return {
+    cardCount: cards.length,
+    newCount: cards.length - reviewedCount,
+    reviewCount,
+    recallPercentage:
+      reviewedCount === 0 ? null : toRecallPercentage(recallScoreTotal / reviewedCount),
+  };
 }
