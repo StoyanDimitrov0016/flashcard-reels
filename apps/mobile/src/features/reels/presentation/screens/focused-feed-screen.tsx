@@ -51,7 +51,7 @@ function ReadyFocusedFeedContent({
   );
 
   useEffect(
-    function consumePreparedFocusedFeedTransition() {
+    function consumePreparedTransition() {
       if (preparedFeed && !consumed.current) {
         consumed.current = true;
         onSessionStarted(preparedFeed.studySessionId, expectedRevision);

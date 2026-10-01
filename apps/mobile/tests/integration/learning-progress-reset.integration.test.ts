@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
 import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";

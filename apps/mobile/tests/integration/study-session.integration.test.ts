@@ -302,7 +302,7 @@ describe("SQLite study sessions", () => {
         "SELECT COUNT(*) AS count FROM study_sessions WHERE scope = 'focus' AND completed_at IS NULL"
       )
     ).toEqual({ count: 1 });
-    await graph.study.recoverPendingCompletedSessionAggregation(1);
+    await graph.study.recoverPendingAggregation(1);
     expect(
       await database.getFirstAsync(
         "SELECT review_count FROM flashcard_progress WHERE flashcard_id = ?",

@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 
 import type { Rating } from "@/features/learning-engine/domain/rating";
-import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt.transaction";
 import type { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 

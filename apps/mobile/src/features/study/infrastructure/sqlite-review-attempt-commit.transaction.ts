@@ -1,7 +1,7 @@
 import { and, eq, gte, isNull, sql } from "drizzle-orm";
 
 import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
-import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit.transaction";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 

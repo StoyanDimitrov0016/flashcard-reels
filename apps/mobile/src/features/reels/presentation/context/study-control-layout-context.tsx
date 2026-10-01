@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext } from "react";
 
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { usePreferencesContext } from "@/features/preferences/presentation/controllers/preferences-context";
 import {
   resolveStudyControlLayout,
   type ResolvedStudyControlLayout,
@@ -11,7 +11,7 @@ const StudyControlLayoutContext = createContext<ResolvedStudyControlLayout | nul
 type StudyControlLayoutProviderProps = Readonly<{ children: ReactNode }>;
 
 export function StudyControlLayoutProvider({ children }: StudyControlLayoutProviderProps) {
-  const { preferences } = usePreferences();
+  const { preferences } = usePreferencesContext();
   const layout = resolveStudyControlLayout({
     audioEnabled: preferences.audioEnabled,
     audioSide: preferences.audioSide,

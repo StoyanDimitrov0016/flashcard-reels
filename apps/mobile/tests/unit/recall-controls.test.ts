@@ -52,10 +52,10 @@ vi.mock("@/shared/presentation/theme", async () => {
   const { getAppColors } = await import("@/shared/presentation/theme-colors");
   return { useAppTheme: () => ({ colors: getAppColors("dark") }) };
 });
-vi.mock("@/features/preferences/presentation/hooks/use-preferences", async () => {
+vi.mock("@/features/preferences/presentation/controllers/preferences-context", async () => {
   const { defaultAppPreferences } = await import("@/features/preferences/domain/app-preferences");
   return {
-    usePreferences: () => ({
+    usePreferencesContext: () => ({
       preferences: {
         ...defaultAppPreferences,
         studyIslandPosition: harness.position,

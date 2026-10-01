@@ -6,7 +6,7 @@ import type { ProgressBackupFileGateway } from "@/features/progress-backup/appli
 import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 import { defaultAppPreferences } from "@/features/preferences/domain/app-preferences";
 import { SQLitePreferencesRepository } from "@/features/preferences/infrastructure/sqlite-preferences.repository";
 import { ProgressBackupServiceImpl } from "@/features/progress-backup/application/progress-backup.service.impl";

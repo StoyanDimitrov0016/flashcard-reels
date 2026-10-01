@@ -506,11 +506,7 @@ describe("deck package installation", () => {
       );
       await importer.installFromBytes(validArchive(1, [first]));
       const sessionId = await reviewCard(graph, database, first.id, false);
-      const attemptsBefore = await graph.study.listReviewAttemptsInReelPositionRange(
-        sessionId,
-        0,
-        0
-      );
+      const attemptsBefore = await graph.study.listAttemptsInRange(sessionId, 0, 0);
       const audioBefore = [...audio.activeVersions];
       const stagedBefore = audio.staged.length;
 
@@ -525,9 +521,7 @@ describe("deck package installation", () => {
 
       const retainedSession = await graph.sessions.findById(sessionId);
       expect(retainedSession?.completedAt).toBeNull();
-      expect(await graph.study.listReviewAttemptsInReelPositionRange(sessionId, 0, 0)).toEqual(
-        attemptsBefore
-      );
+      expect(await graph.study.listAttemptsInRange(sessionId, 0, 0)).toEqual(attemptsBefore);
       expect(await graph.memoryStates.findByFlashcardId(first.id)).toBeNull();
       expect([...audio.activeVersions]).toEqual(audioBefore);
       expect(audio.staged).toHaveLength(stagedBefore);
@@ -561,7 +555,7 @@ describe("deck package installation", () => {
     expect(audio.removedOtherVersions).toContain(`${TEST_DECK_ID}:2`);
     const completedSession = await graph.sessions.findById(sessionId);
     expect(completedSession?.completedAt).not.toBeNull();
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
     const repository = new SQLiteFlashcardRepository(database.drizzle);
     expect(
       await new SQLiteFlashcardAvailabilityQuery(database.drizzle).listAvailableFlashcardsByDeckId(
@@ -597,7 +591,7 @@ describe("deck package installation", () => {
 
     await importer.installFromBytes(validArchive(1, [removedCard]));
     await reviewCard(graph, database, removedCard.id);
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
     await importer.installFromBytes(validArchive(2, [card(testId(22), 0)]));
     expect(
       await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)
@@ -749,7 +743,7 @@ describe("deck package installation", () => {
     const existingCard = card(testId(16), 0);
     await initial.importer.installFromBytes(validArchive(1, [existingCard]));
     await reviewCard(graph, database, existingCard.id);
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
     const gate = new GatedInstallation(
       new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator())
     );
@@ -947,7 +941,7 @@ describe("deck package installation", () => {
         .where(eq(flashcardReviewAttempts.id, attemptId))
     ).toEqual([{ committedAt: null }]);
 
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
 
     const recoveredRows = await database.drizzle
       .select({ committedAt: flashcardReviewAttempts.committedAt })

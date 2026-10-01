@@ -12,8 +12,10 @@ import { StyleSheet, View, useColorScheme } from "react-native";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { DeckThemeSelectionProvider } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
-import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import {
+  PreferencesProvider,
+  usePreferencesContext,
+} from "@/features/preferences/presentation/controllers/preferences-context";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
 import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
 import { AppServicesProvider, useAppServices } from "@/infrastructure/app-services";
@@ -61,7 +63,7 @@ export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
 
 function AppNavigation() {
   const { colors, resolvedScheme } = useAppTheme();
-  const { ready } = usePreferences();
+  const { ready } = usePreferencesContext();
 
   useEffect(
     function synchronizeNativeRootBackground() {

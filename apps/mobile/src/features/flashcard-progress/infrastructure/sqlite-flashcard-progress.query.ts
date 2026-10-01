@@ -16,7 +16,7 @@ export class SQLiteFlashcardProgressQuery<TRunResult = unknown> implements Flash
     this.database = database;
     this.repository = repository;
   }
-  async findIncludingPendingRatingsByFlashcardIds(
+  async findIncludingPendingRatings(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, FlashcardProgress>> {
     if (flashcardIds.length === 0) {

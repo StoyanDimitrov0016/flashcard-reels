@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 
-import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed.transaction";
 import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 

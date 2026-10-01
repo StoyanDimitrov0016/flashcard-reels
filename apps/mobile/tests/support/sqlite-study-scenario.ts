@@ -1,10 +1,10 @@
-import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit.transaction";
 
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
-import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation.transaction";
 import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
@@ -16,13 +16,13 @@ import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
-import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt.transaction";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
-import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
-import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance-transaction";
+import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed.transaction";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle.transaction";
+import { SQLiteStudySessionMaintenanceTransaction } from "@/features/study/infrastructure/sqlite-study-session-maintenance.transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -88,7 +88,7 @@ export function createScenarioGraph(
     updateSessionReelPosition: (id: string, position: number) =>
       sessions.updateCurrentReelPosition(id, position, clock.now()),
     consumeRecurrence: (id: string) => recurrences.markConsumed(id, clock.now()),
-    listReviewAttemptsInReelPositionRange: (id: string, from: number, through: number) =>
+    listAttemptsInRange: (id: string, from: number, through: number) =>
       attempts.listBySessionAndReelPositionRange(id, from, through),
     findSession: (id: string) => sessions.findById(id),
     listSessionReels: (id: string) => items.listBySessionId(id),

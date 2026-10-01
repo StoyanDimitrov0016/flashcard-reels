@@ -1,5 +1,5 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset-transaction";
+import type { LearningProgressResetTransaction } from "@/features/flashcard-progress/application/learning-progress-reset.transaction";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { FlashcardProgressQuery } from "@/features/flashcard-progress/domain/flashcard-progress.query";
 import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
@@ -31,7 +31,7 @@ export class FlashcardProgressServiceImpl implements FlashcardProgressService {
   async findByFlashcardIds(
     flashcardIds: readonly string[]
   ): Promise<ReadonlyMap<string, FlashcardProgress>> {
-    return this.progressQuery.findIncludingPendingRatingsByFlashcardIds(flashcardIds);
+    return this.progressQuery.findIncludingPendingRatings(flashcardIds);
   }
 
   async resetFlashcardProgress(flashcardId: string): Promise<void> {

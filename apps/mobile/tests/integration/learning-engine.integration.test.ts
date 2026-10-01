@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { FlashcardMemoryState } from "@/features/learning-engine/domain/flashcard-memory-state";
 import type { FlashcardMemoryStateRepository } from "@/features/learning-engine/domain/flashcard-memory-state.repository";
-import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit.transaction";
 
 import {
   createFeedComposer,
@@ -12,9 +12,9 @@ import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
 import { completeReelActivation } from "@/features/reels/application/reel-position-extension";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt.transaction";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { decks, flashcards } from "@/infrastructure/sqlite/schema";
 

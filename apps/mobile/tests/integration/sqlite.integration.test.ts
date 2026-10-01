@@ -7,12 +7,12 @@ import { StudySessionOperations } from "@/features/study/application/study-sessi
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
-import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt.transaction";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
-import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
+import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed.transaction";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle.transaction";
 import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
 import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
@@ -593,10 +593,10 @@ describe("SQLite study persistence", () => {
     });
     await recurrences.create(recurrence);
 
-    expect(await recurrences.listPendingFlashcardIdsFromTargetPosition(session.id, 7)).toEqual([
+    expect(await recurrences.listPendingCardIdsFromTarget(session.id, 7)).toEqual([
       attempt.flashcardId,
     ]);
-    expect(await recurrences.listPendingFlashcardIdsFromTargetPosition(session.id, 8)).toEqual([]);
+    expect(await recurrences.listPendingCardIdsFromTarget(session.id, 8)).toEqual([]);
 
     await expect(
       recurrences.create(

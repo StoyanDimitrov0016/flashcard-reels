@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
+import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation.transaction";
 
-import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation.transaction";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt.transaction";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
-import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle.transaction";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { flashcardProgress, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
@@ -290,7 +290,7 @@ describe("SQLite flashcard-progress aggregation", () => {
     );
     await recovered.openSession("focus", TEST_DECK_ID, false);
 
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(10)).toEqual([]);
+    expect(await aggregationQuery.findCompletedPending(10)).toEqual([]);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
@@ -309,10 +309,10 @@ describe("SQLite flashcard-progress aggregation", () => {
     await createAttempt(second.id, 1, "hard", "2026-01-01T00:02:00.000Z");
     await sessions.complete(second.id, "2026-01-01T00:04:00.000Z");
 
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
-    const firstPendingSession = await aggregationQuery.findCompletedSessionsPendingAggregation(1);
+    expect(await aggregationQuery.findCompletedPending(1)).toHaveLength(1);
+    const firstPendingSession = await aggregationQuery.findCompletedPending(1);
     expect(firstPendingSession[0]?.id).toBe(first.id);
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(2)).toHaveLength(2);
+    expect(await aggregationQuery.findCompletedPending(2)).toHaveLength(2);
   });
 
   it("bounds foreground completed-session aggregation and resumes from its checkpoint", async () => {
@@ -332,9 +332,9 @@ describe("SQLite flashcard-progress aggregation", () => {
       goodCount: 50,
       reviewCount: 50,
     });
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
+    expect(await aggregationQuery.findCompletedPending(1)).toHaveLength(1);
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     const secondAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(secondAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(99);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -342,16 +342,16 @@ describe("SQLite flashcard-progress aggregation", () => {
       reviewCount: 100,
     });
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     const finalAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(finalAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(149);
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toEqual([]);
+    expect(await aggregationQuery.findCompletedPending(1)).toEqual([]);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,
     });
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,

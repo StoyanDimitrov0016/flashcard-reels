@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 import {
   decks,
   flashcards,
@@ -80,7 +80,7 @@ describe("SQLite flashcard progress", () => {
     const currentProgress = await new SQLiteFlashcardProgressQuery(
       database.drizzle,
       progress
-    ).findIncludingPendingRatingsByFlashcardIds([makeFlashcard(1).id]);
+    ).findIncludingPendingRatings([makeFlashcard(1).id]);
     expect(currentProgress.get(makeFlashcard(1).id)).toMatchObject({
       goodCount: 1,
       reviewCount: 1,

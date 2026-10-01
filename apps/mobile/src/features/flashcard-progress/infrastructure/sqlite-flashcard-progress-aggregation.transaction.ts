@@ -3,7 +3,7 @@ import { and, asc, eq, gt, inArray, isNotNull, lte } from "drizzle-orm";
 import type {
   FlashcardProgressAggregationResult,
   FlashcardProgressAggregationTransaction,
-} from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
+} from "@/features/flashcard-progress/application/flashcard-progress-aggregation.transaction";
 import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { IdGenerator } from "@/shared/domain/id-generator";

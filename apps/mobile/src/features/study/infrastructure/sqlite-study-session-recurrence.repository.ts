@@ -15,7 +15,7 @@ export class SQLiteStudySessionRecurrenceRepository<
     this.database = database;
   }
 
-  async cancelPendingByFlashcardReviewAttemptId(flashcardReviewAttemptId: string): Promise<void> {
+  async cancelPendingByAttemptId(flashcardReviewAttemptId: string): Promise<void> {
     await this.database
       .delete(studySessionRecurrences)
       .where(
@@ -42,7 +42,7 @@ export class SQLiteStudySessionRecurrenceRepository<
     return this.listBySessionIdInTargetRange(studySessionId, 0, Number.MAX_SAFE_INTEGER);
   }
 
-  async listPendingFlashcardIdsFromTargetPosition(
+  async listPendingCardIdsFromTarget(
     studySessionId: string,
     fromTargetReelPosition: number
   ): Promise<string[]> {

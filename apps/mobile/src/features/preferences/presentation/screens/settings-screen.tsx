@@ -13,8 +13,8 @@ import {
   PreferenceSwitch,
 } from "@/features/preferences/presentation/components/preference-settings-components";
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
+import { usePreferencesContext } from "@/features/preferences/presentation/controllers/preferences-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
     setReadingSide,
     setRatingDirection,
     setStudyIslandPosition,
-  } = usePreferences();
+  } = usePreferencesContext();
   const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);

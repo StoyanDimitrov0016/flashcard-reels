@@ -91,7 +91,7 @@ const ReviewEventSchema = z
   })
   .strict();
 
-const ProgressBackupDocumentUncompiledSchema = z
+const UncompiledDocumentSchema = z
   .object({
     format: z.literal(PROGRESS_BACKUP_FORMAT),
     version: z.literal(PROGRESS_BACKUP_VERSION),
@@ -271,7 +271,7 @@ const ProgressBackupDocumentUncompiledSchema = z
     }
   });
 
-export const ProgressBackupDocumentSchema = z.compile(ProgressBackupDocumentUncompiledSchema, {
+export const ProgressBackupDocumentSchema = z.compile(UncompiledDocumentSchema, {
   strict: true,
 });
 

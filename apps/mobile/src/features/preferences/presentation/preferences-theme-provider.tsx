@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import { usePreferencesContext } from "@/features/preferences/presentation/controllers/preferences-context";
 import { AppThemeProvider } from "@/shared/presentation/theme";
 
 type PreferencesThemeProviderProps = Readonly<{
@@ -8,6 +8,6 @@ type PreferencesThemeProviderProps = Readonly<{
 }>;
 
 export function PreferencesThemeProvider({ children }: PreferencesThemeProviderProps) {
-  const { resolvedScheme } = usePreferences();
+  const { resolvedScheme } = usePreferencesContext();
   return <AppThemeProvider resolvedScheme={resolvedScheme}>{children}</AppThemeProvider>;
 }

@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle-transaction";
+import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle.transaction";
 import type { OpenStudySession } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 

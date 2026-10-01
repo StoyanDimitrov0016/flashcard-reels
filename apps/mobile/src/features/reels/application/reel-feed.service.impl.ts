@@ -8,7 +8,7 @@ import type {
   PreparedReelOccurrence,
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
-import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed.transaction";
 import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
@@ -187,10 +187,7 @@ export class ReelFeedServiceImpl {
       activeCards.map((card) => card.id)
     );
     const pendingRecurrenceCardIds = new Set(
-      await this.recurrences.listPendingFlashcardIdsFromTargetPosition(
-        session.id,
-        session.furthestReelPosition
-      )
+      await this.recurrences.listPendingCardIdsFromTarget(session.id, session.furthestReelPosition)
     );
     const now = this.clock.now();
 

@@ -1,9 +1,9 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
-import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit-transaction";
-import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
-import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle-transaction";
-import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
+import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation.transaction";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit.transaction";
+import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt.transaction";
+import type { StudySessionLifecycleTransaction } from "@/features/study/application/study-session-lifecycle.transaction";
+import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance.transaction";
 import type { RandomSource } from "@/features/study/domain/recurrences";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
 import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
@@ -43,7 +43,7 @@ export class StudySessionOperations {
   private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
   private readonly reviewAttemptCommitTransaction: ReviewAttemptCommitTransaction;
   private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
-  private readonly flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null;
+  private readonly progressAggregation: FlashcardProgressAggregationTransaction | null;
   private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
   private readonly commitQueues = new Map<string, Promise<void>>();
   private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
@@ -58,7 +58,7 @@ export class StudySessionOperations {
     studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
     reviewAttemptCommitTransaction: ReviewAttemptCommitTransaction,
     random: RandomSource = Math.random,
-    flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null = null,
+    progressAggregation: FlashcardProgressAggregationTransaction | null = null,
     studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
   ) {
     this.reviewAttemptRepository = reviewAttemptRepository;
@@ -70,7 +70,7 @@ export class StudySessionOperations {
     this.reviewAttemptCommitTransaction = reviewAttemptCommitTransaction;
     this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
     this.random = random;
-    this.flashcardProgressAggregationTransaction = flashcardProgressAggregationTransaction;
+    this.progressAggregation = progressAggregation;
     this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
   }
 
@@ -105,7 +105,7 @@ export class StudySessionOperations {
     deckId: DeckId | null,
     replaceExisting: boolean
   ): Promise<OpenStudySession> {
-    await this.recoverPendingCompletedSessionAggregation();
+    await this.recoverPendingAggregation();
 
     const createdAt = this.clock.now();
     const opened = await this.studySessionLifecycleTransaction.open(
@@ -147,7 +147,7 @@ export class StudySessionOperations {
     }
     // oxlint-enable no-await-in-loop
     await this.drainPendingAggregation(() =>
-      this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(
+      this.studySessionAggregationQuery.findCompletedPending(
         PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
       )
     );
@@ -167,7 +167,7 @@ export class StudySessionOperations {
   async settleBeforeDeckRemoval(deckId: DeckId): Promise<void> {
     await this.settleActiveSessionsAffectedByDeck(deckId, true);
     await this.drainPendingAggregation(() =>
-      this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
+      this.studySessionAggregationQuery.findCompletedPendingForDeck(
         deckId,
         PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
       )
@@ -206,14 +206,11 @@ export class StudySessionOperations {
     }
   }
 
-  async recoverPendingCompletedSessionAggregation(
-    limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-  ): Promise<void> {
-    if (!this.flashcardProgressAggregationTransaction) {
+  async recoverPendingAggregation(limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT): Promise<void> {
+    if (!this.progressAggregation) {
       return;
     }
-    const pending =
-      await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(limit);
+    const pending = await this.studySessionAggregationQuery.findCompletedPending(limit);
     const recoverNext = async (index: number): Promise<void> => {
       const session = pending[index];
       if (!session) {
@@ -440,14 +437,14 @@ export class StudySessionOperations {
   }
 
   private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
-    if (!this.flashcardProgressAggregationTransaction) {
+    if (!this.progressAggregation) {
       return;
     }
     const eligibility = await this.getAggregationEligibility(studySessionId);
     if (!eligibility?.shouldCheck) {
       return;
     }
-    await this.flashcardProgressAggregationTransaction.aggregate(
+    await this.progressAggregation.aggregate(
       studySessionId,
       eligibility.safeThroughReelPosition,
       this.clock.now()
@@ -455,7 +452,7 @@ export class StudySessionOperations {
   }
 
   private async aggregateCompletedSession(studySessionId: string): Promise<void> {
-    const aggregation = this.flashcardProgressAggregationTransaction;
+    const aggregation = this.progressAggregation;
     if (!aggregation) {
       return;
     }
