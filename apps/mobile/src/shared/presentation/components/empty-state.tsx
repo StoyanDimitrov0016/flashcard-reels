@@ -61,10 +61,10 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       backgroundColor: colors.surfaceSubtle,
       borderRadius: sizes.radius.pill,
-      height: 56,
+      height: sizes.iconBadge.medium,
       justifyContent: "center",
       marginBottom: sizes.spacing.small,
-      width: 56,
+      width: sizes.iconBadge.medium,
     },
     message: {
       color: colors.textSecondary,

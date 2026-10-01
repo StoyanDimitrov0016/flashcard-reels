@@ -5,6 +5,10 @@ export const sizes = {
     medium: 22,
     large: 34,
   },
+  iconBadge: {
+    medium: 56,
+    large: 64,
+  },
   touchTarget: {
     minimum: 44,
   },

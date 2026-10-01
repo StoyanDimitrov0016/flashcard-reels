@@ -15,7 +15,9 @@ import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
+import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontWeight } from "@/shared/presentation/typography";
 
 type ReelFeedProps = Readonly<{
   /** Space at the top of each card that overlaid chrome, such as the study feed header, uses. */
@@ -185,11 +187,11 @@ function createStyles(colors: AppColors) {
     extensionNotice: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
-      gap: 8,
-      padding: 12,
+      gap: sizes.spacing.medium,
+      padding: sizes.spacing.xLarge,
     },
     feed: { backgroundColor: colors.canvas, flex: 1 },
     noticeText: { color: colors.textSecondary, textAlign: "center" },
-    retryLabel: { color: colors.actionPrimary, fontWeight: "700" },
+    retryLabel: { color: colors.actionPrimary, fontWeight: fontWeight.bold },
   });
 }

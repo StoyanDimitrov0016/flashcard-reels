@@ -67,5 +67,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: screenLayout.headerHeight,
   },
-  labelStack: { alignItems: "center", paddingVertical: 4 },
+  labelStack: { alignItems: "center", paddingVertical: sizes.spacing.xSmall },
 });

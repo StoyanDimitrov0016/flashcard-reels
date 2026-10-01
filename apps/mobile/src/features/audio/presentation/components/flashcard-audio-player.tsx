@@ -6,6 +6,7 @@ import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import { useFlashcardAudio } from "@/features/audio/presentation/hooks/use-flashcard-audio";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontSize } from "@/shared/presentation/typography";
 
 type FlashcardAudioPlayerProps = Readonly<{ isActive: boolean; source: AudioReference }>;
 
@@ -81,9 +82,9 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
       width: sizes.control.audio,
     },
-    container: { alignItems: "center", gap: 4 },
+    container: { alignItems: "center", gap: sizes.spacing.xSmall },
     disabled: { opacity: 0.45 },
-    errorText: { color: colors.textSecondary, fontSize: 12 },
+    errorText: { color: colors.textSecondary, fontSize: fontSize.caption },
     pressed: { opacity: 0.72 },
   });
 }

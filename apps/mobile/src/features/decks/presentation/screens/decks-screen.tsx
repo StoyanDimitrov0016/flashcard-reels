@@ -531,7 +531,7 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       height: sizes.control.compact,
       justifyContent: "center",
-      width: 36,
+      width: sizes.control.compact,
     },
     pendingBanner: {
       backgroundColor: colors.surfaceRaised,
@@ -553,7 +553,7 @@ function createStyles(colors: AppColors) {
       borderRadius: sizes.radius.pill,
       height: sizes.control.compact,
       justifyContent: "center",
-      width: 36,
+      width: sizes.control.compact,
     },
     list: {
       gap: sizes.spacing.medium,
@@ -571,20 +571,20 @@ function createStyles(colors: AppColors) {
     skeletonDeck: { paddingHorizontal: sizes.spacing.content },
     skeletonLine: {
       backgroundColor: colors.borderSubtle,
-      borderRadius: 3,
+      borderRadius: sizes.radius.medium,
       height: 12,
       width: "85%",
     },
     skeletonList: { gap: sizes.spacing.xxLarge },
     skeletonShortLine: {
       backgroundColor: colors.borderSubtle,
-      borderRadius: 3,
+      borderRadius: sizes.radius.medium,
       height: 10,
       width: "35%",
     },
     skeletonTitle: {
       backgroundColor: colors.borderStrong,
-      borderRadius: 3,
+      borderRadius: sizes.radius.medium,
       height: 21,
       width: "55%",
     },

@@ -64,10 +64,10 @@ function createStyles(colors: AppColors) {
       borderColor: colors.success + "38",
       borderRadius: sizes.radius.pill,
       borderWidth: sizes.border,
-      height: 64,
+      height: sizes.iconBadge.large,
       justifyContent: "center",
       marginTop: sizes.spacing.section,
-      width: 64,
+      width: sizes.iconBadge.large,
     },
     message: {
       color: colors.textSecondary,

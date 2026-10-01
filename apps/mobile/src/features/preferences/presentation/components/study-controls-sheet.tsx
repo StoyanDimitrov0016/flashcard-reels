@@ -414,9 +414,17 @@ function createStyles(colors: AppColors) {
       gap: 0,
       maxWidth: 176,
     },
-    previewLabel: { color: colors.textSecondary, fontSize: 9, fontWeight: fontWeight.bold },
+    previewLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.micro,
+      fontWeight: fontWeight.bold,
+    },
     previewLeft: { flexDirection: "row-reverse" },
-    previewLine: { backgroundColor: colors.borderStrong, borderRadius: 3, height: 6 },
+    previewLine: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 6,
+    },
     previewLineMedium: { width: "70%" },
     previewLineShort: { marginBottom: sizes.spacing.xSmall, opacity: 0.6, width: "45%" },
     previewMarker: {

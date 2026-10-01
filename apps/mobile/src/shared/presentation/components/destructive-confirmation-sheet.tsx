@@ -88,7 +88,7 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       flex: 1,
       justifyContent: "center",
-      minHeight: 46,
+      minHeight: sizes.control.standard,
     },
     cancelLabel: {
       color: colors.textPrimary,
@@ -101,7 +101,7 @@ function createStyles(colors: AppColors) {
       borderRadius: sizes.radius.pill,
       flex: 1,
       justifyContent: "center",
-      minHeight: 46,
+      minHeight: sizes.control.standard,
     },
     confirmLabel: {
       color: colors.actionPrimaryText,
@@ -117,10 +117,10 @@ function createStyles(colors: AppColors) {
       borderColor: colors.error + "38",
       borderRadius: sizes.radius.pill,
       borderWidth: sizes.border,
-      height: 64,
+      height: sizes.iconBadge.large,
       justifyContent: "center",
       marginTop: sizes.spacing.section,
-      width: 64,
+      width: sizes.iconBadge.large,
     },
     message: {
       color: colors.textSecondary,

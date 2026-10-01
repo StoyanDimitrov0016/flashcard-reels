@@ -142,6 +142,9 @@ function EmptyReadingList({ colors }: EmptyReadingListProps) {
   );
 }
 
+/** The column that holds a teaser's lesson number; following rows align past it. */
+const TEASER_POSITION_WIDTH = 22;
+
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     card: {
@@ -202,7 +205,7 @@ function createStyles(colors: AppColors) {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontWeight: fontWeight.semibold,
-      paddingLeft: 22 + sizes.spacing.medium,
+      paddingLeft: TEASER_POSITION_WIDTH + sizes.spacing.medium,
     },
     teaserPosition: {
       color: colors.textTertiary,
@@ -210,7 +213,7 @@ function createStyles(colors: AppColors) {
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
       textAlign: "center",
-      width: 22,
+      width: TEASER_POSITION_WIDTH,
     },
     teaserRow: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.medium },
     teaserTitle: {
