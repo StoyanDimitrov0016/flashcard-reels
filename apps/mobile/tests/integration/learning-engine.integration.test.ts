@@ -373,7 +373,12 @@ describe("SQLite learning-engine commit", () => {
       recordingMemoryStates,
       createLearningScheduler(),
       new TestClock(),
-      createFeedComposer(() => 0)
+      createFeedComposer(() => 0),
+      graph.sessions,
+      graph.items,
+      graph.recurrences,
+      graph.feedTransaction,
+      graph.ids
     );
     const prepared = await feed.prepareFeed([card], "discover", null, false, null);
     const attemptId = await graph.study.startAttempt(card.id, 0, prepared.studySessionId);

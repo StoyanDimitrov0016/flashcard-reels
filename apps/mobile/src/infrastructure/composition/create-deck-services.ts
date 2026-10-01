@@ -1,5 +1,4 @@
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
-import type { StudyService } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
@@ -22,7 +21,7 @@ type CreateDeckServicesOptions = Readonly<{
   database: DrizzleDatabase;
   clock: Clock;
   idGenerator: IdGenerator;
-  studyService: StudyService & StudySessionSettlement;
+  studyService: StudySessionSettlement;
 }>;
 
 export function createDeckServices({

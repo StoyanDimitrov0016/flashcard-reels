@@ -381,7 +381,7 @@ describe("deck package installation", () => {
           await audio.removeDeck(deckId);
         },
       },
-      graph.study
+      graph.runtime
     );
     const deletion = service.remove(TEST_DECK_ID);
     await cleanupStarted.promise;
@@ -500,7 +500,7 @@ describe("deck package installation", () => {
         clock,
         undefined,
         undefined,
-        graph.study
+        graph.runtime
       );
       await importer.installFromBytes(validArchive(1, [first]));
       const sessionId = await reviewCard(graph, database, first.id, false);
@@ -878,7 +878,7 @@ describe("deck package installation", () => {
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(19), 0);
     await importer.installFromBytes(validArchive(1, [sourceCard]));
@@ -976,7 +976,7 @@ describe("deck package installation", () => {
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(21), 0);
     await importer.installFromBytes(validArchive(1, [sourceCard]));
@@ -1022,7 +1022,7 @@ describe("deck package installation", () => {
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(23), 0);
     const bytes = validArchive(1, [sourceCard]);

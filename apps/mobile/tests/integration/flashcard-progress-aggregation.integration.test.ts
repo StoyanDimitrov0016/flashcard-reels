@@ -5,16 +5,13 @@ import type { FlashcardProgressAggregationTransaction } from "@/features/flashca
 import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
 import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
-import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
+import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
-import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
 import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
-import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
-import { SQLiteStudySessionReelRepository } from "@/features/study/infrastructure/sqlite-study-session-reel.repository";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { flashcardProgress, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
@@ -238,7 +235,7 @@ describe("SQLite flashcard-progress aggregation", () => {
     const service = createService();
     const opened = await service.openSession("discover", null, false);
     await createAttempt(opened.session.id, 0, "again", "2026-01-01T00:01:00.000Z");
-    await service.updateSessionReelPosition(opened.session.id, 130);
+    await sessions.updateCurrentReelPosition(opened.session.id, 130, new TestClock().now());
     await service.commitAttemptsOutsideEditableWindow(opened.session.id);
 
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -365,17 +362,14 @@ describe("SQLite flashcard-progress aggregation", () => {
     aggregationTransaction: FlashcardProgressAggregationTransaction | null = aggregation,
     sessionRepository: SQLiteStudySessionRepository = sessions,
     idGenerator: SequenceIdGenerator = new SequenceIdGenerator()
-  ): StudyServiceImpl {
-    return new StudyServiceImpl(
+  ): StudySessionOperations {
+    return new StudySessionOperations(
       attempts,
       sessionRepository,
       new SQLiteStudySessionAggregationQuery(database.drizzle),
-      new SQLiteStudySessionReelRepository(database.drizzle),
-      new SQLiteStudySessionRecurrenceRepository(database.drizzle),
       new TestClock(),
       idGenerator,
       new SQLiteReviewAttemptTransaction(database.drizzle),
-      new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
       new SQLiteReviewAttemptCommitTransaction(
         database.drizzle,

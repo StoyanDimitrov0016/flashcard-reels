@@ -42,19 +42,8 @@ export function ReelFeed({
     initialFeed: preparedFeed,
     sourceCards,
   });
-  const {
-    extensionError,
-    fatalError,
-    feed,
-    onOccurrenceBecameActive,
-    onRatingSelected,
-    refreshError,
-    requestFeedExtension,
-    ratings,
-    revealedPositions,
-    retryFeedExtension,
-    toggleCard,
-  } = controller;
+  const { feed, cardState, activate, rate, toggle, extend, retryExtension, feedback } = controller;
+  const { fatal: fatalError, extension: extensionError, refresh: refreshError } = feedback;
   const { handleLayout, viewport } = useReelViewport();
   const feedListReference = useRef<FlashListRef<PreparedReelOccurrence>>(null);
   const { height, width } = viewport;
@@ -98,10 +87,10 @@ export function ReelFeed({
   useEffect(
     function synchronizeActiveOccurrence() {
       if (activeOccurrenceReelPosition !== undefined) {
-        onOccurrenceBecameActive(activeOccurrenceReelPosition);
+        activate(activeOccurrenceReelPosition);
       }
     },
-    [activeOccurrenceReelPosition, onOccurrenceBecameActive]
+    [activeOccurrenceReelPosition, activate]
   );
 
   const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item }) => {
@@ -121,10 +110,10 @@ export function ReelFeed({
         height={height}
         ratingEnabled={item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)}
         isActive={item.reelPosition === activeReelPosition}
-        onFlip={() => toggleCard(item.reelPosition)}
-        onRate={(rating) => onRatingSelected(item, rating)}
-        rating={ratings.get(item.reelPosition) ?? null}
-        revealed={revealedPositions.has(item.reelPosition)}
+        onFlip={() => toggle(item.reelPosition)}
+        onRate={(rating) => rate(item.reelPosition, rating)}
+        rating={cardState(item.reelPosition).rating}
+        revealed={cardState(item.reelPosition).revealed}
         occurrenceKey={item.key}
         reelPosition={item.reelPosition}
         showMainFeedLink={showMainFeedLink}
@@ -136,12 +125,11 @@ export function ReelFeed({
     activeIndex,
     activeReelPosition,
     furthestReelPosition: feed.furthestReelPosition,
-    ratings,
-    revealedPositions,
+    cardState,
   };
   const handleEndReached = useCallback(() => {
-    void requestFeedExtension().catch(() => undefined);
-  }, [requestFeedExtension]);
+    void extend().catch(() => undefined);
+  }, [extend]);
   const keyExtractor = useCallback((occurrence: PreparedReelOccurrence) => occurrence.key, []);
   if (fatalError) {
     throw fatalError;
@@ -154,7 +142,7 @@ export function ReelFeed({
           <Text accessibilityRole="alert" style={styles.noticeText}>
             More cards could not be loaded.
           </Text>
-          <Pressable accessibilityRole="button" onPress={retryFeedExtension}>
+          <Pressable accessibilityRole="button" onPress={retryExtension}>
             <Text style={styles.retryLabel}>Try again</Text>
           </Pressable>
         </View>

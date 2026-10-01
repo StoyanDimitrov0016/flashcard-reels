@@ -52,7 +52,7 @@ describe("SQLite learning progress reset transaction", () => {
       ),
       { now: () => RESET_AT },
       new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
-      graph.study,
+      graph.runtime,
       new FlashcardServiceImpl(
         new SQLiteFlashcardRepository(database.drizzle),
         new SQLiteFlashcardAvailabilityQuery(database.drizzle)
@@ -166,7 +166,7 @@ describe("SQLite learning progress reset transaction", () => {
       ),
       clock,
       new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
-      graph.study,
+      graph.runtime,
       flashcardService
     );
     const deckCard = await flashcardRepository.findById(makeFlashcard(1).id);

@@ -142,11 +142,11 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
         new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
         new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
         null,
-        graph.study
+        graph.runtime
       ),
       flashcardService,
-      reelFeedService: graph.feed,
-      studyService: graph.study,
+
+      studyService: graph.runtime,
     };
   });
   afterEach(() => {

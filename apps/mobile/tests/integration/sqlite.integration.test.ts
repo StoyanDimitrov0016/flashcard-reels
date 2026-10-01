@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
-import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
+import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
 import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
@@ -130,16 +130,13 @@ describe("SQLite study persistence", () => {
 
   it("replaces an active Focus session atomically without touching Discover", async () => {
     const clock = new TestClock();
-    const service = new StudyServiceImpl(
+    const service = new StudySessionOperations(
       attempts,
       sessions,
       new SQLiteStudySessionAggregationQuery(database.drizzle),
-      items,
-      recurrences,
       clock,
       new SequenceIdGenerator(),
       new SQLiteReviewAttemptTransaction(database.drizzle),
-      new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
       new SQLiteReviewAttemptCommitTransaction(
         database.drizzle,
@@ -164,16 +161,13 @@ describe("SQLite study persistence", () => {
 
   it("leaves no duplicate active sessions across repeated open paths", async () => {
     const clock = new TestClock();
-    const service = new StudyServiceImpl(
+    const service = new StudySessionOperations(
       attempts,
       sessions,
       new SQLiteStudySessionAggregationQuery(database.drizzle),
-      items,
-      recurrences,
       clock,
       new SequenceIdGenerator(),
       new SQLiteReviewAttemptTransaction(database.drizzle),
-      new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
       new SQLiteReviewAttemptCommitTransaction(
         database.drizzle,

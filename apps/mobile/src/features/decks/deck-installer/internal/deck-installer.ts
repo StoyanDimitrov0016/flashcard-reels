@@ -78,10 +78,10 @@ export class DeckInstallerImpl implements DeckInstaller {
       );
     }
 
-    await this.sessionSettlement?.settleActiveSessionsAffectedByDeck(
-      deck.id,
-      installedRevision !== null
-    );
+    await this.sessionSettlement?.settleDeckChange({
+      deckId: deck.id,
+      kind: installedRevision === null ? "first-install" : "update",
+    });
 
     const stagedAudio = await this.audioStorage.stage(deckPackage);
     let audioActivated = false;

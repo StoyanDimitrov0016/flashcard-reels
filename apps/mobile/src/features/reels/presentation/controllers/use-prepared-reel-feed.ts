@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
-import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudyFeedService } from "@/features/study/domain/study.service";
 
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
@@ -23,7 +23,7 @@ type PreparationInput = Readonly<{
   progressRevision: number;
   scope: StudySessionScope;
   replaceExistingSession: boolean;
-  service: ReelFeedService;
+  service: StudyFeedService;
 }>;
 type PreparationRequest = PreparationInput &
   Readonly<{
@@ -52,7 +52,7 @@ export function usePreparedReelFeed(
   replaceExistingSession: boolean,
   anchorFlashcardId: string | null = null
 ): PreparedReelFeed | null {
-  const { reelFeedService } = useReels();
+  const { studyService } = useReels();
   const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
@@ -69,20 +69,22 @@ export function usePreparedReelFeed(
         progressRevision,
         scope,
         replaceExistingSession,
-        service: reelFeedService,
+        service: studyService,
       };
       const request =
         previousRequest && matchesRequest(previousRequest, input)
           ? previousRequest
           : {
               ...input,
-              promise: reelFeedService.prepareFeed(
-                cards,
-                scope,
-                deckId,
-                replaceExistingSession,
-                anchorFlashcardId
-              ),
+              promise: studyService
+                .openFeed({
+                  cards,
+                  scope,
+                  deckId,
+                  replaceExisting: replaceExistingSession,
+                  anchorFlashcardId,
+                })
+                .then((snapshot) => snapshot.feed),
             };
       requestReference.current = request;
 
@@ -114,7 +116,7 @@ export function usePreparedReelFeed(
       anchorFlashcardId,
       cards,
       deckId,
-      reelFeedService,
+      studyService,
       replaceExistingSession,
       progressRevision,
       scope,
@@ -129,7 +131,7 @@ export function usePreparedReelFeed(
       progressRevision,
       scope,
       replaceExistingSession,
-      service: reelFeedService,
+      service: studyService,
     })
   ) {
     return null;

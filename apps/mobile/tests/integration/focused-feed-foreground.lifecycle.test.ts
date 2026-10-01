@@ -46,7 +46,7 @@ describe("Focus foreground evaluation", () => {
       const resume = vi
         .spyOn(graph.study, "resumeFocusedSession")
         .mockReturnValueOnce(initial.promise);
-      harness.services = { studyService: graph.study, deckService: {} };
+      harness.services = { studyService: graph.runtime, deckService: {} };
       const evaluated = vi.fn();
       const failed = vi.fn();
       renderHook(() => useFocusedFeedLifecycle(evaluated, failed, 0, null), { wrapper: Providers });

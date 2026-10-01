@@ -59,7 +59,7 @@ export class DeckServiceImpl implements DeckService {
     }
     const settlement = this.sessionSettlement;
     await withDeckOperation(id, async () => {
-      await settlement.settleBeforeDeckRemoval(id);
+      await settlement.settleDeckChange({ deckId: id, kind: "remove" });
       await this.deckRemovalTransaction.remove(id);
       try {
         await this.deckAudioRemover?.removeDeck(id);

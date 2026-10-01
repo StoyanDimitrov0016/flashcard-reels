@@ -37,13 +37,13 @@ export class FlashcardProgressServiceImpl implements FlashcardProgressService {
   async resetFlashcardProgress(flashcardId: string): Promise<void> {
     const card = await this.flashcardService.findById(flashcardId);
     if (card) {
-      await this.sessionSettlement.settleActiveSessionsAffectedByDeck(card.deckId, true);
+      await this.sessionSettlement.settleDeckChange({ deckId: card.deckId, kind: "reset" });
     }
     await this.resetTransaction.resetCard(flashcardId, this.clock.now());
   }
 
   async resetDeckProgress(deckId: DeckId): Promise<void> {
-    await this.sessionSettlement.settleActiveSessionsAffectedByDeck(deckId, true);
+    await this.sessionSettlement.settleDeckChange({ deckId, kind: "reset" });
     await this.resetTransaction.resetDeck(deckId, this.clock.now());
   }
 

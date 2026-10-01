@@ -14,6 +14,7 @@ import {
 } from "@/features/learning-engine/infrastructure/learning-engine-factories";
 import { SQLiteFlashcardMemoryStateRepository } from "@/features/learning-engine/infrastructure/sqlite-flashcard-memory-state.repository";
 import { ReelFeedServiceImpl } from "@/features/reels/application/reel-feed.service.impl";
+import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
 import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit-transaction";
 import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
@@ -46,16 +47,13 @@ export function createScenarioGraph(
   const progress = new SQLiteFlashcardProgressRepository(database.drizzle);
   const scheduler = createLearningScheduler();
   const memoryStates = new SQLiteFlashcardMemoryStateRepository(database.drizzle);
-  const study = new StudyServiceImpl(
+  const operations = new StudySessionOperations(
     attempts,
     sessions,
     new SQLiteStudySessionAggregationQuery(database.drizzle),
-    items,
-    recurrences,
     clock,
     ids,
     new SQLiteReviewAttemptTransaction(database.drizzle),
-    new SQLiteStudySessionFeedTransaction(database.drizzle),
     new SQLiteStudySessionLifecycleTransaction(database.drizzle),
     commitTransaction ??
       new SQLiteReviewAttemptCommitTransaction(database.drizzle, scheduler, database.rowIds),
@@ -63,22 +61,52 @@ export function createScenarioGraph(
     new SQLiteFlashcardProgressAggregationTransaction(database.drizzle, database.rowIds),
     new SQLiteStudySessionMaintenanceTransaction(database.drizzle)
   );
+  const feedTransaction = new SQLiteStudySessionFeedTransaction(database.drizzle);
+  const feed = new ReelFeedServiceImpl(
+    operations,
+    memoryStates,
+    scheduler,
+    clock,
+    createFeedComposer(random),
+    sessions,
+    items,
+    recurrences,
+    feedTransaction,
+    ids
+  );
+  const runtime = new StudyServiceImpl({
+    operations,
+    materializer: feed,
+    attempts,
+    sessions,
+    reels: items,
+    recurrences,
+    clock,
+  });
+  // SQLite fixture controls arrange exact positions and interruptions for lower-level invariants.
+  const study = Object.assign(operations, {
+    updateSessionReelPosition: (id: string, position: number) =>
+      sessions.updateCurrentReelPosition(id, position, clock.now()),
+    consumeRecurrence: (id: string) => recurrences.markConsumed(id, clock.now()),
+    listReviewAttemptsInReelPositionRange: (id: string, from: number, through: number) =>
+      attempts.listBySessionAndReelPositionRange(id, from, through),
+    findSession: (id: string) => sessions.findById(id),
+    listSessionReels: (id: string) => items.listBySessionId(id),
+  });
   return {
     attempts,
-    feed: new ReelFeedServiceImpl(
-      study,
-      memoryStates,
-      scheduler,
-      clock,
-      createFeedComposer(random)
-    ),
+    feed,
+    runtime,
+    feedTransaction,
+    clock,
+    ids,
     memoryStates,
     items,
     flashcardProgress: new FlashcardProgressServiceImpl(
       new SQLiteFlashcardProgressQuery(database.drizzle, progress),
       clock,
       new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds),
-      study,
+      runtime,
       new FlashcardServiceImpl(
         new SQLiteFlashcardRepository(database.drizzle),
         new SQLiteFlashcardAvailabilityQuery(database.drizzle)

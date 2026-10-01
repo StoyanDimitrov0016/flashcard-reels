@@ -5,7 +5,7 @@ import type {
   PreparedProgressRestore,
   ProgressBackupService,
 } from "@/features/progress-backup/application/progress-backup.service";
-import type { StudyService } from "@/features/study/domain/study.service";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
 import {
@@ -24,14 +24,14 @@ import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
 export class ProgressBackupServiceImpl implements ProgressBackupService {
-  private readonly studyService: StudyService;
+  private readonly studyService: StudySessionSettlement;
   private readonly query: ProgressBackupQuery;
   private readonly restoreTransaction: ProgressBackupRestoreTransaction;
   private readonly files: ProgressBackupFileGateway;
   private readonly clock: Clock;
 
   constructor(
-    studyService: StudyService,
+    studyService: StudySessionSettlement,
     query: ProgressBackupQuery,
     restoreTransaction: ProgressBackupRestoreTransaction,
     files: ProgressBackupFileGateway,

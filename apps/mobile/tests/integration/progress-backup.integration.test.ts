@@ -132,7 +132,7 @@ describe("progress backup", () => {
     await graph.study.rateAttempt(attemptId, "good");
     const files = new MemoryBackupFiles();
     await new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(source.drizzle),
       new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
       files,
@@ -159,7 +159,7 @@ describe("progress backup", () => {
     const targetGraph = createScenarioGraph(target, clock, new SequenceIdGenerator());
     const query = new SQLiteProgressBackupQuery(target.drizzle);
     const backup = new ProgressBackupServiceImpl(
-      targetGraph.study,
+      targetGraph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       files,
@@ -203,7 +203,7 @@ describe("progress backup", () => {
       const files = new MemoryBackupFiles();
       files.picked = JSON.stringify(invalid);
       const backup = new ProgressBackupServiceImpl(
-        graph.study,
+        graph.runtime,
         query,
         new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
         files,
@@ -239,7 +239,7 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -271,7 +271,7 @@ describe("progress backup", () => {
       await graph.study.rateAttempt(attemptId, "good");
       const files = new MemoryBackupFiles();
       const backup = new ProgressBackupServiceImpl(
-        graph.study,
+        graph.runtime,
         new SQLiteProgressBackupQuery(database.drizzle),
         new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
         files,
@@ -310,7 +310,7 @@ describe("progress backup", () => {
     // oxlint-enable no-await-in-loop
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -340,7 +340,7 @@ describe("progress backup", () => {
     };
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -378,7 +378,7 @@ describe("progress backup", () => {
     });
     const exportedFiles = new MemoryBackupFiles();
     const sourceBackup = new ProgressBackupServiceImpl(
-      sourceGraph.study,
+      sourceGraph.runtime,
       new SQLiteProgressBackupQuery(source.drizzle),
       new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
       exportedFiles,
@@ -398,7 +398,7 @@ describe("progress backup", () => {
     importedFiles.picked = JSON.stringify(exported);
     const targetQuery = new SQLiteProgressBackupQuery(target.drizzle);
     const targetBackup = new ProgressBackupServiceImpl(
-      targetGraph.study,
+      targetGraph.runtime,
       targetQuery,
       new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       importedFiles,
@@ -469,7 +469,7 @@ describe("progress backup", () => {
     );
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -548,7 +548,7 @@ describe("progress backup", () => {
     const files = new MemoryBackupFiles();
     files.picked = JSON.stringify(archived);
     const backup = new ProgressBackupServiceImpl(
-      targetGraph.study,
+      targetGraph.runtime,
       new SQLiteProgressBackupQuery(target.drizzle),
       new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       files,
@@ -604,7 +604,7 @@ describe("progress backup", () => {
     };
     files.picked = JSON.stringify(emptyBackup);
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -620,7 +620,7 @@ describe("progress backup", () => {
 
     files.picked = JSON.stringify(original);
     const failingBackup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       {
         restore: async () => {
@@ -660,7 +660,7 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -684,7 +684,7 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -724,7 +724,7 @@ describe("progress backup", () => {
     );
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -790,7 +790,7 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -826,7 +826,7 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
@@ -876,7 +876,7 @@ describe("progress backup", () => {
     files.picked = JSON.stringify(document);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const backup = new ProgressBackupServiceImpl(graph.study, query, transaction, files, clock);
+    const backup = new ProgressBackupServiceImpl(graph.runtime, query, transaction, files, clock);
     const prepared = await backup.prepareRestore();
     if (!prepared) {
       throw new Error("Expected a prepared restore");
@@ -949,7 +949,7 @@ describe("progress backup", () => {
     const files = new MemoryBackupFiles();
     files.picked = JSON.stringify(incoming);
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,

@@ -8,12 +8,15 @@ import type {
   PreparedReelOccurrence,
   PreparedReelOccurrences,
 } from "@/features/reels/domain/reel-feed";
-import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
+import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
-import type { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
+import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
+import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
-import type { StudyService } from "@/features/study/domain/study.service";
+import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
 import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import {
   rememberCard,
@@ -23,23 +26,39 @@ import {
 } from "@/features/learning-engine/domain/feed-composer";
 import { FeedStateSchema } from "@/features/reels/contracts/feed-state.schema";
 import { FEED_ENGINE_CONFIG } from "@/features/reels/domain/feed-engine";
+import { StudySessionReel } from "@/features/study/domain/study-session-reel.model";
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
-export class ReelFeedServiceImpl implements ReelFeedService {
-  private readonly studyService: StudyService;
+export class ReelFeedServiceImpl {
+  private readonly studyService: Pick<StudySessionOperations, "openSession">;
   private readonly memoryStateRepository: FlashcardMemoryStateRepository;
   private readonly scheduler: LearningScheduler;
   private readonly clock: Clock;
   private readonly feedComposer: FeedComposer;
 
+  private readonly sessions: StudySessionRepository;
+  private readonly reels: StudySessionReelRepository;
+  private readonly recurrences: StudySessionRecurrenceRepository;
+  private readonly feedTransaction: StudySessionFeedTransaction;
+  private readonly ids: IdGenerator;
   constructor(
-    studyService: StudyService,
+    studyService: Pick<StudySessionOperations, "openSession">,
     memoryStateRepository: FlashcardMemoryStateRepository,
     scheduler: LearningScheduler,
     clock: Clock,
-    feedComposer: FeedComposer
+    feedComposer: FeedComposer,
+    sessions: StudySessionRepository,
+    reels: StudySessionReelRepository,
+    recurrences: StudySessionRecurrenceRepository,
+    feedTransaction: StudySessionFeedTransaction,
+    ids: IdGenerator
   ) {
+    this.sessions = sessions;
+    this.reels = reels;
+    this.recurrences = recurrences;
+    this.feedTransaction = feedTransaction;
+    this.ids = ids;
     this.studyService = studyService;
     this.memoryStateRepository = memoryStateRepository;
     this.scheduler = scheduler;
@@ -83,15 +102,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     const session = await this.requireSession(studySessionId);
     const currentState = parseFeedState(session.feedState);
     const nextState = rememberCard(currentState, flashcardId);
-    await this.studyService.updateSessionFeedState(studySessionId, JSON.stringify(nextState));
-  }
-
-  async refreshOccurrences(
-    sourceCards: readonly Flashcard[],
-    studySessionId: string
-  ): Promise<PreparedReelOccurrences> {
-    const feed = await this.refreshFeed(sourceCards, studySessionId);
-    return feed.occurrences;
+    await this.feedTransaction.updateState(studySessionId, JSON.stringify(nextState));
   }
 
   async refreshFeed(
@@ -103,8 +114,8 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   }
 
   private async requireSession(studySessionId: string) {
-    const session = await this.studyService.findSession(studySessionId);
-    if (!session) {
+    const session = await this.sessions.findById(studySessionId);
+    if (!session || session.completedAt !== null) {
       throw new OperationError({
         code: "STUDY_SESSION_ENDED",
         context: { studySessionId },
@@ -176,7 +187,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       activeCards.map((card) => card.id)
     );
     const pendingRecurrenceCardIds = new Set(
-      await this.studyService.listPendingRecurrenceFlashcardIdsFromTargetPosition(
+      await this.recurrences.listPendingFlashcardIdsFromTargetPosition(
         session.id,
         session.furthestReelPosition
       )
@@ -204,9 +215,8 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     const batchCards: Flashcard[] = [];
     const batchReelPositions: number[] = [];
     let selectionFeedState = initialSelectionState;
-    let nextReelPosition =
-      ((await this.studyService.findMaxSessionReelPosition(session.id)) ?? -1) + 1;
-    const reservedRecurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+    let nextReelPosition = ((await this.reels.findMaxReelPosition(session.id)) ?? -1) + 1;
+    const reservedRecurrences = await this.recurrences.listBySessionIdInTargetRange(
       session.id,
       nextReelPosition,
       targetPosition
@@ -215,7 +225,7 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       reservedRecurrences.map((recurrence) => recurrence.targetReelPosition)
     );
     const baseFeedPositionStart =
-      ((await this.studyService.findMaxSessionBaseFeedPosition(session.id)) ?? -1) + 1;
+      ((await this.reels.findMaxBaseFeedPosition(session.id)) ?? -1) + 1;
     const anchorCandidate = candidates.filter(
       (candidate) => candidate.card.id === anchorFlashcardId
     );
@@ -247,11 +257,18 @@ export class ReelFeedServiceImpl implements ReelFeedService {
       return null;
     }
 
-    await this.studyService.appendSessionReels(
+    await this.feedTransaction.append(
       session.id,
-      batchCards,
-      baseFeedPositionStart,
-      batchReelPositions
+      batchCards.map(
+        (card, index) =>
+          new StudySessionReel({
+            id: this.ids.generate(),
+            flashcardId: card.id,
+            studySessionId: session.id,
+            baseFeedPosition: baseFeedPositionStart + index,
+            reelPosition: batchReelPositions[index] ?? 0,
+          })
+      )
     );
     return selectionFeedState;
   }
@@ -275,12 +292,12 @@ export class ReelFeedServiceImpl implements ReelFeedService {
     let items: StudySessionReel[] = [];
     let recurrences: StudySessionRecurrence[] = [];
     if (loadedFromReelPosition <= loadedThroughReelPosition) {
-      items = await this.studyService.listSessionReelsInReelPositionRange(
+      items = await this.reels.listBySessionIdInReelPositionRange(
         session.id,
         loadedFromReelPosition,
         loadedThroughReelPosition
       );
-      recurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+      recurrences = await this.recurrences.listBySessionIdInTargetRange(
         session.id,
         loadedFromReelPosition,
         loadedThroughReelPosition
@@ -344,12 +361,11 @@ export class ReelFeedServiceImpl implements ReelFeedService {
   }
 
   private async findMaterializedThrough(studySessionId: string, through: number): Promise<number> {
-    let materializedThrough =
-      (await this.studyService.findMaxSessionReelPosition(studySessionId)) ?? -1;
+    let materializedThrough = (await this.reels.findMaxReelPosition(studySessionId)) ?? -1;
     if (materializedThrough >= through) {
       return materializedThrough;
     }
-    const recurrences = await this.studyService.listSessionRecurrencesInTargetRange(
+    const recurrences = await this.recurrences.listBySessionIdInTargetRange(
       studySessionId,
       materializedThrough + 1,
       through

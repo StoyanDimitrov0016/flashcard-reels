@@ -1,17 +1,15 @@
 import type { DeckService } from "@/features/decks/domain/deck.service";
-import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
-import type { StudyService } from "@/features/study/domain/study.service";
+import type { StudyFeedService } from "@/features/study/domain/study.service";
 
 import { useAppServices } from "@/infrastructure/app-services";
 
 export type ReelsCapability = Readonly<{
   deckService: DeckService;
-  reelFeedService: ReelFeedService;
-  studyService: StudyService;
+  studyService: StudyFeedService;
 }>;
 
 export function useReels(): ReelsCapability {
-  const { deckService, reelFeedService, studyService } = useAppServices();
+  const { deckService, studyService } = useAppServices();
 
-  return { deckService, reelFeedService, studyService };
+  return { deckService, studyService };
 }

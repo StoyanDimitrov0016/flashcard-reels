@@ -199,7 +199,7 @@ describe("archived deck progress", () => {
       new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
       new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
       null,
-      graph.study
+      graph.runtime
     );
     await service.remove(TEST_DECK_ID);
 
