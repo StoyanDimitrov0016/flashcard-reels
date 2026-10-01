@@ -37,6 +37,16 @@ export function prepareAppStorage(): void {
   }
 }
 
+/**
+ * expo-sqlite reports its directory as a filesystem path, while expo-file-system needs a file
+ * URI. Each segment is encoded, because Expo Go app folders contain `%` characters.
+ */
+function databaseDirectory(): Directory {
+  return new Directory(
+    `file://${defaultDatabaseDirectory.split("/").map(encodeURIComponent).join("/")}`
+  );
+}
+
 function resetMarker(): File {
   return new File(Paths.document, RESET_MARKER);
 }
@@ -71,9 +81,10 @@ export function applyPendingAppDataReset(): void {
     if (!marker.exists) {
       return;
     }
+    const databases = databaseDirectory();
     for (const name of DATABASE_FILES) {
       for (const suffix of ["", "-wal", "-shm", "-journal"]) {
-        const file = new File(defaultDatabaseDirectory, name + suffix);
+        const file = new File(databases, name + suffix);
         if (file.exists) {
           file.delete();
         }
