@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useDeckRouteId } from "@/features/decks/presentation/hooks/use-deck-route-id";
-import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
+import { LessonSearchResults } from "@/features/lessons/presentation/components/lesson-search-results";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
+import { SearchField } from "@/shared/presentation/components/search-field";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
@@ -20,6 +22,7 @@ export default function DeckLessonsScreen() {
   const deckId = useDeckRouteId();
   const { loading, readingLists } = useReadingLists();
   const readingList = readingLists.find((list) => list.deckId === deckId);
+  const [query, setQuery] = useState("");
 
   return (
     <SafeAreaView
@@ -43,12 +46,24 @@ export default function DeckLessonsScreen() {
         </View>
       )}
       {!loading && readingList && (
-        <ScrollView contentContainerStyle={styles.content}>
-          <LessonList
-            lessons={readingList.lessons}
-            onOpen={(lesson) => router.push(getLessonHref(lesson.id))}
-          />
-        </ScrollView>
+        <>
+          <View style={styles.search}>
+            <SearchField
+              accessibilityLabel="Search lessons in deck"
+              clearLabel="Clear lesson search"
+              onChangeText={setQuery}
+              placeholder="Search lessons…"
+              value={query}
+            />
+          </View>
+          <ScrollView contentContainerStyle={styles.content}>
+            <LessonSearchResults
+              lessons={readingList.lessons}
+              onOpen={(lesson) => router.push(getLessonHref(lesson.id))}
+              query={query}
+            />
+          </ScrollView>
+        </>
       )}
     </SafeAreaView>
   );
@@ -58,8 +73,12 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: sizes.spacing.wide * 2,
     paddingHorizontal: screenLayout.horizontalPadding,
-    paddingTop: screenLayout.contentTopGap,
+    paddingTop: sizes.spacing.section,
   },
   missing: { flex: 1, justifyContent: "center" },
+  search: {
+    paddingHorizontal: screenLayout.horizontalPadding,
+    paddingTop: screenLayout.contentTopGap,
+  },
   screen: { flex: 1 },
 });

@@ -35,7 +35,7 @@ import { useResetDeckProgress } from "@/features/flashcard-progress/presentation
 import { countReviewedCards } from "@/features/flashcard-progress/presentation/review-summary";
 import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
-import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
+import { LessonSearchResults } from "@/features/lessons/presentation/components/lesson-search-results";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
@@ -265,38 +265,40 @@ export default function DeckDetailsScreen() {
                 <SegmentedControl onChange={setTab} options={deckPageTabs} selected={activeTab} />
               </View>
             )}
+            {/* One search under the toggle; it narrows whichever list is shown. */}
+            <View style={styles.search}>
+              <SearchField
+                accessibilityLabel={
+                  activeTab === "lessons" ? "Search lessons in deck" : "Search cards in deck"
+                }
+                clearLabel={activeTab === "lessons" ? "Clear lesson search" : "Clear card search"}
+                onChangeText={setQuery}
+                placeholder={activeTab === "lessons" ? "Search lessons…" : "Search cards…"}
+                value={query}
+              />
+            </View>
             {activeTab === "lessons" ? (
               <ScrollView contentContainerStyle={styles.lessons} style={styles.listView}>
-                <LessonList
+                <LessonSearchResults
                   lessons={lessons}
                   onOpen={(lesson) => router.push(getLessonHref(lesson.id))}
+                  query={query}
                 />
               </ScrollView>
             ) : (
-              <>
-                <View style={styles.search}>
-                  <SearchField
-                    accessibilityLabel="Search cards in deck"
-                    clearLabel="Clear card search"
-                    onChangeText={setQuery}
-                    placeholder="Search cards…"
-                    value={query}
-                  />
-                </View>
-                <FlatList
-                  contentContainerStyle={styles.list}
-                  data={visibleCards}
-                  keyExtractor={(card) => card.id}
-                  ListEmptyComponent={EmptyCardList}
-                  initialNumToRender={12}
-                  maxToRenderPerBatch={8}
-                  removeClippedSubviews
-                  renderItem={renderCard}
-                  style={styles.listView}
-                  updateCellsBatchingPeriod={32}
-                  windowSize={7}
-                />
-              </>
+              <FlatList
+                contentContainerStyle={styles.list}
+                data={visibleCards}
+                keyExtractor={(card) => card.id}
+                ListEmptyComponent={EmptyCardList}
+                initialNumToRender={12}
+                maxToRenderPerBatch={8}
+                removeClippedSubviews
+                renderItem={renderCard}
+                style={styles.listView}
+                updateCellsBatchingPeriod={32}
+                windowSize={7}
+              />
             )}
           </>
         )}
