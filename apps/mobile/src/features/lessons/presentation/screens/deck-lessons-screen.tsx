@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +22,8 @@ export default function DeckLessonsScreen() {
   const deckId = useDeckRouteId();
   const { loading, readingLists } = useReadingLists();
   const readingList = readingLists.find((list) => list.deckId === deckId);
-  const [query, setQuery] = useState("");
+  const { query: initialQuery } = useLocalSearchParams();
+  const [query, setQuery] = useState(() => (typeof initialQuery === "string" ? initialQuery : ""));
 
   return (
     <SafeAreaView
