@@ -2,18 +2,18 @@
   "schema": 1,
   "id": "ed10310f-6d24-4c52-b5c7-bc98081e1606",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 2,
+  "revision": 3,
   "title": "Computer Science",
   "description": "Algorithms, data structures, complexity, graphs, trees, hashing, concurrency fundamentals, networking, and computation.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-30T17:34:00.809Z",
+  "updatedAt": "2026-10-02T16:50:24.624Z",
   "cards": [
     {
       "id": "3b70384d-b1bf-49b5-b725-43891854f6bb",
       "question": "What is an algorithm?",
       "answer": "An algorithm is a finite procedure that transforms inputs into outputs through a defined sequence of steps.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -22,7 +22,7 @@
       "question": "What is time complexity?",
       "answer": "Time complexity describes how the number of basic operations grows as input size grows, usually using asymptotic notation such as O(n).",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -31,7 +31,7 @@
       "question": "What is space complexity?",
       "answer": "Space complexity describes how additional memory use grows with input size.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -40,7 +40,7 @@
       "question": "What does Big O notation express?",
       "answer": "Big O gives an asymptotic upper bound on growth, ignoring constant factors and lower-order terms.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -49,7 +49,7 @@
       "question": "What does Big Omega notation express?",
       "answer": "Big Omega gives an asymptotic lower bound on growth.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -58,7 +58,7 @@
       "question": "What does Big Theta notation express?",
       "answer": "Big Theta gives a tight asymptotic bound: the function grows within constant factors of the stated rate.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -67,7 +67,7 @@
       "question": "Why are constant factors often ignored in asymptotic analysis?",
       "answer": "Asymptotic analysis focuses on growth for large inputs. Constants still matter in real systems, so two algorithms with the same Big O can have very different practical performance.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "b6f89387-1d42-4fde-ab9e-0f07989db8ca",
       "audio": true
     },
@@ -76,7 +76,7 @@
       "question": "What is recursion?",
       "answer": "Recursion solves a problem by calling the same function on smaller subproblems until a base case stops further calls.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "f24af385-6c25-4bbc-b22e-0ea6756d5a9d",
       "audio": true
     },
@@ -85,7 +85,7 @@
       "question": "What is a base case?",
       "answer": "A base case is an input that can be answered directly and stops recursive expansion.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "f24af385-6c25-4bbc-b22e-0ea6756d5a9d",
       "audio": true
     },
@@ -94,7 +94,7 @@
       "question": "What is a call stack?",
       "answer": "The call stack stores active function frames, including return locations and local execution state, in nested call order.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "f24af385-6c25-4bbc-b22e-0ea6756d5a9d",
       "audio": true
     },
@@ -103,7 +103,7 @@
       "question": "Why can deep recursion fail?",
       "answer": "Each recursive call consumes stack space. Sufficient depth can exceed the runtime’s stack limit even when the algorithm is logically correct.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "f24af385-6c25-4bbc-b22e-0ea6756d5a9d",
       "audio": true
     },
@@ -112,7 +112,7 @@
       "question": "What is an invariant in an algorithm?",
       "answer": "An invariant is a condition that remains true at a defined point in every iteration or recursive step and helps prove correctness.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "be6e81ef-4b1a-4c84-b3d5-d93e0b254837",
       "audio": true
     },
@@ -121,7 +121,7 @@
       "question": "What is a loop invariant used for?",
       "answer": "It provides a structured proof: show it holds initially, remains true after each iteration, and implies the desired result at termination.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "be6e81ef-4b1a-4c84-b3d5-d93e0b254837",
       "audio": true
     },
@@ -130,7 +130,7 @@
       "question": "What is the pigeonhole principle?",
       "answer": "If more items are placed into fewer containers, at least one container must hold more than one item. It is often used to prove that a collision or repetition must exist.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "be6e81ef-4b1a-4c84-b3d5-d93e0b254837",
       "audio": true
     },
@@ -139,7 +139,7 @@
       "question": "What is a data structure?",
       "answer": "A data structure organizes values and relationships so selected operations can be performed with useful time and space costs.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -148,7 +148,7 @@
       "question": "What is an array?",
       "answer": "An array stores elements in indexed order, typically allowing O(1) access by index while insertion or deletion in the middle may require shifting elements.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -157,7 +157,7 @@
       "question": "What is amortized analysis?",
       "answer": "Amortized analysis spreads the cost of occasional expensive operations across a sequence of operations to bound the average cost per operation over that sequence.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -166,7 +166,7 @@
       "question": "Why is dynamic-array append amortized O(1)?",
       "answer": "Most appends write into existing capacity. Rare resizes copy many elements, but geometric growth makes the total copying across many appends linear.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -175,7 +175,7 @@
       "question": "What is a linked list?",
       "answer": "A linked list stores elements in nodes connected by references. Insertion near a known node can be O(1), but finding the nth element requires traversal.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -184,7 +184,7 @@
       "question": "What is a stack?",
       "answer": "A stack is a last-in, first-out structure supporting operations such as push and pop at one end.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -193,7 +193,7 @@
       "question": "What is a queue?",
       "answer": "A queue is a first-in, first-out structure where items are added at one end and removed from the other.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -202,7 +202,7 @@
       "question": "What is a deque?",
       "answer": "A deque supports insertion and removal at both the front and back.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "88f29c6e-a340-4e25-ac06-ecf207967e10",
       "audio": true
     },
@@ -211,7 +211,7 @@
       "question": "What is a priority queue?",
       "answer": "A priority queue removes items according to priority rather than insertion order, commonly implemented with a heap.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "24c2be95-83a7-4252-afd9-8bf984eed4a3",
       "audio": true
     },
@@ -220,7 +220,7 @@
       "question": "What is a binary heap?",
       "answer": "A binary heap is a nearly complete binary tree that maintains a heap-order property, enabling O(1) access to the minimum or maximum and O(log n) insertion/removal.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "24c2be95-83a7-4252-afd9-8bf984eed4a3",
       "audio": true
     },
@@ -229,7 +229,7 @@
       "question": "What is a min-heap?",
       "answer": "A min-heap maintains every parent value as no greater than its children, so the minimum element is at the root.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "24c2be95-83a7-4252-afd9-8bf984eed4a3",
       "audio": true
     },
@@ -238,7 +238,7 @@
       "question": "What is a hash table?",
       "answer": "A hash table maps keys through a hash function to storage buckets, providing expected O(1) lookup, insertion, and deletion when collisions are controlled.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -247,7 +247,7 @@
       "question": "What is a hash collision?",
       "answer": "A collision occurs when distinct keys map to the same hash bucket or position. The table must resolve collisions while still distinguishing the keys.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -256,7 +256,7 @@
       "question": "What is separate chaining?",
       "answer": "Each hash bucket stores a collection of entries that hashed to that bucket, such as a linked list or small array.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -265,7 +265,7 @@
       "question": "What is open addressing?",
       "answer": "All hash-table entries live in the main table, and collisions are resolved by probing alternative slots according to a rule.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -274,7 +274,7 @@
       "question": "What is load factor in a hash table?",
       "answer": "Load factor is the ratio of stored entries to table capacity. High load increases collision or probe costs, so tables often resize before it becomes too large.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -283,7 +283,7 @@
       "question": "What makes a good hash function for a hash table?",
       "answer": "It deterministically maps equal keys to equal hashes while distributing typical distinct keys across buckets to avoid clustering.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -292,7 +292,7 @@
       "question": "What is a set abstract data type?",
       "answer": "A set stores unique values and supports membership, insertion, and deletion without attaching a separate value to each key.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "151b137f-2cb8-45c7-90fb-3b2c79265467",
       "audio": true
     },
@@ -301,7 +301,7 @@
       "question": "What is a tree?",
       "answer": "A tree is a connected acyclic hierarchy of nodes with parent-child relationships and one path between any two nodes.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -310,7 +310,7 @@
       "question": "What is a binary tree?",
       "answer": "A binary tree is a tree where each node has at most two children.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -319,7 +319,7 @@
       "question": "What is a binary search tree?",
       "answer": "A BST orders nodes so keys in one subtree compare lower and keys in the other compare higher according to its ordering rule.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -328,7 +328,7 @@
       "question": "What is the search cost in a balanced binary search tree?",
       "answer": "Search is O(log n) because each comparison eliminates a large fraction of the remaining tree.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -337,7 +337,7 @@
       "question": "Why can a plain binary search tree degrade to O(n)?",
       "answer": "If insertions create a highly skewed tree, its height can approach the number of nodes, turning search into linear traversal.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -346,7 +346,7 @@
       "question": "What problem do self-balancing search trees solve?",
       "answer": "They maintain logarithmic height through rotations or restructuring so lookup, insertion, and deletion remain O(log n).",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -355,7 +355,7 @@
       "question": "What is a trie?",
       "answer": "A trie stores keys by prefixes along tree edges, making lookup proportional to key length rather than the number of stored keys.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -364,7 +364,7 @@
       "question": "When is a trie useful?",
       "answer": "It is useful for prefix searches, autocomplete, dictionaries, and routing structures where shared prefixes matter.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d7eb65aa-003a-4368-a35f-adbd68405bec",
       "audio": true
     },
@@ -373,7 +373,7 @@
       "question": "What is a graph?",
       "answer": "A graph is a set of vertices connected by edges that model relationships between entities.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "ab04b1fe-7d86-4d40-82dc-342978432677",
       "audio": true
     },
@@ -382,7 +382,7 @@
       "question": "What is the difference between a directed and undirected graph?",
       "answer": "Directed edges have an orientation from one vertex to another. Undirected edges represent a symmetric connection.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "ab04b1fe-7d86-4d40-82dc-342978432677",
       "audio": true
     },
@@ -391,7 +391,7 @@
       "question": "What is a weighted graph?",
       "answer": "A weighted graph assigns a cost, distance, capacity, or other numeric value to edges.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "ab04b1fe-7d86-4d40-82dc-342978432677",
       "audio": true
     },
@@ -400,7 +400,7 @@
       "question": "What is an adjacency list?",
       "answer": "It stores, for each vertex, the edges or neighbors leaving that vertex. It is space-efficient for sparse graphs.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "ab04b1fe-7d86-4d40-82dc-342978432677",
       "audio": true
     },
@@ -409,7 +409,7 @@
       "question": "What is an adjacency matrix?",
       "answer": "It stores a table indexed by vertex pairs indicating whether or with what weight an edge exists. Edge lookup is O(1) but storage is O(V²).",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "ab04b1fe-7d86-4d40-82dc-342978432677",
       "audio": true
     },
@@ -418,7 +418,7 @@
       "question": "What is breadth-first search?",
       "answer": "BFS explores graph vertices in layers from a start vertex using a queue. In an unweighted graph it finds shortest paths measured by edge count.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -427,7 +427,7 @@
       "question": "What is depth-first search?",
       "answer": "DFS follows one path deeply before backtracking, using recursion or an explicit stack.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -436,7 +436,7 @@
       "question": "When is DFS useful?",
       "answer": "It is useful for traversal, cycle detection, topological reasoning, connected components, and exploring paths where layer order is unnecessary.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -445,7 +445,7 @@
       "question": "What is a connected component?",
       "answer": "It is a maximal set of vertices in an undirected graph where each vertex can reach every other through graph edges.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -454,7 +454,7 @@
       "question": "What is a strongly connected component?",
       "answer": "In a directed graph, it is a maximal set of vertices where every vertex can reach every other following edge directions.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -463,7 +463,7 @@
       "question": "What is a cycle in a graph?",
       "answer": "A cycle is a path that returns to a previously visited vertex without needing to reuse an edge in the intended cycle definition.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -472,7 +472,7 @@
       "question": "What is a directed acyclic graph?",
       "answer": "A DAG is a directed graph with no directed cycles.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -481,7 +481,7 @@
       "question": "What is topological ordering?",
       "answer": "It is an ordering of DAG vertices where every directed edge goes from an earlier vertex to a later one.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -490,7 +490,7 @@
       "question": "When is topological sorting useful?",
       "answer": "It is useful for dependency scheduling such as build steps, course prerequisites, or jobs that must run after other jobs.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "280c6997-9668-4cb2-8095-faadba9c4ac4",
       "audio": true
     },
@@ -499,7 +499,7 @@
       "question": "What does Dijkstra’s algorithm solve?",
       "answer": "It finds shortest paths from one source in a graph with non-negative edge weights.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d0013844-3f95-473d-a21b-9dc4bbac496d",
       "audio": true
     },
@@ -508,7 +508,7 @@
       "question": "Why does Dijkstra’s algorithm fail with negative edge weights?",
       "answer": "It assumes that once the smallest tentative distance is finalized, no later path can improve it. A negative edge can violate that assumption.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d0013844-3f95-473d-a21b-9dc4bbac496d",
       "audio": true
     },
@@ -517,7 +517,7 @@
       "question": "What does Bellman-Ford solve?",
       "answer": "It finds single-source shortest paths even with negative edge weights and can detect a reachable negative-weight cycle.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d0013844-3f95-473d-a21b-9dc4bbac496d",
       "audio": true
     },
@@ -526,7 +526,7 @@
       "question": "What does Floyd-Warshall solve?",
       "answer": "It computes shortest-path distances between all pairs of vertices using dynamic programming in O(V³) time.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "d0013844-3f95-473d-a21b-9dc4bbac496d",
       "audio": true
     },
@@ -535,7 +535,7 @@
       "question": "What is a minimum spanning tree?",
       "answer": "It connects all vertices of a weighted undirected graph with no cycles and minimum total edge weight.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "0598faf5-32f2-4b37-ad8f-1ff4f64b1037",
       "audio": true
     },
@@ -544,7 +544,7 @@
       "question": "What does Kruskal’s algorithm do?",
       "answer": "It processes edges from lowest to highest weight, adding an edge when it connects two previously separate components.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "0598faf5-32f2-4b37-ad8f-1ff4f64b1037",
       "audio": true
     },
@@ -553,7 +553,7 @@
       "question": "What is union-find?",
       "answer": "Union-find maintains disjoint sets with operations to find a set representative and merge two sets, useful for connectivity problems.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "0598faf5-32f2-4b37-ad8f-1ff4f64b1037",
       "audio": true
     },
@@ -562,7 +562,7 @@
       "question": "What does path compression do in union-find?",
       "answer": "During find operations it rewrites parent links toward the set root, making future finds much faster.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "0598faf5-32f2-4b37-ad8f-1ff4f64b1037",
       "audio": true
     },
@@ -571,7 +571,7 @@
       "question": "What does Prim’s algorithm do?",
       "answer": "It grows one connected tree by repeatedly adding the cheapest edge from the current tree to a new vertex.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "0598faf5-32f2-4b37-ad8f-1ff4f64b1037",
       "audio": true
     },
@@ -580,7 +580,7 @@
       "question": "What is sorting?",
       "answer": "Sorting rearranges items into an order defined by a comparison or key.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -589,7 +589,7 @@
       "question": "What is a stable sort?",
       "answer": "A stable sort preserves the relative order of records that compare equal.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -598,7 +598,7 @@
       "question": "What is merge sort?",
       "answer": "Merge sort recursively sorts halves and merges them, giving O(n log n) worst-case time and commonly O(n) auxiliary space for arrays.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -607,7 +607,7 @@
       "question": "What is quicksort?",
       "answer": "Quicksort partitions elements around a pivot and recursively sorts partitions, with expected O(n log n) time but O(n²) worst-case time under bad pivots.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -616,7 +616,7 @@
       "question": "What is heapsort?",
       "answer": "Heapsort builds a heap and repeatedly extracts the extreme element, giving O(n log n) worst-case time and O(1) auxiliary array storage in common in-place implementations.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -625,7 +625,7 @@
       "question": "Why is comparison sorting generally bounded below by Ω(n log n)?",
       "answer": "A comparison sort must distinguish among n! possible input orders, requiring a decision tree with logarithmic depth proportional to log(n!).",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -634,7 +634,7 @@
       "question": "How can counting sort beat O(n log n)?",
       "answer": "It uses numeric key ranges rather than only comparisons, running in O(n + k) when keys fall in a manageable range of size k.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -643,7 +643,7 @@
       "question": "What is binary search?",
       "answer": "Binary search repeatedly halves a sorted search range by comparing the target with the middle element, giving O(log n) comparisons.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -652,7 +652,7 @@
       "question": "What condition is required for ordinary binary search?",
       "answer": "The search space must have a monotonic ordering or predicate so one comparison tells which half can be discarded.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -661,7 +661,7 @@
       "question": "What common bug occurs in binary-search boundaries?",
       "answer": "Mixing inclusive and exclusive interval conventions can skip candidates or loop forever. Define the interval invariant before coding.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "5f331061-f31e-44b2-a43b-8a5580f37bad",
       "audio": true
     },
@@ -670,7 +670,7 @@
       "question": "What is dynamic programming?",
       "answer": "Dynamic programming solves overlapping subproblems once and reuses their results to construct the final answer.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bb271509-acf5-4af6-8b45-322c5baa2f4d",
       "audio": true
     },
@@ -679,7 +679,7 @@
       "question": "What is optimal substructure?",
       "answer": "A problem has optimal substructure when an optimal solution can be built from optimal solutions to suitable subproblems.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bb271509-acf5-4af6-8b45-322c5baa2f4d",
       "audio": true
     },
@@ -688,7 +688,7 @@
       "question": "What are overlapping subproblems?",
       "answer": "They are subproblems reached repeatedly from different branches of a naive recursive solution, making cached results reusable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bb271509-acf5-4af6-8b45-322c5baa2f4d",
       "audio": true
     },
@@ -697,7 +697,7 @@
       "question": "What is memoization in dynamic programming?",
       "answer": "Memoization is top-down DP that caches results of subproblems when recursive calls first compute them.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bb271509-acf5-4af6-8b45-322c5baa2f4d",
       "audio": true
     },
@@ -706,7 +706,7 @@
       "question": "What is tabulation in dynamic programming?",
       "answer": "Tabulation is bottom-up DP that fills a table of smaller subproblem results in an order that makes later results available.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bb271509-acf5-4af6-8b45-322c5baa2f4d",
       "audio": true
     },
@@ -715,7 +715,7 @@
       "question": "What is a greedy algorithm?",
       "answer": "A greedy algorithm repeatedly makes a locally best choice without revisiting previous choices.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bd7a3026-7698-48ef-9640-57871e57ca6a",
       "audio": true
     },
@@ -724,7 +724,7 @@
       "question": "When is a greedy strategy correct?",
       "answer": "Only when the problem has a property proving that locally optimal choices can be extended into a globally optimal solution.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bd7a3026-7698-48ef-9640-57871e57ca6a",
       "audio": true
     },
@@ -733,7 +733,7 @@
       "question": "What is divide and conquer?",
       "answer": "It splits a problem into smaller independent subproblems, solves them recursively, and combines their results.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bd7a3026-7698-48ef-9640-57871e57ca6a",
       "audio": true
     },
@@ -742,7 +742,7 @@
       "question": "What is backtracking?",
       "answer": "Backtracking incrementally builds candidates and abandons a partial candidate as soon as it cannot lead to a valid solution.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bd7a3026-7698-48ef-9640-57871e57ca6a",
       "audio": true
     },
@@ -751,7 +751,7 @@
       "question": "What is branch and bound?",
       "answer": "It explores a search space while using bounds on the best possible remaining result to prune branches that cannot beat the current best solution.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "bd7a3026-7698-48ef-9640-57871e57ca6a",
       "audio": true
     },
@@ -760,7 +760,7 @@
       "question": "What is a two-pointer technique?",
       "answer": "It maintains two indexes that move according to an invariant, often reducing nested scanning of ordered or sequence data to linear time.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "38319fb9-f529-476a-8790-8a06a4eaea93",
       "audio": true
     },
@@ -769,7 +769,7 @@
       "question": "What is a sliding window technique?",
       "answer": "It maintains information about a contiguous range while moving its boundaries, reusing work instead of recomputing every range from scratch.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "38319fb9-f529-476a-8790-8a06a4eaea93",
       "audio": true
     },
@@ -778,7 +778,7 @@
       "question": "What is a prefix sum?",
       "answer": "A prefix-sum array stores cumulative totals so a range sum can be computed from two prefix values in O(1) after O(n) preprocessing.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "38319fb9-f529-476a-8790-8a06a4eaea93",
       "audio": true
     },
@@ -787,7 +787,7 @@
       "question": "What is a monotonic stack?",
       "answer": "It keeps elements in increasing or decreasing order while processing a sequence, enabling nearest-greater or nearest-smaller queries in linear time.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "38319fb9-f529-476a-8790-8a06a4eaea93",
       "audio": true
     },
@@ -796,7 +796,7 @@
       "question": "What is a bitset useful for?",
       "answer": "A bitset stores many Boolean flags compactly and lets word-sized bit operations process many flags at once.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "38319fb9-f529-476a-8790-8a06a4eaea93",
       "audio": true
     },
@@ -805,7 +805,7 @@
       "question": "What is a race condition in concurrent algorithms?",
       "answer": "A race condition occurs when correctness depends on the relative timing of concurrent operations that are not properly coordinated.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -814,7 +814,7 @@
       "question": "What is mutual exclusion?",
       "answer": "Mutual exclusion ensures that only one execution path at a time can enter a protected critical section for shared state.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -823,7 +823,7 @@
       "question": "What is a semaphore conceptually?",
       "answer": "A semaphore is a counter used to control access to a limited number of permits, allowing up to a configured number of concurrent holders.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -832,7 +832,7 @@
       "question": "What is a deadlock?",
       "answer": "A deadlock is a state where a set of participants each waits for a condition that only another waiting participant can satisfy.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -841,7 +841,7 @@
       "question": "What four conditions are classically necessary for resource deadlock?",
       "answer": "Mutual exclusion, hold-and-wait, no forced preemption, and a circular wait must all be possible for the classic deadlock model.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -850,7 +850,7 @@
       "question": "What is starvation?",
       "answer": "Starvation occurs when a runnable participant repeatedly loses access to a needed resource and makes no progress even though the system overall continues.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e040322b-fd7c-46a4-9299-80f7add83f26",
       "audio": true
     },
@@ -859,7 +859,7 @@
       "question": "What is a networking packet?",
       "answer": "A packet is a bounded unit of data sent through a packet-switched network, carrying payload plus protocol headers used for delivery and processing.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -868,7 +868,7 @@
       "question": "What is an IP address?",
       "answer": "An IP address identifies a network interface endpoint for routing packets across IP networks.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -877,7 +877,7 @@
       "question": "What is a port number?",
       "answer": "A transport-layer port identifies a logical endpoint on a host so multiple networked applications can share one IP address.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -886,7 +886,7 @@
       "question": "What does TCP provide?",
       "answer": "TCP provides a reliable ordered byte stream between endpoints, using acknowledgments, retransmission, sequencing, flow control, and congestion control.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -895,7 +895,7 @@
       "question": "What does UDP provide?",
       "answer": "UDP sends independent datagrams without built-in delivery, ordering, retransmission, or connection state, giving applications more control and lower protocol overhead.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -904,7 +904,7 @@
       "question": "What is DNS?",
       "answer": "DNS maps domain names and other records through a distributed hierarchical naming system, commonly resolving names to IP addresses.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -913,7 +913,7 @@
       "question": "What is HTTP?",
       "answer": "HTTP is an application protocol where clients send requests and servers return responses containing status, headers, and optional bodies.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -922,7 +922,7 @@
       "question": "What is TLS?",
       "answer": "TLS authenticates endpoints using certificates and establishes encrypted, integrity-protected communication over an untrusted network.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "21bfc487-170e-4199-8ee3-bd903b86f010",
       "audio": true
     },
@@ -931,7 +931,7 @@
       "question": "What does a cryptographic hash function provide?",
       "answer": "It deterministically maps arbitrary input to a fixed-size digest designed to make collisions, preimages, and related manipulations computationally difficult.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e12bf06a-0e32-40f6-a29b-ad81a6134d15",
       "audio": true
     },
@@ -940,7 +940,7 @@
       "question": "Why is a password hash different from a general fast hash?",
       "answer": "Password hashing intentionally uses salt and expensive computation or memory so guessing each candidate password costs an attacker substantial resources.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e12bf06a-0e32-40f6-a29b-ad81a6134d15",
       "audio": true
     },
@@ -949,7 +949,7 @@
       "question": "What is public-key encryption?",
       "answer": "It uses a public key for an allowed operation such as encryption and a mathematically related private key for the corresponding protected operation such as decryption.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e12bf06a-0e32-40f6-a29b-ad81a6134d15",
       "audio": true
     },
@@ -958,7 +958,7 @@
       "question": "What is a digital signature?",
       "answer": "A signer uses a private key to produce a signature that others can verify with the public key, providing integrity and evidence that the private-key holder signed the message.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e12bf06a-0e32-40f6-a29b-ad81a6134d15",
       "audio": true
     },
@@ -967,7 +967,7 @@
       "question": "What is NP-completeness useful for in engineering reasoning?",
       "answer": "Showing a problem is NP-complete suggests no known polynomial-time exact algorithm is likely to scale generally, motivating approximation, heuristics, restricted inputs, or exponential search with pruning.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e5969076-7a8a-4121-aa87-a8fcb72f9132",
       "audio": true
     },
@@ -976,7 +976,7 @@
       "question": "What does it mean for one problem to reduce to another?",
       "answer": "A reduction transforms instances of one problem into instances of another so solving the second would solve the first, allowing complexity or hardness results to transfer.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e5969076-7a8a-4121-aa87-a8fcb72f9132",
       "audio": true
     },
@@ -985,7 +985,7 @@
       "question": "Why should algorithm choice follow input constraints?",
       "answer": "An O(n²) solution may be fine for hundreds of items and unusable for millions. Input size, memory, constants, and data distribution determine what is practical.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:50:24.624Z",
       "lessonId": "e5969076-7a8a-4121-aa87-a8fcb72f9132",
       "audio": true
     }

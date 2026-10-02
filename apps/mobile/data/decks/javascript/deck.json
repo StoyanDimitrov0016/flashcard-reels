@@ -2,18 +2,18 @@
   "schema": 1,
   "id": "4e4c5ba0-51d0-4619-9c88-920e6ff12d6e",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 2,
+  "revision": 3,
   "title": "JavaScript",
   "description": "Core language semantics, objects, functions, async behavior, modules, memory, and practical runtime reasoning.",
   "createdAt": "2026-09-06T13:26:00Z",
-  "updatedAt": "2026-09-30T17:34:00.809Z",
+  "updatedAt": "2026-10-02T16:52:01.110Z",
   "cards": [
     {
       "id": "328c777f-291d-40de-8f4e-c2f972c35b7a",
       "question": "What is a JavaScript value?",
       "answer": "A value is a piece of data manipulated by a program, such as a number, string, object, function, null, or undefined.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -22,7 +22,7 @@
       "question": "What is the difference between a primitive and an object in JavaScript?",
       "answer": "Primitives are immutable values such as strings and numbers. Objects are mutable collections with identity, so two separate objects can contain the same data but still not be equal by reference.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -31,7 +31,7 @@
       "question": "What does `undefined` mean in JavaScript?",
       "answer": "`undefined` is the primitive value commonly produced when a variable or property has no assigned value, or when a function returns nothing explicitly.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -40,7 +40,7 @@
       "question": "What is `null` used for?",
       "answer": "`null` is an explicit primitive value typically used to represent an intentional absence of an object or value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -49,7 +49,7 @@
       "question": "What is the practical difference between `null` and `undefined`?",
       "answer": "Both represent missing values, but `undefined` often means no value was supplied or produced, while `null` is usually assigned deliberately to mean no value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -58,7 +58,7 @@
       "question": "What does `typeof` report for `null`?",
       "answer": "It reports `\"object\"`. This is a long-standing language quirk, so `value === null` is the reliable null check.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d651955b-97a3-4230-baa4-e8cbee0953ac",
       "audio": true
     },
@@ -67,7 +67,7 @@
       "question": "What is lexical scope?",
       "answer": "Lexical scope means variable visibility is determined by where code is written. An inner function can access bindings from surrounding source scopes.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -76,7 +76,7 @@
       "question": "What is block scope?",
       "answer": "A block-scoped binding is visible only within the nearest `{ ... }` block that declares it. `let`, `const`, and `class` declarations are block-scoped.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -85,7 +85,7 @@
       "question": "What is function scope?",
       "answer": "Bindings declared with `var` inside a function are visible throughout that function, including nested blocks, but not outside it.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -94,7 +94,7 @@
       "question": "How does `var` scope differ from `let` and `const`?",
       "answer": "`var` is scoped to the nearest function or global scope, not ordinary blocks. `let` and `const` are block-scoped.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -103,7 +103,7 @@
       "question": "What does `const` guarantee?",
       "answer": "`const` prevents rebinding the variable name to a different value. It does not make an object or array stored in that variable immutable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -112,7 +112,7 @@
       "question": "What is hoisting?",
       "answer": "Hoisting describes how declarations are processed before ordinary execution in their scope. Function declarations are callable before their source line, while `let`, `const`, and `class` cannot be accessed before initialization.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -121,7 +121,7 @@
       "question": "What is the temporal dead zone?",
       "answer": "It is the part of a block from entering the scope until a `let`, `const`, or `class` declaration is initialized. Accessing the binding there throws a `ReferenceError`.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -130,7 +130,7 @@
       "question": "What is the difference between a function declaration and a function expression?",
       "answer": "A function declaration creates a function binding as part of declaration instantiation and can usually be called before its source line. A function expression creates a function value when execution reaches the expression.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "a916c94f-afe5-46d6-9417-4d7ade9e4b6e",
       "audio": true
     },
@@ -139,7 +139,7 @@
       "question": "What is a first-class function?",
       "answer": "A first-class function can be stored in variables, passed as an argument, returned from another function, and placed in data structures like any other value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -148,7 +148,7 @@
       "question": "What is a higher-order function?",
       "answer": "A higher-order function takes one or more functions as arguments, returns a function, or both.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -157,7 +157,7 @@
       "question": "What is a closure?",
       "answer": "A closure is a function together with access to the lexical bindings that existed where the function was created, even after the outer function has returned.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -166,7 +166,7 @@
       "question": "Why are closures useful?",
       "answer": "They let functions retain private or contextual state without global variables, such as counters, configuration, or callbacks that remember surrounding values.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -175,7 +175,7 @@
       "question": "How is `this` determined for a normal function call?",
       "answer": "For normal functions, `this` depends on the call form: method call, constructor call, explicit `call`/`apply`/`bind`, or ordinary function call.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -184,7 +184,7 @@
       "question": "How do arrow functions differ from regular functions regarding `this`?",
       "answer": "Arrow functions do not create their own `this`; they capture `this` lexically from the surrounding scope. Regular functions receive `this` from how they are called.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -193,7 +193,7 @@
       "question": "Why can an arrow function not be used as a constructor?",
       "answer": "Arrow functions have no constructor behavior and no own `prototype` for instances. Calling one with `new` throws a `TypeError`.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -202,7 +202,7 @@
       "question": "What does `Function.prototype.bind` do?",
       "answer": "`bind` creates a new function whose `this` value and optional leading arguments are fixed for later calls.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -211,7 +211,7 @@
       "question": "What is the difference between `call` and `apply`?",
       "answer": "Both invoke a function with an explicit `this`. `call` receives arguments individually, while `apply` receives them in an array-like value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "ad1bd666-c1d2-4784-941e-f4a7f46f99c8",
       "audio": true
     },
@@ -220,7 +220,7 @@
       "question": "What is strict equality?",
       "answer": "`===` compares values without type coercion. Objects are equal only when both operands reference the same object.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -229,7 +229,7 @@
       "question": "Why can `==` produce surprising results?",
       "answer": "`==` may coerce operands to different types before comparing them, so values such as `0`, `false`, and empty strings can compare equal in combinations that `===` would reject.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -238,7 +238,7 @@
       "question": "Why does `NaN === NaN` evaluate to false?",
       "answer": "IEEE-754 defines NaN as unequal to every value, including itself. Use `Number.isNaN` when you need to test specifically for NaN.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -247,7 +247,7 @@
       "question": "What problem does `Number.isNaN` solve compared with global `isNaN`?",
       "answer": "`Number.isNaN` checks whether a value is actually the numeric NaN value without first coercing other types to numbers.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -256,7 +256,7 @@
       "question": "What is floating-point precision error?",
       "answer": "Most JavaScript numbers use binary IEEE-754 floating point, so many decimal fractions cannot be represented exactly. Arithmetic such as `0.1 + 0.2` can therefore produce a nearby value instead of exact decimal equality.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -265,7 +265,7 @@
       "question": "When should `BigInt` be used?",
       "answer": "Use `BigInt` for integers outside the safe integer range or when exact arbitrary-size integer arithmetic is required. It cannot be mixed directly with `Number` arithmetic.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "866189ec-a3c3-4141-8b51-177b8b3271af",
       "audio": true
     },
@@ -274,7 +274,7 @@
       "question": "What is truthiness?",
       "answer": "Truthiness is the Boolean interpretation of a value in conditions. Only `false`, `0`, `-0`, `0n`, `NaN`, `\"\"`, `null`, and `undefined` are falsy.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "e2094c0a-6b94-4888-8d6a-b9777fb0249b",
       "audio": true
     },
@@ -283,7 +283,7 @@
       "question": "What is short-circuit evaluation?",
       "answer": "Logical operators can skip evaluating later operands when the result is already determined. This lets `&&`, `||`, and `??` conditionally evaluate expressions.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "e2094c0a-6b94-4888-8d6a-b9777fb0249b",
       "audio": true
     },
@@ -292,7 +292,7 @@
       "question": "What does the nullish coalescing operator `??` do?",
       "answer": "It returns the right operand only when the left operand is `null` or `undefined`. Unlike `||`, it preserves valid falsy values such as `0` and an empty string.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "e2094c0a-6b94-4888-8d6a-b9777fb0249b",
       "audio": true
     },
@@ -301,7 +301,7 @@
       "question": "What does optional chaining `?.` do?",
       "answer": "It stops a property access or call and produces `undefined` when the value to its left is `null` or `undefined`, instead of throwing for that access.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "e2094c0a-6b94-4888-8d6a-b9777fb0249b",
       "audio": true
     },
@@ -310,7 +310,7 @@
       "question": "What is a JavaScript object property key?",
       "answer": "An object property key is either a string or a symbol. Numeric-looking property names are converted to strings.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "9d30c657-8acb-4adc-bc6f-7fdfbc8bbabb",
       "audio": true
     },
@@ -319,7 +319,7 @@
       "question": "What is a symbol useful for?",
       "answer": "A symbol is a unique primitive often used as a collision-resistant object property key or for language protocols such as iteration.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "9d30c657-8acb-4adc-bc6f-7fdfbc8bbabb",
       "audio": true
     },
@@ -328,7 +328,7 @@
       "question": "What is a property descriptor?",
       "answer": "A property descriptor controls attributes such as value, writability, enumerability, configurability, or getter/setter functions for an object property.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "9d30c657-8acb-4adc-bc6f-7fdfbc8bbabb",
       "audio": true
     },
@@ -337,7 +337,7 @@
       "question": "What is the difference between a data property and an accessor property?",
       "answer": "A data property stores a value. An accessor property runs getter or setter functions when the property is read or written.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "9d30c657-8acb-4adc-bc6f-7fdfbc8bbabb",
       "audio": true
     },
@@ -346,7 +346,7 @@
       "question": "What does `Object.freeze` guarantee?",
       "answer": "It prevents adding, removing, or reconfiguring own properties and makes existing data properties non-writable. The freeze is shallow, so nested objects can still change unless they are frozen separately.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "9d30c657-8acb-4adc-bc6f-7fdfbc8bbabb",
       "audio": true
     },
@@ -355,7 +355,7 @@
       "question": "What is the prototype chain?",
       "answer": "When a property is not found directly on an object, JavaScript follows that object’s prototype links until it finds the property or reaches `null`.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -364,7 +364,7 @@
       "question": "What does `Object.create(proto)` do?",
       "answer": "It creates a new object whose direct prototype is `proto`, without invoking a constructor function.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -373,7 +373,7 @@
       "question": "What is property shadowing?",
       "answer": "Property shadowing occurs when an object has its own property with the same key as one on its prototype, causing lookup to return the own property first.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -382,7 +382,7 @@
       "question": "What does the `new` operator do?",
       "answer": "`new` creates an object linked to the constructor’s `prototype`, calls the constructor with that object as `this`, and returns the constructed object unless the constructor explicitly returns another object.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -391,7 +391,7 @@
       "question": "What is the relationship between a class and prototypes in JavaScript?",
       "answer": "JavaScript classes are syntax over prototype-based objects. Instance methods are stored on the class prototype and shared by instances.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -400,7 +400,7 @@
       "question": "What does `instanceof` test?",
       "answer": "It checks whether the constructor’s `prototype` object appears in the tested object’s prototype chain.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -409,7 +409,7 @@
       "question": "Why can `instanceof` be unreliable across realms?",
       "answer": "Different browser frames or realms have different constructor and prototype objects, so an object created in one realm may fail an `instanceof` check against a constructor from another.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "305e84d6-cd1e-4112-9725-2e9b59206272",
       "audio": true
     },
@@ -418,7 +418,7 @@
       "question": "What is an iterable?",
       "answer": "An iterable is a value that provides a `[Symbol.iterator]()` method returning an iterator, allowing constructs such as `for...of` and spread to consume its values.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "efed1ddf-24d7-48f8-a553-107ccb28f785",
       "audio": true
     },
@@ -427,7 +427,7 @@
       "question": "What is an iterator?",
       "answer": "An iterator is an object with a `next()` method that returns `{ value, done }` records describing the next item in a sequence.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "efed1ddf-24d7-48f8-a553-107ccb28f785",
       "audio": true
     },
@@ -436,7 +436,7 @@
       "question": "What is the difference between `for...of` and `for...in`?",
       "answer": "`for...of` iterates values from an iterable. `for...in` iterates enumerable string property keys, including inherited enumerable properties.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "efed1ddf-24d7-48f8-a553-107ccb28f785",
       "audio": true
     },
@@ -445,7 +445,7 @@
       "question": "What is a generator function?",
       "answer": "A generator function returns an iterator whose execution can pause at `yield` and resume on later `next()` calls.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "efed1ddf-24d7-48f8-a553-107ccb28f785",
       "audio": true
     },
@@ -454,7 +454,7 @@
       "question": "What problem do generators solve?",
       "answer": "They let code produce a sequence lazily while preserving local execution state between values, avoiding the need to compute or store the full sequence up front.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "efed1ddf-24d7-48f8-a553-107ccb28f785",
       "audio": true
     },
@@ -463,7 +463,7 @@
       "question": "What does object destructuring do?",
       "answer": "Destructuring reads selected properties from an object and assigns them to bindings according to a pattern.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "0f2fc01c-2fc4-441b-b90a-7a9c448e8796",
       "audio": true
     },
@@ -472,7 +472,7 @@
       "question": "What does array destructuring do?",
       "answer": "Array destructuring consumes values from an iterable by position and assigns them to bindings according to a pattern.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "0f2fc01c-2fc4-441b-b90a-7a9c448e8796",
       "audio": true
     },
@@ -481,7 +481,7 @@
       "question": "What is the difference between spread and rest syntax?",
       "answer": "Spread expands iterable items or object properties into a new context. Rest collects remaining arguments, elements, or properties into one value.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "0f2fc01c-2fc4-441b-b90a-7a9c448e8796",
       "audio": true
     },
@@ -490,7 +490,7 @@
       "question": "Is object spread a deep copy?",
       "answer": "No. Object spread creates a new top-level object and copies enumerable own properties, but nested objects remain shared references.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "0f2fc01c-2fc4-441b-b90a-7a9c448e8796",
       "audio": true
     },
@@ -499,7 +499,7 @@
       "question": "What does `Array.prototype.map` return?",
       "answer": "It returns a new array containing the callback result for each source element, preserving the source length and order.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -508,7 +508,7 @@
       "question": "What does `Array.prototype.filter` return?",
       "answer": "It returns a new array containing only source elements for which the callback produced a truthy result.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -517,7 +517,7 @@
       "question": "What does `Array.prototype.reduce` do?",
       "answer": "It processes array elements in order while carrying an accumulator from one callback invocation to the next, returning the final accumulator.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -526,7 +526,7 @@
       "question": "What is the difference between `slice` and `splice` on arrays?",
       "answer": "`slice` returns a shallow copy of a range without changing the source. `splice` changes the source array by removing, replacing, or inserting elements.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -535,7 +535,7 @@
       "question": "Why can mutating an array during iteration be risky?",
       "answer": "Changing length or indexes while iterating can cause elements to be skipped, revisited, or observed in an unexpected state depending on the iteration method.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -544,7 +544,7 @@
       "question": "What does `Array.from` do?",
       "answer": "It creates a real array from an iterable or array-like value and can optionally map each item during creation.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "08710bb5-a00f-482b-876c-95076c094d20",
       "audio": true
     },
@@ -553,7 +553,7 @@
       "question": "What problem does `Set` solve?",
       "answer": "A `Set` stores unique values and provides direct membership operations without manually scanning an array for duplicates.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -562,7 +562,7 @@
       "question": "What problem does `Map` solve compared with plain objects?",
       "answer": "A `Map` stores key-value pairs where keys can be any value, preserves insertion order for iteration, and avoids collisions with inherited object property names.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -571,7 +571,7 @@
       "question": "What is a `WeakMap` useful for?",
       "answer": "A `WeakMap` associates data with object keys without preventing those keys from being garbage-collected. Its contents are intentionally not enumerable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -580,7 +580,7 @@
       "question": "Why are weak collections not enumerable?",
       "answer": "Whether an object is still reachable can change because of garbage collection. Exposing weak collection contents would make garbage-collection behavior observable and unstable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -589,7 +589,7 @@
       "question": "What is garbage collection in JavaScript?",
       "answer": "The runtime reclaims memory for objects that are no longer reachable from live roots. Developers cannot rely on an exact collection time.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -598,7 +598,7 @@
       "question": "What commonly causes a JavaScript memory leak?",
       "answer": "A leak occurs when code unintentionally keeps references to objects that are no longer useful, such as forgotten event listeners, timers, caches, or closures retaining large structures.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "01244800-e38f-4c2c-9144-1a88eff1fa4f",
       "audio": true
     },
@@ -607,7 +607,7 @@
       "question": "What is a module in JavaScript?",
       "answer": "A module is a file with its own scope that can explicitly export bindings and import bindings from other modules.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "76ab03e3-994d-4754-8814-7720d05f8573",
       "audio": true
     },
@@ -616,7 +616,7 @@
       "question": "What problem does static `import` solve?",
       "answer": "Static imports make module dependencies known before execution, enabling reliable linking and tooling such as bundling and tree-shaking.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "76ab03e3-994d-4754-8814-7720d05f8573",
       "audio": true
     },
@@ -625,7 +625,7 @@
       "question": "What is a live binding in ES modules?",
       "answer": "An imported binding reflects updates to the exported binding rather than receiving a one-time copied value. Importers cannot reassign the imported binding directly.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "76ab03e3-994d-4754-8814-7720d05f8573",
       "audio": true
     },
@@ -634,7 +634,7 @@
       "question": "What does dynamic `import()` do?",
       "answer": "It loads a module asynchronously and returns a Promise for the module namespace object, allowing code to defer loading until needed.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "76ab03e3-994d-4754-8814-7720d05f8573",
       "audio": true
     },
@@ -643,7 +643,7 @@
       "question": "What is a Promise?",
       "answer": "A Promise is an object representing the eventual result of an asynchronous operation. It settles once as fulfilled with a value or rejected with a reason.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5febb8a6-2586-47df-b9d9-a13b4b4babf9",
       "audio": true
     },
@@ -652,7 +652,7 @@
       "question": "What states can a Promise have?",
       "answer": "A Promise begins pending and can settle once as fulfilled or rejected. After settlement, its state and result do not change.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5febb8a6-2586-47df-b9d9-a13b4b4babf9",
       "audio": true
     },
@@ -661,7 +661,7 @@
       "question": "What does `.then()` return?",
       "answer": "`.then()` returns a new Promise. Its outcome depends on the callback result: returned values fulfill it, thrown errors reject it, and returned Promises are adopted.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5febb8a6-2586-47df-b9d9-a13b4b4babf9",
       "audio": true
     },
@@ -670,7 +670,7 @@
       "question": "What happens when a Promise handler throws?",
       "answer": "The Promise returned by `.then()` or `.catch()` becomes rejected with the thrown error, allowing the error to propagate down the chain.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5febb8a6-2586-47df-b9d9-a13b4b4babf9",
       "audio": true
     },
@@ -679,7 +679,7 @@
       "question": "What guarantee does `Promise.all` provide?",
       "answer": "It fulfills with results in input order after all inputs fulfill, and rejects as soon as one input rejects.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "46192408-3ec3-4934-8203-181fa17468e7",
       "audio": true
     },
@@ -688,7 +688,7 @@
       "question": "How does `Promise.allSettled` differ from `Promise.all`?",
       "answer": "`allSettled` waits for every input and returns each fulfillment or rejection outcome. It does not reject merely because one input rejected.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "46192408-3ec3-4934-8203-181fa17468e7",
       "audio": true
     },
@@ -697,7 +697,7 @@
       "question": "What does `Promise.race` do?",
       "answer": "It settles with the outcome of the first input Promise to settle, whether that outcome is fulfillment or rejection.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "46192408-3ec3-4934-8203-181fa17468e7",
       "audio": true
     },
@@ -706,7 +706,7 @@
       "question": "What does `Promise.any` do?",
       "answer": "It fulfills with the first fulfilled input. It rejects with an `AggregateError` only if all inputs reject.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "46192408-3ec3-4934-8203-181fa17468e7",
       "audio": true
     },
@@ -715,7 +715,7 @@
       "question": "What does `await` do?",
       "answer": "`await` pauses the current async function until the awaited value is resolved through Promise semantics, then resumes the function in a later microtask with the fulfillment value or throws the rejection reason.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -724,7 +724,7 @@
       "question": "Does `await` block the JavaScript thread?",
       "answer": "No. It suspends only the current async function, allowing the runtime to process other work before the function resumes.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -733,7 +733,7 @@
       "question": "Why can sequential `await` calls be slower than `Promise.all`?",
       "answer": "Sequential awaits start or wait for operations one after another. `Promise.all` can wait for independent operations concurrently when those operations are started together.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -742,7 +742,7 @@
       "question": "What is the difference between synchronous throwing and Promise rejection?",
       "answer": "A synchronous throw immediately unwinds the current call stack until caught. A Promise rejection is an asynchronous result that propagates through Promise chaining unless handled.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -751,7 +751,7 @@
       "question": "What is an uncaught exception?",
       "answer": "It is an error thrown during execution that reaches the host without being handled by a matching `catch` or rejection handler, typically causing the current operation to fail and be reported.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -760,7 +760,7 @@
       "question": "Why should asynchronous APIs have consistent timing behavior?",
       "answer": "If a callback sometimes runs synchronously and sometimes later, callers cannot reason reliably about ordering. Promise-based APIs avoid this by scheduling reactions asynchronously.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "d24dce4c-2d5e-4133-b79b-67ea98ee98f4",
       "audio": true
     },
@@ -769,7 +769,7 @@
       "question": "What is the JavaScript event loop?",
       "answer": "It is the runtime coordination model that executes queued jobs or tasks when the call stack is free, interleaving JavaScript execution with host events such as timers and I/O.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "b66a1f0d-95fe-440f-ace2-3ab54a349ff6",
       "audio": true
     },
@@ -778,7 +778,7 @@
       "question": "What is run-to-completion?",
       "answer": "A JavaScript job executes until it finishes before another queued JavaScript job starts on the same agent. Another callback cannot interrupt it halfway through.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "b66a1f0d-95fe-440f-ace2-3ab54a349ff6",
       "audio": true
     },
@@ -787,7 +787,7 @@
       "question": "What is a microtask?",
       "answer": "A microtask is queued work that runs after the current JavaScript stack completes and before the runtime proceeds to the next ordinary task. Promise reactions use microtasks.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "b66a1f0d-95fe-440f-ace2-3ab54a349ff6",
       "audio": true
     },
@@ -796,7 +796,7 @@
       "question": "Why can an endless microtask chain freeze progress?",
       "answer": "The runtime drains microtasks before moving to the next task. If each microtask continually queues another, timers, input handling, or rendering may be delayed indefinitely.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "b66a1f0d-95fe-440f-ace2-3ab54a349ff6",
       "audio": true
     },
@@ -805,7 +805,7 @@
       "question": "Why does `setTimeout(fn, 0)` not mean “run immediately”?",
       "answer": "It schedules `fn` as future task after at least the host’s minimum delay rules. The callback cannot run until current work and earlier eligible queued work finish.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "b66a1f0d-95fe-440f-ace2-3ab54a349ff6",
       "audio": true
     },
@@ -814,7 +814,7 @@
       "question": "What is event capturing?",
       "answer": "Capturing is the earlier propagation phase where an event travels from outer ancestors toward the target before the target and bubbling phases.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -823,7 +823,7 @@
       "question": "What is event bubbling?",
       "answer": "After an event reaches its target, many DOM events propagate upward through ancestor elements, allowing ancestor listeners to observe them.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -832,7 +832,7 @@
       "question": "What is event delegation in the browser?",
       "answer": "A parent element handles events from descendant elements by relying on event propagation, reducing the need to attach one listener to every child.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -841,7 +841,7 @@
       "question": "What does `preventDefault()` do?",
       "answer": "It asks the browser not to perform the event’s default action, such as following a link or submitting a form, when that event is cancelable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -850,7 +850,7 @@
       "question": "What does `stopPropagation()` do?",
       "answer": "It prevents the event from continuing through the remaining propagation path. It does not automatically prevent the browser’s default action.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -859,7 +859,7 @@
       "question": "What is debouncing?",
       "answer": "Debouncing delays a function until calls have stopped for a chosen interval, so many rapid triggers collapse into one later execution.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -868,7 +868,7 @@
       "question": "What is throttling?",
       "answer": "Throttling limits how often a function can run during repeated triggers, allowing executions at a controlled maximum rate.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1c31bc2e-c565-4730-9461-f7a3aecc7e3e",
       "audio": true
     },
@@ -877,7 +877,7 @@
       "question": "What is a race condition in asynchronous JavaScript?",
       "answer": "A race occurs when the visible result depends on which of multiple asynchronous operations completes last or first, and the program has not defined how stale outcomes should be handled.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -886,7 +886,7 @@
       "question": "How can stale async responses overwrite newer state?",
       "answer": "An earlier request can finish after a later request and still write its result. Track request identity, abort obsolete work, or ignore results that are no longer current.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -895,7 +895,7 @@
       "question": "What problem does `AbortController` solve?",
       "answer": "It provides an `AbortSignal` that APIs can observe so callers can request cancellation of supported asynchronous work such as `fetch`.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -904,7 +904,7 @@
       "question": "What happens when `fetch` receives an aborted signal?",
       "answer": "The fetch operation is canceled and its Promise rejects with an abort-related error, assuming the operation has not already completed.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -913,7 +913,7 @@
       "question": "What problem do streams solve?",
       "answer": "Streams process data incrementally instead of waiting for an entire payload to be buffered, reducing peak memory use and allowing earlier consumption.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -922,7 +922,7 @@
       "question": "What is backpressure in an asynchronous data pipeline?",
       "answer": "Backpressure is a way for a slower consumer to signal or enforce that a faster producer should slow down, preventing unbounded buffering and memory growth.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "65de59f3-a5ed-430c-9a70-f9b2d48d16d4",
       "audio": true
     },
@@ -931,7 +931,7 @@
       "question": "What is referential equality?",
       "answer": "For objects and functions, equality compares identity rather than contents. Two separately created objects are not `===` even when their properties match.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -940,7 +940,7 @@
       "question": "Why can object identity matter in application code?",
       "answer": "Identity is often used to detect whether a value was reused or replaced, to key maps and sets, and to decide whether memoized work can be reused.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -949,7 +949,7 @@
       "question": "When is memoization useful in JavaScript?",
       "answer": "Memoization caches function results keyed by inputs so repeated calls can reuse previous results. It is useful when computation is expensive and the cache cost and input identity rules are acceptable.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -958,7 +958,7 @@
       "question": "What is immutability as an application-level practice?",
       "answer": "It means treating existing values as unchanged and creating replacements for updates. This makes previous snapshots trustworthy and makes identity changes useful for change detection.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -967,7 +967,7 @@
       "question": "What is structural sharing?",
       "answer": "Structural sharing creates a new data structure while reusing unchanged nested parts from the old one, avoiding a full deep copy while preserving immutable update semantics.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -976,7 +976,7 @@
       "question": "When is a shallow equality check sufficient?",
       "answer": "It works when updates replace changed nested values instead of mutating them in place. Then changed data produces a changed reference at the compared boundary.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "1b67906e-1e1d-4769-99cd-54fd02bb0882",
       "audio": true
     },
@@ -985,7 +985,7 @@
       "question": "What does `structuredClone` solve?",
       "answer": "It creates a deep clone of many structured data types, including cyclic object graphs, without sharing ordinary nested object references. Some values such as functions cannot be cloned.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "2b165fb8-5b14-4340-b118-c425d2c6a3a4",
       "audio": true
     },
@@ -994,7 +994,7 @@
       "question": "What is serialization?",
       "answer": "Serialization converts an in-memory value into a transport or storage representation such as JSON. The chosen format determines which types and relationships can be represented.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "2b165fb8-5b14-4340-b118-c425d2c6a3a4",
       "audio": true
     },
@@ -1003,7 +1003,7 @@
       "question": "What information does JSON serialization lose from ordinary JavaScript objects?",
       "answer": "JSON does not preserve functions, symbols, undefined-valued object properties, prototypes, or object identity. Dates become strings when serialized through their JSON behavior.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "2b165fb8-5b14-4340-b118-c425d2c6a3a4",
       "audio": true
     },
@@ -1012,7 +1012,7 @@
       "question": "Why can `JSON.parse(JSON.stringify(x))` be an unsafe deep-clone technique?",
       "answer": "It changes or drops unsupported values, fails on cycles, and does not preserve prototypes or shared-reference identity. Use a cloning method suited to the data instead.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "2b165fb8-5b14-4340-b118-c425d2c6a3a4",
       "audio": true
     },
@@ -1021,7 +1021,7 @@
       "question": "What does a JavaScript engine JIT compiler do?",
       "answer": "A JIT compiler turns frequently executed JavaScript into optimized machine code at runtime, using observed types and execution patterns to specialize generated code.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5277df0f-2002-4ee9-aedf-a81ede1082e7",
       "audio": true
     },
@@ -1030,7 +1030,7 @@
       "question": "What is hidden-class or shape optimization conceptually?",
       "answer": "Engines can group objects with similar property layouts into internal shapes so property access can use predictable offsets or caches instead of fully dynamic lookup each time.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5277df0f-2002-4ee9-aedf-a81ede1082e7",
       "audio": true
     },
@@ -1039,7 +1039,7 @@
       "question": "Why can JIT-optimized code be deoptimized?",
       "answer": "If runtime assumptions used by optimized code stop holding, the engine may discard or fall back from that specialization to preserve correct behavior.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5277df0f-2002-4ee9-aedf-a81ede1082e7",
       "audio": true
     },
@@ -1048,7 +1048,7 @@
       "question": "Why is relying on engine-specific micro-optimizations risky?",
       "answer": "Engine heuristics change and often matter less than algorithmic complexity, I/O, or allocation patterns. Optimize measured bottlenecks rather than coding to undocumented internals.",
       "createdAt": "2026-09-06T13:26:00Z",
-      "updatedAt": "2026-09-06T13:26:00Z",
+      "updatedAt": "2026-10-02T16:52:01.110Z",
       "lessonId": "5277df0f-2002-4ee9-aedf-a81ede1082e7",
       "audio": true
     }
