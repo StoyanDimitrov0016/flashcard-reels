@@ -10,6 +10,7 @@ import type {
 } from "@/features/lessons/domain/lesson.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+import { findAdjacentLessons } from "@/features/lessons/presentation/adjacent-lessons";
 import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
 import { SheetLessonReader } from "@/features/lessons/presentation/components/sheet-lesson-reader";
 import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
@@ -142,7 +143,7 @@ function DeckLessonsSheet({
           key={`${lesson.id}:${opening}:${sectionId ?? ""}`}
           sectionId={sectionId}
           lesson={lesson}
-          nextLesson={lessons[lessons.findIndex((item) => item.id === lesson.id) + 1]}
+          nextLesson={findAdjacentLessons(lessons, lesson.id).next}
           onBack={() => onOpenLesson(null)}
           onClose={onClose}
           onOpenLesson={onOpenLesson}

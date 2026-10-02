@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, type ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
@@ -8,20 +8,13 @@ import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-d
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import { LessonSheetNavigation } from "@/features/lessons/presentation/components/lesson-sheet-navigation";
-import {
-  ReadingProgressBar,
-  useReadingProgress,
-} from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
 import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
-import { useReadingProgressVisibility } from "@/features/lessons/presentation/controllers/use-reading-progress-visibility";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme } from "@/shared/presentation/theme";
-
-const PROGRESS_FADE_DURATION_MS = 250;
 
 type SheetLessonReaderProps = Readonly<{
   deckId: DeckId;
@@ -36,6 +29,7 @@ type SheetLessonReaderProps = Readonly<{
 /**
  * A lesson read inside the deck's lesson sheet, so studying resumes on the same card when it
  * closes. It fills the sheet from the start, so the sheet does not jump while the lesson loads.
+ * The related section carries the deck's accent; the native scroll indicator shows position.
  */
 export function SheetLessonReader({
   deckId,
@@ -54,34 +48,14 @@ export function SheetLessonReader({
   const accent = themeSelection
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
-  const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
-  const { visible: progressVisible, scrollViewProps: progressVisibilityProps } =
-    useReadingProgressVisibility();
-  const progressOpacity = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
   const positioned = useRef(false);
   const [targetY, setTargetY] = useState<number | null>(null);
   const [documentY, setDocumentY] = useState<number | null>(null);
-  const [contentReady, setContentReady] = useState(false);
-  const [viewportReady, setViewportReady] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const scrollableHeight = Math.max(contentHeight - viewportHeight, 0);
   const targetSection = sections.find((section) => section.id === sectionId);
-
-  useEffect(
-    function animateProgressVisibility() {
-      const animation = Animated.timing(progressOpacity, {
-        toValue: progressVisible ? 1 : 0,
-        duration: progressVisible ? 0 : PROGRESS_FADE_DURATION_MS,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-        isInteraction: false,
-      });
-      animation.start();
-      return function stopProgressFade() {
-        animation.stop();
-      };
-    },
-    [progressOpacity, progressVisible]
-  );
 
   useEffect(
     function positionRelatedSection() {
@@ -89,8 +63,8 @@ export function SheetLessonReader({
         positioned.current ||
         targetY === null ||
         documentY === null ||
-        !contentReady ||
-        !viewportReady ||
+        contentHeight === 0 ||
+        viewportHeight === 0 ||
         !scrollRef.current
       ) {
         return;
@@ -101,7 +75,7 @@ export function SheetLessonReader({
         animated: false,
       });
     },
-    [targetY, documentY, contentReady, viewportReady, scrollableHeight]
+    [targetY, documentY, contentHeight, viewportHeight, scrollableHeight]
   );
 
   return (
@@ -119,20 +93,12 @@ export function SheetLessonReader({
           </View>
         )}
         {!loading && loadedLesson && (
-          <Animated.ScrollView
+          <ScrollView
             contentContainerStyle={styles.content}
-            style={styles.scrollView}
-            {...scrollViewProps}
-            {...progressVisibilityProps}
+            onContentSizeChange={(_width, nextHeight) => setContentHeight(nextHeight)}
+            onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
             ref={scrollRef}
-            onContentSizeChange={(width, contentHeight) => {
-              scrollViewProps.onContentSizeChange(width, contentHeight);
-              setContentReady(contentHeight > 0);
-            }}
-            onLayout={(event) => {
-              scrollViewProps.onLayout(event);
-              setViewportReady(event.nativeEvent.layout.height > 0);
-            }}
+            style={styles.scrollView}
           >
             <LessonMarkdownView
               blocks={blocks}
@@ -141,19 +107,7 @@ export function SheetLessonReader({
               onTargetLayout={setTargetY}
               onDocumentLayout={setDocumentY}
             />
-          </Animated.ScrollView>
-        )}
-        {scrollableHeight > 0 && (
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.progressOverlay, { opacity: progressOpacity }]}
-          >
-            <ReadingProgressBar
-              color={accent}
-              scrollableHeight={scrollableHeight}
-              scrollY={scrollY}
-            />
-          </Animated.View>
+          </ScrollView>
         )}
       </View>
       <LessonSheetNavigation
@@ -167,7 +121,6 @@ export function SheetLessonReader({
 
 const styles = StyleSheet.create({
   article: { flex: 1 },
-  progressOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 1 },
   content: {
     gap: sizes.spacing.large,
     paddingBottom: sizes.spacing.spacious,
