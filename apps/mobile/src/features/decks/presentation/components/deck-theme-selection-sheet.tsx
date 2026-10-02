@@ -120,6 +120,7 @@ type DeckThemeSelectionSheetProps = Readonly<{
   onDismiss: () => void;
   onSelect: (preset: DeckTheme) => void;
   pendingPreset: DeckTheme | null;
+  saving: boolean;
 }>;
 
 export function DeckThemeSelectionSheet({
@@ -130,6 +131,7 @@ export function DeckThemeSelectionSheet({
   onDismiss,
   onSelect,
   pendingPreset,
+  saving,
 }: DeckThemeSelectionSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
@@ -147,7 +149,7 @@ export function DeckThemeSelectionSheet({
           <View accessibilityRole="radiogroup" style={styles.swatches}>
             {deckThemes.map((preset) => (
               <PaletteSwatch
-                disabled={pendingPreset !== null}
+                disabled={saving}
                 key={preset.id}
                 onSelect={onSelect}
                 pending={pendingPreset === preset}

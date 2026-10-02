@@ -143,7 +143,8 @@ export default function DeckDetailsScreen() {
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
   const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
   const { readingLists } = useReadingLists();
-  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckThemeSelection();
+  const { clearSaveError, pendingPreset, saveError, savePreset, saving } =
+    useSaveDeckThemeSelection({ deckId, themeId: themeSelection?.theme ?? null });
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
   const [tab, setTab] = useState<DeckPageTab>("lessons");
@@ -323,12 +324,13 @@ export default function DeckDetailsScreen() {
         error={saveError}
         isPresented={themePresented}
         onDismiss={() => {
-          if (!pendingPreset) {
+          if (!saving) {
             setThemePresented(false);
           }
         }}
         onSelect={selectTheme}
         pendingPreset={pendingPreset}
+        saving={saving}
         themeSelection={themeSelection}
       />
       <DeckInfoSheet

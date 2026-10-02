@@ -281,7 +281,6 @@ export default function DecksScreen() {
     importFromUrl,
     importing,
   } = useImportDeckPackage();
-  const { clearSaveError, pendingPreset, saveError, savePreset } = useSaveDeckThemeSelection();
   const [query, setQuery] = useState("");
   const [importSheetPresented, setImportSheetPresented] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CatalogEntry | null>(null);
@@ -291,6 +290,11 @@ export default function DecksScreen() {
   const sheetThemeSelection = selectedEntry
     ? (entries.find(({ deck }) => deck.id === selectedEntry.deck.id)?.themeSelection ?? null)
     : null;
+  const { clearSaveError, pendingPreset, saveError, savePreset, saving } =
+    useSaveDeckThemeSelection({
+      deckId: selectedEntry?.deck.id ?? null,
+      themeId: sheetThemeSelection?.theme ?? null,
+    });
 
   const handleImport = async (
     importDeck: () => Promise<Awaited<ReturnType<typeof importFromDevice>>>
@@ -406,12 +410,13 @@ export default function DecksScreen() {
         error={saveError}
         isPresented={selectedEntry !== null}
         onDismiss={() => {
-          if (!pendingPreset) {
+          if (!saving) {
             setSelectedEntry(null);
           }
         }}
         onSelect={selectPreset}
         pendingPreset={pendingPreset}
+        saving={saving}
       />
       <ImportDeckSheet
         canRetryDownload={isRetryableDeckDownloadError(importError)}
