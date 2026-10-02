@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 
@@ -8,7 +8,7 @@ import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-d
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { findAdjacentLessons } from "@/features/lessons/presentation/adjacent-lessons";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
-import { LessonNavigationButtons } from "@/features/lessons/presentation/components/lesson-navigation-buttons";
+import { LessonPager } from "@/features/lessons/presentation/components/lesson-pager";
 import {
   ReadingProgressBar,
   useReadingProgress,
@@ -47,6 +47,8 @@ export default function LessonScreen() {
     ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
+  // The screen draws under the bottom system bar, so the end of the lesson clears it.
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -69,7 +71,13 @@ export default function LessonScreen() {
             scrollableHeight={scrollableHeight}
             scrollY={scrollY}
           />
-          <Animated.ScrollView contentContainerStyle={styles.content} {...scrollViewProps}>
+          <Animated.ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: bottom + sizes.spacing.screen },
+            ]}
+            {...scrollViewProps}
+          >
             <View style={styles.column}>
               {lessonCount > 0 && (
                 <Text style={styles.lessonPosition}>
@@ -81,18 +89,7 @@ export default function LessonScreen() {
               </Text>
               <LessonMarkdownView blocks={blocks} />
               <View style={styles.navigation}>
-                <LessonNavigationButtons
-                  back={
-                    previous && {
-                      accessibilityLabel: `Previous lesson: ${previous.title}`,
-                      icon: { android: "arrow_back", ios: "arrow.left", web: "arrow_back" },
-                      label: "Previous",
-                      onPress: () => openLesson(previous),
-                    }
-                  }
-                  nextLesson={next}
-                  onOpenLesson={openLesson}
-                />
+                <LessonPager next={next} onOpenLesson={openLesson} previous={previous} />
               </View>
             </View>
           </Animated.ScrollView>
@@ -116,7 +113,6 @@ function createStyles(colors: AppColors) {
       width: "100%",
     },
     content: {
-      paddingBottom: sizes.spacing.wide * 2,
       paddingHorizontal: screenLayout.horizontalPadding,
       paddingTop: sizes.spacing.spacious,
     },
