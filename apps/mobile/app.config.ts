@@ -28,6 +28,8 @@ const config: ExpoConfig = {
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
+    ["expo-navigation-bar", { enforceContrast: false, hidden: false }],
+    "./plugins/with-transparent-android-navigation-bar.cjs",
     [
       "expo-router",
       {

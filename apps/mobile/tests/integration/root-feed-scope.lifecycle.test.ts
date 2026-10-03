@@ -21,6 +21,7 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ navigate: harness.navigate }),
 }));
 vi.mock("react-native", () => ({
+  Platform: { OS: "web" },
   View: Children,
   StyleSheet: { create: (styles: unknown) => styles },
   useColorScheme: () => "light",
