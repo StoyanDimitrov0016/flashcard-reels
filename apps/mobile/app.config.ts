@@ -80,7 +80,7 @@ const config: ExpoConfig = {
       projectId: "3420f53b-a597-432c-be5b-cab7114861f8",
     },
   },
-  owner: "stoyan_dimitrov",
+  owner: "flashcard-reels-org",
 };
 
 export default config;
