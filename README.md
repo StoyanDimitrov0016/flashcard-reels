@@ -14,7 +14,7 @@ installer validates complete packages; the portal reads manifests and lessons by
 
 ## Try the current builds
 
-[Install the latest Android preview (APK)](https://expo.dev/accounts/stoyan_dimitrov/projects/flashcard-reels/builds/29fcdb77-61dc-48f6-9d36-a2d4503de931)
+[Install the latest Android preview (APK)](https://expo.dev/accounts/flashcard-reels-org/projects/flashcard-reels/builds/b5e8320f-404d-4ba7-b61c-efe091c69fc6)
 
 [Open the internal web deck portal](https://flashcard-reels.vercel.app/)
 
