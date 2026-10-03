@@ -55,7 +55,7 @@ function createStyles(questionColor: string, instructionColor: string) {
       justifyContent: "center",
       paddingVertical: sizes.spacing.screen,
     },
-    copy: { gap: 22 },
+    copy: { gap: sizes.spacing.content },
     prompt: {
       color: questionColor,
       fontSize: fontSize.hero,

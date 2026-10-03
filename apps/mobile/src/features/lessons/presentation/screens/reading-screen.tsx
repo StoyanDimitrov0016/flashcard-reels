@@ -1,17 +1,21 @@
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import type { DeckReadingList } from "@/features/lessons/domain/lesson.model";
+import type { DeckReadingList, LessonSummary } from "@/features/lessons/domain/lesson.model";
 
 import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
 import { getDeckLessonsHref } from "@/features/lessons/presentation/lesson-href";
+import { searchReadingLists } from "@/features/lessons/presentation/reading-search";
+import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
+import { SearchField } from "@/shared/presentation/components/search-field";
 import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
@@ -23,7 +27,12 @@ export default function ReadingScreen() {
   const styles = createStyles(colors);
   const tabBarInset = useTabBarInset();
   const { loading, readingLists } = useReadingLists();
-  const { appearances } = useDeckAppearances(readingLists.map((list) => list.deckId));
+  const { themeSelections } = useDeckMetadata(
+    readingLists.map((list) => list.deckId),
+    false
+  );
+  const [query, setQuery] = useState("");
+  const results = searchReadingLists(readingLists, query);
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -35,22 +44,44 @@ export default function ReadingScreen() {
       {loading && <LoadingState />}
       {!loading && readingLists.length === 0 && <EmptyReadingList colors={colors} />}
       {!loading && readingLists.length > 0 && (
+        <View style={styles.search}>
+          <SearchField
+            accessibilityLabel="Search decks and lessons"
+            clearLabel="Clear reading search"
+            onChangeText={setQuery}
+            placeholder="Search decks and lessons…"
+            value={query}
+          />
+        </View>
+      )}
+      {!loading && readingLists.length > 0 && results.length === 0 && (
+        <View style={styles.noResults}>
+          <EmptyState
+            icon={{ android: "search_off", ios: "magnifyingglass", web: "search_off" }}
+            message="Try another word from a deck or lesson title."
+            title="No decks or lessons found"
+          />
+        </View>
+      )}
+      {!loading && results.length > 0 && (
         <ScrollView
           contentContainerStyle={[
             styles.content,
             { paddingBottom: sizes.spacing.wide + tabBarInset },
           ]}
         >
-          {readingLists.map((readingList) => {
-            const appearance = appearances.get(readingList.deckId);
-            const accent = appearance
-              ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+          {results.map(({ readingList, lessons, matchedLessonsOnly }) => {
+            const themeSelection = themeSelections.get(readingList.deckId);
+            const accent = themeSelection
+              ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
               : colors.textTertiary;
             return (
               <DeckLessonsCard
                 accent={accent}
                 colors={colors}
                 key={readingList.deckId}
+                lessons={lessons}
+                query={matchedLessonsOnly ? query : undefined}
                 readingList={readingList}
               />
             );
@@ -67,23 +98,30 @@ const TEASER_LESSON_COUNT = 3;
 type DeckLessonsCardProps = Readonly<{
   accent: string;
   colors: AppColors;
+  /** The lessons to preview: all of them, or the ones matching `query`. */
+  lessons: readonly LessonSummary[];
+  /** Set when only some lessons matched; the deck's screen then opens with the same search. */
+  query: string | undefined;
   readingList: DeckReadingList;
 }>;
 
 /** A deck's lessons at a glance; the whole list opens on its own screen. */
-function DeckLessonsCard({ accent, colors, readingList }: DeckLessonsCardProps) {
+function DeckLessonsCard({ accent, colors, lessons, query, readingList }: DeckLessonsCardProps) {
   const styles = createStyles(colors);
   const router = useRouter();
   const lessonCount = readingList.lessons.length;
-  const teaser = readingList.lessons.slice(0, TEASER_LESSON_COUNT);
-  const remaining = lessonCount - teaser.length;
+  const teaser = lessons.slice(0, TEASER_LESSON_COUNT);
+  const remaining = lessons.length - teaser.length;
+  const countLabel = query
+    ? `${lessons.length} of ${formatLessonCount(lessonCount)} match`
+    : formatLessonCount(lessonCount);
 
   return (
     <Pressable
       accessibilityHint="Shows this deck's lessons"
-      accessibilityLabel={`${readingList.deckTitle}, ${formatLessonCount(lessonCount)}`}
+      accessibilityLabel={`${readingList.deckTitle}, ${countLabel}`}
       accessibilityRole="button"
-      onPress={() => router.push(getDeckLessonsHref(readingList.deckId))}
+      onPress={() => router.push(getDeckLessonsHref(readingList.deckId, query))}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.cardHeading}>
@@ -92,7 +130,7 @@ function DeckLessonsCard({ accent, colors, readingList }: DeckLessonsCardProps) 
           <Text numberOfLines={2} style={styles.deckTitle}>
             {readingList.deckTitle}
           </Text>
-          <Text style={styles.lessonCount}>{formatLessonCount(lessonCount)}</Text>
+          <Text style={styles.lessonCount}>{countLabel}</Text>
         </View>
         <SymbolView
           name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
@@ -109,10 +147,19 @@ function DeckLessonsCard({ accent, colors, readingList }: DeckLessonsCardProps) 
             </Text>
           </View>
         ))}
-        {remaining > 0 && <Text style={styles.teaserMore}>+{remaining} more</Text>}
+        {remaining > 0 && (
+          <Text style={styles.teaserMore}>{formatRemainingLessons(remaining, !!query)}</Text>
+        )}
       </View>
     </Pressable>
   );
+}
+
+function formatRemainingLessons(remaining: number, searching: boolean): string {
+  if (!searching) {
+    return `+${remaining} more`;
+  }
+  return `+${remaining} more ${remaining === 1 ? "match" : "matches"}`;
 }
 
 function formatLessonCount(count: number): string {
@@ -142,6 +189,9 @@ function EmptyReadingList({ colors }: EmptyReadingListProps) {
   );
 }
 
+/** The column that holds a teaser's lesson number; following rows align past it. */
+const TEASER_POSITION_WIDTH = 22;
+
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     card: {
@@ -157,6 +207,11 @@ function createStyles(colors: AppColors) {
     content: {
       gap: sizes.spacing.large,
       paddingBottom: sizes.spacing.wide,
+      paddingHorizontal: screenLayout.horizontalPadding,
+      paddingTop: sizes.spacing.section,
+    },
+    noResults: { flex: 1, justifyContent: "center" },
+    search: {
       paddingHorizontal: screenLayout.horizontalPadding,
       paddingTop: screenLayout.contentTopGap,
     },
@@ -202,7 +257,7 @@ function createStyles(colors: AppColors) {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontWeight: fontWeight.semibold,
-      paddingLeft: 22 + sizes.spacing.medium,
+      paddingLeft: TEASER_POSITION_WIDTH + sizes.spacing.medium,
     },
     teaserPosition: {
       color: colors.textTertiary,
@@ -210,7 +265,7 @@ function createStyles(colors: AppColors) {
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
       textAlign: "center",
-      width: 22,
+      width: TEASER_POSITION_WIDTH,
     },
     teaserRow: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.medium },
     teaserTitle: {

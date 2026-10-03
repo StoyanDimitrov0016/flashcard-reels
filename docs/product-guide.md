@@ -4,9 +4,9 @@ Flashcard Reels is a local-first study app for practicing technical knowledge in
 
 ## Mobile app
 
-The destinations are **For you**, **Focus**, **Reading**, **Library**, **Progress**, and **Controls**, and swiping left or right moves between them. For you mixes cards across decks, and Focus stays with one deck; a header above the feed shows which of the two is open, and both share the Study icon in the bottom bar. Swipe vertically through cards, double-tap to reveal the answer, then rate recall as **Again**, **Hard**, **Good**, or **Easy**. Answer audio is available when a deck includes it.
+The destinations are **Discover**, **Focus**, **Reading**, **Decks**, and **Settings**, and swiping left or right moves between them. Discover mixes cards across decks, and Focus stays with one deck; a header above the feed shows which of the two is open, and both share the Study icon in the bottom bar. Swipe vertically through cards, double-tap to reveal the answer, then rate recall as **Again**, **Hard**, **Good**, or **Easy**. Flashcard audio is available when a deck includes it.
 
-Ratings influence what appears later, while Progress summarizes review history and recall patterns. Study can be reset for a card, deck, or the whole library without removing deck content.
+Ratings influence what appears later, while Decks shows how many cards of each deck are reviewed, and each deck page shows its cards' recall history. Study can be reset for a card, deck, or the whole library without removing deck content.
 
 ## Reading
 
@@ -14,14 +14,14 @@ Ratings influence what appears later, while Progress summarizes review history a
 
 ## Deck library
 
-The app includes a small offline demo deck. Larger libraries arrive as `.fcrdeck` packages through **Library → Import**, either from the device or by scanning a QR code from the [internal web portal](https://flashcard-reels.vercel.app/). Imported decks use the same validation and update path in both cases.
+The app includes a small offline demo deck. Larger libraries arrive as `.fcrdeck` packages through **Decks → Import**, either from the device or by scanning a QR code from the [internal web portal](https://flashcard-reels.vercel.app/). Imported decks use the same validation and update path in both cases.
 
-Library also supports deck search, focused study, card browsing, and a curated appearance preset for each deck.
+Decks also supports deck search, focused study, card browsing, and a curated theme for each deck.
 
 ## Settings and privacy
 
-**Controls** groups appearance, the study island, audio, reading, haptics, learning-data reset, and app information. Decks, audio, preferences, sessions, and learning history stay on the device; the mobile app does not require an account or sync study data.
+**Settings** groups color mode, the study island, audio, reading, haptics, learning-data reset, and app information. Decks, audio, preferences, sessions, and learning history stay on the device; the mobile app does not require an account or sync study data.
 
-Controls also offers a [progress backup](progress-backup.md) for saving learning data to a file or moving it to another device. Import previews the backup before replacing local learning progress; downloaded decks and preferences stay on the device.
+Settings also offers a [progress backup](progress-backup.md) for saving learning data to a file or moving it to another device. Import previews the backup before replacing local learning progress; downloaded decks and preferences stay on the device.
 
 The web portal is a separate internal tool for browsing and transferring curated decks. It does not store mobile learning progress.

@@ -1,7 +1,6 @@
+import { parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-
-import { ArchiveDeckPackageReader } from "../src/features/decks/deck-installer/internal/archive-deck-package.reader.ts";
 
 const root = process.cwd();
 const registry = JSON.parse(
@@ -21,10 +20,10 @@ if (runtimePackages.join("\n") !== registeredPackages.join("\n")) {
 
 for (const entry of registry) {
   const bytes = await readFile(path.join(packageDirectory, entry.packageAsset));
-  const document = new ArchiveDeckPackageReader().read(new Uint8Array(bytes));
+  const document = parseDeckPackage(new Uint8Array(bytes)).deck;
   if (
     document.id !== entry.id ||
-    document.version !== entry.version ||
+    document.revision !== entry.revision ||
     entry.packageAsset !== `${entry.id}.fcrdeck`
   ) {
     throw new Error(`Bundled registry/package mismatch for ${entry.packageAsset}`);

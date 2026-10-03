@@ -1,6 +1,28 @@
+import { parseDeck } from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// oxlint-disable typescript/no-extraneous-class -- Native dependencies expose constructors; these mocks replace their filesystem boundary.
+vi.mock("expo-file-system", () => ({ File: class {} }));
+vi.mock("@/features/decks/deck-installer/internal/installed-audio-storage", () => ({
+  InstalledAudioStorage: class {
+    constructor() {
+      return new MemoryAudioStorage();
+    }
+  },
+}));
+// oxlint-enable typescript/no-extraneous-class
+vi.mock("@/infrastructure/bundled-deck-packages", () => ({
+  bundledDeckRegistry: {
+    fixture: {
+      id: "00000000-0000-4000-8000-000000000100",
+      revision: 1,
+      appearance: { theme: "cyan", coverAsset: "react" },
+    },
+  },
+  readBundledDeckPackage: async () => validArchive(1, [card(testId(1), 0)]),
+}));
 
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
 import type {
@@ -11,20 +33,24 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
+import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
-import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/deck-package-limits";
-import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
+import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { installBundledDecks } from "@/infrastructure/bundled-deck-installer";
 import {
-  deckAppearances,
+  deckThemeSelections,
   flashcardMemoryStates,
   flashcardReviewAttempts,
 } from "@/infrastructure/sqlite/schema";
 
+import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, type ScenarioGraph } from "../support/sqlite-study-scenario";
 import {
@@ -36,6 +62,9 @@ import {
 } from "../support/study-fixtures";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
+const maximumCardCount = 1_000;
+const maximumAudioFileBytes = 5 * 1024 * 1024;
+const maximumArchiveEntries = 1 + 1_000 + 200;
 
 class MemoryAudioStorage implements DeckAudioStorage {
   readonly staged: StagedDeckAudio[] = [];
@@ -45,11 +74,19 @@ class MemoryAudioStorage implements DeckAudioStorage {
   readonly activeVersions = new Set<string>();
   private nextToken = 0;
 
+  async removeDeck(deckId: string): Promise<void> {
+    for (const version of this.activeVersions) {
+      if (version.startsWith(`${deckId}:`)) {
+        this.activeVersions.delete(version);
+      }
+    }
+  }
+
   async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
     const staged = {
-      deckId: deckPackage.id,
+      deckId: deckPackage.deck.id,
       token: `audio-${++this.nextToken}`,
-      version: deckPackage.version,
+      revision: deckPackage.deck.revision,
     };
     this.staged.push(staged);
     return staged;
@@ -57,15 +94,15 @@ class MemoryAudioStorage implements DeckAudioStorage {
 
   async activate(staged: StagedDeckAudio): Promise<void> {
     this.activated.push(staged);
-    this.activeVersions.add(`${staged.deckId}:${staged.version}`);
+    this.activeVersions.add(`${staged.deckId}:${staged.revision}`);
   }
 
-  async removeVersion(deckId: string, version: number): Promise<void> {
+  async removeRevision(deckId: string, version: number): Promise<void> {
     this.removedVersions.push(`${deckId}:${version}`);
     this.activeVersions.delete(`${deckId}:${version}`);
   }
 
-  async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+  async removeOtherRevisions(deckId: string, keepVersion: number): Promise<void> {
     this.removedOtherVersions.push(`${deckId}:${keepVersion}`);
     for (const activeVersion of this.activeVersions) {
       if (activeVersion.startsWith(`${deckId}:`) && activeVersion !== `${deckId}:${keepVersion}`) {
@@ -96,7 +133,7 @@ class CountingInstallation implements DeckPackageInstallationTransaction {
 }
 
 class CleanupFailingAudioStorage extends MemoryAudioStorage {
-  override async removeOtherVersions(deckId: string, keepVersion: number): Promise<void> {
+  override async removeOtherRevisions(deckId: string, keepVersion: number): Promise<void> {
     this.removedOtherVersions.push(`${deckId}:${keepVersion}`);
     throw new Error("obsolete audio cleanup failed");
   }
@@ -105,7 +142,7 @@ class CleanupFailingAudioStorage extends MemoryAudioStorage {
 class ActivatedCleanupFailingAudioStorage extends MemoryAudioStorage {
   failRemoval = true;
 
-  override async removeVersion(deckId: string, version: number): Promise<void> {
+  override async removeRevision(deckId: string, version: number): Promise<void> {
     this.removedVersions.push(`${deckId}:${version}`);
     if (this.failRemoval) {
       this.failRemoval = false;
@@ -135,7 +172,7 @@ class GatedInstallation implements DeckPackageInstallationTransaction {
   }
 
   async install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult> {
-    if (deckPackage.id === this.gatedDeckId) {
+    if (deckPackage.deck.id === this.gatedDeckId) {
       this.signalEntered();
       await this.gate;
     }
@@ -149,26 +186,36 @@ class GatedInstallation implements DeckPackageInstallationTransaction {
 
 function rawDeck(
   version: number,
-  cards: readonly DeckPackage["cards"][number][] = [],
+  cards: readonly ReturnType<typeof card>[] = [],
   id = TEST_DECK_ID
 ) {
   return {
-    cards,
+    cards: [...cards]
+      // oxlint-disable-next-line unicorn/no-array-sort -- Sort a copy for the manifest fixture.
+      .sort((a, b) => a.order - b.order)
+      .map((item) => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        lessonId: item.lessonId,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        audio: true,
+      })),
+    authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+    schema: 1,
+    lessons: [],
     createdAt: timestamp,
     description: "Scenario deck",
     id,
     title: "Scenario deck",
     updatedAt: new Date(Date.parse(timestamp) + version * 60_000).toISOString(),
-    version,
+    revision: version,
   };
 }
 
-function deck(
-  version: number,
-  cards: readonly DeckPackage["cards"][number][] = [],
-  id = TEST_DECK_ID
-) {
-  return DeckPackageSchema.parse(rawDeck(version, cards, id));
+function deck(version: number, cards: readonly ReturnType<typeof card>[] = [], id = TEST_DECK_ID) {
+  return parseDeck(rawDeck(version, cards, id));
 }
 
 function card(id: string, order: number, answer = `Answer ${id}`) {
@@ -176,6 +223,7 @@ function card(id: string, order: number, answer = `Answer ${id}`) {
     answer,
     createdAt: timestamp,
     id,
+    lessonId: null,
     order,
     question: `Question ${id}`,
     updatedAt: timestamp,
@@ -186,23 +234,26 @@ function archive(
   packageDocument: unknown,
   audio: Readonly<Record<string, Uint8Array>> = {}
 ): Uint8Array {
-  return zipSync({ "deck.json": strToU8(JSON.stringify(packageDocument)), ...audio });
+  return zipSync({
+    "deck.json": strToU8(JSON.stringify(packageDocument)),
+    ...audio,
+  });
 }
 
 function validArchive(
   version: number,
-  cards: readonly DeckPackage["cards"][number][],
+  cards: readonly ReturnType<typeof card>[],
   id = TEST_DECK_ID
 ) {
   const audio: Record<string, Uint8Array> = {};
   for (const candidate of cards) {
-    audio[`audio/${candidate.id}.answer.mp3`] = new Uint8Array([1, 2, 3]);
+    audio[`audio/${candidate.id}.mp3`] = new Uint8Array([1, 2, 3]);
   }
   return archive(deck(version, cards, id), audio);
 }
 
 function archiveWithTooManyCards(): Uint8Array {
-  const cards = Array.from({ length: DECK_PACKAGE_LIMITS.maximumCardCount + 1 }, (_, order) =>
+  const cards = Array.from({ length: maximumCardCount + 1 }, (_, order) =>
     card(`10000000-0000-4000-8000-${order.toString(16).padStart(12, "0")}`, order)
   );
   return archive(rawDeck(2, cards));
@@ -210,11 +261,11 @@ function archiveWithTooManyCards(): Uint8Array {
 
 function archiveWithTooManyAudioFiles(): Uint8Array {
   const entries: Record<string, Uint8Array> = {};
-  for (let index = 0; index <= DECK_PACKAGE_LIMITS.maximumAudioFileCount; index += 1) {
+  for (let index = 0; index <= maximumArchiveEntries; index += 1) {
     const id = `20000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
-    entries[`audio/${id}.answer.mp3`] = new Uint8Array([1]);
+    entries[`audio/${id}.mp3`] = new Uint8Array([1]);
   }
-  return archive(deck(2), entries);
+  return archive(deck(2, [card(testId(20), 0)]), entries);
 }
 
 function createImporter(
@@ -222,7 +273,8 @@ function createImporter(
   clock: TestClock,
   audio = new MemoryAudioStorage(),
   installation: DeckPackageInstallationTransaction = new SQLiteDeckPackageInstallationTransaction(
-    database.drizzle
+    database.drizzle,
+    new SequenceIdGenerator()
   ),
   sessionSettlement: StudySessionSettlement | null = null
 ) {
@@ -230,7 +282,7 @@ function createImporter(
   return {
     audio,
     importer: new DeckInstallerImpl(
-      new ArchiveDeckPackageReader(),
+      new ContractDeckPackageReader(),
       installation,
       audio,
       clock,
@@ -252,7 +304,7 @@ async function reviewCard(
   if (!flashcard) {
     throw new Error(`Missing scenario card ${cardId}`);
   }
-  const feed = await graph.feed.prepareFeed([flashcard], "focused", TEST_DECK_ID, false);
+  const feed = await graph.feed.prepareFeed([flashcard], "focus", TEST_DECK_ID, false, null);
   const attemptId = await graph.study.startAttempt(cardId, 0, feed.studySessionId);
   await graph.study.rateAttempt(attemptId, "good");
   if (complete) {
@@ -266,6 +318,216 @@ describe("deck package installation", () => {
 
   afterEach(() => database?.close());
 
+  it("commits bundled appearance atomically and preserves learner themes on cover repair", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const ids = new SequenceIdGenerator();
+    await installBundledDecks(database.drizzle, clock, ids);
+    const themeWrite = vi.spyOn(SQLiteDeckThemeSelectionRepository.prototype, "save");
+    expect(themeWrite).not.toHaveBeenCalled();
+    await database.runAsync("UPDATE decks SET cover_asset = 'cards' WHERE id = ?", TEST_DECK_ID);
+    await installBundledDecks(database.drizzle, clock, ids);
+    const themes = new SQLiteDeckThemeSelectionRepository(database.drizzle, ids);
+    const restored = await themes.findByDeckId(TEST_DECK_ID);
+    expect(restored?.theme).toBe("cyan");
+    const installedDeck = await new SQLiteDeckRepository(database.drizzle).findById(TEST_DECK_ID);
+    expect(installedDeck?.coverAsset).toBe("react");
+    await database.runAsync("UPDATE deck_theme_selections SET theme = 'gold'");
+    await installBundledDecks(database.drizzle, clock, ids);
+    const chosen = await themes.findByDeckId(TEST_DECK_ID);
+    expect(chosen?.theme).toBe("gold");
+    themeWrite.mockRestore();
+  });
+
+  it("stores the bundled theme and cover in the installation transaction itself", async () => {
+    database = new NodeSqliteDatabase();
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
+    await installation.install(
+      new ContractDeckPackageReader().read(validArchive(1, [card(testId(1), 0)])),
+      timestamp,
+      { theme: "cyan", coverAsset: "react" }
+    );
+    const theme = await new SQLiteDeckThemeSelectionRepository(
+      database.drizzle,
+      database.rowIds
+    ).findByDeckId(TEST_DECK_ID);
+    const installed = await new SQLiteDeckRepository(database.drizzle).findById(TEST_DECK_ID);
+    expect(theme?.theme).toBe("cyan");
+    expect(installed?.coverAsset).toBe("react");
+  });
+
+  it("serializes deletion and import so delayed cleanup cannot remove freshly installed audio", async () => {
+    database = new NodeSqliteDatabase();
+    const clock = new TestClock();
+    const ids = new SequenceIdGenerator();
+    const graph = createScenarioGraph(database, clock, ids);
+    const audio = new MemoryAudioStorage();
+    const { importer } = createImporter(database, clock, audio);
+    await importer.installFromBytes(validArchive(1, [card(testId(1), 0)]));
+    const cleanupStarted = deferred<void>();
+    const finishCleanup = deferred<void>();
+    const repository = new SQLiteDeckRepository(database.drizzle);
+    const service = new DeckServiceImpl(
+      repository,
+      new SQLiteDeckThemeSelectionRepository(database.drizzle, ids),
+      new SQLiteDeckRemovalTransaction(database.drizzle, ids),
+      {
+        async removeDeck(deckId) {
+          cleanupStarted.resolve();
+          await finishCleanup.promise;
+          await audio.removeDeck(deckId);
+        },
+      },
+      graph.runtime,
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+    );
+    const deletion = service.remove(TEST_DECK_ID);
+    await cleanupStarted.promise;
+    const installation = importer.installFromBytes(validArchive(2, [card(testId(1), 0)]));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    finishCleanup.resolve();
+    await Promise.all([deletion, installation]);
+    expect(await repository.findRevision(TEST_DECK_ID)).toBe(2);
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:2`)).toBe(true);
+  });
+
+  it.each([false, true])(
+    "offers audio according to the persisted package flag %s",
+    async (hasAudio) => {
+      database = new NodeSqliteDatabase();
+      const cardId = testId(990);
+      const manifest = deck(1, [card(cardId, 0)]);
+      manifest.cards = manifest.cards.map((row) => ({ ...row, audio: hasAudio }));
+      const files = hasAudio ? { [`audio/${cardId}.mp3`]: new Uint8Array([1, 2, 3]) } : {};
+      const { importer } = createImporter(database, new TestClock());
+      await importer.installFromBytes(archive(manifest, files));
+      const stored = await new SQLiteFlashcardRepository(database.drizzle).findById(cardId);
+      expect(stored?.hasAudio).toBe(hasAudio);
+      if (!stored) {
+        throw new Error("Missing installed card");
+      }
+      let lookups = 0;
+      const service = new FlashcardAudioServiceImpl({
+        findSourceForFlashcard(deckId, revision, id) {
+          lookups += 1;
+          return { uri: `deck-audio/${deckId}/${revision}/${id}.mp3` };
+        },
+      });
+      expect(service.findSourceForFlashcard(TEST_DECK_ID, 1, stored.id, stored.hasAudio)).toEqual(
+        hasAudio ? { uri: `deck-audio/${TEST_DECK_ID}/1/${cardId}.mp3` } : null
+      );
+      expect(lookups).toBe(hasAudio ? 1 : 0);
+      await expect(
+        database.runAsync("UPDATE flashcards SET has_audio = 2 WHERE id = ?", cardId)
+      ).rejects.toThrow();
+    }
+  );
+
+  it("stores schema and author while deriving card order from the manifest array", async () => {
+    database = new NodeSqliteDatabase();
+    const first = card(testId(31), 0);
+    const second = card(testId(32), 1);
+    const manifest = deck(1, [first, second]);
+    const bytes = archive(
+      {
+        ...manifest,
+        cards: [
+          { ...manifest.cards[1], audio: false },
+          { ...manifest.cards[0], audio: true },
+        ],
+      },
+      { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) }
+    );
+    const { importer } = createImporter(database, new TestClock());
+
+    await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({
+      status: "installed",
+      revision: 1,
+    });
+    expect(
+      await database.getFirstAsync(
+        "SELECT author_id, package_schema, revision FROM decks WHERE id = ?",
+        TEST_DECK_ID
+      )
+    ).toEqual({ author_id: manifest.authorId, package_schema: 1, revision: 1 });
+    expect(
+      await database.getAllAsync(
+        'SELECT id, "order" AS card_order FROM flashcards WHERE deck_id = ? ORDER BY "order"',
+        TEST_DECK_ID
+      )
+    ).toEqual([
+      { id: second.id, card_order: 0 },
+      { id: first.id, card_order: 1 },
+    ]);
+  });
+
+  it("preserves an installed deck when a higher revision changes its author ID", async () => {
+    database = new NodeSqliteDatabase();
+    const first = card(testId(31), 0);
+    const { importer, audio } = createImporter(database, new TestClock());
+    await importer.installFromBytes(validArchive(1, [first]));
+    const changedAuthor = {
+      ...deck(2, [first]),
+      authorId: "a5f43c1e-7890-4abc-8def-1234567890ab",
+    };
+
+    await expect(
+      importer.installFromBytes(
+        archive(changedAuthor, { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) })
+      )
+    ).rejects.toThrow("cannot change author ID");
+    expect(
+      await database.getFirstAsync(
+        "SELECT author_id, revision FROM decks WHERE id = ?",
+        TEST_DECK_ID
+      )
+    ).toEqual({ author_id: deck(1, [first]).authorId, revision: 1 });
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:1`)).toBe(true);
+    expect(audio.activeVersions.has(`${TEST_DECK_ID}:2`)).toBe(false);
+  });
+
+  it.each([1, 2])(
+    "rejects a changed author at revision %s without settling an active review or touching audio",
+    async (revision) => {
+      database = new NodeSqliteDatabase();
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const first = card(testId(31), 0);
+      const { importer, audio } = createImporter(
+        database,
+        clock,
+        undefined,
+        undefined,
+        graph.runtime
+      );
+      await importer.installFromBytes(validArchive(1, [first]));
+      const sessionId = await reviewCard(graph, database, first.id, false);
+      const attemptsBefore = await graph.study.listAttemptsInRange(sessionId, 0, 0);
+      const audioBefore = [...audio.activeVersions];
+      const stagedBefore = audio.staged.length;
+
+      await expect(
+        importer.installFromBytes(
+          archive(
+            { ...deck(revision, [first]), authorId: "a5f43c1e-7890-4abc-8def-1234567890ab" },
+            { [`audio/${first.id}.mp3`]: new Uint8Array([1, 2, 3]) }
+          )
+        )
+      ).rejects.toThrow("cannot change author ID");
+
+      const retainedSession = await graph.sessions.findById(sessionId);
+      expect(retainedSession?.completedAt).toBeNull();
+      expect(await graph.study.listAttemptsInRange(sessionId, 0, 0)).toEqual(attemptsBefore);
+      expect(await graph.memoryStates.findByFlashcardId(first.id)).toBeNull();
+      expect([...audio.activeVersions]).toEqual(audioBefore);
+      expect(audio.staged).toHaveLength(stagedBefore);
+    }
+  );
+
   it("installs cards and audio, then updates content without losing learner history", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
@@ -278,10 +540,10 @@ describe("deck package installation", () => {
     expect(initialInstall.status).toBe("installed");
     expect(
       await database.drizzle
-        .select({ presetId: deckAppearances.presetId })
-        .from(deckAppearances)
-        .where(eq(deckAppearances.deckId, TEST_DECK_ID))
-    ).toEqual([{ presetId: "graphite" }]);
+        .select({ id: deckThemeSelections.id, theme: deckThemeSelections.theme })
+        .from(deckThemeSelections)
+        .where(eq(deckThemeSelections.deckId, TEST_DECK_ID))
+    ).toEqual([{ id: testId(1000), theme: "graphite" }]);
     expect(audio.staged).toHaveLength(1);
     expect(audio.activated).toHaveLength(1);
     const sessionId = await reviewCard(graph, database, cardA.id, false);
@@ -293,7 +555,7 @@ describe("deck package installation", () => {
     expect(audio.removedOtherVersions).toContain(`${TEST_DECK_ID}:2`);
     const completedSession = await graph.sessions.findById(sessionId);
     expect(completedSession?.completedAt).not.toBeNull();
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
     const repository = new SQLiteFlashcardRepository(database.drizzle);
     expect(
       await new SQLiteFlashcardAvailabilityQuery(database.drizzle).listAvailableFlashcardsByDeckId(
@@ -329,8 +591,8 @@ describe("deck package installation", () => {
 
     await importer.installFromBytes(validArchive(1, [removedCard]));
     await reviewCard(graph, database, removedCard.id);
-    await graph.study.recoverPendingCompletedSessionAggregation();
-    await importer.installFromBytes(validArchive(2, []));
+    await graph.study.recoverPendingAggregation();
+    await importer.installFromBytes(validArchive(2, [card(testId(22), 0)]));
     expect(
       await database.getFirstAsync("SELECT active FROM flashcards WHERE id = ?", removedCard.id)
     ).toEqual({ active: 0 });
@@ -381,8 +643,8 @@ describe("deck package installation", () => {
     ).rejects.toThrow("database installation failed");
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]));
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 1 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 1 });
   });
 
   it("keeps a successful install when obsolete-audio cleanup fails", async () => {
@@ -395,11 +657,11 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(1, [existingCard]));
     await expect(
       importer.installFromBytes(validArchive(2, [card(existingCard.id, 0, "Still usable")]))
-    ).resolves.toMatchObject({ status: "updated", version: 2 });
+    ).resolves.toMatchObject({ status: "updated", revision: 2 });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${TEST_DECK_ID}:2`]));
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 2 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 2 });
   });
 
   it("retries after database and activated-audio cleanup both fail", async () => {
@@ -414,13 +676,13 @@ describe("deck package installation", () => {
     );
     expect(audio.activeVersions).toContain(`${TEST_DECK_ID}:1`);
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
     ).toBeNull();
 
     const retry = createImporter(database, clock, audio);
     await expect(retry.importer.installFromBytes(candidate)).resolves.toMatchObject({
       status: "installed",
-      version: 1,
+      revision: 1,
     });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`]));
   });
@@ -430,7 +692,10 @@ describe("deck package installation", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const audio = new MemoryAudioStorage();
-    const delegate = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const delegate = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const installation = new CountingInstallation(delegate);
     const { importer } = createImporter(database, clock, audio, installation);
     const existingCard = card(testId(20), 0);
@@ -442,7 +707,13 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focus",
+      TEST_DECK_ID,
+      false,
+      null
+    );
     const countsBefore = {
       activated: audio.activated.length,
       installation: installation.calls,
@@ -472,9 +743,9 @@ describe("deck package installation", () => {
     const existingCard = card(testId(16), 0);
     await initial.importer.installFromBytes(validArchive(1, [existingCard]));
     await reviewCard(graph, database, existingCard.id);
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
     const gate = new GatedInstallation(
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator())
     );
     const { importer } = createImporter(database, clock, audio, gate);
     const update = validArchive(2, [card(existingCard.id, 0, "Concurrent winner")]);
@@ -483,7 +754,7 @@ describe("deck package installation", () => {
     await gate.entered;
     const second = importer.installFromBytes(update);
     await Promise.resolve();
-    expect(audio.staged.filter((entry) => entry.version === 2)).toHaveLength(1);
+    expect(audio.staged.filter((entry) => entry.revision === 2)).toHaveLength(1);
     gate.release();
 
     const importResults = await Promise.all([first, second]);
@@ -506,7 +777,7 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const gate = new GatedInstallation(
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle)
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator())
     );
     const audio = new MemoryAudioStorage();
     const { importer } = createImporter(database, clock, audio, gate);
@@ -519,6 +790,24 @@ describe("deck package installation", () => {
     gate.release();
     await expect(blocked).resolves.toMatchObject({ deckId: TEST_DECK_ID, status: "installed" });
     expect(audio.activeVersions).toEqual(new Set([`${TEST_DECK_ID}:1`, `${OTHER_DECK_ID}:1`]));
+  });
+
+  it("updates only an installed deck's cover asset and never creates a missing deck", async () => {
+    database = new NodeSqliteDatabase();
+    const { importer } = createImporter(database, new TestClock());
+    await importer.installFromBytes(validArchive(1, [card(testId(13), 0)]));
+    const before = await database.getAllAsync("SELECT * FROM decks ORDER BY id");
+    const repository = new SQLiteDeckRepository(database.drizzle);
+
+    await repository.updateCoverAsset(TEST_DECK_ID, "javascript");
+
+    const after = await database.getAllAsync("SELECT * FROM decks ORDER BY id");
+    expect(after).toEqual([Object.assign({}, before[0], { cover_asset: "javascript" })]);
+
+    await repository.updateCoverAsset(OTHER_DECK_ID, "react");
+
+    expect(await database.getAllAsync("SELECT * FROM decks ORDER BY id")).toEqual(after);
+    expect(await repository.findById(OTHER_DECK_ID)).toBeNull();
   });
 
   it("completes active focused and mixed sessions when an installed deck changes", async () => {
@@ -538,12 +827,19 @@ describe("deck package installation", () => {
       "SELECT completed_at FROM study_sessions WHERE id = ?",
       historicalSessionId
     );
-    const finalizedAttemptBefore = await database.getFirstAsync(
-      "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
-      historicalSessionId
+    const committedAttemptBefore = database.drizzle
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
+      .from(flashcardReviewAttempts)
+      .where(eq(flashcardReviewAttempts.studySessionId, historicalSessionId))
+      .get();
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focus",
+      TEST_DECK_ID,
+      false,
+      null
     );
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
+    const mixed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
 
     await importer.installFromBytes(validArchive(2, [card(existingCard.id, 0, "Updated")]));
     const completedFocusedSession = await graph.sessions.findById(focused.studySessionId);
@@ -557,24 +853,28 @@ describe("deck package installation", () => {
       )
     ).toEqual(historicalBefore);
     expect(
-      await database.getFirstAsync(
-        "SELECT finalized_at FROM flashcard_review_attempts WHERE study_session_id = ?",
-        historicalSessionId
-      )
-    ).toEqual(finalizedAttemptBefore);
+      database.drizzle
+        .select({ committedAt: flashcardReviewAttempts.committedAt })
+        .from(flashcardReviewAttempts)
+        .where(eq(flashcardReviewAttempts.studySessionId, historicalSessionId))
+        .get()
+    ).toEqual(committedAttemptBefore);
   });
 
   it("settles recent ratings through FSRS before an installed deck changes", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(19), 0);
     await importer.installFromBytes(validArchive(1, [sourceCard]));
@@ -584,7 +884,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -596,11 +896,11 @@ describe("deck package installation", () => {
 
     const completedSession = await graph.sessions.findById(feed.studySessionId);
     expect(completedSession?.completedAt).not.toBeNull();
-    const finalizedRows = await database.drizzle
-      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+    const committedRows = await database.drizzle
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, attemptId));
-    expect(finalizedRows[0]?.finalizedAt).not.toBeNull();
+    expect(committedRows[0]?.committedAt).not.toBeNull();
     expect(
       await database.drizzle
         .select({ flashcardId: flashcardMemoryStates.flashcardId })
@@ -612,7 +912,7 @@ describe("deck package installation", () => {
     });
   });
 
-  it("recovers and finalizes a completed import-invalidated session after interruption", async () => {
+  it("recovers and commits a completed import-invalidated session after interruption", async () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
@@ -625,7 +925,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -636,18 +936,18 @@ describe("deck package installation", () => {
     await importer.installFromBytes(validArchive(2, [card(sourceCard.id, 0, "Updated")]));
     expect(
       await database.drizzle
-        .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+        .select({ committedAt: flashcardReviewAttempts.committedAt })
         .from(flashcardReviewAttempts)
         .where(eq(flashcardReviewAttempts.id, attemptId))
-    ).toEqual([{ finalizedAt: null }]);
+    ).toEqual([{ committedAt: null }]);
 
-    await graph.study.recoverPendingCompletedSessionAggregation();
+    await graph.study.recoverPendingAggregation();
 
     const recoveredRows = await database.drizzle
-      .select({ finalizedAt: flashcardReviewAttempts.finalizedAt })
+      .select({ committedAt: flashcardReviewAttempts.committedAt })
       .from(flashcardReviewAttempts)
       .where(eq(flashcardReviewAttempts.id, attemptId));
-    expect(recoveredRows[0]?.finalizedAt).not.toBeNull();
+    expect(recoveredRows[0]?.committedAt).not.toBeNull();
     expect(await graph.progress.findByFlashcardId(installedCard.id)).toMatchObject({
       reviewCount: 1,
     });
@@ -663,13 +963,16 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(21), 0);
     await importer.installFromBytes(validArchive(1, [sourceCard]));
@@ -679,7 +982,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
+    const feed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
     const attemptId = await graph.study.startAttempt(
       installedCard.id,
       feed.currentReelPosition,
@@ -706,13 +1009,16 @@ describe("deck package installation", () => {
     database = new NodeSqliteDatabase();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const installation = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
+    const installation = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    );
     const { importer } = createImporter(
       database,
       clock,
       new MemoryAudioStorage(),
       installation,
-      graph.study
+      graph.runtime
     );
     const sourceCard = card(testId(23), 0);
     const bytes = validArchive(1, [sourceCard]);
@@ -723,7 +1029,7 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const feed = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const feed = await graph.feed.prepareFeed([installedCard], "focus", TEST_DECK_ID, false, null);
 
     await expect(importer.installFromBytes(bytes)).resolves.toMatchObject({ status: "no-op" });
 
@@ -745,8 +1051,14 @@ describe("deck package installation", () => {
     if (!installedCard) {
       throw new Error("Missing installed card");
     }
-    const mixed = await graph.feed.prepareFeed([installedCard], "mixed", null, false);
-    const focused = await graph.feed.prepareFeed([installedCard], "focused", TEST_DECK_ID, false);
+    const mixed = await graph.feed.prepareFeed([installedCard], "discover", null, false, null);
+    const focused = await graph.feed.prepareFeed(
+      [installedCard],
+      "focus",
+      TEST_DECK_ID,
+      false,
+      null
+    );
 
     await importer.installFromBytes(validArchive(1, [card(testId(15), 0)], OTHER_DECK_ID));
     const completedMixedSession = await graph.sessions.findById(mixed.studySessionId);
@@ -758,6 +1070,15 @@ describe("deck package installation", () => {
   it.each([
     ["malformed deck.json", zipSync({ "deck.json": strToU8("{") })],
     ["invalid deck ID", archive({ ...rawDeck(1), id: "not-a-uuid" })],
+    [
+      "legacy manifest fields",
+      archive({
+        ...rawDeck(1, [card(testId(29), 0)]),
+        schema: undefined,
+        revision: undefined,
+        version: 1,
+      }),
+    ],
     ["invalid card ID", archive(rawDeck(1, [{ ...card(testId(5), 0), id: "bad" }]))],
     ["invalid deck version", archive({ ...rawDeck(1), version: 0 })],
     ["duplicate IDs", archive(rawDeck(1, [card(testId(5), 0), card(testId(5), 1)]))],
@@ -767,9 +1088,15 @@ describe("deck package installation", () => {
       archive(deck(1, [card(testId(7), 0)]), { "audio/a.mp3": new Uint8Array([1]) }),
     ],
     [
+      "legacy side audio",
+      archive(deck(1, [card(testId(7), 0)]), {
+        [`audio/${testId(7)}.answer.mp3`]: new Uint8Array([1]),
+      }),
+    ],
+    [
       "unknown audio card",
       archive(deck(1, [card(testId(8), 0)]), {
-        [`audio/${testId(9)}.answer.mp3`]: new Uint8Array([1]),
+        [`audio/${testId(9)}.mp3`]: new Uint8Array([1]),
       }),
     ],
     [
@@ -782,15 +1109,13 @@ describe("deck package installation", () => {
       "unsafe archive path",
       archive(deck(1, [card(testId(10), 0)]), { "../escape.mp3": new Uint8Array([1]) }),
     ],
-    ["missing required package file", zipSync({ "audio/orphan.answer.mp3": new Uint8Array([1]) })],
+    ["missing required package file", zipSync({ "audio/orphan.mp3": new Uint8Array([1]) })],
     ["card-count limit", archiveWithTooManyCards()],
     ["audio-count limit", archiveWithTooManyAudioFiles()],
     [
       "oversized audio resource",
       archive(deck(2, [card(testId(10), 0)]), {
-        [`audio/${testId(10)}.answer.mp3`]: new Uint8Array(
-          DECK_PACKAGE_LIMITS.maximumAudioFileBytes + 1
-        ),
+        [`audio/${testId(10)}.mp3`]: new Uint8Array(maximumAudioFileBytes + 1),
       }),
     ],
   ])("rejects %s before changing installed state", async (_name, bytes) => {
@@ -805,8 +1130,8 @@ describe("deck package installation", () => {
     };
     await expect(importer.installFromBytes(bytes)).rejects.toThrow();
     expect(
-      await database.getFirstAsync("SELECT version FROM decks WHERE id = ?", TEST_DECK_ID)
-    ).toEqual({ version: 1 });
+      await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+    ).toEqual({ revision: 1 });
     expect(audio.activeVersions).toEqual(audioBefore.activeVersions);
     expect(audio.activated).toHaveLength(audioBefore.activated);
     expect(audio.staged).toHaveLength(audioBefore.staged);

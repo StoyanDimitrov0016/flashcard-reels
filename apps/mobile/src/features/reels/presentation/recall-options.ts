@@ -1,12 +1,12 @@
 import { type SymbolViewProps } from "expo-symbols";
 
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 import type { AppColors } from "@/shared/presentation/theme";
 
 export type RecallOption = Readonly<{
   color: keyof Pick<AppColors, "recallAgain" | "recallHard" | "recallGood" | "recallEasy">;
   label: string;
-  level: RecallLevel;
+  rating: Rating;
   symbol: SymbolViewProps["name"];
 }>;
 
@@ -14,25 +14,25 @@ export const recallOptions: readonly RecallOption[] = [
   {
     color: "recallAgain",
     label: "Again",
-    level: "again",
+    rating: "again",
     symbol: { android: "replay", ios: "arrow.counterclockwise", web: "replay" },
   },
   {
     color: "recallHard",
     label: "Hard",
-    level: "hard",
+    rating: "hard",
     symbol: { android: "speed", ios: "tortoise.fill", web: "speed" },
   },
   {
     color: "recallGood",
     label: "Good",
-    level: "good",
+    rating: "good",
     symbol: { android: "check_circle", ios: "checkmark.circle.fill", web: "check_circle" },
   },
   {
     color: "recallEasy",
     label: "Easy",
-    level: "easy",
+    rating: "easy",
     symbol: { android: "bolt", ios: "bolt.fill", web: "bolt" },
   },
 ];

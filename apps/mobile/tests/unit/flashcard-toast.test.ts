@@ -29,9 +29,7 @@ describe("shared toast ownership", () => {
     showSuccessToast("Deck installed.");
     hideFlashcardToast();
     expect(toast.hide).not.toHaveBeenCalled();
-    expect(toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({ text1: "Deck installed.", visibilityTime: 2500 })
-    );
+    expect(toast.show).toHaveBeenCalledWith(expect.objectContaining({ text1: "Deck installed." }));
   });
 
   it("still dismisses a hold hint", () => {

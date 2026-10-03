@@ -16,7 +16,7 @@ export class SQLiteDeckProgressRepository<TRunResult = unknown> implements DeckP
     const records = await this.database
       .select()
       .from(deckProgress)
-      .where(eq(deckProgress.resolution, "pending"))
+      .where(eq(deckProgress.status, "pending"))
       .orderBy(asc(deckProgress.title), asc(deckProgress.deckId));
     return records.map(({ deckId, title, lastReviewedAt }) => ({ deckId, title, lastReviewedAt }));
   }

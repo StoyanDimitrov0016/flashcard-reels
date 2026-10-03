@@ -10,26 +10,81 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+import { memoryStateValues } from "@/features/learning-engine/domain/flashcard-memory-state";
+import { ratingValues } from "@/features/learning-engine/domain/rating";
+import {
+  controlSides,
+  ratingDirections,
+  studyIslandPositions,
+  colorModes,
+} from "@/features/preferences/domain/app-preferences";
+import { sqlValueList } from "@/infrastructure/sqlite/sql-value-list";
+
+export const learnerPreferences = sqliteTable(
+  "learner_preferences",
+  {
+    id: text("id").primaryKey().notNull(),
+    colorMode: text("color_mode", { enum: colorModes }).notNull(),
+    studyIslandPosition: text("study_island_position", {
+      enum: studyIslandPositions,
+    }).notNull(),
+    ratingDirection: text("rating_direction", { enum: ratingDirections }).notNull(),
+    audioEnabled: integer("audio_enabled", { mode: "boolean" }).notNull(),
+    audioSide: text("audio_side", { enum: controlSides }).notNull(),
+    readingEnabled: integer("reading_enabled", { mode: "boolean" }).notNull(),
+    readingSide: text("reading_side", { enum: controlSides }).notNull(),
+    hapticsEnabled: integer("haptics_enabled", { mode: "boolean" }).notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("learner_preferences_singleton_idx").on(sql`(1)`),
+    check(
+      "learner_preferences_color_mode_check",
+      sql`${table.colorMode} IN (${sqlValueList(colorModes)})`
+    ),
+    check(
+      "learner_preferences_study_island_position_check",
+      sql`${table.studyIslandPosition} IN (${sqlValueList(studyIslandPositions)})`
+    ),
+    check(
+      "learner_preferences_rating_direction_check",
+      sql`${table.ratingDirection} IN (${sqlValueList(ratingDirections)})`
+    ),
+    check("learner_preferences_audio_enabled_check", sql`${table.audioEnabled} IN (0, 1)`),
+    check(
+      "learner_preferences_audio_side_check",
+      sql`${table.audioSide} IN (${sqlValueList(controlSides)})`
+    ),
+    check("learner_preferences_reading_enabled_check", sql`${table.readingEnabled} IN (0, 1)`),
+    check(
+      "learner_preferences_reading_side_check",
+      sql`${table.readingSide} IN (${sqlValueList(controlSides)})`
+    ),
+    check("learner_preferences_haptics_enabled_check", sql`${table.hapticsEnabled} IN (0, 1)`),
+  ]
+);
+
 export const decks = sqliteTable("decks", {
   id: text("id").primaryKey().notNull(),
+  authorId: text("author_id").notNull(),
+  packageSchema: integer("package_schema").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   coverAsset: text("cover_asset").notNull().default("cards"),
-  version: integer("version").notNull().default(1),
+  revision: integer("revision").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
 
-export const removedDecks = sqliteTable("removed_decks", {
+export const dismissedBundledDecks = sqliteTable("dismissed_bundled_decks", {
   id: text("id").primaryKey().notNull(),
+  deckId: text("deck_id").notNull().unique(),
 });
 
-export const deckAppearances = sqliteTable("deck_appearances", {
-  deckId: text("deck_id")
-    .primaryKey()
-    .notNull()
-    .references(() => decks.id, { onDelete: "cascade" }),
-  presetId: text("preset_id").notNull(),
+export const deckThemeSelections = sqliteTable("deck_theme_selections", {
+  id: text("id").primaryKey().notNull(),
+  deckId: text("deck_id").notNull().unique(),
+  theme: text("theme").notNull(),
 });
 
 export const flashcards = sqliteTable(
@@ -41,12 +96,17 @@ export const flashcards = sqliteTable(
       .references(() => decks.id, { onDelete: "cascade" }),
     order: integer("order").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    hasAudio: integer("has_audio", { mode: "boolean" }).notNull(),
     question: text("question").notNull(),
     answer: text("answer").notNull(),
+    lessonId: text("lesson_id"),
+    lessonSectionId: text("lesson_section_id"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    check("flashcards_active_check", sql`${table.active} IN (0, 1)`),
+    check("flashcards_has_audio_check", sql`${table.hasAudio} IN (0, 1)`),
     check("flashcards_order_check", sql`${table.order} >= 0`),
     index("flashcards_deck_id_idx").on(table.deckId),
     unique("flashcards_order_unique").on(table.deckId, table.order),
@@ -75,7 +135,8 @@ export const lessons = sqliteTable(
 export const flashcardProgress = sqliteTable(
   "flashcard_progress",
   {
-    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    id: text("id").primaryKey().notNull(),
+    flashcardId: text("flashcard_id").notNull().unique(),
     deckId: text("deck_id").notNull(),
     reviewCount: integer("review_count").notNull().default(0),
     againCount: integer("again_count").notNull().default(0),
@@ -114,9 +175,10 @@ export const flashcardProgress = sqliteTable(
 export const flashcardMemoryStates = sqliteTable(
   "flashcard_memory_states",
   {
-    flashcardId: text("flashcard_id").primaryKey().notNull(),
+    id: text("id").primaryKey().notNull(),
+    flashcardId: text("flashcard_id").notNull().unique(),
     deckId: text("deck_id").notNull(),
-    state: text("state", { enum: ["new", "learning", "review", "relearning"] }).notNull(),
+    state: text("state", { enum: memoryStateValues }).notNull(),
     dueAt: text("due_at").notNull(),
     stability: real("stability").notNull(),
     difficulty: real("difficulty").notNull(),
@@ -130,6 +192,10 @@ export const flashcardMemoryStates = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    check(
+      "flashcard_memory_states_state_check",
+      sql`${table.state} IN (${sqlValueList(memoryStateValues)})`
+    ),
     check("flashcard_memory_states_elapsed_days_check", sql`${table.elapsedDays} >= 0`),
     check("flashcard_memory_states_scheduled_days_check", sql`${table.scheduledDays} >= 0`),
     check("flashcard_memory_states_reps_check", sql`${table.reps} >= 0`),
@@ -139,29 +205,40 @@ export const flashcardMemoryStates = sqliteTable(
   ]
 );
 
-export const reviewEvents = sqliteTable(
-  "review_events",
+export const flashcardReviewEvents = sqliteTable(
+  "flashcard_review_events",
   {
     id: text("id").primaryKey().notNull(),
     deckId: text("deck_id").notNull(),
     flashcardId: text("flashcard_id").notNull(),
-    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }).notNull(),
+    rating: text("rating", { enum: ratingValues }).notNull(),
     reviewedAt: text("reviewed_at").notNull(),
-    finalizedAt: text("finalized_at").notNull(),
+    committedAt: text("committed_at").notNull(),
   },
   (table) => [
-    index("review_events_deck_id_idx").on(table.deckId),
-    index("review_events_flashcard_id_idx").on(table.flashcardId),
+    check(
+      "flashcard_review_events_rating_check",
+      sql`${table.rating} IN (${sqlValueList(ratingValues)})`
+    ),
+    index("flashcard_review_events_deck_id_idx").on(table.deckId),
+    index("flashcard_review_events_flashcard_id_idx").on(table.flashcardId),
   ]
 );
 
-export const deckProgress = sqliteTable("deck_progress", {
-  deckId: text("deck_id").primaryKey().notNull(),
-  title: text("title").notNull(),
-  version: integer("version").notNull(),
-  lastReviewedAt: text("last_reviewed_at").notNull(),
-  resolution: text("resolution", { enum: ["active", "archived", "pending"] }).notNull(),
-});
+export const deckProgress = sqliteTable(
+  "deck_progress",
+  {
+    id: text("id").primaryKey().notNull(),
+    deckId: text("deck_id").notNull().unique(),
+    title: text("title").notNull(),
+    revision: integer("revision").notNull(),
+    lastReviewedAt: text("last_reviewed_at").notNull(),
+    status: text("status", { enum: ["active", "archived", "pending"] }).notNull(),
+  },
+  (table) => [
+    check("deck_progress_status_check", sql`${table.status} IN ('active', 'archived', 'pending')`),
+  ]
+);
 
 export const progressBackupState = sqliteTable("progress_backup_state", {
   id: integer("id").primaryKey(),
@@ -172,7 +249,7 @@ export const studySessions = sqliteTable(
   "study_sessions",
   {
     id: text("id").primaryKey().notNull(),
-    scope: text("scope", { enum: ["mixed", "focused"] }).notNull(),
+    scope: text("scope", { enum: ["discover", "focus"] }).notNull(),
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
     currentReelPosition: integer("current_reel_position").notNull(),
     furthestReelPosition: integer("furthest_reel_position").notNull(),
@@ -185,9 +262,10 @@ export const studySessions = sqliteTable(
     feedState: text("feed_state").notNull(),
   },
   (table) => [
+    check("study_sessions_scope_check", sql`${table.scope} IN ('discover', 'focus')`),
     check(
       "study_sessions_scope_deck_check",
-      sql`(${table.scope} = 'mixed' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focused' AND ${table.deckId} IS NOT NULL)`
+      sql`(${table.scope} = 'discover' AND ${table.deckId} IS NULL) OR (${table.scope} = 'focus' AND ${table.deckId} IS NOT NULL)`
     ),
     check("study_sessions_current_reel_position_check", sql`${table.currentReelPosition} >= 0`),
     check(
@@ -211,8 +289,8 @@ export const studySessions = sqliteTable(
   ]
 );
 
-export const studySessionItems = sqliteTable(
-  "study_session_items",
+export const studySessionReels = sqliteTable(
+  "study_session_reels",
   {
     id: text("id").primaryKey().notNull(),
     studySessionId: text("study_session_id")
@@ -225,17 +303,17 @@ export const studySessionItems = sqliteTable(
     reelPosition: integer("reel_position").notNull(),
   },
   (table) => [
-    check("study_session_items_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
-    check("study_session_items_reel_position_check", sql`${table.reelPosition} >= 0`),
-    unique("study_session_items_session_position_unique").on(
+    check("study_session_reels_base_feed_position_check", sql`${table.baseFeedPosition} >= 0`),
+    check("study_session_reels_reel_position_check", sql`${table.reelPosition} >= 0`),
+    unique("study_session_reels_session_position_unique").on(
       table.studySessionId,
       table.baseFeedPosition
     ),
-    unique("study_session_items_session_reel_position_unique").on(
+    unique("study_session_reels_session_reel_position_unique").on(
       table.studySessionId,
       table.reelPosition
     ),
-    index("study_session_items_flashcard_id_idx").on(table.flashcardId),
+    index("study_session_reels_flashcard_id_idx").on(table.flashcardId),
   ]
 );
 
@@ -250,31 +328,31 @@ export const flashcardReviewAttempts = sqliteTable(
       .notNull()
       .references(() => flashcards.id, { onDelete: "cascade" }),
     reelPosition: integer("reel_position").notNull(),
-    rating: text("rating", { enum: ["again", "hard", "good", "easy"] }),
+    rating: text("rating", { enum: ratingValues }),
     createdAt: text("created_at").notNull(),
     ratedAt: text("rated_at"),
     updatedAt: text("updated_at").notNull(),
-    finalizedAt: text("finalized_at"),
+    committedAt: text("committed_at"),
   },
   (table) => [
     check("flashcard_review_attempts_reel_position_check", sql`${table.reelPosition} >= 0`),
     check(
       "flashcard_review_attempts_rating_check",
-      sql`${table.rating} IS NULL OR ${table.rating} IN ('again', 'hard', 'good', 'easy')`
+      sql`${table.rating} IS NULL OR ${table.rating} IN (${sqlValueList(ratingValues)})`
     ),
     check(
       "flashcard_review_attempts_rating_timestamp_check",
       sql`(${table.rating} IS NULL AND ${table.ratedAt} IS NULL) OR (${table.rating} IS NOT NULL AND ${table.ratedAt} IS NOT NULL)`
     ),
-    unique("review_attempts_session_reel_position_unique").on(
+    unique("flashcard_review_attempts_session_reel_position_unique").on(
       table.studySessionId,
       table.reelPosition
     ),
-    index("review_attempts_flashcard_id_idx").on(table.flashcardId),
-    index("review_attempts_session_position_aggregation_idx").on(
+    index("flashcard_review_attempts_flashcard_id_idx").on(table.flashcardId),
+    index("flashcard_review_attempts_session_position_aggregation_idx").on(
       table.studySessionId,
       table.reelPosition,
-      table.finalizedAt,
+      table.committedAt,
       table.rating,
       table.ratedAt
     ),
@@ -291,7 +369,7 @@ export const studySessionRecurrences = sqliteTable(
     flashcardId: text("flashcard_id")
       .notNull()
       .references(() => flashcards.id, { onDelete: "cascade" }),
-    sourceAttemptId: text("source_attempt_id")
+    flashcardReviewAttemptId: text("flashcard_review_attempt_id")
       .notNull()
       .references(() => flashcardReviewAttempts.id, { onDelete: "cascade" }),
     targetReelPosition: integer("target_reel_position").notNull(),
@@ -313,24 +391,26 @@ export const studySessionRecurrences = sqliteTable(
     uniqueIndex("study_session_recurrences_pending_target_idx")
       .on(table.studySessionId, table.targetReelPosition)
       .where(sql`${table.consumedAt} IS NULL`),
-    uniqueIndex("study_session_recurrences_pending_source_attempt_idx")
-      .on(table.sourceAttemptId)
+    uniqueIndex("study_session_recurrences_pending_flashcard_review_attempt_idx")
+      .on(table.flashcardReviewAttemptId)
       .where(sql`${table.consumedAt} IS NULL`),
   ]
 );
 
 export const databaseSchema = {
+  learnerPreferences,
+  progressBackupState,
   decks,
-  removedDecks,
-  deckAppearances,
+  dismissedBundledDecks,
+  deckThemeSelections,
   flashcards,
   lessons,
   flashcardProgress,
   flashcardMemoryStates,
-  reviewEvents,
+  flashcardReviewEvents,
   deckProgress,
   studySessions,
-  studySessionItems,
+  studySessionReels,
   flashcardReviewAttempts,
   studySessionRecurrences,
 };

@@ -25,5 +25,10 @@ learning history, or the study flow.
 ## Specs
 
 - [0 - Deck publish check](0-deck-publish-check.md)
-- [1a - Study feeds with a For you and Focus header](1a-study-tab.md)
+- [1a - Study feeds with a Discover and Focus header](1a-study-tab.md)
 - [1b - Reading tab and lessons](1b-reading-tab.md)
+- [2 - Deck themes and deck theme selections](2-deck-theme-selections.md)
+- [3 - Naming alignment before the next release](3-naming-alignment.md)
+- [4 - Lesson section references](4-lesson-section-references.md)
+- [5 - Learner data completion before the release](5-learner-data-completion.md)
+- [6 - Deep modules and robustness](6-deep-modules-and-robustness.md)

@@ -1,9 +1,12 @@
+import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+
 import {
-  DeckPackageValidationError,
-  DeckPackageVersionError,
+  DeckPackageAuthorError,
+  DeckPackageRevisionError,
   type DeckInstallResult,
 } from "@/features/decks/deck-installer";
 import { AppError } from "@/shared/errors/app-error";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 export type DeckImportFeedback = Readonly<{
   message: string;
@@ -22,21 +25,41 @@ export function getDeckImportResultFeedback(result: DeckInstallResult): DeckImpo
 export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
   if (error instanceof AppError && error.code === "DECK_DOWNLOAD_TIMED_OUT") {
     return {
-      message: "The download took too long. Check your connection and scan again.",
+      message: getErrorFeedback(error).message,
       tone: "error",
     };
   }
-  if (error instanceof AppError && error.code === "DECK_DOWNLOAD_FAILED") {
+  if (
+    error instanceof AppError &&
+    ["DECK_DOWNLOAD_FAILED", "DECK_DOWNLOAD_EXPIRED", "DECK_DOWNLOAD_UNAVAILABLE"].includes(
+      error.code
+    )
+  ) {
     return {
-      message: "Couldn’t download this deck. Check your connection or get a new QR code.",
+      message: getErrorFeedback(error).message,
       tone: "error",
     };
   }
-  if (error instanceof DeckPackageValidationError) {
-    return { message: "That deck package is invalid or damaged.", tone: "error" };
+  if (error instanceof DeckPackageParseError) {
+    return { message: getErrorFeedback(error).message, tone: "error" };
   }
-  if (error instanceof DeckPackageVersionError) {
-    return { message: "That deck package is older than the installed version.", tone: "error" };
+  if (error instanceof DeckPackageRevisionError) {
+    return { message: "That deck package is older than the installed revision.", tone: "error" };
+  }
+  if (error instanceof DeckPackageAuthorError) {
+    return {
+      message: getErrorFeedback(error).message,
+      tone: "error",
+    };
   }
   return { message: "Could not import deck package. Try again.", tone: "error" };
+}
+
+export function isRetryableDeckDownloadError(error: unknown): boolean {
+  return (
+    error instanceof AppError &&
+    ["DECK_DOWNLOAD_FAILED", "DECK_DOWNLOAD_TIMED_OUT", "DECK_DOWNLOAD_UNAVAILABLE"].includes(
+      error.code
+    )
+  );
 }

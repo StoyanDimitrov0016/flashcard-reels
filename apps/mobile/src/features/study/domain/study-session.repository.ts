@@ -7,6 +7,7 @@ export type StudySessionPosition = Readonly<{
 }>;
 
 export interface StudySessionRepository {
+  listActiveAffectedByDeck(deckId: DeckId, includeFocus: boolean): Promise<StudySession[]>;
   complete(sessionId: string, completedAt: string): Promise<void>;
   create(session: StudySession): Promise<void>;
   findById(sessionId: string): Promise<StudySession | null>;

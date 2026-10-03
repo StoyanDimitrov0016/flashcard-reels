@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   shouldApplyBundledAppearance,
   shouldInstallBundledDeck,
-} from "@/infrastructure/bundled-deck-version";
+} from "@/infrastructure/bundled-deck-revision";
 
 describe("bundled deck startup version behavior", () => {
   it.each([

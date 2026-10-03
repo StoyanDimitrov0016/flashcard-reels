@@ -1,7 +1,7 @@
 appId: com.flashcardreels.app
 ---
-- tapOn: Library tab
-- assertVisible: Library
+- tapOn: Decks tab
+- assertVisible: Decks
 - tapOn: Import deck package
 - tapOn: Browse device
 - tapOn: Show roots

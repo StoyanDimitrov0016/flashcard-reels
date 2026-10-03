@@ -18,10 +18,12 @@ export function makeFlashcard(
 ): Flashcard {
   return new Flashcard({
     active: true,
+    hasAudio: false,
     answer: `Answer ${index}`,
     createdAt: "2026-01-01T00:00:00.000Z",
     deckId,
     id: testId(index),
+    lessonId: null,
     order,
     question: `Question ${index}`,
     updatedAt: "2026-01-01T00:00:00.000Z",
@@ -30,8 +32,8 @@ export function makeFlashcard(
 
 export function makeSession(
   id: string,
-  scope: "mixed" | "focused",
-  deckId: string | null = scope === "focused" ? TEST_DECK_ID : null,
+  scope: "discover" | "focus",
+  deckId: string | null = scope === "focus" ? TEST_DECK_ID : null,
   currentReelPosition = 0,
   furthestReelPosition = currentReelPosition
 ): StudySession {
@@ -63,7 +65,11 @@ export class TestClock implements Clock {
 }
 
 export class SequenceIdGenerator implements IdGenerator {
-  private nextId = 1000;
+  private nextId: number;
+
+  constructor(firstId = 1000) {
+    this.nextId = firstId;
+  }
 
   generate(): string {
     const id = testId(this.nextId);

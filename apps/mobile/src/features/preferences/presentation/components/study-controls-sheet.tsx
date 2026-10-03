@@ -3,13 +3,13 @@ import type { ReactElement } from "react";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 
-import type {
-  AppPreferences,
-  ControlSide,
-  RatingDirection,
-  RecollectionIslandPosition,
+import {
+  type AppPreferences,
+  type ControlSide,
+  type RatingDirection,
+  type StudyIslandPosition,
+  studyIslandPositions,
 } from "@/features/preferences/domain/app-preferences";
-
 import { recallOptions } from "@/features/reels/presentation/recall-options";
 import {
   deriveControlPlacement,
@@ -25,7 +25,7 @@ import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
-const positions: readonly RecollectionIslandPosition[] = ["left", "bottom", "right"];
+const positions: readonly StudyIslandPosition[] = studyIslandPositions;
 
 // The preview is a small card, so its island uses compact markers instead of the real 40pt ones.
 const PREVIEW_MARKER = 24;
@@ -85,13 +85,13 @@ function StudyIslandPreview({ layout }: StudyIslandPreviewProps) {
     <View style={[styles.previewCluster, horizontal && styles.previewClusterHorizontal]}>
       {toolGroup(before)}
       <View style={[styles.previewIsland, horizontal && styles.previewIslandHorizontal]}>
-        {layout.ratingOrder.map((level) => {
-          const option = recallOptions.find((current) => current.level === level);
+        {layout.ratingOrder.map((rating) => {
+          const option = recallOptions.find((current) => current.rating === rating);
           if (!option) {
             return null;
           }
           return (
-            <View key={level} style={[styles.previewAction, horizontal && styles.flexOne]}>
+            <View key={rating} style={[styles.previewAction, horizontal && styles.flexOne]}>
               <View style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}>
                 <SymbolView name={option.symbol} size={13} tintColor={colors.actionPrimaryText} />
               </View>
@@ -136,7 +136,7 @@ function animateNext() {
 type StudyControlsSheetProps = Readonly<{
   onAudioSideChange: (value: ControlSide) => void;
   onClose: () => void;
-  onPositionChange: (value: RecollectionIslandPosition) => void;
+  onPositionChange: (value: StudyIslandPosition) => void;
   onRatingDirectionChange: (value: RatingDirection) => void;
   onReadingSideChange: (value: ControlSide) => void;
   preferences: AppPreferences;
@@ -155,7 +155,7 @@ export function StudyControlsSheet({
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const layout = resolveStudyControlLayout(preferences);
-  const position = preferences.recollectionIslandPosition;
+  const position = preferences.studyIslandPosition;
   const sideOptions = [
     {
       label: getControlSideLabel(position, "primary"),
@@ -230,7 +230,7 @@ export function StudyControlsSheet({
             />
           </View>
           {(!preferences.audioEnabled || !preferences.readingEnabled) && (
-            <Text style={styles.footnote}>Turned-off buttons can be switched on in Controls.</Text>
+            <Text style={styles.footnote}>Turned-off buttons can be switched on in Settings.</Text>
           )}
         </View>
       </View>
@@ -238,7 +238,7 @@ export function StudyControlsSheet({
   );
 }
 
-function getPositionSymbol(position: RecollectionIslandPosition): SymbolViewProps["name"] {
+function getPositionSymbol(position: StudyIslandPosition): SymbolViewProps["name"] {
   if (position === "left") {
     return {
       android: "align_horizontal_left",
@@ -261,7 +261,7 @@ function getPositionSymbol(position: RecollectionIslandPosition): SymbolViewProp
 }
 
 function getDirectionSymbol(
-  position: RecollectionIslandPosition,
+  position: StudyIslandPosition,
   direction: RatingDirection
 ): SymbolViewProps["name"] {
   if (position === "bottom") {
@@ -275,7 +275,7 @@ function getDirectionSymbol(
 }
 
 function getPlacementSymbol(
-  position: RecollectionIslandPosition,
+  position: StudyIslandPosition,
   side: ControlSide
 ): SymbolViewProps["name"] {
   const names = {
@@ -414,9 +414,17 @@ function createStyles(colors: AppColors) {
       gap: 0,
       maxWidth: 176,
     },
-    previewLabel: { color: colors.textSecondary, fontSize: 9, fontWeight: fontWeight.bold },
+    previewLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.micro,
+      fontWeight: fontWeight.bold,
+    },
     previewLeft: { flexDirection: "row-reverse" },
-    previewLine: { backgroundColor: colors.borderStrong, borderRadius: 3, height: 6 },
+    previewLine: {
+      backgroundColor: colors.borderStrong,
+      borderRadius: sizes.radius.pill,
+      height: 6,
+    },
     previewLineMedium: { width: "70%" },
     previewLineShort: { marginBottom: sizes.spacing.xSmall, opacity: 0.6, width: "45%" },
     previewMarker: {

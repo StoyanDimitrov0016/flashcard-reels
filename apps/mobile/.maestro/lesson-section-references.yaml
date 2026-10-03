@@ -1,0 +1,73 @@
+appId: com.flashcardreels.app
+---
+# Requires the feature branch's bundled demo and a fresh app state.
+- launchApp:
+    clearState: true
+- tapOn: Decks tab
+- longPressOn: Flashcard Reels Demo
+- assertVisible: "Flashcard question: What is a JavaScript value.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Values and types
+- assertNotVisible: Related section starts here
+- tapOn: Close lesson
+- assertVisible: "Flashcard answer: .*"
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 650
+- assertVisible: "Flashcard question: What is the difference between a primitive.*"
+- doubleTapOn: "Flashcard question: .*"
+# Exercise opening through the answer, as well as the book button above.
+- tapOn: "Flashcard answer: .*"
+- assertVisible: Related section starts here
+- assertVisible: Why it matters
+- tapOn: Close lesson
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 650
+- assertVisible: "Flashcard question: What does undefined mean.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Related section starts here
+- assertVisible: "^undefined$"
+- tapOn: Close lesson
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 22%"
+    duration: 650
+- assertVisible: "Flashcard question: What is null used for.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Related section starts here
+- assertVisible: "^null$"
+- tapOn: Back to lessons
+- tapOn: "Lesson 2: null and undefined"
+- assertNotVisible: Related section starts here
+- tapOn: Close lesson
+- assertVisible: "Flashcard answer: .*"
+- runFlow: subflows/next-reel.yaml
+- runFlow: subflows/next-reel.yaml
+- runFlow: subflows/next-reel.yaml
+- assertVisible: "Flashcard question: What is vertical scaling.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Related section starts here
+- assertVisible: Vertical scaling
+- tapOn: Close lesson
+- runFlow: subflows/next-reel.yaml
+- assertVisible: "Flashcard question: Can more CPU cores.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Related section starts here
+- assertVisible: Vertical scaling
+- tapOn: Close lesson
+- runFlow: subflows/next-reel.yaml
+- runFlow: subflows/next-reel.yaml
+- assertVisible: "Flashcard question: What limits vertical scaling.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: Read connected lesson
+- assertVisible: Related section starts here
+- assertVisible: Limitations
+- tapOn: Close lesson

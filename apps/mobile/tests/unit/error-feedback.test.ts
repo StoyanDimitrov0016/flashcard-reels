@@ -1,9 +1,58 @@
+import { DeckPackageParseError, DeckParseError } from "@flashcard-reels/deck-contract";
 import { describe, expect, it } from "vitest";
 
 import { AppError } from "@/shared/errors/app-error";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 describe("error feedback", () => {
+  it("handles manifest parse errors explicitly", () => {
+    expect(getErrorFeedback(new DeckParseError([{ path: ["id"], message: "Invalid" }]))).toEqual({
+      message: "That deck package is invalid or damaged.",
+    });
+  });
+  it.each([
+    [
+      "DECK_DOWNLOAD_EXPIRED",
+      "This QR code has expired. Create a new one in the portal and scan it again.",
+    ],
+    ["DECK_DOWNLOAD_UNAVAILABLE", "The deck server is unavailable. Try again in a moment."],
+    [
+      "DECK_PACKAGE_AUTHOR_CONFLICT",
+      "That deck belongs to a different author than the installed deck.",
+    ],
+    ["PROGRESS_BACKUP_INVALID", "That progress backup is invalid or damaged. Choose another file."],
+    ["PROGRESS_BACKUP_TOO_LARGE", "That progress backup is too large to import."],
+    ["PROGRESS_BACKUP_VERSION_UNSUPPORTED", "This app cannot read that progress backup version."],
+    ["PROGRESS_BACKUP_READ_FAILED", "Could not prepare the backup preview. Try again."],
+    [
+      "PROGRESS_BACKUP_EXPORT_FAILED",
+      "Could not export progress. Your learning data is still on this device.",
+    ],
+    [
+      "PROGRESS_BACKUP_RESTORE_FAILED",
+      "Could not replace progress. Current progress is still on this device.",
+    ],
+    ["DATABASE_ROW_INVALID", "Some saved data could not be read. Restart the app and try again."],
+    ["STUDY_SESSION_ENDED", "This study session has ended. Reload the feed to continue."],
+    [
+      "DECK_PACKAGE_ID_CONFLICT",
+      "This deck package reuses ids from another installed deck. Ask its author for a fixed package.",
+    ],
+    ["SAVED_PROGRESS_UNAVAILABLE", "Could not update saved progress. Try again."],
+    ["PROGRESS_BACKUP_UNAVAILABLE", "Could not share the previous progress backup."],
+    ["FILE_SHARING_UNAVAILABLE", "Sharing isn't available on this device."],
+  ] as const)("maps %s", (code, message) => {
+    expect(
+      getErrorFeedback(new AppError({ name: "TestError", code, message: "Technical details" }))
+    ).toEqual({ message });
+  });
+  it("offers another file when the shared parser rejects a package", () => {
+    expect(
+      getErrorFeedback(new DeckPackageParseError([{ path: ["deck.json"], message: "Invalid" }]))
+    ).toEqual({
+      message: "That deck package is invalid or damaged.",
+    });
+  });
   it("maps only the outer AppError code", () => {
     const error = new AppError({
       name: "OperationError",
@@ -18,14 +67,12 @@ describe("error feedback", () => {
 
     expect(getErrorFeedback(error)).toEqual({
       message: "More cards could not be loaded.",
-      recovery: "retry",
     });
   });
 
   it("uses neutral feedback for unknown values", () => {
     expect(getErrorFeedback("database is corrupt")).toEqual({
       message: "Something went wrong while loading this part of the app.",
-      recovery: "retry",
     });
   });
 
@@ -40,6 +87,6 @@ describe("error feedback", () => {
       getErrorFeedback(
         new AppError({ code, message: "technical details", name: "PreferencesError" })
       )
-    ).toEqual({ message, recovery: "none" });
+    ).toEqual({ message });
   });
 });

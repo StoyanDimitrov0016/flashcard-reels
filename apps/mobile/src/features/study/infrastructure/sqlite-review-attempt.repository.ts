@@ -75,14 +75,14 @@ export class SQLiteReviewAttemptRepository<
     return rows[0]?.reelPosition ?? null;
   }
 
-  async listUnfinalizedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]> {
+  async listUncommittedBySessionId(studySessionId: string): Promise<FlashcardReviewAttempt[]> {
     const rows = await this.database
       .select()
       .from(flashcardReviewAttempts)
       .where(
         and(
           eq(flashcardReviewAttempts.studySessionId, studySessionId),
-          isNull(flashcardReviewAttempts.finalizedAt)
+          isNull(flashcardReviewAttempts.committedAt)
         )
       )
       .orderBy(
@@ -93,7 +93,7 @@ export class SQLiteReviewAttemptRepository<
     return rows.map((row) => this.toModel(row));
   }
 
-  async listUnfinalizedBeforeReelPosition(
+  async listUncommittedBeforeReelPosition(
     studySessionId: string,
     reelPosition: number
   ): Promise<FlashcardReviewAttempt[]> {
@@ -103,7 +103,7 @@ export class SQLiteReviewAttemptRepository<
       .where(
         and(
           eq(flashcardReviewAttempts.studySessionId, studySessionId),
-          isNull(flashcardReviewAttempts.finalizedAt),
+          isNull(flashcardReviewAttempts.committedAt),
           lt(flashcardReviewAttempts.reelPosition, reelPosition)
         )
       )
@@ -118,7 +118,7 @@ export class SQLiteReviewAttemptRepository<
   private toModel(row: typeof flashcardReviewAttempts.$inferSelect): FlashcardReviewAttempt {
     return new FlashcardReviewAttempt({
       createdAt: row.createdAt,
-      finalizedAt: row.finalizedAt,
+      committedAt: row.committedAt,
       flashcardId: row.flashcardId,
       id: row.id,
       reelPosition: row.reelPosition,

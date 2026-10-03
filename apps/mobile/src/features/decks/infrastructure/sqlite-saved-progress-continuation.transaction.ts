@@ -5,6 +5,7 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { deckProgress, decks } from "@/infrastructure/sqlite/schema";
+import { OperationError } from "@/shared/errors/operation-error";
 
 export class SQLiteSavedProgressContinuationTransaction<
   TRunResult = unknown,
@@ -23,16 +24,22 @@ export class SQLiteSavedProgressContinuationTransaction<
         .where(eq(decks.id, id))
         .get();
       if (!installed) {
-        throw new Error(`Deck ${id} is not installed`);
+        throw new OperationError({
+          code: "DECK_NOT_FOUND",
+          message: `Deck ${id} is not installed`,
+        });
       }
       const resolved = transaction
         .update(deckProgress)
-        .set({ resolution: "active" })
-        .where(and(eq(deckProgress.deckId, id), eq(deckProgress.resolution, "pending")))
+        .set({ status: "active" })
+        .where(and(eq(deckProgress.deckId, id), eq(deckProgress.status, "pending")))
         .returning({ deckId: deckProgress.deckId })
         .all();
       if (resolved.length === 0) {
-        throw new Error(`Deck ${id} has no pending saved progress`);
+        throw new OperationError({
+          code: "SAVED_PROGRESS_UNAVAILABLE",
+          message: `Deck ${id} has no pending saved progress`,
+        });
       }
     });
   }

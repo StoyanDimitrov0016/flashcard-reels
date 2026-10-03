@@ -1,4 +1,10 @@
+export const PROGRESS_BACKUP_FORMAT = "flashcard-reels-learner-data";
+export const PROGRESS_BACKUP_VERSION = 1;
 import { z } from "zod";
+
+import { memoryStateValues } from "@/features/learning-engine/domain/flashcard-memory-state";
+import { ratingValues } from "@/features/learning-engine/domain/rating";
+import { AppPreferencesSchema } from "@/features/preferences/application/normalize-preferences";
 
 const ProgressBackupIdSchema = z.uuid();
 // SQLite compares these timestamps as text, so backups must keep the app's UTC form.
@@ -8,15 +14,22 @@ const ProgressBackupTimestampSchema = z.iso
     (value) => new Date(value).toISOString() === value,
     "Expected a UTC timestamp with milliseconds"
   );
+const LearnerPreferencesSchema = AppPreferencesSchema.extend({
+  updatedAt: ProgressBackupTimestampSchema,
+}).strict();
+const DeckThemeSelectionSchema = z
+  .object({ deckId: ProgressBackupIdSchema, theme: z.string().min(1) })
+  .strict();
+
 const ProgressBackupCountSchema = z.number().int().nonnegative();
 
 const DeckProgressSchema = z
   .object({
     deckId: ProgressBackupIdSchema,
     title: z.string().min(1),
-    version: z.number().int().positive(),
+    revision: z.number().int().positive(),
     lastReviewedAt: ProgressBackupTimestampSchema,
-    resolution: z.enum(["active", "archived", "pending"]),
+    status: z.enum(["active", "archived", "pending"]),
   })
   .strict();
 
@@ -52,7 +65,7 @@ const FlashcardMemoryStateSchema = z
   .object({
     flashcardId: ProgressBackupIdSchema,
     deckId: ProgressBackupIdSchema,
-    state: z.enum(["new", "learning", "review", "relearning"]),
+    state: z.enum(memoryStateValues),
     dueAt: ProgressBackupTimestampSchema,
     stability: z.number(),
     difficulty: z.number(),
@@ -72,24 +85,37 @@ const ReviewEventSchema = z
     id: ProgressBackupIdSchema,
     deckId: ProgressBackupIdSchema,
     flashcardId: ProgressBackupIdSchema,
-    rating: z.enum(["again", "hard", "good", "easy"]),
+    rating: z.enum(ratingValues),
     reviewedAt: ProgressBackupTimestampSchema,
-    finalizedAt: ProgressBackupTimestampSchema,
+    committedAt: ProgressBackupTimestampSchema,
   })
   .strict();
 
-const ProgressBackupDocumentUncompiledSchema = z
+const UncompiledDocumentSchema = z
   .object({
-    format: z.literal("flashcard-reels-progress"),
-    version: z.literal(1),
+    format: z.literal(PROGRESS_BACKUP_FORMAT),
+    version: z.literal(PROGRESS_BACKUP_VERSION),
     exportedAt: ProgressBackupTimestampSchema,
+    learnerPreferences: LearnerPreferencesSchema,
+    deckThemeSelections: z.array(DeckThemeSelectionSchema),
     deckProgress: z.array(DeckProgressSchema),
     flashcardProgress: z.array(FlashcardProgressSchema),
     flashcardMemoryStates: z.array(FlashcardMemoryStateSchema),
-    reviewEvents: z.array(ReviewEventSchema),
+    flashcardReviewEvents: z.array(ReviewEventSchema),
   })
   .strict()
   .superRefine((document, context) => {
+    const themeDeckIds = new Set<string>();
+    for (const [index, row] of document.deckThemeSelections.entries()) {
+      if (themeDeckIds.has(row.deckId)) {
+        context.addIssue({
+          code: "custom",
+          path: ["deckThemeSelections", index, "deckId"],
+          message: "Duplicate deck theme selection",
+        });
+      }
+      themeDeckIds.add(row.deckId);
+    }
     const cardDecks = new Map<string, string>();
     const studiedDeckIds = new Set(document.deckProgress.map((row) => row.deckId));
     const checkOwnership = (flashcardId: string, deckId: string, path: (string | number)[]) => {
@@ -154,16 +180,16 @@ const ProgressBackupDocumentUncompiledSchema = z
       }
     >();
     const latestDeckReview = new Map<string, string>();
-    for (const [index, row] of document.reviewEvents.entries()) {
+    for (const [index, row] of document.flashcardReviewEvents.entries()) {
       if (eventIds.has(row.id)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents", index, "id"],
+          path: ["flashcardReviewEvents", index, "id"],
           message: "Duplicate review event",
         });
       }
       eventIds.add(row.id);
-      checkOwnership(row.flashcardId, row.deckId, ["reviewEvents", index, "deckId"]);
+      checkOwnership(row.flashcardId, row.deckId, ["flashcardReviewEvents", index, "deckId"]);
       const stats = eventStats.get(row.flashcardId) ?? {
         again: 0,
         hard: 0,
@@ -187,7 +213,7 @@ const ProgressBackupDocumentUncompiledSchema = z
       if (!studiedDeckIds.has(row.deckId)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents", index, "deckId"],
+          path: ["flashcardReviewEvents", index, "deckId"],
           message: "Missing deck progress for review event",
         });
       }
@@ -229,7 +255,7 @@ const ProgressBackupDocumentUncompiledSchema = z
       if (!progressIds.has(flashcardId)) {
         context.addIssue({
           code: "custom",
-          path: ["reviewEvents"],
+          path: ["flashcardReviewEvents"],
           message: `Missing progress summary for ${flashcardId}`,
         });
       }
@@ -245,7 +271,7 @@ const ProgressBackupDocumentUncompiledSchema = z
     }
   });
 
-export const ProgressBackupDocumentSchema = z.compile(ProgressBackupDocumentUncompiledSchema, {
+export const ProgressBackupDocumentSchema = z.compile(UncompiledDocumentSchema, {
   strict: true,
 });
 
@@ -260,8 +286,8 @@ export type ProgressBackupSummary = Readonly<{
 export function summarizeProgressBackup(document: ProgressBackupDocument): ProgressBackupSummary {
   return {
     deckCount: document.deckProgress.length,
-    reviewCount: document.reviewEvents.length,
-    lastReviewedAt: document.reviewEvents.reduce<string | null>(
+    reviewCount: document.flashcardReviewEvents.length,
+    lastReviewedAt: document.flashcardReviewEvents.reduce<string | null>(
       (latest, event) => (latest === null || event.reviewedAt > latest ? event.reviewedAt : latest),
       null
     ),

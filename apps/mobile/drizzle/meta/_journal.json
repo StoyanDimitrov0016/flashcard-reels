@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1790104575356,
-      "tag": "0000_cheerful_vengeance",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1790284408965,
-      "tag": "0001_military_roulette",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1790352599233,
-      "tag": "0002_lessons",
+      "when": 1790939656856,
+      "tag": "0000_large_the_leader",
       "breakpoints": true
     }
   ]

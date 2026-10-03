@@ -1,10 +1,10 @@
 import type { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
 
 export interface StudySessionRecurrenceRepository {
-  cancelPendingBySourceAttemptId(sourceAttemptId: string): Promise<void>;
+  cancelPendingByAttemptId(flashcardReviewAttemptId: string): Promise<void>;
   create(recurrence: StudySessionRecurrence): Promise<void>;
   listBySessionId(studySessionId: string): Promise<StudySessionRecurrence[]>;
-  listPendingFlashcardIdsFromTargetPosition(
+  listPendingCardIdsFromTarget(
     studySessionId: string,
     fromTargetReelPosition: number
   ): Promise<string[]>;

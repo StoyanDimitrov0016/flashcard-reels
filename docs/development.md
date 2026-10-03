@@ -98,7 +98,7 @@ npm run db:generate -w @flashcard-reels/mobile # generate a Drizzle migration
 npm run db:check -w @flashcard-reels/mobile    # validate schema and migrations
 ```
 
-Phase 0 uses one clean `0000` migration baseline. Whenever that baseline is regenerated, recreate local development databases before launching the app. Commit the generated baseline and metadata with schema changes.
+Phase 0 uses one clean `0000` migration baseline. To regenerate it, remove the existing `0000_*.sql` and the generated `drizzle/meta` directory, then run the generation command above. Removing only the metadata files leaves an empty directory that Drizzle Kit expects to contain a journal. Whenever that baseline is regenerated, recreate local development databases before launching the app. Commit the generated baseline and metadata with schema changes.
 
 ## Android preview builds
 

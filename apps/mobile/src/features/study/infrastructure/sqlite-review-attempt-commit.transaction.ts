@@ -1,0 +1,232 @@
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
+
+import type { LearningScheduler } from "@/features/learning-engine/domain/learning-scheduler";
+import type { ReviewAttemptCommitTransaction } from "@/features/study/application/review-attempt-commit.transaction";
+import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
+
+import { isFirstReviewOnLocalDay } from "@/features/learning-engine/domain/review-day";
+import {
+  calculateRecurrenceTarget,
+  findNextFreeRecurrenceSlot,
+  type RandomSource,
+} from "@/features/study/domain/recurrences";
+import {
+  studySessions,
+  studySessionRecurrences,
+  studySessionReels,
+  deckProgress,
+  decks,
+  flashcardMemoryStates,
+  flashcardReviewAttempts,
+  flashcards,
+  flashcardReviewEvents,
+} from "@/infrastructure/sqlite/schema";
+
+export class SQLiteReviewAttemptCommitTransaction<
+  TRunResult = unknown,
+> implements ReviewAttemptCommitTransaction {
+  private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
+  private readonly scheduler: LearningScheduler;
+
+  constructor(
+    database: DrizzleDatabase<TRunResult>,
+    scheduler: LearningScheduler,
+    idGenerator: IdGenerator
+  ) {
+    this.database = database;
+    this.idGenerator = idGenerator;
+    this.scheduler = scheduler;
+  }
+
+  async commitAttempt(
+    attemptId: string,
+    committedAt: string,
+    updatedAt: string,
+    random: RandomSource = Math.random
+  ): Promise<boolean> {
+    return this.database.transaction((transaction) => {
+      const rows = transaction
+        .select()
+        .from(flashcardReviewAttempts)
+        .where(
+          and(
+            eq(flashcardReviewAttempts.id, attemptId),
+            isNull(flashcardReviewAttempts.committedAt)
+          )
+        )
+        .limit(1)
+        .all();
+      const attempt = rows[0];
+      if (!attempt) {
+        return false;
+      }
+
+      if (attempt.rating !== null && attempt.ratedAt !== null) {
+        const card = transaction
+          .select({ deckId: flashcards.deckId, title: decks.title, version: decks.revision })
+          .from(flashcards)
+          .innerJoin(decks, eq(decks.id, flashcards.deckId))
+          .where(eq(flashcards.id, attempt.flashcardId))
+          .limit(1)
+          .all()[0];
+        if (!card) {
+          throw new Error(`Missing flashcard ${attempt.flashcardId} for review commit`);
+        }
+        const memoryRows = transaction
+          .select()
+          .from(flashcardMemoryStates)
+          .where(eq(flashcardMemoryStates.flashcardId, attempt.flashcardId))
+          .limit(1)
+          .all();
+        const current = memoryRows[0];
+        if (isFirstReviewOnLocalDay(current?.lastReviewAt ?? null, attempt.ratedAt)) {
+          const currentState = current ? toMemoryState(current) : null;
+          const nextState = this.scheduler.review(
+            attempt.flashcardId,
+            currentState,
+            attempt.rating,
+            attempt.ratedAt
+          ).memoryState;
+          const values = {
+            id: current?.id ?? this.idGenerator.generate(),
+            createdAt: current?.createdAt ?? committedAt,
+            dueAt: nextState.dueAt,
+            difficulty: nextState.difficulty,
+            deckId: card.deckId,
+            elapsedDays: nextState.elapsedDays,
+            flashcardId: nextState.flashcardId,
+            lapses: nextState.lapses,
+            lastReviewAt: nextState.lastReviewAt,
+            learningSteps: nextState.learningSteps,
+            reps: nextState.reps,
+            scheduledDays: nextState.scheduledDays,
+            stability: nextState.stability,
+            state: nextState.state,
+            updatedAt: committedAt,
+          };
+          transaction
+            .insert(flashcardMemoryStates)
+            .values(values)
+            .onConflictDoUpdate({ target: flashcardMemoryStates.flashcardId, set: values })
+            .run();
+        }
+        transaction
+          .insert(flashcardReviewEvents)
+          .values({
+            id: attempt.id,
+            deckId: card.deckId,
+            flashcardId: attempt.flashcardId,
+            rating: attempt.rating,
+            reviewedAt: attempt.ratedAt,
+            committedAt,
+          })
+          .onConflictDoNothing()
+          .run();
+        transaction
+          .insert(deckProgress)
+          .values({
+            id: this.idGenerator.generate(),
+            deckId: card.deckId,
+            title: card.title,
+            revision: card.version,
+            lastReviewedAt: attempt.ratedAt,
+            status: "active",
+          })
+          .onConflictDoUpdate({
+            target: deckProgress.deckId,
+            set: {
+              title: card.title,
+              revision: card.version,
+              lastReviewedAt: sql`max(${deckProgress.lastReviewedAt}, ${attempt.ratedAt})`,
+            },
+          })
+          .run();
+      }
+
+      if (attempt.rating !== null) {
+        const proposed = calculateRecurrenceTarget(attempt.reelPosition, attempt.rating, random);
+        if (proposed !== null) {
+          const session = transaction
+            .select({ furthest: studySessions.furthestReelPosition })
+            .from(studySessions)
+            .where(eq(studySessions.id, attempt.studySessionId))
+            .get();
+          if (!session) {
+            throw new Error(`Missing study session ${attempt.studySessionId} for review commit`);
+          }
+          const minimumTarget = Math.max(proposed, session.furthest + 1);
+          const recurrences = transaction
+            .select({ position: studySessionRecurrences.targetReelPosition })
+            .from(studySessionRecurrences)
+            .where(
+              and(
+                eq(studySessionRecurrences.studySessionId, attempt.studySessionId),
+                isNull(studySessionRecurrences.consumedAt),
+                gte(studySessionRecurrences.targetReelPosition, minimumTarget)
+              )
+            )
+            .all();
+          const reels = transaction
+            .select({ position: studySessionReels.reelPosition })
+            .from(studySessionReels)
+            .where(
+              and(
+                eq(studySessionReels.studySessionId, attempt.studySessionId),
+                gte(studySessionReels.reelPosition, minimumTarget)
+              )
+            )
+            .all();
+          const targetReelPosition = findNextFreeRecurrenceSlot(
+            minimumTarget,
+            new Set([...recurrences, ...reels].map((row) => row.position))
+          );
+          transaction
+            .insert(studySessionRecurrences)
+            .values({
+              id: this.idGenerator.generate(),
+              studySessionId: attempt.studySessionId,
+              flashcardId: attempt.flashcardId,
+              flashcardReviewAttemptId: attempt.id,
+              targetReelPosition,
+              createdAt: committedAt,
+              consumedAt: null,
+            })
+            .run();
+        }
+      }
+
+      const committed = transaction
+        .update(flashcardReviewAttempts)
+        .set({ committedAt, updatedAt })
+        .where(
+          and(
+            eq(flashcardReviewAttempts.id, attemptId),
+            isNull(flashcardReviewAttempts.committedAt)
+          )
+        )
+        .returning({ id: flashcardReviewAttempts.id })
+        .all();
+      return committed.length > 0;
+    });
+  }
+}
+
+function toMemoryState(row: typeof flashcardMemoryStates.$inferSelect) {
+  return {
+    createdAt: row.createdAt,
+    dueAt: row.dueAt,
+    difficulty: row.difficulty,
+    elapsedDays: row.elapsedDays,
+    flashcardId: row.flashcardId,
+    lapses: row.lapses,
+    lastReviewAt: row.lastReviewAt,
+    learningSteps: row.learningSteps,
+    reps: row.reps,
+    scheduledDays: row.scheduledDays,
+    stability: row.stability,
+    state: row.state,
+    updatedAt: row.updatedAt,
+  };
+}

@@ -1,15 +1,22 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
+
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
+import { findAdjacentLessons } from "@/features/lessons/presentation/adjacent-lessons";
 import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
+import { LessonPager } from "@/features/lessons/presentation/components/lesson-pager";
 import {
   ReadingProgressBar,
   useReadingProgress,
 } from "@/features/lessons/presentation/components/reading-progress-bar";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
+import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
+import { useLessonRouteId } from "@/features/lessons/presentation/hooks/use-lesson-route-id";
+import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
@@ -24,14 +31,24 @@ export default function LessonScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { blocks, lesson, loading } = useLesson({ lessonId: lessonId ?? "" });
-  const { appearances } = useDeckAppearances(lesson ? [lesson.deckId] : []);
-  const appearance = lesson ? appearances.get(lesson.deckId) : undefined;
-  const accent = appearance
-    ? resolveDeckAppearance(appearance.presetId, resolvedScheme).accent
+  const lessonId = useLessonRouteId();
+  const { blocks, lesson, loading } = useLesson({ lessonId });
+  const { readingLists } = useReadingLists();
+  const deckLessons = lesson
+    ? (readingLists.find((list) => list.deckId === lesson.deckId)?.lessons ?? [])
+    : [];
+  const lessonCount = deckLessons.length;
+  const { previous, next } = findAdjacentLessons(deckLessons, lesson?.id);
+  // Replacing keeps Back pointing at the deck's lessons instead of every lesson read.
+  const openLesson = (target: LessonSummary) => router.replace(getLessonHref(target.id));
+  const { themeSelections } = useDeckMetadata(lesson ? [lesson.deckId] : [], false);
+  const themeSelection = lesson ? themeSelections.get(lesson.deckId) : undefined;
+  const accent = themeSelection
+    ? resolveDeckTheme(themeSelection.theme, resolvedScheme).accent
     : colors.textSecondary;
   const { scrollableHeight, scrollViewProps, scrollY } = useReadingProgress();
+  // The screen draws under the bottom system bar, so the end of the lesson clears it.
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
@@ -54,12 +71,26 @@ export default function LessonScreen() {
             scrollableHeight={scrollableHeight}
             scrollY={scrollY}
           />
-          <Animated.ScrollView contentContainerStyle={styles.content} {...scrollViewProps}>
+          <Animated.ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: bottom + sizes.spacing.screen },
+            ]}
+            {...scrollViewProps}
+          >
             <View style={styles.column}>
+              {lessonCount > 0 && (
+                <Text style={styles.lessonPosition}>
+                  Lesson {lesson.order + 1} of {lessonCount}
+                </Text>
+              )}
               <Text accessibilityRole="header" style={styles.title}>
                 {lesson.title}
               </Text>
               <LessonMarkdownView blocks={blocks} />
+              <View style={styles.navigation}>
+                <LessonPager next={next} onOpenLesson={openLesson} previous={previous} />
+              </View>
             </View>
           </Animated.ScrollView>
         </>
@@ -70,6 +101,11 @@ export default function LessonScreen() {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+    lessonPosition: {
+      color: colors.textTertiary,
+      fontSize: fontSize.footnote,
+      fontWeight: fontWeight.bold,
+    },
     column: {
       alignSelf: "center",
       gap: sizes.spacing.large,
@@ -77,11 +113,16 @@ function createStyles(colors: AppColors) {
       width: "100%",
     },
     content: {
-      paddingBottom: sizes.spacing.wide * 2,
       paddingHorizontal: screenLayout.horizontalPadding,
       paddingTop: sizes.spacing.spacious,
     },
     missing: { flex: 1, justifyContent: "center" },
+    navigation: {
+      borderTopColor: colors.borderSubtle,
+      borderTopWidth: sizes.border,
+      marginTop: sizes.spacing.screen,
+      paddingTop: sizes.spacing.content,
+    },
     screen: { backgroundColor: colors.canvas, flex: 1 },
     title: {
       color: colors.textPrimary,

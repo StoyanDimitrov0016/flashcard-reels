@@ -9,6 +9,14 @@ export type FlashcardProgressExplanation = Readonly<{
   reviewCount: number;
 }>;
 
+/** The average recall score of a card whose every review was rated Easy. */
+const MAXIMUM_RECALL_SCORE = 3;
+
+/** An average recall score as a whole percentage of the best possible recall. */
+export function toRecallPercentage(averageRecallScore: number): number {
+  return Math.round((averageRecallScore / MAXIMUM_RECALL_SCORE) * 100);
+}
+
 export function explainFlashcardProgress(
   progress: FlashcardProgress | null
 ): FlashcardProgressExplanation {
@@ -16,7 +24,7 @@ export function explainFlashcardProgress(
     return {
       averageRecallScore: null,
       historyBand: "New",
-      reason: "This card has no finalized reviews yet.",
+      reason: "This card has no committed reviews yet.",
       reviewCount: 0,
     };
   }

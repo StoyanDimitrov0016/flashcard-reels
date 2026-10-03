@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
-import type { ReelFeedService } from "@/features/reels/domain/reel-feed.service";
+import type { ShareFeedRequest } from "@/features/reels/presentation/focus-start-requests";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 import type { StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudyFeedService } from "@/features/study/domain/study.service";
 
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
@@ -23,7 +24,8 @@ type PreparationInput = Readonly<{
   progressRevision: number;
   scope: StudySessionScope;
   replaceExistingSession: boolean;
-  service: ReelFeedService;
+  service: StudyFeedService;
+  shareRequest: ShareFeedRequest | undefined;
 }>;
 type PreparationRequest = PreparationInput &
   Readonly<{
@@ -41,18 +43,30 @@ function matchesRequest(request: PreparationRequest | null, input: PreparationIn
     request.progressRevision === input.progressRevision &&
     request.scope === input.scope &&
     request.replaceExistingSession === input.replaceExistingSession &&
-    request.service === input.service
+    request.service === input.service &&
+    request.shareRequest === input.shareRequest
   );
 }
 
-export function usePreparedReelFeed(
-  cards: readonly Flashcard[],
-  scope: StudySessionScope,
-  deckId: DeckId | null,
-  replaceExistingSession: boolean,
-  anchorFlashcardId: string | null = null
-): PreparedReelFeed | null {
-  const { reelFeedService } = useReels();
+type PreparedReelFeedOptions = Readonly<{
+  cards: readonly Flashcard[];
+  scope: StudySessionScope;
+  deckId: DeckId | null;
+  replaceExistingSession: boolean;
+  anchorFlashcardId?: string | null;
+  /** Shares one preparation across remounts, for a start that must open its session once. */
+  shareRequest?: ShareFeedRequest;
+}>;
+
+export function usePreparedReelFeed({
+  cards,
+  scope,
+  deckId,
+  replaceExistingSession,
+  anchorFlashcardId = null,
+  shareRequest,
+}: PreparedReelFeedOptions): PreparedReelFeed | null {
+  const { studyService } = useReels();
   const { revision: progressRevision } = useLearningProgressRevision();
   const [state, setState] = useState<PreparationState>(initialState);
   const requestReference = useRef<PreparationRequest | null>(null);
@@ -69,21 +83,23 @@ export function usePreparedReelFeed(
         progressRevision,
         scope,
         replaceExistingSession,
-        service: reelFeedService,
+        service: studyService,
+        shareRequest,
       };
+      const prepare = () =>
+        studyService
+          .openFeed({
+            cards,
+            scope,
+            deckId,
+            replaceExisting: replaceExistingSession,
+            anchorFlashcardId,
+          })
+          .then((snapshot) => snapshot.feed);
       const request =
         previousRequest && matchesRequest(previousRequest, input)
           ? previousRequest
-          : {
-              ...input,
-              promise: reelFeedService.prepareFeed(
-                cards,
-                scope,
-                deckId,
-                replaceExistingSession,
-                anchorFlashcardId
-              ),
-            };
+          : { ...input, promise: shareRequest ? shareRequest(prepare) : prepare() };
       requestReference.current = request;
 
       void request.promise
@@ -114,10 +130,11 @@ export function usePreparedReelFeed(
       anchorFlashcardId,
       cards,
       deckId,
-      reelFeedService,
+      studyService,
       replaceExistingSession,
       progressRevision,
       scope,
+      shareRequest,
     ]
   );
 
@@ -129,7 +146,8 @@ export function usePreparedReelFeed(
       progressRevision,
       scope,
       replaceExistingSession,
-      service: reelFeedService,
+      service: studyService,
+      shareRequest,
     })
   ) {
     return null;

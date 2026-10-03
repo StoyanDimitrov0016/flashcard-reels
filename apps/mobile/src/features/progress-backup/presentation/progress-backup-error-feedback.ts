@@ -1,4 +1,5 @@
 import { AppError } from "@/shared/errors/app-error";
+import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 
 type BackupAction = "export" | "read" | "restore" | "share";
 
@@ -6,19 +7,19 @@ export function getProgressBackupErrorFeedback(error: unknown, action: BackupAct
   if (error instanceof AppError) {
     switch (error.code) {
       case "PROGRESS_BACKUP_INVALID":
-        return "That progress backup is invalid or damaged. Choose another file.";
+        return getErrorFeedback(error).message;
       case "PROGRESS_BACKUP_TOO_LARGE":
         return action === "export"
           ? "Your progress exceeds the supported backup size."
           : "That progress backup is too large to import.";
       case "PROGRESS_BACKUP_VERSION_UNSUPPORTED":
-        return "This app cannot read that progress backup version.";
+        return getErrorFeedback(error).message;
       case "PROGRESS_BACKUP_READ_FAILED":
-        return "Could not prepare the backup preview. Try again.";
+        return getErrorFeedback(error).message;
       case "PROGRESS_BACKUP_EXPORT_FAILED":
-        return "Could not export progress. Your learning data is still on this device.";
+        return getErrorFeedback(error).message;
       case "PROGRESS_BACKUP_RESTORE_FAILED":
-        return "Could not replace progress. Current progress is still on this device.";
+        return getErrorFeedback(error).message;
     }
   }
 

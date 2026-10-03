@@ -7,7 +7,10 @@ The project contains two connected products:
 - an Expo/React Native mobile app for local-first study;
 - an internal Next.js/Vercel portal for browsing, inspecting, and transferring larger deck libraries.
 
-The mobile app includes a bundled demo deck, mixed and deck-focused study modes, offline audio, local progress tracking, customizable deck appearances, and portable `.fcrdeck` imports. The portal can transfer a deck directly to the app with a short-lived QR code.
+The mobile app includes a bundled demo deck, mixed and deck-focused study modes, offline audio, local progress tracking, customizable deck themes, and portable `.fcrdeck` imports. The portal can transfer a deck directly to the app with a short-lived QR code.
+
+Both apps use `@flashcard-reels/deck-contract` to validate the shared deck format. The mobile
+installer validates complete packages; the portal reads manifests and lessons by byte range.
 
 ## Try the current builds
 

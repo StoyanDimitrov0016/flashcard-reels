@@ -3,11 +3,13 @@ import { File } from "expo-file-system";
 
 import type { DeckCoverAsset, DeckId } from "@/features/decks/domain/deck.model";
 
+import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
 import {
-  isDeckAppearancePresetId,
-  type DeckAppearancePresetId,
-} from "@/features/decks/domain/deck-appearance.model";
+  isDeckThemeId,
+  type DeckThemeId,
+} from "@/features/decks/domain/deck-theme-selection.model";
 import registryMetadata from "@/infrastructure/bundled-deck-registry.json";
+import { OperationError } from "@/shared/errors/operation-error";
 
 // Metro must see a static import for every bundled asset; registry metadata alone cannot
 // produce a runtime asset module through a computed path.
@@ -15,10 +17,10 @@ import demoPackage from "../../assets/decks/7f6f98a7-a84d-4cc8-b744-3d0b53e3c873
 
 export type BundledDeckDefinition = Readonly<{
   id: DeckId;
-  version: number;
+  revision: number;
   asset: number;
   appearance: Readonly<{
-    presetId: DeckAppearancePresetId;
+    theme: DeckThemeId;
     coverAsset: DeckCoverAsset;
   }>;
 }>;
@@ -28,15 +30,7 @@ const packageAssets: Readonly<Record<string, number>> = {
 };
 
 function isDeckCoverAsset(value: string): value is DeckCoverAsset {
-  return [
-    "cards",
-    "computer-science",
-    "database",
-    "javascript",
-    "operating-systems",
-    "react",
-    "system-design",
-  ].includes(value);
+  return DeckCoverAssetSchema.safeParse(value).success;
 }
 
 export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>> =
@@ -49,17 +43,17 @@ export const bundledDeckRegistry: Readonly<Record<DeckId, BundledDeckDefinition>
       if (!isDeckCoverAsset(metadata.appearance.coverAsset)) {
         throw new Error(`Invalid cover asset ${metadata.appearance.coverAsset}`);
       }
-      if (!isDeckAppearancePresetId(metadata.appearance.presetId)) {
-        throw new Error(`Invalid deck appearance preset ${metadata.appearance.presetId}`);
+      if (!isDeckThemeId(metadata.appearance.theme)) {
+        throw new Error(`Invalid deck theme ${metadata.appearance.theme}`);
       }
       const definition: BundledDeckDefinition = {
         appearance: {
-          presetId: metadata.appearance.presetId,
+          theme: metadata.appearance.theme,
           coverAsset: metadata.appearance.coverAsset,
         },
         asset,
         id: metadata.id,
-        version: metadata.version,
+        revision: metadata.revision,
       };
       return [definition.id, definition];
     })
@@ -71,7 +65,11 @@ export async function readBundledDeckPackage(
   const asset = Asset.fromModule(definition.asset);
   await asset.downloadAsync();
   if (!asset.localUri) {
-    throw new Error(`Bundled deck package ${definition.id} did not resolve to a local file`);
+    throw new OperationError({
+      code: "BUNDLED_DECK_INSTALL_FAILED",
+      context: { deckId: definition.id },
+      message: `Bundled deck package ${definition.id} did not resolve to a local file`,
+    });
   }
   return new File(asset.localUri).bytes();
 }

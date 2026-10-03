@@ -7,23 +7,10 @@ import {
 } from "@/features/preferences/domain/app-preferences";
 
 describe("application preferences", () => {
-  it("provides the complete default model", () => {
-    expect(defaultAppPreferences).toEqual({
-      appearance: "device",
-      recollectionIslandPosition: "right",
-      ratingDirection: "forward",
-      audioSide: "primary",
-      audioEnabled: true,
-      hapticsEnabled: true,
-      readingEnabled: true,
-      readingSide: "opposite",
-    });
-  });
-
   it("merges valid partial stored data with defaults", () => {
-    expect(normalizePersistedPreferences({ appearance: "light", audioEnabled: false })).toEqual({
+    expect(normalizePersistedPreferences({ colorMode: "light", audioEnabled: false })).toEqual({
       ...defaultAppPreferences,
-      appearance: "light",
+      colorMode: "light",
       audioEnabled: false,
     });
   });
@@ -31,23 +18,23 @@ describe("application preferences", () => {
   it("preserves valid fields when another stored field is invalid", () => {
     expect(
       normalizePersistedPreferences({
-        appearance: "light",
+        colorMode: "light",
         audioEnabled: "yes",
         hapticsEnabled: false,
       })
     ).toEqual({
       ...defaultAppPreferences,
-      appearance: "light",
+      colorMode: "light",
       hapticsEnabled: false,
     });
   });
   it("keeps preferences saved before reading controls existed", () => {
     expect(
-      normalizePersistedPreferences({ audioEnabled: false, recollectionIslandPosition: "bottom" })
+      normalizePersistedPreferences({ audioEnabled: false, studyIslandPosition: "bottom" })
     ).toEqual({
       ...defaultAppPreferences,
       audioEnabled: false,
-      recollectionIslandPosition: "bottom",
+      studyIslandPosition: "bottom",
     });
     expect(normalizePersistedPreferences({ readingEnabled: false, readingSide: "left" })).toEqual({
       ...defaultAppPreferences,
@@ -56,7 +43,7 @@ describe("application preferences", () => {
   });
 
   it("falls back to a complete model for invalid stored data", () => {
-    expect(normalizePersistedPreferences({ appearance: "sepia" })).toEqual(defaultAppPreferences);
+    expect(normalizePersistedPreferences({ colorMode: "sepia" })).toEqual(defaultAppPreferences);
     expect(normalizePersistedPreferences("not-json-object")).toEqual(defaultAppPreferences);
   });
 

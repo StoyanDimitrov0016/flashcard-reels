@@ -1,14 +1,14 @@
 {
-  "format": "flashcard-reels-progress",
+  "format": "flashcard-reels-learner-data",
   "version": 1,
   "exportedAt": "2026-01-02T00:00:00.000Z",
   "deckProgress": [
     {
       "deckId": "a1000000-0000-4000-8000-000000000001",
       "title": "Versioned Test Deck",
-      "version": 1,
+      "revision": 1,
       "lastReviewedAt": "2026-01-01T12:00:00.000Z",
-      "resolution": "archived"
+      "status": "archived"
     }
   ],
   "flashcardProgress": [
@@ -45,14 +45,26 @@
       "updatedAt": "2026-01-01T12:00:00.000Z"
     }
   ],
-  "reviewEvents": [
+  "flashcardReviewEvents": [
     {
       "id": "c1000000-0000-4000-8000-000000000001",
       "deckId": "a1000000-0000-4000-8000-000000000001",
       "flashcardId": "b1000000-0000-4000-8000-000000000001",
       "rating": "good",
       "reviewedAt": "2026-01-01T12:00:00.000Z",
-      "finalizedAt": "2026-01-01T12:00:00.000Z"
+      "committedAt": "2026-01-01T12:00:00.000Z"
     }
-  ]
+  ],
+  "learnerPreferences": {
+    "colorMode": "device",
+    "studyIslandPosition": "right",
+    "ratingDirection": "forward",
+    "audioEnabled": true,
+    "audioSide": "primary",
+    "readingEnabled": true,
+    "readingSide": "opposite",
+    "hapticsEnabled": true,
+    "updatedAt": "2026-01-02T00:00:00.000Z"
+  },
+  "deckThemeSelections": []
 }

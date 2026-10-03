@@ -1,55 +1,22 @@
+import {
+  parseDeck,
+  validateLessonReferences,
+  type Deck,
+  type Flashcard,
+} from "@flashcard-reels/deck-contract";
 import { strFromU8 } from "fflate";
-import * as z from "zod";
 
 import type { ZipRangeReader } from "@/server/decks/zip-range-reader";
 
-// Mirrors the `.fcrdeck` document described in docs/deck-packages.md.
-const DeckCardSchema = z
-  .object({
-    id: z.uuid(),
-    order: z.number().int().nonnegative(),
-    question: z.string().min(1),
-    answer: z.string().min(1),
-    createdAt: z.iso.datetime({ offset: true }),
-    updatedAt: z.iso.datetime({ offset: true }),
-  })
-  .strict();
-
-const DeckLessonSchema = z
-  .object({
-    id: z.uuid(),
-    order: z.number().int().nonnegative(),
-    title: z.string().min(1),
-  })
-  .strict();
-
-const DeckDocumentSchema = z.compile(
-  z
-    .object({
-      id: z.uuid(),
-      version: z.number().int().positive(),
-      title: z.string().min(1),
-      description: z.string(),
-      createdAt: z.iso.datetime({ offset: true }),
-      updatedAt: z.iso.datetime({ offset: true }),
-      cards: z.array(DeckCardSchema),
-      lessons: z.array(DeckLessonSchema).optional(),
-    })
-    .strict()
-);
-
-type DeckDocument = z.infer<typeof DeckDocumentSchema>;
-
-export type DeckCard = z.infer<typeof DeckCardSchema>;
-
-export type DeckLesson = Readonly<{ id: string; order: number; title: string; markdown: string }>;
+export type DeckCard = Flashcard;
+export type DeckLesson = Readonly<{ id: string; title: string; markdown: string }>;
 
 export type DeckSummary = Readonly<{
   id: string;
   key: string;
   title: string;
   description: string;
-  version: number;
+  revision: number;
   updatedAt: string;
   cardCount: number;
   lessonCount: number;
@@ -60,33 +27,38 @@ export type DeckSummary = Readonly<{
 export type DeckContent = DeckSummary &
   Readonly<{ cards: readonly DeckCard[]; lessons: readonly DeckLesson[] }>;
 
-const AudioEntryPattern = /^audio\/[^/]+\.(?:answer|question)\.mp3$/;
-
-async function readDocument(reader: ZipRangeReader): Promise<DeckDocument> {
+async function readDocument(reader: ZipRangeReader): Promise<Deck> {
   const bytes = await reader.read("deck.json");
   if (!bytes) {
     throw new Error("Invalid deck package: missing deck.json");
   }
-  return DeckDocumentSchema.parse(JSON.parse(strFromU8(bytes)));
+  const document = parseDeck(JSON.parse(strFromU8(bytes)));
+  const expected = new Set([
+    "deck.json",
+    ...document.cards.filter((card) => card.audio).map((card) => `audio/${card.id}.mp3`),
+    ...document.lessons.map((lesson) => `lessons/${lesson.id}.md`),
+  ]);
+  if (
+    reader.entries.length !== expected.size ||
+    reader.entries.some((entry) => !expected.has(entry.name) || entry.uncompressedSize === 0)
+  ) {
+    throw new Error("Invalid deck package: assets do not match deck.json");
+  }
+  return document;
 }
 
-function summarize(
-  document: DeckDocument,
-  reader: ZipRangeReader,
-  key: string,
-  sizeBytes: number
-): DeckSummary {
+function summarize(document: Deck, key: string, sizeBytes: number): DeckSummary {
   return {
-    audioCount: reader.entries.filter((entry) => AudioEntryPattern.test(entry.name)).length,
+    audioCount: document.cards.filter((card) => card.audio).length,
     cardCount: document.cards.length,
     description: document.description,
     id: document.id,
     key,
-    lessonCount: document.lessons?.length ?? 0,
+    lessonCount: document.lessons.length,
+    revision: document.revision,
     sizeBytes,
     title: document.title,
     updatedAt: document.updatedAt,
-    version: document.version,
   };
 }
 
@@ -95,7 +67,7 @@ export async function readDeckSummary(
   key: string,
   sizeBytes: number
 ): Promise<DeckSummary> {
-  return summarize(await readDocument(reader), reader, key, sizeBytes);
+  return summarize(await readDocument(reader), key, sizeBytes);
 }
 
 export async function readDeckContent(
@@ -105,22 +77,25 @@ export async function readDeckContent(
 ): Promise<DeckContent> {
   const document = await readDocument(reader);
   const lessons = await Promise.all(
-    (document.lessons ?? []).map(async (lesson) => {
+    document.lessons.map(async (lesson) => {
       const bytes = await reader.read(`lessons/${lesson.id}.md`);
       if (!bytes) {
         throw new Error(`Invalid deck package: missing lesson ${lesson.id}`);
       }
-      return {
-        id: lesson.id,
-        markdown: strFromU8(bytes),
-        order: lesson.order,
-        title: lesson.title,
-      };
+      const markdown = strFromU8(bytes);
+      if (!markdown.trim()) {
+        throw new Error(`Invalid deck package: empty lesson ${lesson.id}`);
+      }
+      return { id: lesson.id, markdown, title: lesson.title };
     })
   );
+  validateLessonReferences(
+    document,
+    new Map(lessons.map((lesson) => [lesson.id, lesson.markdown]))
+  );
   return {
-    ...summarize(document, reader, key, sizeBytes),
-    cards: document.cards.toSorted((left, right) => left.order - right.order),
-    lessons: lessons.toSorted((left, right) => left.order - right.order),
+    ...summarize(document, key, sizeBytes),
+    cards: document.cards,
+    lessons,
   };
 }

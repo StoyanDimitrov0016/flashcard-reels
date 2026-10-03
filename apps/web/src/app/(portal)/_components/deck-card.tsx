@@ -26,7 +26,7 @@ export function DeckCard({ deck }: DeckCardProps) {
             </Link>
           </h2>
           <p className="mt-0.5 text-xs text-subtle-foreground">
-            Version {deck.version} · {formatBytes(deck.sizeBytes)}
+            Revision {deck.revision} · {formatBytes(deck.sizeBytes)}
           </p>
         </div>
       </div>

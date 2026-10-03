@@ -17,7 +17,7 @@ export class SQLiteStudySessionAggregationQuery<
     this.database = database;
   }
 
-  async findCompletedSessionsPendingAggregation(limit: number): Promise<StudySession[]> {
+  async findCompletedPending(limit: number): Promise<StudySession[]> {
     if (limit <= 0) {
       return [];
     }
@@ -31,10 +31,7 @@ export class SQLiteStudySessionAggregationQuery<
     return rows.map(({ session }) => toModel(session));
   }
 
-  async findCompletedSessionsPendingAggregationForDeck(
-    deckId: DeckId,
-    limit: number
-  ): Promise<StudySession[]> {
+  async findCompletedPendingForDeck(deckId: DeckId, limit: number): Promise<StudySession[]> {
     if (limit <= 0) {
       return [];
     }

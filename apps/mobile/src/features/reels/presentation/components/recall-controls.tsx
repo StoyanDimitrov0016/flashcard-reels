@@ -1,7 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
@@ -11,35 +11,35 @@ import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 type RecallControlsProps = Readonly<{
-  onSelect: (level: RecallLevel) => void;
+  onSelect: (rating: Rating) => void;
   ratingEnabled: boolean;
-  selectedLevel: RecallLevel | null;
+  selectedRating: Rating | null;
 }>;
 
-export function RecallControls({ onSelect, ratingEnabled, selectedLevel }: RecallControlsProps) {
+export function RecallControls({ onSelect, ratingEnabled, selectedRating }: RecallControlsProps) {
   const { orientation, ratingOrder } = useStudyControlLayout();
   const { colors } = useAppTheme();
   const styles = createStyles(colors, orientation);
   const haptics = useHaptics();
-  const orderedOptions = ratingOrder.flatMap((level) =>
-    recallOptions.filter((option) => option.level === level)
+  const orderedOptions = ratingOrder.flatMap((rating) =>
+    recallOptions.filter((option) => option.rating === rating)
   );
 
   return (
     <View style={styles.island}>
-      {orderedOptions.map(({ color: colorName, label, level, symbol }) => {
+      {orderedOptions.map(({ color: colorName, label, rating, symbol }) => {
         const color = colors[colorName];
-        const selected = level === selectedLevel;
+        const selected = rating === selectedRating;
         return (
           <Pressable
-            accessibilityLabel={"Recall level: " + label}
+            accessibilityLabel={"Recall rating: " + label}
             accessibilityRole="button"
             accessibilityState={{ disabled: !ratingEnabled, selected }}
             disabled={!ratingEnabled}
-            key={level}
+            key={rating}
             onPress={() => {
               haptics.ratingSelected();
-              onSelect(level);
+              onSelect(rating);
             }}
             style={styles.action}
           >

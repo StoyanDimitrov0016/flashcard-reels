@@ -4,9 +4,10 @@ import { StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
+import type { LessonId } from "@/features/lessons/domain/lesson.model";
 
-import { AnswerAudioPlayer } from "@/features/audio/presentation/components/answer-audio-player";
+import { FlashcardAudioPlayer } from "@/features/audio/presentation/components/flashcard-audio-player";
 import { ReadingButton } from "@/features/lessons/presentation/components/reading-button";
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
@@ -17,35 +18,46 @@ import { sizes } from "@/shared/presentation/sizes";
 type StudyControlClusterProps = Readonly<{
   audioSource: AudioReference;
   deckId: DeckId;
+  lessonId: LessonId | null;
+  lessonSectionId?: string | null;
   isActive: boolean;
-  onRate: (level: RecallLevel) => void;
+  onRate: (rating: Rating) => void;
   ratingEnabled: boolean;
-  selectedLevel: RecallLevel | null;
+  selectedRating: Rating | null;
 }>;
 
 /** The ratings island with the audio and reading buttons on their chosen sides. */
 export function StudyControlCluster({
   audioSource,
   deckId,
+  lessonId,
+  lessonSectionId,
   isActive,
   onRate,
   ratingEnabled,
-  selectedLevel,
+  selectedRating,
 }: StudyControlClusterProps) {
   const { audioEnabled, audioPosition, orientation, readingEnabled, readingPosition } =
     useStudyControlLayout();
-  const { hasLessons } = useDeckLessons();
+  const { hasLesson } = useDeckLessons();
   const styles = createStyles(orientation);
   const before: ReactElement[] = [];
   const after: ReactElement[] = [];
   if (audioEnabled && audioSource !== null) {
     (isBeforeRatings(audioPosition) ? before : after).push(
-      <AnswerAudioPlayer isActive={isActive} key="audio" source={audioSource} />
+      <FlashcardAudioPlayer isActive={isActive} key="audio" source={audioSource} />
     );
   }
-  if (readingEnabled && hasLessons(deckId)) {
+  if (readingEnabled && lessonId && hasLesson(deckId, lessonId)) {
     // Reading sits outside audio when both share a side, so audio stays next to the ratings.
-    const reading = <ReadingButton deckId={deckId} key="reading" />;
+    const reading = (
+      <ReadingButton
+        deckId={deckId}
+        key="reading"
+        lessonId={lessonId}
+        sectionId={lessonSectionId}
+      />
+    );
     if (isBeforeRatings(readingPosition)) {
       before.unshift(reading);
     } else {
@@ -63,7 +75,7 @@ export function StudyControlCluster({
       <RecallControls
         onSelect={onRate}
         ratingEnabled={ratingEnabled}
-        selectedLevel={selectedLevel}
+        selectedRating={selectedRating}
       />
       {after.length > 0 ? <View style={styles.tools}>{after}</View> : spacerCount > 0 && spacer}
     </View>

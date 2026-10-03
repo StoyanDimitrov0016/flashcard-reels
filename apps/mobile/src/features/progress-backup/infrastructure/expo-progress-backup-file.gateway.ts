@@ -11,6 +11,7 @@ import {
   ProgressBackupTooLargeError,
   ProgressBackupValidationError,
 } from "@/features/progress-backup/domain/progress-backup.errors";
+import { OperationError } from "@/shared/errors/operation-error";
 
 const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
 const SAFETY_COPY_DIRECTORY = "progress-backups";
@@ -72,7 +73,10 @@ export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway 
   async shareSafetyCopy(fileName: string): Promise<void> {
     const file = new File(Paths.document, SAFETY_COPY_DIRECTORY, fileName);
     if (!file.exists) {
-      throw new Error("No previous progress backup is available");
+      throw new OperationError({
+        code: "PROGRESS_BACKUP_UNAVAILABLE",
+        message: "No previous progress backup is available",
+      });
     }
     await this.shareFile(file);
   }
@@ -86,7 +90,10 @@ export class ExpoProgressBackupFileGateway implements ProgressBackupFileGateway 
 
   private async shareFile(file: File): Promise<void> {
     if (!(await Sharing.isAvailableAsync())) {
-      throw new Error("File sharing is unavailable on this device");
+      throw new OperationError({
+        code: "FILE_SHARING_UNAVAILABLE",
+        message: "File sharing is unavailable on this device",
+      });
     }
     await Sharing.shareAsync(file.uri, {
       dialogTitle: "Save progress backup",

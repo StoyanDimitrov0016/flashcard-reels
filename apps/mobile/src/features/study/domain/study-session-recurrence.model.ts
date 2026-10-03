@@ -3,7 +3,7 @@ export type StudySessionRecurrenceFields = Readonly<{
   createdAt: string;
   flashcardId: string;
   id: string;
-  sourceAttemptId: string;
+  flashcardReviewAttemptId: string;
   studySessionId: string;
   targetReelPosition: number;
 }>;
@@ -12,7 +12,7 @@ export class StudySessionRecurrence {
   public readonly id: string;
   public readonly studySessionId: string;
   public readonly flashcardId: string;
-  public readonly sourceAttemptId: string;
+  public readonly flashcardReviewAttemptId: string;
   public readonly targetReelPosition: number;
   public readonly createdAt: string;
   public readonly consumedAt: string | null;
@@ -22,7 +22,7 @@ export class StudySessionRecurrence {
     this.createdAt = fields.createdAt;
     this.flashcardId = fields.flashcardId;
     this.id = fields.id;
-    this.sourceAttemptId = fields.sourceAttemptId;
+    this.flashcardReviewAttemptId = fields.flashcardReviewAttemptId;
     this.studySessionId = fields.studySessionId;
     this.targetReelPosition = fields.targetReelPosition;
   }

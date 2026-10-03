@@ -43,6 +43,21 @@ import {
 } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 
 describe("deck package download ownership", () => {
+  it.each([
+    ["Unable to download a file: HTTP 404", "DECK_DOWNLOAD_EXPIRED"],
+    ["Unable to download a file: HTTP 410", "DECK_DOWNLOAD_EXPIRED"],
+    ["Unable to download a file: HTTP 503", "DECK_DOWNLOAD_UNAVAILABLE"],
+    ["Unable to download a file: server returned HTTP 410", "DECK_DOWNLOAD_EXPIRED"],
+    ["Unable to download a file: server returned HTTP 500", "DECK_DOWNLOAD_UNAVAILABLE"],
+    ["Unable to download a file: HTTP 403", "DECK_DOWNLOAD_FAILED"],
+    ["offline", "DECK_DOWNLOAD_FAILED"],
+    ["Network failed near HTTP 4100", "DECK_DOWNLOAD_FAILED"],
+  ])("categorizes native failure %s", async (message, code) => {
+    native.download.mockRejectedValue(new Error(message));
+    await expect(
+      new ExpoDeckPackageDownloader().download("https://example.com/deck")
+    ).rejects.toMatchObject({ code });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     vi.resetAllMocks();

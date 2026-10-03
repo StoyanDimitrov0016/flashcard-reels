@@ -1,10 +1,11 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
@@ -40,18 +41,26 @@ function ReadyFocusedFeedContent({
   replaceSession,
   transition,
 }: ReadyFocusedFeedContentProps) {
+  // A start is keyed by its revision, so these stay fixed after the session is confirmed.
   const [entryTransition] = useState(() => transition);
+  const [replacesSession] = useState(() => replaceSession);
   const consumed = useRef(false);
-  const preparedFeed = usePreparedReelFeed(
-    cards,
-    "focused",
-    deckId,
-    replaceSession,
-    entryTransition?.anchorFlashcardId ?? null
+  const { shareFocusStart } = useFeedScope();
+  const shareStart = useCallback(
+    (prepare: () => Promise<PreparedReelFeed>) => shareFocusStart(expectedRevision, prepare),
+    [expectedRevision, shareFocusStart]
   );
+  const preparedFeed = usePreparedReelFeed({
+    cards,
+    scope: "focus",
+    deckId,
+    replaceExistingSession: replacesSession,
+    anchorFlashcardId: entryTransition?.anchorFlashcardId ?? null,
+    shareRequest: replacesSession ? shareStart : undefined,
+  });
 
   useEffect(
-    function consumePreparedFocusedFeedTransition() {
+    function consumePreparedTransition() {
       if (preparedFeed && !consumed.current) {
         consumed.current = true;
         onSessionStarted(preparedFeed.studySessionId, expectedRevision);
@@ -146,7 +155,7 @@ export default function FocusedFeedScreen() {
   const showRecovery = !isReady && hasRestorationError;
   const showLoading = !isReady && !hasRestorationError && focusRestoring;
   const showEmpty = !isReady && !hasRestorationError && !focusRestoring;
-  const chooseDeck = () => router.navigate("../library");
+  const chooseDeck = () => router.navigate("../decks");
   const contentInsetTop = useStudyFeedContentInset();
 
   return (

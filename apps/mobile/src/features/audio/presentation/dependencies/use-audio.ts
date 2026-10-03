@@ -1,13 +1,13 @@
-import type { AnswerAudioService } from "@/features/audio/domain/answer-audio.service";
+import type { FlashcardAudioService } from "@/features/audio/domain/flashcard-audio.service";
 
 import { useAppServices } from "@/infrastructure/app-services";
 
 export type AudioCapability = Readonly<{
-  answerAudioService: AnswerAudioService;
+  flashcardAudioService: FlashcardAudioService;
 }>;
 
 export function useAudio(): AudioCapability {
-  const { answerAudioService } = useAppServices();
+  const { flashcardAudioService } = useAppServices();
 
-  return { answerAudioService };
+  return { flashcardAudioService };
 }

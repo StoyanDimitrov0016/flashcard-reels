@@ -1,24 +1,28 @@
 import { z } from "zod";
 
 import {
+  controlSides,
+  ratingDirections,
+  studyIslandPositions,
+  colorModes,
   defaultAppPreferences,
   type AppPreferences,
 } from "@/features/preferences/domain/app-preferences";
 
 export const AppPreferencesSchema = z.object({
-  appearance: z.enum(["light", "dark", "device"]),
-  recollectionIslandPosition: z.enum(["left", "bottom", "right"]),
-  ratingDirection: z.enum(["forward", "reverse"]),
-  audioSide: z.enum(["primary", "opposite"]),
+  colorMode: z.enum(colorModes),
+  studyIslandPosition: z.enum(studyIslandPositions),
+  ratingDirection: z.enum(ratingDirections),
+  audioSide: z.enum(controlSides),
   audioEnabled: z.boolean(),
   hapticsEnabled: z.boolean(),
   readingEnabled: z.boolean(),
-  readingSide: z.enum(["primary", "opposite"]),
+  readingSide: z.enum(controlSides),
 });
 
 const preferenceKeys: ReadonlyArray<keyof AppPreferences> = [
-  "appearance",
-  "recollectionIslandPosition",
+  "colorMode",
+  "studyIslandPosition",
   "ratingDirection",
   "audioSide",
   "audioEnabled",

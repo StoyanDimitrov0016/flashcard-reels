@@ -56,6 +56,7 @@ try {
     "archived-progress-continue.yaml",
     "archived-progress-start-fresh.yaml",
     "archived-progress-delete.yaml",
+    "archived-progress-restart.yaml",
     "app-data-reset-confirmation.yaml"
     "progress-backup-transfer.yaml"
   )) {

@@ -5,6 +5,8 @@ import { fileURLToPath, URL } from "node:url";
 
 import type { DatabaseSchema } from "@/infrastructure/sqlite/schema";
 
+import { SequenceIdGenerator } from "./study-fixtures";
+
 export type TestDatabase = BetterSQLite3Database<DatabaseSchema>;
 
 type NodeSqliteValue = null | number | bigint | string | NodeJS.ArrayBufferView;
@@ -12,11 +14,12 @@ type NodeSqliteValue = null | number | bigint | string | NodeJS.ArrayBufferView;
 export class NodeSqliteDatabase {
   private readonly database: Database.Database;
   readonly drizzle: TestDatabase;
+  readonly rowIds = new SequenceIdGenerator(1_000_000);
 
   constructor() {
     this.database = new Database(":memory:");
     this.database.pragma("foreign_keys = ON");
-    // Keep filesystem resolution out of Vite's browser-asset new URL transform.
+    // Keep filesystem status out of Vite's browser-asset new URL transform.
     const moduleUrl = import.meta.url;
     const migrationDirectory = fileURLToPath(new URL("../../drizzle", moduleUrl));
     for (const migrationFile of orderedMigrationFiles(readdirSync(migrationDirectory))) {

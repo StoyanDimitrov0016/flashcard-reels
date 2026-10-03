@@ -1,10 +1,19 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import type { DeckRepository } from "@/features/decks/domain/deck.repository";
+import type {
+  DeckRepository,
+  InstalledDeckIdentity,
+} from "@/features/decks/domain/deck.repository";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 
 import { DeckCoverAssetSchema } from "@/features/decks/contracts/deck.schema";
-import { Deck as DeckModel, type Deck, type DeckId } from "@/features/decks/domain/deck.model";
+import {
+  Deck as DeckModel,
+  type Deck,
+  type DeckCoverAsset,
+  type DeckId,
+} from "@/features/decks/domain/deck.model";
+import { parseDatabaseRow } from "@/infrastructure/sqlite/parse-database-row";
 import { decks } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepository {
@@ -37,37 +46,26 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
     return rows.map((row) => this.toModel(row));
   }
 
-  async save(deck: Deck): Promise<void> {
-    await this.database
-      .insert(decks)
-      .values({
-        createdAt: deck.createdAt,
-        description: deck.description,
-        id: deck.id,
-        coverAsset: deck.coverAsset,
-        title: deck.title,
-        version: deck.version,
-        updatedAt: deck.updatedAt,
-      })
-      .onConflictDoUpdate({
-        target: decks.id,
-        set: {
-          description: deck.description,
-          title: deck.title,
-          coverAsset: deck.coverAsset,
-          version: deck.version,
-          updatedAt: deck.updatedAt,
-        },
-      });
+  async updateCoverAsset(deckId: DeckId, coverAsset: DeckCoverAsset): Promise<void> {
+    await this.database.update(decks).set({ coverAsset }).where(eq(decks.id, deckId));
   }
 
-  async findVersion(id: DeckId): Promise<number | null> {
+  async findRevision(id: DeckId): Promise<number | null> {
     const rows = await this.database
-      .select({ version: decks.version })
+      .select({ revision: decks.revision })
       .from(decks)
       .where(eq(decks.id, id))
       .limit(1);
-    return rows[0]?.version ?? null;
+    return rows[0]?.revision ?? null;
+  }
+
+  async findInstalledIdentity(id: DeckId): Promise<InstalledDeckIdentity | null> {
+    const rows = await this.database
+      .select({ authorId: decks.authorId, revision: decks.revision })
+      .from(decks)
+      .where(eq(decks.id, id))
+      .limit(1);
+    return rows[0] ?? null;
   }
 
   private toModel(row: typeof decks.$inferSelect): Deck {
@@ -75,8 +73,8 @@ export class SQLiteDeckRepository<TRunResult = unknown> implements DeckRepositor
       description: row.description,
       id: row.id,
       title: row.title,
-      coverAsset: DeckCoverAssetSchema.parse(row.coverAsset),
-      version: row.version,
+      coverAsset: parseDatabaseRow(DeckCoverAssetSchema, row.coverAsset, "decks", row.id),
+      revision: row.revision,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

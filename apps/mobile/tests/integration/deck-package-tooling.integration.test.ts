@@ -1,11 +1,9 @@
+import { parseDeck, parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { spawnSync } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
-import { DeckPackageSchema } from "@/features/decks/deck-installer/internal/deck-package.schema";
 
 const temporaryDirectories: string[] = [];
 
@@ -30,6 +28,7 @@ describe("deck package tooling independence", () => {
     );
   });
 
+  // Builds the demo twice in separate Node processes, so it needs more time under a parallel run.
   it("generates the demo from its isolated authoring source", async () => {
     const project = await temporaryProject();
     await mkdir(path.join(project, "data"), { recursive: true });
@@ -63,11 +62,11 @@ describe("deck package tooling independence", () => {
     );
     expect(generatedInSofia).toEqual(generated);
     expect(generated).toEqual(checkedIn);
-    expect(new ArchiveDeckPackageReader().read(generated)).toMatchObject({
+    expect(parseDeckPackage(generated).deck).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-      version: 2,
+      revision: 2,
     });
-  }, 10_000);
+  }, 30_000);
 
   it("verifies runtime packages in a project with no authoring data", async () => {
     const project = await temporaryProject();
@@ -115,27 +114,27 @@ describe("deck package tooling independence", () => {
         .status
     ).toBe(0);
 
-    const v1 = new ArchiveDeckPackageReader().read(new Uint8Array(await readFile(v1Output)));
-    const v2 = new ArchiveDeckPackageReader().read(new Uint8Array(await readFile(v2Output)));
-    expect(v1).toMatchObject({
+    const v1 = parseDeckPackage(new Uint8Array(await readFile(v1Output)));
+    const v2 = parseDeckPackage(new Uint8Array(await readFile(v2Output)));
+    expect(v1.deck).toMatchObject({
       description: "A tiny deck for import update testing.",
       id: "a1000000-0000-4000-8000-000000000001",
       title: "Versioned Test Deck",
-      version: 1,
+      revision: 1,
     });
-    expect(v1.cards).toHaveLength(3);
-    expect(v1.audioFiles.get("audio/b1000000-0000-4000-8000-000000000001.answer.mp3")).toEqual(
+    expect(v1.deck.cards).toHaveLength(3);
+    expect(v1.audioFiles.get("b1000000-0000-4000-8000-000000000001")).toEqual(
       new Uint8Array(Buffer.from("fixture-audio-unchanged\n"))
     );
-    expect(v2.cards.map(({ id }) => id)).toEqual([
+    expect(v2.deck.cards.map(({ id }) => id)).toEqual([
       "b1000000-0000-4000-8000-000000000001",
       "b1000000-0000-4000-8000-000000000002",
       "b1000000-0000-4000-8000-000000000004",
     ]);
-    expect(v2.cards.find(({ id }) => id.endsWith("0002"))?.answer).toBe(
+    expect(v2.deck.cards.find(({ id }) => id.endsWith("0002"))?.answer).toBe(
       "The second version answer."
     );
-    expect(v2.audioFiles.has("audio/b1000000-0000-4000-8000-000000000002.question.mp3")).toBe(true);
+    expect(v2.audioFiles.has("b1000000-0000-4000-8000-000000000002")).toBe(true);
   }, 10_000);
 
   it("inspects valid packages and reports invalid packages with a non-zero exit", async () => {
@@ -155,8 +154,7 @@ describe("deck package tooling independence", () => {
     expect(validResult.status).toBe(0);
     expect(validResult.stdout).toContain("Deck ID: a1000000-0000-4000-8000-000000000001");
     expect(validResult.stdout).toContain("Cards: 3");
-    expect(validResult.stdout).toContain("Answer audio: 2");
-    expect(validResult.stdout).toContain("Question audio: 0");
+    expect(validResult.stdout).toContain("Combined audio: 2");
     expect(validResult.stdout).toContain("Validation: passed");
 
     const invalidResult = runTool("inspect-deck-package.mjs", invalidPackage);
@@ -171,29 +169,36 @@ describe("deck package tooling independence", () => {
     await cp(path.join(process.cwd(), "data", "decks", "system-design-foundations"), source, {
       recursive: true,
     });
-    const document = DeckPackageSchema.parse(
-      JSON.parse(await readFile(path.join(source, "deck.json"), "utf8"))
-    );
+    const document = parseDeck(JSON.parse(await readFile(path.join(source, "deck.json"), "utf8")));
     const [firstCard] = document.cards;
-    await mkdir(path.join(source, "audio"), { recursive: true });
+    if (!firstCard) {
+      throw new Error("Expected a card in the lesson deck");
+    }
     await writeFile(
-      path.join(source, "audio", `${firstCard?.id}.question.mp3`),
-      new Uint8Array([1, 2, 3])
+      path.join(source, "deck.json"),
+      JSON.stringify({
+        ...document,
+        cards: document.cards.map((card) =>
+          card.id === firstCard.id ? { ...card, audio: true } : card
+        ),
+      })
     );
+    await mkdir(path.join(source, "audio"), { recursive: true });
+    await writeFile(path.join(source, "audio", `${firstCard?.id}.mp3`), new Uint8Array([1, 2, 3]));
     const output = path.join(project, "out", "deck.fcrdeck");
 
     const result = runTool("generate-deck-package.mjs", source, output);
 
     expect(result.status, result.stderr).toBe(0);
-    const generated = new ArchiveDeckPackageReader().read(new Uint8Array(await readFile(output)));
-    expect(generated.id).toBe(document.id);
-    expect(generated.cards).toHaveLength(document.cards.length);
+    const generated = parseDeckPackage(new Uint8Array(await readFile(output)));
+    expect(generated.deck.id).toBe(document.id);
+    expect(generated.deck.cards).toHaveLength(document.cards.length);
     expect(generated.lessonFiles.size).toBe(document.lessons?.length);
-    expect([...generated.audioFiles.keys()]).toEqual([`audio/${firstCard?.id}.question.mp3`]);
+    expect(generated.audioFiles.has(firstCard?.id ?? "")).toBe(true);
 
     await writeFile(path.join(source, "audio", "stray.mp3"), new Uint8Array([1]));
     const rejected = runTool("generate-deck-package.mjs", source, output);
     expect(rejected.status).not.toBe(0);
-    expect(rejected.stderr).toContain("Unexpected audio file stray.mp3");
+    expect(rejected.stderr).toContain("Audio file stray.mp3 does not match a card");
   }, 10_000);
 });

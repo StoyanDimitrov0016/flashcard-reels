@@ -1,8 +1,8 @@
 import { createHapticPolicy } from "@/features/preferences/application/haptics-policy";
+import { usePreferencesContext } from "@/features/preferences/presentation/controllers/preferences-context";
 import { triggerHaptic } from "@/features/preferences/presentation/haptics";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
 
 export function useHaptics() {
-  const { preferences } = usePreferences();
+  const { preferences } = usePreferencesContext();
   return createHapticPolicy(preferences.hapticsEnabled, triggerHaptic);
 }

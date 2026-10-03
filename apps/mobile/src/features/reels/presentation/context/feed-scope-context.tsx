@@ -1,12 +1,21 @@
-import { createContext, type ReactNode, useCallback, useContext, useReducer } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useReducer,
+  useState,
+} from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import {
   useFocusedFeedLifecycle,
   type FocusedFeedEvaluation,
 } from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
+import { createFocusStartRequests } from "@/features/reels/presentation/focus-start-requests";
 import {
   confirmFocusedFeedSession,
   createFocusedFeedState,
@@ -29,10 +38,15 @@ type FeedScopeContextValue = Readonly<{
   retryFocusedFeedRestoration: () => void;
   startFocusedFeed: (
     deckId: DeckId,
-    anchorFlashcardId?: string,
+    anchorFlashcardId: string | null,
     options?: FocusedFeedOptions
   ) => void;
   confirmFocusedFeedSession: (sessionId: string, expectedRevision: number) => void;
+  /** Runs a start's session-replacing preparation once, however often its feed remounts. */
+  shareFocusStart: (
+    revision: number,
+    prepare: () => Promise<PreparedReelFeed>
+  ) => Promise<PreparedReelFeed>;
 }>;
 
 type FeedScopeOwnerState = Readonly<{
@@ -51,7 +65,7 @@ type FeedScopeEvent =
   | Readonly<{ error: Error; type: "lifecycle-failed" }>
   | Readonly<{ type: "retry-lifecycle" }>
   | Readonly<{
-      anchorFlashcardId?: string;
+      anchorFlashcardId: string | null;
       deckId: DeckId;
       options?: FocusedFeedOptions;
       type: "start";
@@ -113,6 +127,7 @@ type FeedScopeProviderProps = Readonly<{ children: ReactNode }>;
 
 export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const [ownerState, dispatch] = useReducer(reduceFeedScope, initialOwnerState);
+  const [focusStarts] = useState(createFocusStartRequests);
   const handleLifecycleEvaluation = useCallback(
     ({ session, requestedDeckAvailable }: FocusedFeedEvaluation) => {
       dispatch({
@@ -147,7 +162,7 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   );
 
   const startFocusedFeed = useCallback(
-    (deckId: DeckId, anchorFlashcardId?: string, options?: FocusedFeedOptions) => {
+    (deckId: DeckId, anchorFlashcardId: string | null, options?: FocusedFeedOptions) => {
       dispatch({ anchorFlashcardId, deckId, options, type: "start" });
     },
     []
@@ -162,6 +177,7 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
     focusRestoring: !ownerState.lifecycleResolved || evaluatingFocusedFeed,
     restorationError: ownerState.restorationError,
     retryFocusedFeedRestoration,
+    shareFocusStart: focusStarts.share,
     startFocusedFeed,
   };
 

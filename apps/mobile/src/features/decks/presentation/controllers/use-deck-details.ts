@@ -1,104 +1,71 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
-import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
+import type { DeckId } from "@/features/decks/domain/deck.model";
+import type { DeckDetails } from "@/features/decks/domain/deck.service";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
+import { useDeckThemeSelectionRevision } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
-
-type DeckDetailsState = Readonly<{
-  cards: Flashcard[];
-  appearance: DeckAppearance | null;
-  deck: Deck | null;
-  error: Error | null;
-  loading: boolean;
-  progress: ReadonlyMap<string, FlashcardProgress>;
-}>;
-
-export function useDeckDetails(deckId: DeckId, enabled = true): DeckDetailsState {
-  const { deckService, flashcardService, flashcardProgressService } = useDecks();
+import { useAsyncLoad } from "@/shared/presentation/hooks/use-async-load";
+type DetailsData = DeckDetails & Readonly<{ progress: ReadonlyMap<string, FlashcardProgress> }>;
+const emptyDetails: DetailsData = {
+  deck: null,
+  cards: [],
+  themeSelection: null,
+  progress: new Map(),
+};
+export function useDeckDetails(deckId: DeckId | null, enabled = true) {
+  const { deckService, flashcardProgressService } = useDecks();
   const { revision } = useDeckContentRevision();
+  const { themeSelectionRevision } = useDeckThemeSelectionRevision();
   const { revision: progressRevision } = useLearningProgressRevision();
-  const [state, setState] = useState<DeckDetailsState>({
-    appearance: null,
-    cards: [],
-    deck: null,
-    error: null,
-    loading: true,
-    progress: new Map(),
-  });
-
-  useEffect(
-    function loadDeckDetails() {
-      if (!enabled) {
-        return undefined;
+  const load = useCallback(
+    async (_content = revision, _theme = themeSelectionRevision, _progress = progressRevision) => {
+      if (deckId === null) {
+        return emptyDetails;
       }
-      let active = true;
-      void Promise.all([
-        deckService.findById(deckId),
-        flashcardService.listByDeckId(deckId),
-        deckService.getAppearance(deckId),
-      ])
-        .then(async ([deck, cards, appearance]) => {
-          if (!deck) {
-            if (active) {
-              setState({
-                appearance: null,
-                cards: [],
-                deck: null,
-                error: null,
-                loading: false,
-                progress: new Map(),
-              });
-            }
-            return;
-          }
-          if (active) {
-            const progress = await flashcardProgressService.findByFlashcardIds(
-              cards.map((card) => card.id)
-            );
-            if (active) {
-              setState({ appearance, cards, deck, error: null, loading: false, progress });
-            }
-          }
-        })
-        .catch((error: unknown) => {
-          if (active) {
-            setState({
-              appearance: null,
-              cards: [],
-              deck: null,
-              error: toOperationError(error, {
-                code: "VIEW_LOAD_FAILED",
-                context: { deckId, operation: "deck-details.load" },
-                message: "Could not load deck cards",
-              }),
-              loading: false,
-              progress: new Map(),
-            });
-          }
-        });
-      return function cancelDeckDetailsLoad() {
-        active = false;
-      };
+      const details = await deckService.getDetails(deckId);
+      if (!details.deck) {
+        return emptyDetails;
+      }
+      const progress = await flashcardProgressService.findByFlashcardIds(
+        details.cards.map((card) => card.id)
+      );
+      return { ...details, progress };
     },
     [
       deckId,
       deckService,
-      enabled,
-      flashcardService,
       flashcardProgressService,
-      progressRevision,
       revision,
+      themeSelectionRevision,
+      progressRevision,
     ]
   );
-
+  const onError = useCallback(
+    (error: unknown) =>
+      toOperationError(error, {
+        code: "VIEW_LOAD_FAILED",
+        context: { deckId, operation: "deck-details.load" },
+        message: "Could not load deck cards",
+      }),
+    [deckId]
+  );
+  const state = useAsyncLoad({
+    load,
+    initialData: emptyDetails,
+    onError,
+    enabled: enabled && deckId !== null,
+  });
+  if (deckId === null) {
+    return { ...emptyDetails, error: null, loading: false };
+  }
   if (state.error) {
     throw state.error;
   }
-  return state;
+
+  return { ...state.data, error: state.error, loading: state.loading };
 }

@@ -7,14 +7,15 @@ import {
   defaultAppPreferences,
   resolveColorScheme,
   type AppPreferences,
-  type AppearancePreference,
+  type ColorMode,
   type AudioSide,
   type ControlSide,
   type RatingDirection,
-  type RecollectionIslandPosition,
+  type StudyIslandPosition,
   type ResolvedColorScheme,
 } from "@/features/preferences/domain/app-preferences";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
 type PreferencesContextValue = Readonly<{
@@ -22,14 +23,14 @@ type PreferencesContextValue = Readonly<{
   ready: boolean;
   storageError: Error | null;
   resolvedScheme: ResolvedColorScheme;
-  setAppearance: (appearance: AppearancePreference) => void;
+  setColorMode: (colorMode: ColorMode) => void;
   setAudioEnabled: (enabled: boolean) => void;
   setAudioSide: (audioSide: AudioSide) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setReadingEnabled: (enabled: boolean) => void;
   setReadingSide: (readingSide: ControlSide) => void;
   setRatingDirection: (ratingDirection: RatingDirection) => void;
-  setRecollectionIslandPosition: (position: RecollectionIslandPosition) => void;
+  setStudyIslandPosition: (position: StudyIslandPosition) => void;
 }>;
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
@@ -64,7 +65,8 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
           if (!active) {
             return;
           }
-          const normalized = toOperationError(error, {
+          const normalized = new OperationError({
+            cause: error,
             code: "PREFERENCES_READ_FAILED",
             context: { operation: "preferences.load" },
             message: "Preferences could not be loaded. Using defaults.",
@@ -104,18 +106,17 @@ export function PreferencesProvider({ children, service }: PreferencesProviderPr
     ready,
     storageError,
     resolvedScheme: resolveColorScheme(
-      preferences.appearance,
+      preferences.colorMode,
       deviceScheme === "light" || deviceScheme === "dark" ? deviceScheme : null
     ),
-    setAppearance: (appearance) => updatePreferences("appearance", appearance),
+    setColorMode: (colorMode) => updatePreferences("colorMode", colorMode),
     setAudioEnabled: (enabled) => updatePreferences("audioEnabled", enabled),
     setAudioSide: (audioSide) => updatePreferences("audioSide", audioSide),
     setHapticsEnabled: (enabled) => updatePreferences("hapticsEnabled", enabled),
     setReadingEnabled: (enabled) => updatePreferences("readingEnabled", enabled),
     setReadingSide: (readingSide) => updatePreferences("readingSide", readingSide),
     setRatingDirection: (ratingDirection) => updatePreferences("ratingDirection", ratingDirection),
-    setRecollectionIslandPosition: (position) =>
-      updatePreferences("recollectionIslandPosition", position),
+    setStudyIslandPosition: (position) => updatePreferences("studyIslandPosition", position),
   };
 
   return <PreferencesContext.Provider value={contextValue}>{children}</PreferencesContext.Provider>;

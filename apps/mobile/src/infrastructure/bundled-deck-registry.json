@@ -1,10 +1,10 @@
 [
   {
     "id": "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-    "version": 2,
+    "revision": 2,
     "packageAsset": "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873.fcrdeck",
     "appearance": {
-      "presetId": "gold",
+      "theme": "gold",
       "coverAsset": "javascript"
     }
   }

@@ -1,3 +1,5 @@
+import type { LessonSection } from "@flashcard-reels/deck-contract";
+
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import type { LessonBlock, LessonInline } from "@/features/lessons/domain/lesson-markdown.parser";
@@ -9,16 +11,70 @@ import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typograp
 const monospaceFamily = Platform.select({ android: "monospace", default: "Menlo" });
 const listMarkerWidth = 26;
 
-type LessonMarkdownViewProps = Readonly<{ blocks: readonly LessonBlock[] }>;
+type LessonMarkdownViewProps = Readonly<{
+  blocks: readonly LessonBlock[];
+  targetSection?: LessonSection;
+  sectionColor?: string;
+  onTargetLayout?: (y: number) => void;
+  onDocumentLayout?: (y: number) => void;
+}>;
 
-export function LessonMarkdownView({ blocks }: LessonMarkdownViewProps) {
+export function LessonMarkdownView({
+  blocks,
+  targetSection,
+  sectionColor,
+  onTargetLayout,
+  onDocumentLayout,
+}: LessonMarkdownViewProps) {
   const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
+  return (
+    <View
+      style={styles.document}
+      onLayout={(event) => onDocumentLayout?.(event.nativeEvent.layout.y)}
+    >
+      {targetSection ? (
+        <>
+          {targetSection.startBlock > 0 && (
+            <LessonBlocksView blocks={blocks.slice(0, targetSection.startBlock)} colors={colors} />
+          )}
+          <View
+            onLayout={(event) => onTargetLayout?.(event.nativeEvent.layout.y)}
+            style={[
+              styles.document,
+              styles.relatedSection,
+              sectionColor && { borderLeftColor: sectionColor },
+            ]}
+          >
+            <Text accessibilityLabel="Related section starts here" style={styles.relatedLabel}>
+              Related section
+            </Text>
+            <LessonBlocksView
+              blocks={blocks.slice(targetSection.startBlock, targetSection.endBlock)}
+              colors={colors}
+            />
+          </View>
+          {targetSection.endBlock < blocks.length && (
+            <LessonBlocksView blocks={blocks.slice(targetSection.endBlock)} colors={colors} />
+          )}
+        </>
+      ) : (
+        <LessonBlocksView blocks={blocks} colors={colors} />
+      )}
+    </View>
+  );
+}
+
+type LessonBlocksViewProps = Readonly<{ blocks: readonly LessonBlock[]; colors: AppColors }>;
+
+function LessonBlocksView({ blocks, colors }: LessonBlocksViewProps) {
   const styles = createStyles(colors);
 
   return (
     <View style={styles.document}>
       {blocks.map((block, index) => (
-        // Blocks have no identity beyond their position in an immutable lesson.
+        // Blocks are ordered within the current immutable document range.
         // oxlint-disable-next-line react/no-array-index-key
         <LessonBlockView block={block} colors={colors} key={index} />
       ))}
@@ -32,7 +88,9 @@ function LessonBlockView({ block, colors }: LessonBlockViewProps) {
   const styles = createStyles(colors);
 
   if (block.type === "heading") {
-    const headingStyle = [styles.heading1, styles.heading2, styles.heading3][block.level - 1];
+    const headingStyle = [styles.heading1, styles.heading2, styles.heading3][
+      Math.min(block.level, 3) - 1
+    ];
     return (
       <Text accessibilityRole="header" style={[styles.heading, headingStyle]}>
         <InlineText colors={colors} content={block.content} />
@@ -154,6 +212,12 @@ function createStyles(colors: AppColors) {
       color: colors.textPrimary,
       fontSize: fontSize.reading,
       lineHeight: lineHeight.reading,
+    },
+    relatedLabel: { color: colors.textSecondary },
+    relatedSection: {
+      borderLeftColor: colors.borderStrong,
+      borderLeftWidth: 3,
+      paddingLeft: sizes.spacing.medium,
     },
   });
 }

@@ -2,65 +2,44 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Children, isValidElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { AppearancePreference } from "@/features/preferences/domain/app-preferences";
-
+import { type ColorMode, colorModes } from "@/features/preferences/domain/app-preferences";
 import { AppSwitch } from "@/shared/presentation/components/app-switch";
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from "@/shared/presentation/components/segmented-control";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
 import { fontSize, fontWeight, letterSpacing, lineHeight } from "@/shared/presentation/typography";
 
-const appearanceLabels: Record<AppearancePreference, string> = {
+const colorModeLabels: Record<ColorMode, string> = {
   light: "Light",
   dark: "Dark",
   device: "Device",
 };
 
-const appearanceIcons: Record<AppearancePreference, SymbolViewProps["name"]> = {
+const colorModeIcons: Record<ColorMode, SymbolViewProps["name"]> = {
   light: { android: "light_mode", ios: "sun.max.fill", web: "light_mode" },
   dark: { android: "dark_mode", ios: "moon.fill", web: "dark_mode" },
   device: { android: "devices", ios: "iphone", web: "devices" },
 };
 
-const appearanceOptions: readonly AppearancePreference[] = ["light", "dark", "device"];
+const colorModeOptions: readonly SegmentedControlOption<ColorMode>[] = colorModes.map(
+  (colorMode) => ({
+    accessibilityLabel: `${colorModeLabels[colorMode]} color mode`,
+    icon: colorModeIcons[colorMode],
+    label: colorModeLabels[colorMode],
+    value: colorMode,
+  })
+);
 
-type AppearanceSelectorProps = Readonly<{
-  onChange: (value: AppearancePreference) => void;
-  selected: AppearancePreference;
+type ColorModeSelectorProps = Readonly<{
+  onChange: (value: ColorMode) => void;
+  selected: ColorMode;
 }>;
 
-export function AppearanceSelector({ onChange, selected }: AppearanceSelectorProps) {
-  const { colors } = useAppTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <View accessibilityRole="radiogroup" style={styles.segmentedControl}>
-      {appearanceOptions.map((appearance) => {
-        const isSelected = selected === appearance;
-        return (
-          <Pressable
-            accessibilityLabel={appearanceLabels[appearance] + " appearance"}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: isSelected, selected: isSelected }}
-            hitSlop={4}
-            key={appearance}
-            onPress={() => onChange(appearance)}
-            style={[styles.segment, isSelected && styles.segmentSelected]}
-          >
-            <View style={styles.segmentContent}>
-              <SymbolView
-                name={appearanceIcons[appearance]}
-                size={16}
-                tintColor={isSelected ? colors.textPrimary : colors.textSecondary}
-              />
-              <Text style={[styles.segmentLabel, isSelected && styles.segmentLabelSelected]}>
-                {appearanceLabels[appearance]}
-              </Text>
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
+export function ColorModeSelector({ onChange, selected }: ColorModeSelectorProps) {
+  return <SegmentedControl onChange={onChange} options={colorModeOptions} selected={selected} />;
 }
 
 type PreferenceSectionProps = Readonly<{
@@ -228,36 +207,6 @@ function createStyles(colors: AppColors) {
       letterSpacing: letterSpacing.wider,
       paddingHorizontal: sizes.spacing.xSmall,
       textTransform: "uppercase",
-    },
-    segment: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      height: sizes.control.compact,
-      paddingHorizontal: sizes.spacing.small,
-    },
-    segmentContent: { alignItems: "center", flexDirection: "row", gap: sizes.spacing.xSmall },
-    segmentLabel: {
-      color: colors.textSecondary,
-      fontSize: fontSize.caption,
-      fontWeight: fontWeight.bold,
-    },
-    segmentLabelSelected: { color: colors.textPrimary },
-    segmentSelected: {
-      backgroundColor: colors.surfaceHover,
-      // Concentric with the card corner around it.
-      borderRadius: sizes.radius.row - sizes.spacing.xSmall,
-    },
-    // Framed like the grouped setting cards.
-    segmentedControl: {
-      backgroundColor: colors.surfaceRaised,
-      borderColor: colors.borderSubtle,
-      borderRadius: sizes.radius.row,
-      borderWidth: sizes.border,
-      flexDirection: "row",
-      gap: sizes.spacing.large,
-      margin: 0,
-      padding: sizes.spacing.xSmall,
     },
     switchLabel: { flex: 1 },
   });

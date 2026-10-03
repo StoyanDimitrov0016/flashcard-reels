@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
 
+import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight } from "@/shared/presentation/typography";
 
 const symbolNames = {
@@ -50,7 +51,7 @@ const styles = StyleSheet.create({
   cover: {
     alignItems: "center",
     borderRadius: 11,
-    borderWidth: 1,
+    borderWidth: sizes.border,
     justifyContent: "center",
   },
   javascript: { fontSize: fontSize.subhead, fontWeight: fontWeight.heavy },

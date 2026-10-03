@@ -3,8 +3,12 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import type { ProgressBackupFileGateway } from "@/features/progress-backup/application/progress-backup-file.gateway";
 
+import { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
+import { defaultAppPreferences } from "@/features/preferences/domain/app-preferences";
+import { SQLitePreferencesRepository } from "@/features/preferences/infrastructure/sqlite-preferences.repository";
 import { ProgressBackupServiceImpl } from "@/features/progress-backup/application/progress-backup.service.impl";
 import {
   ProgressBackupDocumentSchema,
@@ -20,7 +24,7 @@ import {
   flashcardReviewAttempts,
   flashcards,
   flashcardProgress,
-  reviewEvents,
+  flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -28,6 +32,7 @@ import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createScenarioGraph, seedDeck } from "../support/sqlite-study-scenario";
 import {
   makeSession,
+  OTHER_DECK_ID,
   SequenceIdGenerator,
   TEST_DECK_ID,
   TestClock,
@@ -103,9 +108,150 @@ describe("progress backup", () => {
     return database;
   }
 
+  it("round trips preferences and themes with progress, replacing the target learner data", async () => {
+    const source = createDatabase();
+    const clock = new TestClock();
+    await seedDeck(source, TEST_DECK_ID, [testId(1)]);
+    const preferences = {
+      colorMode: "light" as const,
+      studyIslandPosition: "left" as const,
+      ratingDirection: "reverse" as const,
+      audioEnabled: false,
+      audioSide: "opposite" as const,
+      readingEnabled: false,
+      readingSide: "primary" as const,
+      hapticsEnabled: false,
+    };
+    await new SQLitePreferencesRepository(source.drizzle, clock, source.rowIds).save(preferences);
+    const themes = new SQLiteDeckThemeSelectionRepository(source.drizzle, source.rowIds);
+    await themes.save(new DeckThemeSelection({ deckId: TEST_DECK_ID, theme: "cyan" }));
+    await themes.save(new DeckThemeSelection({ deckId: OTHER_DECK_ID, theme: "rose" }));
+    const graph = createScenarioGraph(source, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("focus", TEST_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(testId(1), 0, session.id);
+    await graph.study.rateAttempt(attemptId, "good");
+    const files = new MemoryBackupFiles();
+    await new ProgressBackupServiceImpl(
+      graph.runtime,
+      new SQLiteProgressBackupQuery(source.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
+      files,
+      clock
+    ).exportProgress();
+    const exported = files.shared;
+    if (!exported) {
+      throw new Error("Missing exported learner data");
+    }
+    expect(exported.learnerPreferences).toMatchObject(preferences);
+    expect(exported.learnerPreferences).not.toHaveProperty("id");
+    expect(exported.deckThemeSelections).toEqual([
+      { deckId: TEST_DECK_ID, theme: "cyan" },
+      { deckId: OTHER_DECK_ID, theme: "rose" },
+    ]);
+    const target = createDatabase();
+    await seedDeck(target, TEST_DECK_ID, [testId(1)]);
+    await new SQLitePreferencesRepository(target.drizzle, clock, target.rowIds).save(
+      defaultAppPreferences
+    );
+    await new SQLiteDeckThemeSelectionRepository(target.drizzle, target.rowIds).save(
+      new DeckThemeSelection({ deckId: testId(999), theme: "gold" })
+    );
+    const targetGraph = createScenarioGraph(target, clock, new SequenceIdGenerator());
+    const query = new SQLiteProgressBackupQuery(target.drizzle);
+    const backup = new ProgressBackupServiceImpl(
+      targetGraph.runtime,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
+      files,
+      clock
+    );
+    files.picked = JSON.stringify(exported);
+    const prepared = await backup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Missing prepared learner data restore");
+    }
+    await backup.restore(prepared);
+    expect(
+      await new SQLitePreferencesRepository(target.drizzle, clock, target.rowIds).load()
+    ).toEqual(preferences);
+    expect(await query.read(exported.exportedAt)).toEqual(exported);
+  });
+
+  it.each(["missing preferences", "old format", "duplicate themes"])(
+    "rejects %s without altering learner data",
+    async (invalidCase) => {
+      const database = createDatabase();
+      const original = loadDeviceFixture();
+      const query = new SQLiteProgressBackupQuery(database.drizzle);
+      await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+        original
+      );
+      const before = await query.read(original.exportedAt);
+      const invalid: Record<string, unknown> = { ...before };
+      if (invalidCase === "missing preferences") {
+        delete invalid.learnerPreferences;
+      } else if (invalidCase === "old format") {
+        invalid.format = "flashcard-reels-progress";
+      } else {
+        invalid.deckThemeSelections = [
+          { deckId: TEST_DECK_ID, theme: "cyan" },
+          { deckId: TEST_DECK_ID, theme: "rose" },
+        ];
+      }
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const files = new MemoryBackupFiles();
+      files.picked = JSON.stringify(invalid);
+      const backup = new ProgressBackupServiceImpl(
+        graph.runtime,
+        query,
+        new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+        files,
+        clock
+      );
+      await expect(backup.prepareRestore()).rejects.toBeInstanceOf(ProgressBackupValidationError);
+      expect(await query.read(original.exportedAt)).toEqual(before);
+    }
+  );
+
+  it.each([
+    ["colorMode", "sepia"],
+    ["studyIslandPosition", "top"],
+    ["ratingDirection", "sideways"],
+    ["audioSide", "left"],
+    ["readingSide", "right"],
+    ["audioEnabled", 2],
+    ["readingEnabled", 2],
+    ["hapticsEnabled", 2],
+  ])("rejects invalid backup preference %s", async (key, value) => {
+    const database = createDatabase();
+    const original = loadDeviceFixture();
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const before = await query.read(original.exportedAt);
+    const files = new MemoryBackupFiles();
+    files.picked = JSON.stringify({
+      ...before,
+      learnerPreferences: { ...before.learnerPreferences, [key]: value },
+    });
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const backup = new ProgressBackupServiceImpl(
+      graph.runtime,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+      files,
+      clock
+    );
+    await expect(backup.prepareRestore()).rejects.toBeInstanceOf(ProgressBackupValidationError);
+    expect(await query.read(original.exportedAt)).toEqual(before);
+  });
+
   it("keeps the device import fixture compatible with the backup format", () => {
     const document = loadDeviceFixture();
-    expect(document.reviewEvents).toHaveLength(1);
+    expect(document.flashcardReviewEvents).toHaveLength(1);
   });
 
   it.each([
@@ -120,14 +266,14 @@ describe("progress backup", () => {
       await database.drizzle.update(flashcards).set({ createdAt });
       const clock = new TestClock();
       const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-      const { session } = await graph.study.openSession("mixed", null, false);
+      const { session } = await graph.study.openSession("discover", null, false);
       const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
       await graph.study.rateAttempt(attemptId, "good");
       const files = new MemoryBackupFiles();
       const backup = new ProgressBackupServiceImpl(
-        graph.study,
+        graph.runtime,
         new SQLiteProgressBackupQuery(database.drizzle),
-        new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+        new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
         files,
         clock
       );
@@ -135,7 +281,7 @@ describe("progress backup", () => {
       await backup.exportProgress();
 
       expect(files.shared?.flashcardProgress[0]?.createdAt).toBe(expected);
-      expect(files.shared?.reviewEvents).toHaveLength(1);
+      expect(files.shared?.flashcardReviewEvents).toHaveLength(1);
       const stored = await database.drizzle.select().from(flashcardProgress);
       expect(stored[0]?.createdAt).toBe(createdAt);
       files.picked = JSON.stringify(files.shared);
@@ -153,7 +299,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, cardIds);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const { session } = await graph.study.openSession("mixed", null, false);
+    const { session } = await graph.study.openSession("discover", null, false);
     const ratings = ["again", "hard", "good", "easy"] as const;
     // oxlint-disable no-await-in-loop -- Rate each card in the order a learner studies it.
     for (const [position, rating] of ratings.entries()) {
@@ -164,27 +310,27 @@ describe("progress backup", () => {
     // oxlint-enable no-await-in-loop
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
 
     await backup.exportProgress();
 
-    expect(files.shared?.reviewEvents.map((event) => event.rating)).toEqual(ratings);
+    expect(files.shared?.flashcardReviewEvents.map((event) => event.rating)).toEqual(ratings);
     expect(files.shared?.flashcardProgress).toHaveLength(4);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(4);
   });
 
-  it("preserves finalized progress and the native cause when sharing an export fails", async () => {
+  it("preserves committed progress and the native cause when sharing an export fails", async () => {
     const database = createDatabase();
     const flashcardId = testId(1);
     await seedDeck(database, TEST_DECK_ID, [flashcardId]);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const { session } = await graph.study.openSession("mixed", null, false);
+    const { session } = await graph.study.openSession("discover", null, false);
     const attemptId = await graph.study.startAttempt(flashcardId, 0, session.id);
     await graph.study.rateAttempt(attemptId, "good");
     const cause = new Error("File sharing is unavailable on this device");
@@ -194,9 +340,9 @@ describe("progress backup", () => {
     };
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -208,17 +354,17 @@ describe("progress backup", () => {
     });
 
     const retained = await query.read(clock.now());
-    expect(retained.reviewEvents).toHaveLength(1);
+    expect(retained.flashcardReviewEvents).toHaveLength(1);
     expect(retained.flashcardProgress[0]?.reviewCount).toBe(1);
   });
 
-  it("transfers an exported JSON document to another installed deck without changing it on retry", async () => {
+  it("transfers learning to another device, keeps retries idempotent, and resumes studying", async () => {
     const source = createDatabase();
     const flashcardId = testId(1);
     await seedDeck(source, TEST_DECK_ID, [flashcardId]);
     const sourceClock = new TestClock();
     const sourceGraph = createScenarioGraph(source, sourceClock, new SequenceIdGenerator());
-    const session = makeSession(testId(701), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(701), "focus", TEST_DECK_ID);
     await sourceGraph.sessions.create(session);
     await source.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(801),
@@ -232,9 +378,9 @@ describe("progress backup", () => {
     });
     const exportedFiles = new MemoryBackupFiles();
     const sourceBackup = new ProgressBackupServiceImpl(
-      sourceGraph.study,
+      sourceGraph.runtime,
       new SQLiteProgressBackupQuery(source.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(source.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(source.drizzle, source.rowIds),
       exportedFiles,
       sourceClock
     );
@@ -252,9 +398,9 @@ describe("progress backup", () => {
     importedFiles.picked = JSON.stringify(exported);
     const targetQuery = new SQLiteProgressBackupQuery(target.drizzle);
     const targetBackup = new ProgressBackupServiceImpl(
-      targetGraph.study,
+      targetGraph.runtime,
       targetQuery,
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       importedFiles,
       targetClock
     );
@@ -264,7 +410,7 @@ describe("progress backup", () => {
     }
     expect(await targetBackup.restore(prepared)).toBe(true);
     const restored = await targetQuery.read(exported.exportedAt);
-    expect(restored.reviewEvents).toEqual(exported.reviewEvents);
+    expect(restored.flashcardReviewEvents).toEqual(exported.flashcardReviewEvents);
     expect(restored.flashcardProgress).toEqual(exported.flashcardProgress);
     expect(restored.flashcardMemoryStates).toEqual(exported.flashcardMemoryStates);
     expect(restored.deckProgress).toEqual(exported.deckProgress);
@@ -276,6 +422,29 @@ describe("progress backup", () => {
     }
     expect(await targetBackup.restore(retry)).toBe(false);
     expect(await targetQuery.readSafetyCopyFileName()).toBe(safetyCopyFileName);
+
+    targetClock.advance(24 * 60 * 60 * 1000);
+    const opened = await targetGraph.study.openSession("focus", TEST_DECK_ID, false);
+    const newAttemptId = await targetGraph.study.startAttempt(flashcardId, 0, opened.session.id);
+    await targetGraph.study.rateAttempt(newAttemptId, "easy");
+    await targetGraph.study.completeSession(opened.session.id);
+    await targetBackup.exportProgress();
+    const continued = importedFiles.shared;
+    if (!continued) {
+      throw new Error("Expected an export after continuing study");
+    }
+    expect(continued.flashcardReviewEvents).toHaveLength(2);
+    expect(continued.flashcardReviewEvents).toEqual(
+      expect.arrayContaining(exported.flashcardReviewEvents)
+    );
+    expect(continued.flashcardProgress).toMatchObject([
+      { flashcardId, reviewCount: 2, goodCount: 1, easyCount: 1 },
+    ]);
+    expect(continued.flashcardMemoryStates).toHaveLength(1);
+    expect(firstRow(continued.flashcardMemoryStates).reps).toBe(
+      firstRow(exported.flashcardMemoryStates).reps + 1
+    );
+    expect(continued.deckProgress).toHaveLength(1);
   });
 
   it("closes an active session and drains progress beyond the foreground batch limit", async () => {
@@ -284,7 +453,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, cardIds);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const session = makeSession(testId(700), "focused", TEST_DECK_ID, 0, 59);
+    const session = makeSession(testId(700), "focus", TEST_DECK_ID, 0, 59);
     await graph.sessions.create(session);
     await database.drizzle.insert(flashcardReviewAttempts).values(
       cardIds.map((flashcardId, reelPosition) => ({
@@ -300,16 +469,16 @@ describe("progress backup", () => {
     );
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
 
     await backup.exportProgress();
 
-    expect(files.shared?.reviewEvents).toHaveLength(60);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(60);
     expect(files.shared?.flashcardProgress).toHaveLength(60);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(60);
     expect(files.shared?.flashcardProgress.every((row) => row.reviewCount === 1)).toBe(true);
@@ -324,7 +493,7 @@ describe("progress backup", () => {
     await seedDeck(source, TEST_DECK_ID, [cardId]);
     const sourceClock = new TestClock();
     const sourceGraph = createScenarioGraph(source, sourceClock, new SequenceIdGenerator());
-    const session = makeSession(testId(701), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(701), "focus", TEST_DECK_ID);
     await sourceGraph.sessions.create(session);
     await source.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(801),
@@ -337,9 +506,9 @@ describe("progress backup", () => {
       updatedAt: sourceClock.now(),
     });
     await sourceGraph.study.completeSession(session.id);
-    await new SQLiteDeckRemovalTransaction(source.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(source.drizzle, source.rowIds).remove(TEST_DECK_ID);
     const archived = await new SQLiteProgressBackupQuery(source.drizzle).read(sourceClock.now());
-    expect(archived.deckProgress[0]?.resolution).toBe("archived");
+    expect(archived.deckProgress[0]?.status).toBe("archived");
 
     const target = createDatabase();
     await seedDeck(target, TEST_DECK_ID, [cardId]);
@@ -347,7 +516,7 @@ describe("progress backup", () => {
     const targetGraph = createScenarioGraph(target, targetClock, new SequenceIdGenerator());
     await target.drizzle.insert(studySessions).values({
       id: testId(901),
-      scope: "focused",
+      scope: "focus",
       deckId: TEST_DECK_ID,
       currentReelPosition: 0,
       furthestReelPosition: 0,
@@ -368,7 +537,7 @@ describe("progress backup", () => {
     await targetGraph.study.completeSession(testId(901));
     await target.drizzle.insert(studySessions).values({
       id: testId(902),
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: 0,
       furthestReelPosition: 0,
@@ -379,9 +548,9 @@ describe("progress backup", () => {
     const files = new MemoryBackupFiles();
     files.picked = JSON.stringify(archived);
     const backup = new ProgressBackupServiceImpl(
-      targetGraph.study,
+      targetGraph.runtime,
       new SQLiteProgressBackupQuery(target.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds),
       files,
       targetClock
     );
@@ -395,11 +564,11 @@ describe("progress backup", () => {
     expect(await backup.restore(prepared)).toBe(true);
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(targetClock.now());
-    expect(restored.reviewEvents.map((event) => event.id)).toEqual([testId(801)]);
-    expect(restored.deckProgress[0]?.resolution).toBe("active");
+    expect(restored.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(801)]);
+    expect(restored.deckProgress[0]?.status).toBe("active");
     expect(restored.flashcardMemoryStates).toHaveLength(1);
     expect(await target.drizzle.select().from(studySessions)).toHaveLength(0);
-    expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+    expect(files.safetyCopy?.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(900)]);
 
     const safetyCopyFileName = await new SQLiteProgressBackupQuery(
       target.drizzle
@@ -409,31 +578,35 @@ describe("progress backup", () => {
       safetyCopyFileName
     );
     expect(files.copies.size).toBe(1);
-    expect(files.safetyCopy?.reviewEvents.map((event) => event.id)).toEqual([testId(900)]);
+    expect(files.safetyCopy?.flashcardReviewEvents.map((event) => event.id)).toEqual([testId(900)]);
   });
 
   it("preserves the last successful safety copy when a later restore fails", async () => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const files = new MemoryBackupFiles();
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const emptyBackup: ProgressBackupDocument = {
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: clock.now(),
       deckProgress: [],
       flashcardProgress: [],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     };
     files.picked = JSON.stringify(emptyBackup);
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -447,7 +620,7 @@ describe("progress backup", () => {
 
     files.picked = JSON.stringify(original);
     const failingBackup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
       {
         restore: async () => {
@@ -468,7 +641,7 @@ describe("progress backup", () => {
     expect(files.copies.size).toBe(1);
     expect(await query.read(emptyBackup.exportedAt)).toEqual(emptyBackup);
     await failingBackup.shareSafetyCopy();
-    expect(files.shared?.reviewEvents).toHaveLength(1);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(1);
 
     const successfulRetry = await backup.prepareRestore();
     if (!successfulRetry) {
@@ -477,19 +650,19 @@ describe("progress backup", () => {
     expect(await backup.restore(successfulRetry)).toBe(true);
     expect(await query.readSafetyCopyFileName()).not.toBe(successfulCopyName);
     expect(files.copies.size).toBe(1);
-    expect(files.safetyCopy?.reviewEvents).toHaveLength(0);
+    expect(files.safetyCopy?.flashcardReviewEvents).toHaveLength(0);
   });
 
   it("reports an unsupported backup version before changing local progress", async () => {
     const database = createDatabase();
     const files = new MemoryBackupFiles();
-    files.picked = '{"format":"flashcard-reels-progress","version":99}';
+    files.picked = '{"format":"flashcard-reels-learner-data","version":99}';
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -511,9 +684,9 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -531,7 +704,7 @@ describe("progress backup", () => {
     await seedDeck(database, TEST_DECK_ID, [flashcardId]);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const session = makeSession(testId(707), "focused", TEST_DECK_ID);
+    const session = makeSession(testId(707), "focus", TEST_DECK_ID);
     await graph.sessions.create(session);
     await database.drizzle.insert(flashcardReviewAttempts).values({
       id: testId(808),
@@ -545,15 +718,15 @@ describe("progress backup", () => {
     });
     await graph.study.completeSession(session.id);
     const resetAt = clock.now();
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetCard(
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetCard(
       flashcardId,
       resetAt
     );
     const files = new MemoryBackupFiles();
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       new SQLiteProgressBackupQuery(database.drizzle),
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -561,7 +734,7 @@ describe("progress backup", () => {
     await backup.exportProgress();
 
     expect(files.shared?.deckProgress).toHaveLength(0);
-    expect(files.shared?.reviewEvents).toHaveLength(0);
+    expect(files.shared?.flashcardReviewEvents).toHaveLength(0);
     expect(files.shared?.flashcardMemoryStates).toHaveLength(0);
     expect(files.shared?.flashcardProgress).toMatchObject([
       { flashcardId, reviewCount: 0, resetAt },
@@ -597,7 +770,7 @@ describe("progress backup", () => {
     [
       "duplicate review IDs",
       (document: ProgressBackupDocument) => {
-        document.reviewEvents.push({ ...firstRow(document.reviewEvents) });
+        document.flashcardReviewEvents.push({ ...firstRow(document.flashcardReviewEvents) });
         firstRow(document.flashcardProgress).reviewCount = 2;
         firstRow(document.flashcardProgress).goodCount = 2;
       },
@@ -605,7 +778,9 @@ describe("progress backup", () => {
   ] as const)("rejects inconsistent %s without changing saved progress", async (_, corrupt) => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const before = await query.read(original.exportedAt);
     const incoming = structuredClone(original);
@@ -615,9 +790,9 @@ describe("progress backup", () => {
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -630,26 +805,30 @@ describe("progress backup", () => {
   it("retains current progress when the safety copy cannot be saved", async () => {
     const database = createDatabase();
     const original = loadDeviceFixture();
-    await new SQLiteProgressBackupRestoreTransaction(database.drizzle).restore(original);
+    await new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds).restore(
+      original
+    );
     const query = new SQLiteProgressBackupQuery(database.drizzle);
     const before = await query.read(original.exportedAt);
     const files = new MemoryBackupFiles();
     files.picked = JSON.stringify({
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: original.exportedAt,
       deckProgress: [],
       flashcardProgress: [],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     });
     files.failSafetyCopy = true;
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
     const backup = new ProgressBackupServiceImpl(
-      graph.study,
+      graph.runtime,
       query,
-      new SQLiteProgressBackupRestoreTransaction(database.drizzle),
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
       files,
       clock
     );
@@ -667,12 +846,14 @@ describe("progress backup", () => {
   it("keeps progress archived when its deck is absent on the receiving device", async () => {
     const target = createDatabase();
     const document = loadDeviceFixture();
-    firstRow(document.deckProgress).resolution = "active";
+    firstRow(document.deckProgress).status = "active";
 
-    await new SQLiteProgressBackupRestoreTransaction(target.drizzle).restore(document);
+    await new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds).restore(
+      document
+    );
 
     const restored = await new SQLiteProgressBackupQuery(target.drizzle).read(document.exportedAt);
-    expect(restored.deckProgress[0]?.resolution).toBe("archived");
+    expect(restored.deckProgress[0]?.status).toBe("archived");
     expect(restored.deckProgress[0]?.title).toBe("Versioned Test Deck");
   });
 
@@ -680,10 +861,13 @@ describe("progress backup", () => {
     const database = createDatabase();
     const document = loadDeviceFixture();
     const query = new SQLiteProgressBackupQuery(database.drizzle);
-    const transaction = new SQLiteProgressBackupRestoreTransaction(database.drizzle);
+    const transaction = new SQLiteProgressBackupRestoreTransaction(
+      database.drizzle,
+      database.rowIds
+    );
     await transaction.restore(document);
     const archived = await query.read(document.exportedAt);
-    expect(archived.deckProgress[0]?.resolution).toBe("archived");
+    expect(archived.deckProgress[0]?.status).toBe("archived");
     await seedDeck(database, firstRow(document.deckProgress).deckId, [
       firstRow(document.flashcardProgress).flashcardId,
     ]);
@@ -692,7 +876,7 @@ describe("progress backup", () => {
     files.picked = JSON.stringify(document);
     const clock = new TestClock();
     const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
-    const backup = new ProgressBackupServiceImpl(graph.study, query, transaction, files, clock);
+    const backup = new ProgressBackupServiceImpl(graph.runtime, query, transaction, files, clock);
     const prepared = await backup.prepareRestore();
     if (!prepared) {
       throw new Error("Expected a prepared restore");
@@ -700,23 +884,25 @@ describe("progress backup", () => {
 
     expect(await backup.restore(prepared)).toBe(true);
     const restored = await query.read(document.exportedAt);
-    expect(restored.deckProgress[0]?.resolution).toBe("active");
+    expect(restored.deckProgress[0]?.status).toBe("active");
     expect(await backup.hasSafetyCopy()).toBe(true);
   });
 
   it("rolls back all deletions if a restore row fails a SQLite constraint", async () => {
     const target = createDatabase();
     const timestamp = "2026-01-01T00:00:00.000Z";
-    await target.drizzle.insert(reviewEvents).values({
+    await target.drizzle.insert(flashcardReviewEvents).values({
       id: testId(950),
       deckId: TEST_DECK_ID,
       flashcardId: testId(1),
       rating: "good",
       reviewedAt: timestamp,
-      finalizedAt: timestamp,
+      committedAt: timestamp,
     });
     const invalid: ProgressBackupDocument = {
-      format: "flashcard-reels-progress",
+      format: "flashcard-reels-learner-data",
+      learnerPreferences: { ...defaultAppPreferences, updatedAt: "2026-01-01T00:00:00.000Z" },
+      deckThemeSelections: [],
       version: 1,
       exportedAt: timestamp,
       deckProgress: [],
@@ -737,13 +923,50 @@ describe("progress backup", () => {
         },
       ],
       flashcardMemoryStates: [],
-      reviewEvents: [],
+      flashcardReviewEvents: [],
     };
 
     await expect(
-      new SQLiteProgressBackupRestoreTransaction(target.drizzle).restore(invalid)
+      new SQLiteProgressBackupRestoreTransaction(target.drizzle, target.rowIds).restore(invalid)
     ).rejects.toThrow();
-    const remainingEvents = await target.drizzle.select().from(reviewEvents);
+    const remainingEvents = await target.drizzle.select().from(flashcardReviewEvents);
     expect(remainingEvents.map((event) => event.id)).toEqual([testId(950)]);
+  });
+
+  it("rejects a backup that assigns an installed card to another deck and preserves local learning", async () => {
+    const database = createDatabase();
+    const incoming = loadDeviceFixture();
+    const cardId = firstRow(incoming.flashcardProgress).flashcardId;
+    await seedDeck(database, OTHER_DECK_ID, [cardId]);
+    const clock = new TestClock();
+    const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+    const { session } = await graph.study.openSession("focus", OTHER_DECK_ID, false);
+    const attemptId = await graph.study.startAttempt(cardId, 0, session.id);
+    await graph.study.rateAttempt(attemptId, "easy");
+    await graph.study.completeSession(session.id);
+    const query = new SQLiteProgressBackupQuery(database.drizzle);
+    const before = await query.read(clock.now());
+    const files = new MemoryBackupFiles();
+    files.picked = JSON.stringify(incoming);
+    const backup = new ProgressBackupServiceImpl(
+      graph.runtime,
+      query,
+      new SQLiteProgressBackupRestoreTransaction(database.drizzle, database.rowIds),
+      files,
+      clock
+    );
+    const prepared = await backup.prepareRestore();
+    if (!prepared) {
+      throw new Error("Expected a prepared restore");
+    }
+
+    await expect(backup.restore(prepared)).rejects.toMatchObject({
+      code: "PROGRESS_BACKUP_RESTORE_FAILED",
+    });
+    expect(await query.read(before.exportedAt)).toEqual(before);
+    const retainedSession = await graph.sessions.findById(session.id);
+    expect(retainedSession?.completedAt).not.toBeNull();
+    expect(await backup.hasSafetyCopy()).toBe(false);
+    expect(files.copies.size).toBe(0);
   });
 });

@@ -2,13 +2,14 @@ import { useRecyclingState } from "@shopify/flash-list";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
-import type { AudioReference } from "@/features/audio/domain/audio-reference";
-import type { DeckAppearance } from "@/features/decks/domain/deck-appearance.model";
+import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
+import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
+import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
+import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import {
   AnswerBodyLayout,
@@ -73,18 +74,17 @@ function CardPage({ backgroundColor, children, contentInsetTop, height, width }:
 }
 
 type ReelCardProps = Readonly<{
-  audioSource: AudioReference;
   card: Flashcard;
   contentInsetTop: number;
   deck: Deck;
   deckCardCount: number;
-  appearance: DeckAppearance;
+  themeSelection: DeckThemeSelection;
   height: number;
   isActive: boolean;
   onFlip: () => void;
-  onRate: (level: RecallLevel) => void;
+  onRate: (rating: Rating) => void;
   ratingEnabled: boolean;
-  recallLevel: RecallLevel | null;
+  rating: Rating | null;
   revealed: boolean;
   occurrenceKey: string;
   reelPosition: number;
@@ -93,18 +93,17 @@ type ReelCardProps = Readonly<{
 }>;
 
 export function ReelCard({
-  audioSource,
   card,
   contentInsetTop,
   deck,
   deckCardCount,
-  appearance,
+  themeSelection,
   height,
   isActive,
   onFlip,
   onRate,
   ratingEnabled,
-  recallLevel,
+  rating,
   revealed,
   occurrenceKey,
   reelPosition,
@@ -112,11 +111,14 @@ export function ReelCard({
   width,
 }: ReelCardProps) {
   const haptics = useHaptics();
+  const audioSource = useFlashcardAudioSource(deck, card);
   const { resolvedScheme } = useAppTheme();
   const styles = createStyles();
-  const reelAppearance = resolveDeckAppearance(appearance.presetId, resolvedScheme);
+  const deckTheme = resolveDeckTheme(themeSelection.theme, resolvedScheme);
   const openFocusedFeed = useOpenFocusedFeed();
-  const focusedCardState = { cardId: card.id, recallLevel, revealed } as const;
+  const { hasLesson, openLesson } = useDeckLessons();
+  const hasLinkedLesson = card.lessonId !== null && hasLesson(card.deckId, card.lessonId);
+  const focusedCardState = { cardId: card.id, rating, revealed } as const;
   const openFocusWithCurrentCardState = () => {
     openFocusedFeed(card.deckId, card.id, { cardState: focusedCardState });
   };
@@ -129,6 +131,7 @@ export function ReelCard({
   const holdCompleted = useRef(false);
   const holdFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapAt = useRef(0);
+  const openLessonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [flipCount, setFlipCount] = useRecyclingState(
     getReelRotationValue(revealed),
     [occurrenceKey, reelPosition],
@@ -144,6 +147,10 @@ export function ReelCard({
       holdState.current = "idle";
       holdCompleted.current = false;
       lastTapAt.current = 0;
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+        openLessonTimer.current = null;
+      }
       if (holdFeedbackTimer.current !== null) {
         clearTimeout(holdFeedbackTimer.current);
         holdFeedbackTimer.current = null;
@@ -191,6 +198,9 @@ export function ReelCard({
   useEffect(function cleanUpHoldFeedback() {
     return function cancelHoldFeedbackOnUnmount() {
       clearHoldFeedbackTimer();
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+      }
       if (holdState.current === "feedback") {
         hideFlashcardToast();
       }
@@ -206,6 +216,10 @@ export function ReelCard({
     const now = Date.now();
     if (now - lastTapAt.current <= DOUBLE_TAP_WINDOW_MS) {
       lastTapAt.current = 0;
+      if (openLessonTimer.current !== null) {
+        clearTimeout(openLessonTimer.current);
+        openLessonTimer.current = null;
+      }
       const nextFlipCount = flipCount === 0 ? 1 : 0;
       animationTarget.current = nextFlipCount === 1;
       setFlipCount(nextFlipCount);
@@ -219,6 +233,14 @@ export function ReelCard({
       return;
     }
     lastTapAt.current = now;
+    if (revealed && card.lessonId && hasLinkedLesson) {
+      const lessonId = card.lessonId;
+      openLessonTimer.current = setTimeout(() => {
+        openLessonTimer.current = null;
+        lastTapAt.current = 0;
+        openLesson(card.deckId, lessonId, card.lessonSectionId);
+      }, DOUBLE_TAP_WINDOW_MS);
+    }
   };
 
   const startFocusHold = () => {
@@ -295,13 +317,13 @@ export function ReelCard({
         ]}
       >
         <CardPage
-          backgroundColor={reelAppearance.background}
+          backgroundColor={deckTheme.background}
           contentInsetTop={contentInsetTop}
           height={height}
           width={width}
         >
           <ReelHeader
-            appearance={reelAppearance}
+            theme={deckTheme}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
@@ -310,8 +332,8 @@ export function ReelCard({
           />
           <QuestionFaceContent
             cardQuestion={card.question}
-            instructionColor={reelAppearance.textSecondary}
-            questionColor={reelAppearance.textPrimary}
+            instructionColor={deckTheme.textSecondary}
+            questionColor={deckTheme.textPrimary}
             {...gestureProps}
           />
           <GestureFooter showHoldHint={!showMainFeedLink} />
@@ -326,13 +348,13 @@ export function ReelCard({
         ]}
       >
         <CardPage
-          backgroundColor={reelAppearance.background}
+          backgroundColor={deckTheme.background}
           contentInsetTop={contentInsetTop}
           height={height}
           width={width}
         >
           <ReelHeader
-            appearance={reelAppearance}
+            theme={deckTheme}
             card={card}
             deck={deck}
             deckCardCount={deckCardCount}
@@ -343,8 +365,9 @@ export function ReelCard({
             <AnswerBodyLayout>
               <AnswerCopy
                 answer={card.answer}
-                answerColor={reelAppearance.textPrimary}
-                promptColor={reelAppearance.textSecondary}
+                hasLinkedLesson={hasLinkedLesson}
+                answerColor={deckTheme.textPrimary}
+                promptColor={deckTheme.textSecondary}
                 question={card.question}
                 {...gestureProps}
               />
@@ -352,10 +375,12 @@ export function ReelCard({
                 <StudyControlCluster
                   audioSource={audioSource}
                   deckId={card.deckId}
+                  lessonId={card.lessonId}
+                  lessonSectionId={card.lessonSectionId}
                   isActive={isActive}
                   onRate={onRate}
                   ratingEnabled={ratingEnabled}
-                  selectedLevel={recallLevel}
+                  selectedRating={rating}
                 />
               </AnswerControlRegion>
             </AnswerBodyLayout>

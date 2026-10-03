@@ -1,20 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
+import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation.transaction";
 
-import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation.transaction";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
-import { StudyServiceImpl } from "@/features/study/application/study.service.impl";
+import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
+import { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
-import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-transaction";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import { SQLiteReviewAttemptRepository } from "@/features/study/infrastructure/sqlite-review-attempt.repository";
+import { SQLiteReviewAttemptTransaction } from "@/features/study/infrastructure/sqlite-review-attempt.transaction";
 import { SQLiteStudySessionAggregationQuery } from "@/features/study/infrastructure/sqlite-study-session-aggregation.query";
-import { SQLiteStudySessionFeedTransaction } from "@/features/study/infrastructure/sqlite-study-session-feed-transaction";
-import { SQLiteStudySessionItemRepository } from "@/features/study/infrastructure/sqlite-study-session-item.repository";
-import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle-transaction";
-import { SQLiteStudySessionRecurrenceRepository } from "@/features/study/infrastructure/sqlite-study-session-recurrence.repository";
+import { SQLiteStudySessionLifecycleTransaction } from "@/features/study/infrastructure/sqlite-study-session-lifecycle.transaction";
 import { SQLiteStudySessionRepository } from "@/features/study/infrastructure/sqlite-study-session.repository";
 import { flashcardProgress, decks, flashcards } from "@/infrastructure/sqlite/schema";
 
@@ -35,12 +32,16 @@ describe("SQLite flashcard-progress aggregation", () => {
   let progress: SQLiteFlashcardProgressRepository;
   let sessions: SQLiteStudySessionRepository;
   let aggregationQuery: SQLiteStudySessionAggregationQuery;
-  let finalization: SQLiteReviewAttemptFinalizationTransaction;
+  let commit: SQLiteReviewAttemptCommitTransaction;
 
   beforeEach(async () => {
     database = new NodeSqliteDatabase();
     const timestamp = "2026-01-01T00:00:00.000Z";
     await database.drizzle.insert(decks).values({
+      authorId: "00000000-0000-4000-8000-000000000001",
+      packageSchema: 1,
+      revision: 1,
+
       createdAt: timestamp,
       description: "Test deck",
       id: TEST_DECK_ID,
@@ -49,6 +50,7 @@ describe("SQLite flashcard-progress aggregation", () => {
     });
     await database.drizzle.insert(flashcards).values(
       [makeFlashcard(1), makeFlashcard(2)].map((card) => ({
+        hasAudio: card.hasAudio,
         answer: card.answer,
         createdAt: card.createdAt,
         deckId: card.deckId,
@@ -59,13 +61,17 @@ describe("SQLite flashcard-progress aggregation", () => {
       }))
     );
     attempts = new SQLiteReviewAttemptRepository(database.drizzle);
-    aggregation = new SQLiteFlashcardProgressAggregationTransaction(database.drizzle);
+    aggregation = new SQLiteFlashcardProgressAggregationTransaction(
+      database.drizzle,
+      database.rowIds
+    );
     progress = new SQLiteFlashcardProgressRepository(database.drizzle);
     sessions = new SQLiteStudySessionRepository(database.drizzle);
     aggregationQuery = new SQLiteStudySessionAggregationQuery(database.drizzle);
-    finalization = new SQLiteReviewAttemptFinalizationTransaction(
+    commit = new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
+      createLearningScheduler(),
+      database.rowIds
     );
   });
 
@@ -73,8 +79,8 @@ describe("SQLite flashcard-progress aggregation", () => {
     database.close();
   });
 
-  it("aggregates only finalized attempts and is idempotent on retry", async () => {
-    const session = makeSession(testId(500), "mixed");
+  it("aggregates only committed attempts and is idempotent on retry", async () => {
+    const session = makeSession(testId(500), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await createAttempt(session.id, 1, "hard", "2026-01-01T00:02:00.000Z");
@@ -83,25 +89,9 @@ describe("SQLite flashcard-progress aggregation", () => {
     await createAttempt(session.id, 4, null, "2026-01-01T00:05:00.000Z");
     const editable = await createAttempt(session.id, 5, null, null);
     const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "again",
-      "2026-01-01T00:06:00.000Z",
-      null,
-      null
-    );
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "good",
-      "2026-01-01T00:07:00.000Z",
-      null,
-      null
-    );
-    await finalization.finalizeAttempt(
-      editable.id,
-      "2026-01-01T00:08:00.000Z",
-      "2026-01-01T00:08:00.000Z"
-    );
+    await ratingTransaction.rateAttempt(editable.id, "again", "2026-01-01T00:06:00.000Z");
+    await ratingTransaction.rateAttempt(editable.id, "good", "2026-01-01T00:07:00.000Z");
+    await commit.commitAttempt(editable.id, "2026-01-01T00:08:00.000Z", "2026-01-01T00:08:00.000Z");
 
     await expect(aggregation.aggregate(session.id, 5, "2026-01-01T00:09:00.000Z")).resolves.toEqual(
       { aggregatedAttemptCount: 5, throughReelPosition: 5 }
@@ -129,7 +119,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("advances in bounded ranges instead of scanning the entire history", async () => {
-    const session = makeSession(testId(510), "mixed");
+    const session = makeSession(testId(510), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 30, "hard", "2026-01-01T00:01:00.000Z");
 
@@ -145,7 +135,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("rolls back progress updates and checkpoint advancement together", async () => {
-    const session = makeSession(testId(520), "mixed");
+    const session = makeSession(testId(520), "discover");
     await sessions.create(session);
     await insertResetProgress("2025-12-01T00:00:00.000Z");
     await createAttempt(session.id, 0, "good", "2026-01-01T00:01:00.000Z");
@@ -166,7 +156,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   });
 
   it("honors reset boundaries while allowing later attempts to contribute", async () => {
-    const session = makeSession(testId(530), "mixed");
+    const session = makeSession(testId(530), "discover");
     await sessions.create(session);
     await createAttempt(session.id, 0, "again", "2026-01-01T00:01:00.000Z");
     await insertResetProgress("2026-01-01T00:02:00.000Z");
@@ -183,36 +173,20 @@ describe("SQLite flashcard-progress aggregation", () => {
     });
   });
 
-  it("uses the immutable rating time across editable finalization and reconstruction", async () => {
-    const session = makeSession(testId(535), "mixed");
+  it("uses the immutable rating time across editable commit and reconstruction", async () => {
+    const session = makeSession(testId(535), "discover");
     await sessions.create(session);
     const editable = await createAttempt(session.id, 0, null, null);
     const ratingTransaction = new SQLiteReviewAttemptTransaction(database.drizzle);
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "again",
-      "2026-01-01T00:01:00.000Z",
-      null,
-      null
-    );
-    await ratingTransaction.rateAttempt(
-      editable.id,
-      "good",
-      "2026-01-01T00:02:00.000Z",
-      null,
-      null
-    );
+    await ratingTransaction.rateAttempt(editable.id, "again", "2026-01-01T00:01:00.000Z");
+    await ratingTransaction.rateAttempt(editable.id, "good", "2026-01-01T00:02:00.000Z");
     expect(await attempts.findById(editable.id)).toMatchObject({
       ratedAt: "2026-01-01T00:02:00.000Z",
       rating: "good",
     });
 
     await insertResetProgress("2026-01-01T00:03:00.000Z");
-    await finalization.finalizeAttempt(
-      editable.id,
-      "2026-01-01T00:04:00.000Z",
-      "2026-01-01T00:04:00.000Z"
-    );
+    await commit.commitAttempt(editable.id, "2026-01-01T00:04:00.000Z", "2026-01-01T00:04:00.000Z");
     await aggregation.aggregate(session.id, 0, "2026-01-01T00:05:00.000Z");
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       reviewCount: 0,
@@ -220,21 +194,21 @@ describe("SQLite flashcard-progress aggregation", () => {
     });
 
     const reconstructedAggregation = new SQLiteFlashcardProgressAggregationTransaction(
-      database.drizzle
+      database.drizzle,
+      database.rowIds
     );
     const reconstructedProgress = new SQLiteFlashcardProgressRepository(database.drizzle);
     const later = await createAttempt(session.id, 1, null, null);
     await new SQLiteReviewAttemptTransaction(database.drizzle).rateAttempt(
       later.id,
       "easy",
-      "2026-01-01T00:06:00.000Z",
-      null,
-      null
+      "2026-01-01T00:06:00.000Z"
     );
-    await new SQLiteReviewAttemptFinalizationTransaction(
+    await new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
-    ).finalizeAttempt(later.id, "2026-01-01T00:07:00.000Z", "2026-01-01T00:07:00.000Z");
+      createLearningScheduler(),
+      database.rowIds
+    ).commitAttempt(later.id, "2026-01-01T00:07:00.000Z", "2026-01-01T00:07:00.000Z");
     await reconstructedAggregation.aggregate(session.id, 1, "2026-01-01T00:08:00.000Z");
     expect(await reconstructedProgress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
@@ -244,7 +218,7 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("aggregates all remaining history when a Focus session completes", async () => {
     const service = createService();
-    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    const opened = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(opened.session.id, 0, "hard", "2026-01-01T00:01:00.000Z");
 
     await service.completeSession(opened.session.id);
@@ -259,10 +233,10 @@ describe("SQLite flashcard-progress aggregation", () => {
 
   it("aggregates safe history while an active Discover session continues", async () => {
     const service = createService();
-    const opened = await service.openSession("mixed", null, false);
+    const opened = await service.openSession("discover", null, false);
     await createAttempt(opened.session.id, 0, "again", "2026-01-01T00:01:00.000Z");
-    await service.updateSessionReelPosition(opened.session.id, 130);
-    await service.finalizeAttemptsOutsideEditableWindow(opened.session.id);
+    await sessions.updateCurrentReelPosition(opened.session.id, 130, new TestClock().now());
+    await service.commitAttemptsOutsideEditableWindow(opened.session.id);
 
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       againCount: 1,
@@ -272,12 +246,12 @@ describe("SQLite flashcard-progress aggregation", () => {
     expect(activeSession?.aggregatedThroughReelPosition).toBe(24);
   });
 
-  it("aggregates a replaced Focus session after its finalization boundary closes", async () => {
+  it("aggregates a replaced Focus session after its commit boundary closes", async () => {
     const service = createService();
-    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    const first = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(first.session.id, 0, "easy", "2026-01-01T00:01:00.000Z");
 
-    const replacement = await service.openSession("focused", TEST_DECK_ID, true);
+    const replacement = await service.openSession("focus", TEST_DECK_ID, true);
 
     expect(replacement.replacedSessionId).toBe(first.session.id);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -289,7 +263,7 @@ describe("SQLite flashcard-progress aggregation", () => {
   it("rediscovers a replaced completed Focus session after aggregation failure and reconstruction", async () => {
     const idGenerator = new SequenceIdGenerator();
     const service = createService(aggregation, sessions, idGenerator);
-    const first = await service.openSession("focused", TEST_DECK_ID, false);
+    const first = await service.openSession("focus", TEST_DECK_ID, false);
     await createAttempt(first.session.id, 0, "easy", null, "2026-01-01T00:01:00.000Z");
     const replacementService = createService(
       {
@@ -301,33 +275,33 @@ describe("SQLite flashcard-progress aggregation", () => {
       idGenerator
     );
 
-    await expect(replacementService.openSession("focused", TEST_DECK_ID, true)).rejects.toThrow(
+    await expect(replacementService.openSession("focus", TEST_DECK_ID, true)).rejects.toThrow(
       "simulated aggregation interruption"
     );
     const replacedSession = await sessions.findById(first.session.id);
-    const activeFocusedSession = await sessions.findActiveByScope("focused");
+    const activeFocusedSession = await sessions.findActiveByScope("focus");
     expect(replacedSession?.completedAt).not.toBeNull();
     expect(activeFocusedSession?.id).not.toBe(first.session.id);
 
     const reconstructedSessions = new SQLiteStudySessionRepository(database.drizzle);
     const recovered = createService(
-      new SQLiteFlashcardProgressAggregationTransaction(database.drizzle),
+      new SQLiteFlashcardProgressAggregationTransaction(database.drizzle, database.rowIds),
       reconstructedSessions
     );
-    await recovered.openSession("focused", TEST_DECK_ID, false);
+    await recovered.openSession("focus", TEST_DECK_ID, false);
 
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(10)).toEqual([]);
+    expect(await aggregationQuery.findCompletedPending(10)).toEqual([]);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       easyCount: 1,
       reviewCount: 1,
     });
-    const reconstructedActiveSession = await reconstructedSessions.findActiveByScope("focused");
+    const reconstructedActiveSession = await reconstructedSessions.findActiveByScope("focus");
     expect(reconstructedActiveSession?.id).not.toBe(first.session.id);
   });
 
   it("limits completed-session recovery results", async () => {
-    const first = makeSession(testId(540), "focused");
-    const second = makeSession(testId(541), "focused");
+    const first = makeSession(testId(540), "focus");
+    const second = makeSession(testId(541), "focus");
     await sessions.create(first);
     await createAttempt(first.id, 0, "good", "2026-01-01T00:01:00.000Z");
     await sessions.complete(first.id, "2026-01-01T00:03:00.000Z");
@@ -335,15 +309,15 @@ describe("SQLite flashcard-progress aggregation", () => {
     await createAttempt(second.id, 1, "hard", "2026-01-01T00:02:00.000Z");
     await sessions.complete(second.id, "2026-01-01T00:04:00.000Z");
 
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
-    const firstPendingSession = await aggregationQuery.findCompletedSessionsPendingAggregation(1);
+    expect(await aggregationQuery.findCompletedPending(1)).toHaveLength(1);
+    const firstPendingSession = await aggregationQuery.findCompletedPending(1);
     expect(firstPendingSession[0]?.id).toBe(first.id);
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(2)).toHaveLength(2);
+    expect(await aggregationQuery.findCompletedPending(2)).toHaveLength(2);
   });
 
   it("bounds foreground completed-session aggregation and resumes from its checkpoint", async () => {
     const service = createService();
-    const opened = await service.openSession("focused", TEST_DECK_ID, false);
+    const opened = await service.openSession("focus", TEST_DECK_ID, false);
     await Promise.all(
       Array.from({ length: 150 }, (_value, reelPosition) =>
         createAttempt(opened.session.id, reelPosition, "good", "2026-01-01T00:01:00.000Z")
@@ -358,9 +332,9 @@ describe("SQLite flashcard-progress aggregation", () => {
       goodCount: 50,
       reviewCount: 50,
     });
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toHaveLength(1);
+    expect(await aggregationQuery.findCompletedPending(1)).toHaveLength(1);
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     const secondAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(secondAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(99);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
@@ -368,16 +342,16 @@ describe("SQLite flashcard-progress aggregation", () => {
       reviewCount: 100,
     });
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     const finalAggregationCheckpoint = await sessions.findById(opened.session.id);
     expect(finalAggregationCheckpoint?.aggregatedThroughReelPosition).toBe(149);
-    expect(await aggregationQuery.findCompletedSessionsPendingAggregation(1)).toEqual([]);
+    expect(await aggregationQuery.findCompletedPending(1)).toEqual([]);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,
     });
 
-    await service.recoverPendingCompletedSessionAggregation(1);
+    await service.recoverPendingAggregation(1);
     expect(await progress.findByFlashcardId(makeFlashcard(1).id)).toMatchObject({
       goodCount: 150,
       reviewCount: 150,
@@ -388,19 +362,20 @@ describe("SQLite flashcard-progress aggregation", () => {
     aggregationTransaction: FlashcardProgressAggregationTransaction | null = aggregation,
     sessionRepository: SQLiteStudySessionRepository = sessions,
     idGenerator: SequenceIdGenerator = new SequenceIdGenerator()
-  ): StudyServiceImpl {
-    return new StudyServiceImpl(
+  ): StudySessionOperations {
+    return new StudySessionOperations(
       attempts,
       sessionRepository,
       new SQLiteStudySessionAggregationQuery(database.drizzle),
-      new SQLiteStudySessionItemRepository(database.drizzle),
-      new SQLiteStudySessionRecurrenceRepository(database.drizzle),
       new TestClock(),
       idGenerator,
       new SQLiteReviewAttemptTransaction(database.drizzle),
-      new SQLiteStudySessionFeedTransaction(database.drizzle),
       new SQLiteStudySessionLifecycleTransaction(database.drizzle),
-      new SQLiteReviewAttemptFinalizationTransaction(database.drizzle, createLearningScheduler()),
+      new SQLiteReviewAttemptCommitTransaction(
+        database.drizzle,
+        createLearningScheduler(),
+        database.rowIds
+      ),
       () => 0,
       aggregationTransaction
     );
@@ -410,19 +385,19 @@ describe("SQLite flashcard-progress aggregation", () => {
     studySessionId: string,
     reelPosition: number,
     rating: "again" | "hard" | "good" | "easy" | null,
-    finalizedAt: string | null,
-    ratedAt = rating === null ? null : finalizedAt
+    committedAt: string | null,
+    ratedAt = rating === null ? null : committedAt
   ): Promise<FlashcardReviewAttempt> {
     const attempt = new FlashcardReviewAttempt({
       createdAt: "2026-01-01T00:00:00.000Z",
-      finalizedAt,
+      committedAt,
       flashcardId: makeFlashcard(1).id,
       id: testId(600 + reelPosition),
       rating,
       ratedAt,
       reelPosition,
       studySessionId,
-      updatedAt: finalizedAt ?? "2026-01-01T00:00:00.000Z",
+      updatedAt: committedAt ?? "2026-01-01T00:00:00.000Z",
     });
     await new SQLiteReviewAttemptTransaction(database.drizzle).createAttempt(attempt);
     return attempt;
@@ -431,6 +406,8 @@ describe("SQLite flashcard-progress aggregation", () => {
   async function insertResetProgress(resetAt: string): Promise<void> {
     const card = makeFlashcard(1);
     await database.drizzle.insert(flashcardProgress).values({
+      id: database.rowIds.generate(),
+
       againCount: 0,
       createdAt: card.createdAt,
       deckId: card.deckId,

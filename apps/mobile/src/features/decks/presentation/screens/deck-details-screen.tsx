@@ -1,42 +1,66 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItem,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { useCardAnswerAudioSource } from "@/features/audio/presentation/controllers/use-card-answer-audio-source";
-import { DeckCover } from "@/features/decks/presentation/components/deck-cover";
+import { useFlashcardAudioSource } from "@/features/audio/presentation/controllers/use-flashcard-audio-source";
+import {
+  DeckActionsSheet,
+  type DeckAction,
+} from "@/features/decks/presentation/components/deck-actions-sheet";
 import { DeckInfoSheet } from "@/features/decks/presentation/components/deck-info-sheet";
+import { DeckProfileHeader } from "@/features/decks/presentation/components/deck-profile-header";
+import { DeckThemeSelectionSheet } from "@/features/decks/presentation/components/deck-theme-selection-sheet";
 import { DeleteDeckSheet } from "@/features/decks/presentation/components/delete-deck-sheet";
-import { FlashcardDetailsSheet } from "@/features/decks/presentation/components/flashcard-details-sheet";
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import { resolveDeckAppearance } from "@/features/decks/presentation/deck-appearance-presets";
-import {
-  resolveDeckDetailsMode,
-  showsLearningProgress,
-} from "@/features/decks/presentation/deck-details-mode";
+import { useSaveDeckThemeSelection } from "@/features/decks/presentation/controllers/use-save-deck-theme-selection";
+import { resolveDeckTheme, type DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { matchesFlashcardSearch } from "@/features/decks/presentation/flashcard-search";
+import { useDeckRouteId } from "@/features/decks/presentation/hooks/use-deck-route-id";
 import { FlashcardProgressSheet } from "@/features/flashcard-progress/presentation/components/flashcard-progress-sheet";
 import { ResetProgressSheet } from "@/features/flashcard-progress/presentation/components/reset-progress-sheet";
 import { useResetDeckProgress } from "@/features/flashcard-progress/presentation/controllers/use-reset-deck-progress";
+import { countReviewedCards } from "@/features/flashcard-progress/presentation/review-summary";
 import { toSpokenFlashcardText } from "@/features/flashcards/domain/flashcard-text";
 import { FlashcardText } from "@/features/flashcards/presentation/components/flashcard-text";
+import { LessonSearchResults } from "@/features/lessons/presentation/components/lesson-search-results";
+import { useReadingLists } from "@/features/lessons/presentation/controllers/use-reading-lists";
+import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
+import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
 import { reportError } from "@/shared/errors/report-error";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SearchField } from "@/shared/presentation/components/search-field";
+import { SegmentedControl } from "@/shared/presentation/components/segmented-control";
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
-import { fontSize, fontWeight, lineHeight, textStyles } from "@/shared/presentation/typography";
+import { fontSize, fontWeight, lineHeight } from "@/shared/presentation/typography";
+
+type DeckPageTab = "lessons" | "cards";
+
+const deckPageTabs = [
+  { label: "Lessons", value: "lessons" },
+  { label: "Cards", value: "cards" },
+] as const;
 
 type CardRowProps = Readonly<{
   card: Flashcard;
@@ -44,21 +68,16 @@ type CardRowProps = Readonly<{
   /** Fits the deck's largest card number, so numbers line up and never wrap. */
   numberWidth: number;
   position: "first" | "middle" | "last" | "only";
-  showProgress: boolean;
 }>;
 
 /** One row of the grouped card list: rows share a card, split by inset dividers. */
-function CardRow({ card, numberWidth, onPress, position, showProgress }: CardRowProps) {
+function CardRow({ card, numberWidth, onPress, position }: CardRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
   return (
     <Pressable
-      accessibilityHint={
-        showProgress
-          ? "Opens question, answer, audio, and progress"
-          : "Opens question, answer, and audio"
-      }
+      accessibilityHint="Opens question, answer, audio, and progress"
       accessibilityLabel={`Card ${card.order + 1}: ${toSpokenFlashcardText(card.question)}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -119,25 +138,30 @@ export default function DeckDetailsScreen() {
   const { colors, resolvedScheme } = useAppTheme();
   const styles = createStyles(colors);
   const router = useRouter();
-  const { deckId, mode: modeParameter } = useLocalSearchParams<{
-    deckId: string;
-    mode?: string | string[];
-  }>();
-  const mode = resolveDeckDetailsMode(modeParameter);
-  const showProgress = showsLearningProgress(mode);
+  const deckId = useDeckRouteId();
+  const openFocusedFeed = useOpenFocusedFeed();
   const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
-  const { appearance, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
+  const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
+  const { readingLists } = useReadingLists();
+  const { clearSaveError, pendingPreset, saveError, savePreset, saving } =
+    useSaveDeckThemeSelection({ deckId, themeId: themeSelection?.theme ?? null });
   const resetDeckProgress = useResetDeckProgress();
   const haptics = useHaptics();
+  const [tab, setTab] = useState<DeckPageTab>("lessons");
   const [query, setQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
+  const [actionsPresented, setActionsPresented] = useState(false);
+  // Opened once the actions sheet has closed, so two sheets never animate at once.
+  const [queuedAction, setQueuedAction] = useState<DeckAction | null>(null);
+  const [themePresented, setThemePresented] = useState(false);
   const [showDeckInfo, setShowDeckInfo] = useState(false);
   const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const lessons = readingLists.find((list) => list.deckId === deckId)?.lessons ?? [];
+  const activeTab: DeckPageTab = lessons.length > 0 ? tab : "cards";
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
-  const deckColors = appearance ? resolveDeckAppearance(appearance.presetId, resolvedScheme) : null;
+  const deckColors = themeSelection ? resolveDeckTheme(themeSelection.theme, resolvedScheme) : null;
   const accentColor = deckColors?.accent ?? colors.actionPrimary;
   const numberWidth = getNumberWidth(cards.length);
   const renderCard: ListRenderItem<Flashcard> = ({ index, item }) => (
@@ -146,34 +170,58 @@ export default function DeckDetailsScreen() {
       onPress={() => setSelectedCard(item)}
       numberWidth={numberWidth}
       position={getRowPosition(index, visibleCards.length)}
-      showProgress={showProgress}
     />
   );
-  const audioSource = useCardAnswerAudioSource(deck, selectedCard);
-  const confirmReset = () => {
-    if (resetting) {
+  const audioSource = useFlashcardAudioSource(deck, selectedCard);
+  const reset = useSingleFlight(async (): Promise<void> => {
+    if (deckId === null) {
       return;
     }
-    setResetting(true);
     setResetError(null);
-    void resetDeckProgress(deckId)
-      .then(() => {
-        haptics.resetCompleted();
-        setResetPresented(false);
-      })
-      .catch((error: unknown) => {
-        reportError(error, "Deck progress reset failure");
-        setResetError(getErrorFeedback(error).message);
-      })
-      .finally(() => setResetting(false));
+    try {
+      await resetDeckProgress(deckId);
+      if (!reset.isActive()) {
+        return;
+      }
+      haptics.resetCompleted();
+      setResetPresented(false);
+    } catch (error) {
+      reportError(error, "Deck progress reset failure");
+      setResetError(getErrorFeedback(error).message);
+    }
+  });
+  const resetting = reset.busy;
+  const confirmReset = () => void reset.run();
+  const openAction = (action: DeckAction) => {
+    switch (action) {
+      case "theme":
+        clearSaveError();
+        setThemePresented(true);
+        break;
+      case "info":
+        setShowDeckInfo(true);
+        break;
+      case "reset":
+        setResetError(null);
+        setResetPresented(true);
+        break;
+      case "delete":
+        setDeletePresented(true);
+        break;
+    }
+  };
+  const selectTheme = (preset: DeckTheme) => {
+    if (deckId !== null) {
+      void savePreset(deckId, preset);
+    }
   };
 
   if (!loading && !deck) {
     return (
       <ErrorState
-        title="This deck is no longer in your library"
+        title="This deck is no longer installed"
         message="It may have been deleted. You can import it again."
-        actions={[{ label: "Go to Library", onPress: () => router.dismissTo("/(tabs)/library") }]}
+        actions={[{ label: "Go to Decks", onPress: () => router.dismissTo("/(tabs)/decks") }]}
       />
     );
   }
@@ -182,94 +230,109 @@ export default function DeckDetailsScreen() {
     <SafeAreaView style={styles.screen}>
       <SubScreenHeader
         actions={
-          showProgress ? (
-            <Pressable
-              accessibilityLabel={`Reset ${deck?.title ?? "deck"} progress`}
-              accessibilityRole="button"
-              disabled={deck === null || resetting}
-              hitSlop={4}
-              onPress={() => {
-                setResetError(null);
-                setResetPresented(true);
-              }}
-              style={styles.resetButton}
-            >
-              <SymbolView
-                name={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
-                size={sizes.icon.medium}
-                tintColor={colors.error}
-              />
-            </Pressable>
-          ) : (
-            <Pressable
-              accessibilityLabel={`Delete ${deck?.title ?? "deck"}`}
-              accessibilityRole="button"
-              disabled={deck === null || deleting}
-              hitSlop={4}
-              onPress={() => setDeletePresented(true)}
-              style={styles.headerActionButton}
-            >
-              <SymbolView
-                name={{ android: "delete", ios: "trash.fill", web: "delete" }}
-                size={sizes.icon.medium}
-                tintColor={colors.error}
-              />
-            </Pressable>
-          )
-        }
-        backLabel={`Back to ${showProgress ? "Progress" : "Library"}`}
-        onBack={() => router.back()}
-      />
-      <View style={styles.body}>
-        <View style={styles.header}>
-          {!!deck && <DeckCover accentColor={accentColor} asset={deck.coverAsset} size="large" />}
-          <View style={styles.headingCopy}>
-            <Text accessibilityRole="header" numberOfLines={2} style={styles.title}>
-              {deck?.title ?? "Deck cards"}
-            </Text>
-            <Text style={styles.count}>{loading ? "Loading cards…" : `${cards.length} cards`}</Text>
-          </View>
           <Pressable
-            accessibilityLabel="Open deck information"
+            accessibilityLabel={`More actions for ${deck?.title ?? "this deck"}`}
             accessibilityRole="button"
-            accessibilityState={{ expanded: showDeckInfo }}
-            onPress={() => setShowDeckInfo(true)}
-            style={styles.infoButton}
+            disabled={deck === null}
+            hitSlop={4}
+            onPress={() => setActionsPresented(true)}
+            style={styles.moreButton}
           >
             <SymbolView
-              name={{ android: "info", ios: "info.circle", web: "info" }}
+              name={{ android: "more_horiz", ios: "ellipsis.circle", web: "more_horiz" }}
               size={sizes.icon.medium}
               tintColor={colors.textSecondary}
             />
           </Pressable>
-        </View>
-        <View style={styles.search}>
-          <SearchField
-            accessibilityLabel="Search cards in deck"
-            clearLabel="Clear card search"
-            onChangeText={setQuery}
-            placeholder="Search cards…"
-            value={query}
-          />
-        </View>
-        {loading ? (
-          <LoadingState accessibilityLabel="Loading deck cards" />
+        }
+        backLabel="Back to Decks"
+        onBack={() => router.back()}
+      />
+      <View style={styles.body}>
+        {loading || !deck ? (
+          <LoadingState accessibilityLabel="Loading deck" />
         ) : (
-          <FlatList
-            contentContainerStyle={styles.list}
-            data={visibleCards}
-            keyExtractor={(card) => card.id}
-            ListEmptyComponent={EmptyCardList}
-            initialNumToRender={12}
-            maxToRenderPerBatch={8}
-            removeClippedSubviews
-            renderItem={renderCard}
-            style={styles.listView}
-            updateCellsBatchingPeriod={32}
-            windowSize={7}
-          />
+          <>
+            <DeckProfileHeader
+              accentColor={accentColor}
+              cardCount={cards.length}
+              deck={deck}
+              lessonCount={lessons.length}
+              onStudy={() => openFocusedFeed(deck.id, null)}
+              reviewedCount={countReviewedCards(progress.values())}
+            />
+            {lessons.length > 0 && (
+              <View style={styles.tabs}>
+                <SegmentedControl onChange={setTab} options={deckPageTabs} selected={activeTab} />
+              </View>
+            )}
+            {/* One search under the toggle; it narrows whichever list is shown. */}
+            <View style={styles.search}>
+              <SearchField
+                accessibilityLabel={
+                  activeTab === "lessons" ? "Search lessons in deck" : "Search cards in deck"
+                }
+                clearLabel={activeTab === "lessons" ? "Clear lesson search" : "Clear card search"}
+                onChangeText={setQuery}
+                placeholder={activeTab === "lessons" ? "Search lessons…" : "Search cards…"}
+                value={query}
+              />
+            </View>
+            {activeTab === "lessons" ? (
+              <ScrollView contentContainerStyle={styles.lessons} style={styles.listView}>
+                <LessonSearchResults
+                  lessons={lessons}
+                  onOpen={(lesson) => router.push(getLessonHref(lesson.id))}
+                  query={query}
+                />
+              </ScrollView>
+            ) : (
+              <FlatList
+                contentContainerStyle={styles.list}
+                data={visibleCards}
+                keyExtractor={(card) => card.id}
+                ListEmptyComponent={EmptyCardList}
+                initialNumToRender={12}
+                maxToRenderPerBatch={8}
+                removeClippedSubviews
+                renderItem={renderCard}
+                style={styles.listView}
+                updateCellsBatchingPeriod={32}
+                windowSize={7}
+              />
+            )}
+          </>
         )}
       </View>
+      <DeckActionsSheet
+        deckTitle={deck?.title ?? "Deck"}
+        onClose={() => {
+          setActionsPresented(false);
+          if (queuedAction) {
+            setQueuedAction(null);
+            openAction(queuedAction);
+          }
+        }}
+        onSelect={(action) => {
+          setQueuedAction(action);
+          setActionsPresented(false);
+        }}
+        visible={actionsPresented}
+      />
+      <DeckThemeSelectionSheet
+        deck={deck}
+        error={saveError}
+        isPresented={themePresented}
+        onDismiss={() => {
+          if (!saving) {
+            setThemePresented(false);
+          }
+        }}
+        onSelect={selectTheme}
+        pendingPreset={pendingPreset}
+        saving={saving}
+        themeSelection={themeSelection}
+      />
       <DeckInfoSheet
         cards={cards}
         deck={deck}
@@ -277,60 +340,48 @@ export default function DeckDetailsScreen() {
         progress={progress}
         visible={showDeckInfo}
       />
-      {showProgress ? (
-        <FlashcardProgressSheet
-          accentColor={accentColor}
-          audioSource={audioSource}
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)}
-          progress={selectedCard ? (progress.get(selectedCard.id) ?? null) : null}
-        />
-      ) : (
-        <FlashcardDetailsSheet
-          audioSource={audioSource}
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)}
-        />
-      )}
-      {showProgress && (
-        <ResetProgressSheet
-          busy={resetting}
-          error={resetError}
-          isPresented={resetPresented}
-          onCancel={() => {
-            if (!resetting) {
-              setResetPresented(false);
-            }
-          }}
-          onConfirm={confirmReset}
-          scope={`${deck?.title ?? "deck"} progress`}
-        />
-      )}
-      {!showProgress && (
-        <DeleteDeckSheet
-          busy={deleting}
-          deck={deletePresented ? deck : null}
-          error={deleteError}
-          onCancel={() => {
-            if (!deleting) {
-              clearDeleteError();
+      <FlashcardProgressSheet
+        accentColor={accentColor}
+        audioSource={audioSource}
+        card={selectedCard}
+        onClose={() => setSelectedCard(null)}
+        progress={selectedCard ? (progress.get(selectedCard.id) ?? null) : null}
+      />
+      <ResetProgressSheet
+        busy={resetting}
+        error={resetError}
+        isPresented={resetPresented}
+        onCancel={() => {
+          if (!resetting) {
+            setResetPresented(false);
+          }
+        }}
+        onConfirm={confirmReset}
+        scope={`${deck?.title ?? "deck"} progress`}
+      />
+      <DeleteDeckSheet
+        busy={deleting}
+        deck={deletePresented ? deck : null}
+        error={deleteError}
+        onCancel={() => {
+          if (!deleting) {
+            clearDeleteError();
+            setDeletePresented(false);
+          }
+        }}
+        onConfirm={() => {
+          if (!deck) {
+            return;
+          }
+          void deleteDeck(deck.id).then((deleted) => {
+            if (deleted) {
               setDeletePresented(false);
+              router.dismissTo("/(tabs)/decks");
+              showSuccessToast("Deck deleted.");
             }
-          }}
-          onConfirm={() => {
-            if (!deck) {
-              return;
-            }
-            void deleteDeck(deck.id).then((deleted) => {
-              if (deleted) {
-                setDeletePresented(false);
-                router.dismissTo("/(tabs)/library");
-                showSuccessToast("Deck deleted.");
-              }
-            });
-          }}
-        />
-      )}
+          });
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -371,45 +422,27 @@ function createStyles(colors: AppColors) {
       position: "absolute",
       right: 0,
     },
-    count: { color: colors.textTertiary, fontSize: fontSize.footnote },
-    header: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: sizes.spacing.medium,
-      paddingBottom: sizes.spacing.section,
+    lessons: {
+      paddingBottom: sizes.spacing.content,
       paddingHorizontal: sizes.spacing.content,
-      paddingTop: sizes.spacing.small,
-    },
-    headingCopy: { flex: 1 },
-    infoButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
     },
     list: {
       paddingBottom: sizes.spacing.content,
       paddingHorizontal: sizes.spacing.content,
     },
     listView: { flex: 1 },
+    moreButton: {
+      alignItems: "center",
+      height: sizes.touchTarget.minimum,
+      justifyContent: "center",
+      width: sizes.touchTarget.minimum,
+    },
     position: {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       fontVariant: ["tabular-nums"],
       fontWeight: fontWeight.heavy,
       textAlign: "center",
-    },
-    headerActionButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
-    },
-    resetButton: {
-      alignItems: "center",
-      height: sizes.touchTarget.minimum,
-      justifyContent: "center",
-      width: sizes.touchTarget.minimum,
     },
     question: {
       color: colors.textPrimary,
@@ -420,6 +453,6 @@ function createStyles(colors: AppColors) {
     },
     screen: { backgroundColor: colors.canvas, flex: 1 },
     search: { paddingHorizontal: sizes.spacing.content },
-    title: { color: colors.textPrimary, ...textStyles.screenTitle },
+    tabs: { paddingHorizontal: sizes.spacing.content },
   });
 }

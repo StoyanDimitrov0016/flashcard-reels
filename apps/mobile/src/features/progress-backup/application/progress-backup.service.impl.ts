@@ -5,10 +5,12 @@ import type {
   PreparedProgressRestore,
   ProgressBackupService,
 } from "@/features/progress-backup/application/progress-backup.service";
-import type { StudyService } from "@/features/study/domain/study.service";
+import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
 import type { Clock } from "@/shared/domain/clock";
 
 import {
+  PROGRESS_BACKUP_FORMAT,
+  PROGRESS_BACKUP_VERSION,
   ProgressBackupDocumentSchema,
   summarizeProgressBackup,
   type ProgressBackupDocument,
@@ -18,17 +20,18 @@ import {
   ProgressBackupVersionError,
 } from "@/features/progress-backup/domain/progress-backup.errors";
 import { toOperationError } from "@/shared/errors/normalize-error";
+import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
 export class ProgressBackupServiceImpl implements ProgressBackupService {
-  private readonly studyService: StudyService;
+  private readonly studyService: StudySessionSettlement;
   private readonly query: ProgressBackupQuery;
   private readonly restoreTransaction: ProgressBackupRestoreTransaction;
   private readonly files: ProgressBackupFileGateway;
   private readonly clock: Clock;
 
   constructor(
-    studyService: StudyService,
+    studyService: StudySessionSettlement,
     query: ProgressBackupQuery,
     restoreTransaction: ProgressBackupRestoreTransaction,
     files: ProgressBackupFileGateway,
@@ -144,7 +147,10 @@ export class ProgressBackupServiceImpl implements ProgressBackupService {
   async shareSafetyCopy(): Promise<void> {
     const fileName = await this.query.readSafetyCopyFileName();
     if (!fileName) {
-      throw new Error("No previous progress backup is available");
+      throw new OperationError({
+        code: "PROGRESS_BACKUP_UNAVAILABLE",
+        message: "No previous progress backup is available",
+      });
     }
     await this.files.shareSafetyCopy(fileName);
   }
@@ -162,11 +168,11 @@ function hasSameProgress(
       (row) => row.deckId,
       (first, second) =>
         first.lastReviewedAt === second.lastReviewedAt &&
-        first.resolution === (installedDeckIds.has(first.deckId) ? "active" : "archived")
+        first.status === (installedDeckIds.has(first.deckId) ? "active" : "archived")
     ) &&
     sameRows(left.flashcardProgress, right.flashcardProgress, (row) => row.flashcardId) &&
     sameRows(left.flashcardMemoryStates, right.flashcardMemoryStates, (row) => row.flashcardId) &&
-    sameRows(left.reviewEvents, right.reviewEvents, (row) => row.id)
+    sameRows(left.flashcardReviewEvents, right.flashcardReviewEvents, (row) => row.id)
   );
 }
 
@@ -192,10 +198,10 @@ function parseIncomingBackup(value: unknown) {
     typeof value === "object" &&
     value !== null &&
     "format" in value &&
-    value.format === "flashcard-reels-progress" &&
+    value.format === PROGRESS_BACKUP_FORMAT &&
     "version" in value &&
     typeof value.version === "number" &&
-    value.version !== 1
+    value.version !== PROGRESS_BACKUP_VERSION
   ) {
     throw new ProgressBackupVersionError(value.version);
   }

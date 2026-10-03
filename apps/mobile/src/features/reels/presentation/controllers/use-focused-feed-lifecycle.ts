@@ -35,9 +35,14 @@ export function useFocusedFeedLifecycle(
       const sessionService = studyService;
       let disposed = false;
       let evaluationInFlight = false;
+      let evaluationPending = false;
 
       const evaluate = async () => {
+        if (disposed) {
+          return;
+        }
         if (evaluationInFlight) {
+          evaluationPending = true;
           return;
         }
         evaluationInFlight = true;
@@ -54,6 +59,10 @@ export function useFocusedFeedLifecycle(
           }
         } finally {
           evaluationInFlight = false;
+          if (!disposed && evaluationPending) {
+            evaluationPending = false;
+            void evaluate();
+          }
           if (!disposed) {
             setCompletedRequest({ revision, progressRevision, requestedDeckId, retryKey });
           }

@@ -1,4 +1,4 @@
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 export type RandomSource = () => number;
 
@@ -8,16 +8,19 @@ type RecurrenceConfiguration = Readonly<{
   jitterMinimum: number;
 }>;
 
-const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<
-  Partial<Record<RecallLevel, RecurrenceConfiguration>>
-> = {
-  again: { baseDistance: 8, jitterMaximum: 2, jitterMinimum: -2 },
-  hard: { baseDistance: 16, jitterMaximum: 4, jitterMinimum: -4 },
-};
+const INTRA_SESSION_RECURRENCE_CONFIG: Readonly<Partial<Record<Rating, RecurrenceConfiguration>>> =
+  {
+    again: { baseDistance: 8, jitterMaximum: 2, jitterMinimum: -2 },
+    hard: { baseDistance: 16, jitterMaximum: 4, jitterMinimum: -4 },
+  };
+
+export function doesRatingRecur(rating: Rating | null): boolean {
+  return rating !== null && INTRA_SESSION_RECURRENCE_CONFIG[rating] !== undefined;
+}
 
 export function calculateRecurrenceTarget(
   sourceReelPosition: number,
-  rating: RecallLevel,
+  rating: Rating,
   random: RandomSource = Math.random
 ): number | null {
   const configuration = INTRA_SESSION_RECURRENCE_CONFIG[rating];

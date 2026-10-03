@@ -37,7 +37,7 @@ function createStyles(colors: AppColors) {
       flex: 1,
       justifyContent: "center",
       paddingBottom: 52,
-      paddingHorizontal: 36,
+      paddingHorizontal: sizes.spacing.wide,
     },
     iconShell: {
       alignItems: "center",
@@ -47,7 +47,7 @@ function createStyles(colors: AppColors) {
       borderWidth: sizes.border,
       height: 76,
       justifyContent: "center",
-      marginBottom: 22,
+      marginBottom: sizes.spacing.content,
       width: 76,
     },
     title: {
@@ -60,16 +60,16 @@ function createStyles(colors: AppColors) {
       color: colors.textSecondary,
       fontSize: fontSize.bodyLarge,
       lineHeight: lineHeight.bodyLarge,
-      marginTop: 10,
+      marginTop: sizes.spacing.large,
       maxWidth: 300,
       textAlign: "center",
     },
     button: {
       backgroundColor: colors.actionPrimary,
       borderRadius: sizes.radius.pill,
-      marginTop: 26,
-      paddingHorizontal: 22,
-      paddingVertical: 13,
+      marginTop: sizes.spacing.spacious,
+      paddingHorizontal: sizes.spacing.content,
+      paddingVertical: sizes.spacing.xLarge,
     },
     buttonLabel: {
       color: colors.actionPrimaryText,

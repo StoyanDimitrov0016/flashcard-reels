@@ -14,11 +14,11 @@ vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove: 
 vi.mock("@/shared/errors/report-error", () => ({ reportError: harness.report }));
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed } from "@/features/reels/domain/reel-feed";
+import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import {
   DeckContentProvider,
@@ -71,7 +71,12 @@ class Boundary extends Component<Readonly<{ children: ReactNode }>, { error: Err
 }
 
 function MixedFeedProbe({ cards }: Readonly<{ cards: Flashcard[] }>) {
-  const feed = usePreparedReelFeed(cards, "mixed", null, false);
+  const feed = usePreparedReelFeed({
+    cards,
+    scope: "discover",
+    deckId: null,
+    replaceExistingSession: false,
+  });
   useEffect(
     function observeMixedFeed() {
       observedFeed = feed;
@@ -139,14 +144,16 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     harness.services = {
       deckService: new DeckServiceImpl(
         new SQLiteDeckRepository(database.drizzle),
-        new SQLiteDeckAppearanceRepository(database.drizzle),
-        new SQLiteDeckRemovalTransaction(database.drizzle),
+        new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
+        new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
         null,
-        graph.study
+        graph.runtime,
+        new SQLiteFlashcardRepository(database.drizzle),
+        new SQLiteFlashcardAvailabilityQuery(database.drizzle)
       ),
       flashcardService,
-      reelFeedService: graph.feed,
-      studyService: graph.study,
+
+      studyService: graph.runtime,
     };
   });
   afterEach(() => {
@@ -184,9 +191,10 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
   it("clears the persisted focused deck immediately after deletion without requiring foregrounding", async () => {
     await graph.feed.prepareFeed(
       await flashcardService.listByDeckId(TEST_DECK_ID),
-      "focused",
+      "focus",
       TEST_DECK_ID,
-      true
+      true,
+      null
     );
     const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
@@ -212,7 +220,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
-    act(() => result.current.startFocusedFeed(TEST_DECK_ID));
+    act(() => result.current.startFocusedFeed(TEST_DECK_ID, null));
     await waitFor(() => {
       expect(result.current.focusRestoring).toBe(false);
       expect(result.current.focusedFeed.status).toBe("ready");
@@ -229,7 +237,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
-    act(() => result.current.startFocusedFeed(OTHER_DECK_ID));
+    act(() => result.current.startFocusedFeed(OTHER_DECK_ID, null));
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
     await act(async () => {
       await result.current.deleteDeck(TEST_DECK_ID);
@@ -242,7 +250,12 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     const cards = await flashcardService.list();
     const { result } = renderHook(
       () => ({
-        feed: usePreparedReelFeed(cards, "mixed", null, false),
+        feed: usePreparedReelFeed({
+          cards,
+          scope: "discover",
+          deckId: null,
+          replaceExistingSession: false,
+        }),
         ...useLearningProgressRevision(),
       }),
       { wrapper: Providers }
@@ -253,7 +266,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     act(() => result.current.invalidateLearningProgress());
     expect(result.current.feed).toBeNull();
     await act(async () =>
-      preparation.resolve(await graph.feed.prepareFeed(cards, "mixed", null, false))
+      preparation.resolve(await graph.feed.prepareFeed(cards, "discover", null, false, null))
     );
     await waitFor(() => expect(result.current.feed).not.toBeNull());
   });

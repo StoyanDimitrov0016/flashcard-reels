@@ -3,46 +3,40 @@ import { eq, inArray } from "drizzle-orm";
 import type { DeckRemovalTransaction } from "@/features/decks/application/deck-removal.transaction";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { SQLiteDeckLearnerData } from "@/features/decks/infrastructure/sqlite-deck-learner-data";
+import bundledDeckRegistry from "@/infrastructure/bundled-deck-registry.json";
 import {
-  flashcardProgress,
-  deckAppearances,
-  deckProgress,
   decks,
-  flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcards,
   lessons,
-  removedDecks,
-  studySessionItems,
+  dismissedBundledDecks,
+  studySessionReels,
   studySessionRecurrences,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckRemovalTransaction {
   private readonly database: DrizzleDatabase<TRunResult>;
+  private readonly idGenerator: IdGenerator;
 
-  constructor(database: DrizzleDatabase<TRunResult>) {
+  constructor(database: DrizzleDatabase<TRunResult>, idGenerator: IdGenerator) {
     this.database = database;
+    this.idGenerator = idGenerator;
   }
 
   async remove(id: DeckId): Promise<void> {
     this.database.transaction((transaction) => {
-      transaction.insert(removedDecks).values({ id }).onConflictDoNothing().run();
-      const savedProgress = transaction
-        .select({ deckId: deckProgress.deckId })
-        .from(deckProgress)
-        .where(eq(deckProgress.deckId, id))
-        .get();
-      transaction
-        .update(deckProgress)
-        .set({ resolution: "archived" })
-        .where(eq(deckProgress.deckId, id))
-        .run();
-      if (!savedProgress) {
-        transaction.delete(flashcardProgress).where(eq(flashcardProgress.deckId, id)).run();
-        transaction.delete(flashcardMemoryStates).where(eq(flashcardMemoryStates.deckId, id)).run();
+      if (bundledDeckRegistry.some((deck) => deck.id === id)) {
+        transaction
+          .insert(dismissedBundledDecks)
+          .values({ id: this.idGenerator.generate(), deckId: id })
+          .onConflictDoNothing()
+          .run();
       }
+      new SQLiteDeckLearnerData(transaction).archive(id);
       const cardIds = transaction
         .select({ id: flashcards.id })
         .from(flashcards)
@@ -60,13 +54,12 @@ export class SQLiteDeckRemovalTransaction<TRunResult = unknown> implements DeckR
           .where(inArray(flashcardReviewAttempts.flashcardId, cardIds))
           .run();
         transaction
-          .delete(studySessionItems)
-          .where(inArray(studySessionItems.flashcardId, cardIds))
+          .delete(studySessionReels)
+          .where(inArray(studySessionReels.flashcardId, cardIds))
           .run();
       }
       transaction.delete(flashcards).where(eq(flashcards.deckId, id)).run();
       transaction.delete(lessons).where(eq(lessons.deckId, id)).run();
-      transaction.delete(deckAppearances).where(eq(deckAppearances.deckId, id)).run();
       transaction.delete(decks).where(eq(decks.id, id)).run();
     });
   }

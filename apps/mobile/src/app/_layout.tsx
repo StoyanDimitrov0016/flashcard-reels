@@ -9,15 +9,17 @@ import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View, useColorScheme } from "react-native";
 
-import { DeckAppearanceProvider } from "@/features/decks/presentation/context/deck-appearance-context";
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
+import { DeckThemeSelectionProvider } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
-import { PreferencesProvider } from "@/features/preferences/presentation/controllers/preferences-context";
-import { usePreferences } from "@/features/preferences/presentation/hooks/use-preferences";
+import {
+  PreferencesProvider,
+  usePreferencesContext,
+} from "@/features/preferences/presentation/controllers/preferences-context";
 import { PreferencesThemeProvider } from "@/features/preferences/presentation/preferences-theme-provider";
+import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { prepareAppStorage, requestAppDataReset } from "@/infrastructure/app-recovery";
-import { AppServicesProvider } from "@/infrastructure/app-services";
-import { preferencesService } from "@/infrastructure/preferences-services";
+import { AppServicesProvider, useAppServices } from "@/infrastructure/app-services";
 import {
   DATABASE_NAME,
   handleSQLiteProviderError,
@@ -62,7 +64,7 @@ export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
 
 function AppNavigation() {
   const { colors, resolvedScheme } = useAppTheme();
-  const { ready } = usePreferences();
+  const { ready } = usePreferencesContext();
 
   useEffect(
     function synchronizeNativeRootBackground() {
@@ -117,6 +119,20 @@ function AppNavigation() {
   );
 }
 
+function AppPreferences() {
+  const { preferencesService } = useAppServices();
+
+  return (
+    <PreferencesProvider service={preferencesService}>
+      <PreferencesThemeProvider>
+        <FeedScopeProvider>
+          <AppNavigation />
+        </FeedScopeProvider>
+      </PreferencesThemeProvider>
+    </PreferencesProvider>
+  );
+}
+
 function RootLayoutContent() {
   const [prepared, setPrepared] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
@@ -156,17 +172,13 @@ function RootLayoutContent() {
           onInit={initializeAppDatabase}
         >
           <DeckContentProvider>
-            <DeckAppearanceProvider>
+            <DeckThemeSelectionProvider>
               <LearningProgressRevisionProvider>
-                <PreferencesProvider service={preferencesService}>
-                  <PreferencesThemeProvider>
-                    <AppServicesProvider>
-                      <AppNavigation />
-                    </AppServicesProvider>
-                  </PreferencesThemeProvider>
-                </PreferencesProvider>
+                <AppServicesProvider>
+                  <AppPreferences />
+                </AppServicesProvider>
               </LearningProgressRevisionProvider>
-            </DeckAppearanceProvider>
+            </DeckThemeSelectionProvider>
           </DeckContentProvider>
         </SQLiteProvider>
       </View>

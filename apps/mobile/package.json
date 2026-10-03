@@ -20,6 +20,7 @@
     "db:check": "drizzle-kit check",
     "decks:packages": "node scripts/generate-demo-deck-package.mjs",
     "decks:generate": "node scripts/generate-deck-package.mjs",
+    "decks:curated:prepare": "node scripts/prepare-curated-decks.mjs",
     "decks:inspect": "node scripts/inspect-deck-package.mjs",
     "decks:test:generate": "node scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
@@ -34,22 +35,23 @@
     "audio:technical:generate": "node scripts/generate-technical-audio.mjs"
   },
   "dependencies": {
-    "@expo/ui": "~57.0.20",
+    "@expo/ui": "~57.0.21",
+    "@flashcard-reels/deck-contract": "*",
     "@flashcard-reels/design-tokens": "*",
     "@shopify/flash-list": "2.0.2",
     "drizzle-orm": "^0.45.2",
-    "expo": "~57.0.25",
+    "expo": "~57.0.26",
     "expo-asset": "~57.0.16",
     "expo-audio": "~57.0.5",
-    "expo-camera": "~57.0.5",
+    "expo-camera": "~57.0.6",
     "expo-constants": "~57.0.17",
     "expo-crypto": "~57.0.3",
-    "expo-document-picker": "~57.0.2",
+    "expo-document-picker": "~57.0.3",
     "expo-file-system": "~57.0.6",
     "expo-font": "~57.0.3",
     "expo-haptics": "~57.0.3",
     "expo-linking": "~57.0.11",
-    "expo-router": "~57.0.23",
+    "expo-router": "~57.0.24",
     "expo-sharing": "~57.0.22",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.3",
@@ -63,7 +65,7 @@
     "react-native-pager-view": "8.0.2",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-tab-view": "^4.3.2",
+    "react-native-tab-view": "^4.3.3",
     "react-native-toast-message": "^2.5.2",
     "react-native-web": "~0.21.0",
     "ts-fsrs": "5.4.2",
@@ -72,7 +74,7 @@
   "devDependencies": {
     "@testing-library/react": "^16.3.3",
     "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.4",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.0",
     "babel-plugin-inline-import": "^3.0.0",
@@ -81,7 +83,7 @@
     "expo-doctor": "1.20.4",
     "jsdom": "^30.1.0",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.3"
   },
   "overrides": {
     "query-string": {

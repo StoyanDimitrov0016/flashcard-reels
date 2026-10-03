@@ -24,7 +24,7 @@ export class SQLiteFlashcardAvailabilityQuery<
       .where(
         and(
           eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
+          or(isNull(deckProgress.deckId), ne(deckProgress.status, "pending"))
         )
       )
       .orderBy(asc(flashcards.createdAt), asc(flashcards.id));
@@ -40,7 +40,7 @@ export class SQLiteFlashcardAvailabilityQuery<
         and(
           eq(flashcards.deckId, deckId),
           eq(flashcards.active, true),
-          or(isNull(deckProgress.deckId), ne(deckProgress.resolution, "pending"))
+          or(isNull(deckProgress.deckId), ne(deckProgress.status, "pending"))
         )
       )
       .orderBy(asc(flashcards.order), asc(flashcards.id));
@@ -51,10 +51,13 @@ export class SQLiteFlashcardAvailabilityQuery<
 function toModel(row: typeof flashcards.$inferSelect): Flashcard {
   return new Flashcard({
     answer: row.answer,
+    lessonId: row.lessonId,
+    lessonSectionId: row.lessonSectionId ?? null,
     createdAt: row.createdAt,
     deckId: row.deckId,
     order: row.order,
     active: row.active,
+    hasAudio: row.hasAudio,
     id: row.id,
     question: row.question,
     updatedAt: row.updatedAt,

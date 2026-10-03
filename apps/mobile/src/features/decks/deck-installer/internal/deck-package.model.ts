@@ -1,13 +1,12 @@
-import type { DeckInstallResult, DeckPackageFile } from "../index";
-import type { DeckPackageDocument } from "./deck-package.schema.ts";
+import type { DeckPackage } from "@flashcard-reels/deck-contract";
 
-export type DeckPackage = Readonly<
-  DeckPackageDocument & {
-    audioFiles: ReadonlyMap<string, Uint8Array>;
-    /** Lesson Markdown keyed by lesson ID. */
-    lessonFiles: ReadonlyMap<string, string>;
-  }
->;
+import type { DeckThemeId } from "@/features/decks/domain/deck-theme-selection.model";
+import type { DeckCoverAsset } from "@/features/decks/domain/deck.model";
+import type { InstalledDeckIdentity } from "@/features/decks/domain/deck.repository";
+
+import type { DeckInstallResult, DeckPackageFile } from "../index";
+
+export type { DeckPackage };
 
 export interface DeckPackageReader {
   read(bytes: Uint8Array): DeckPackage;
@@ -17,19 +16,28 @@ export interface DeckPackageFileReader {
   read(file: DeckPackageFile): Promise<Uint8Array>;
 }
 
+export type BundledAppearance = Readonly<{
+  theme: DeckThemeId;
+  coverAsset: DeckCoverAsset;
+}>;
+
 export interface DeckPackageInstallationTransaction {
-  install(deckPackage: DeckPackage, now: string): Promise<DeckInstallResult>;
+  install(
+    deckPackage: DeckPackage,
+    now: string,
+    appearance?: BundledAppearance
+  ): Promise<DeckInstallResult>;
 }
 
-export interface InstalledDeckVersionRepository {
-  findVersion(deckId: string): Promise<number | null>;
+export interface InstalledDeckIdentityRepository {
+  findInstalledIdentity(deckId: string): Promise<InstalledDeckIdentity | null>;
 }
 
-export type StagedDeckAudio = Readonly<{ deckId: string; token: string; version: number }>;
+export type StagedDeckAudio = Readonly<{ deckId: string; token: string; revision: number }>;
 
 export interface DeckAudioStorage {
   stage(deckPackage: DeckPackage): Promise<StagedDeckAudio>;
   activate(staged: StagedDeckAudio): Promise<void>;
-  removeVersion(deckId: string, version: number): Promise<void>;
-  removeOtherVersions(deckId: string, keepVersion: number): Promise<void>;
+  removeRevision(deckId: string, revision: number): Promise<void>;
+  removeOtherRevisions(deckId: string, keepRevision: number): Promise<void>;
 }

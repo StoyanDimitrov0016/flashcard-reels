@@ -1,54 +1,23 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "76da0e46-42af-4fc8-bc1a-0c27c60d5f7e",
+  "id": "c95ee54b-3542-42f9-9828-a3b07833600c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "deck_appearances": {
-      "name": "deck_appearances",
+    "deck_progress": {
+      "name": "deck_progress",
       "columns": {
-        "deck_id": {
-          "name": "deck_id",
+        "id": {
+          "name": "id",
           "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
-        "preset_id": {
-          "name": "preset_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "deck_appearances_deck_id_decks_id_fk": {
-          "name": "deck_appearances_deck_id_decks_id_fk",
-          "tableFrom": "deck_appearances",
-          "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "deck_progress": {
-      "name": "deck_progress",
-      "columns": {
         "deck_id": {
           "name": "deck_id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -59,8 +28,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "version": {
-          "name": "version",
+        "revision": {
+          "name": "revision",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -73,15 +42,67 @@
           "notNull": true,
           "autoincrement": false
         },
-        "resolution": {
-          "name": "resolution",
+        "status": {
+          "name": "status",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "deck_progress_deck_id_unique": {
+          "name": "deck_progress_deck_id_unique",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "deck_progress_status_check": {
+          "name": "deck_progress_status_check",
+          "value": "\"deck_progress\".\"status\" IN ('active', 'archived', 'pending')"
+        }
+      }
+    },
+    "deck_theme_selections": {
+      "name": "deck_theme_selections",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deck_id": {
+          "name": "deck_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "theme": {
+          "name": "theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "deck_theme_selections_deck_id_unique": {
+          "name": "deck_theme_selections_deck_id_unique",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -94,6 +115,20 @@
           "name": "id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "package_schema": {
+          "name": "package_schema",
+          "type": "integer",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -119,13 +154,12 @@
           "autoincrement": false,
           "default": "'cards'"
         },
-        "version": {
-          "name": "version",
+        "revision": {
+          "name": "revision",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 1
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
@@ -148,13 +182,52 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "dismissed_bundled_decks": {
+      "name": "dismissed_bundled_decks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deck_id": {
+          "name": "deck_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "dismissed_bundled_decks_deck_id_unique": {
+          "name": "dismissed_bundled_decks_deck_id_unique",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "flashcard_memory_states": {
       "name": "flashcard_memory_states",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "flashcard_id": {
           "name": "flashcard_id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -251,6 +324,13 @@
         }
       },
       "indexes": {
+        "flashcard_memory_states_flashcard_id_unique": {
+          "name": "flashcard_memory_states_flashcard_id_unique",
+          "columns": [
+            "flashcard_id"
+          ],
+          "isUnique": true
+        },
         "flashcard_memory_states_deck_id_idx": {
           "name": "flashcard_memory_states_deck_id_idx",
           "columns": [
@@ -263,6 +343,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "flashcard_memory_states_state_check": {
+          "name": "flashcard_memory_states_state_check",
+          "value": "\"flashcard_memory_states\".\"state\" IN ('new', 'learning', 'review', 'relearning')"
+        },
         "flashcard_memory_states_elapsed_days_check": {
           "name": "flashcard_memory_states_elapsed_days_check",
           "value": "\"flashcard_memory_states\".\"elapsed_days\" >= 0"
@@ -285,255 +369,20 @@
         }
       }
     },
-    "flashcard_review_attempts": {
-      "name": "flashcard_review_attempts",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "study_session_id": {
-          "name": "study_session_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "flashcard_id": {
-          "name": "flashcard_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reel_position": {
-          "name": "reel_position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "rating": {
-          "name": "rating",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "rated_at": {
-          "name": "rated_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "finalized_at": {
-          "name": "finalized_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "review_attempts_flashcard_id_idx": {
-          "name": "review_attempts_flashcard_id_idx",
-          "columns": [
-            "flashcard_id"
-          ],
-          "isUnique": false
-        },
-        "review_attempts_session_position_aggregation_idx": {
-          "name": "review_attempts_session_position_aggregation_idx",
-          "columns": [
-            "study_session_id",
-            "reel_position",
-            "finalized_at",
-            "rating",
-            "rated_at"
-          ],
-          "isUnique": false
-        },
-        "review_attempts_session_reel_position_unique": {
-          "name": "review_attempts_session_reel_position_unique",
-          "columns": [
-            "study_session_id",
-            "reel_position"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {
-        "flashcard_review_attempts_study_session_id_study_sessions_id_fk": {
-          "name": "flashcard_review_attempts_study_session_id_study_sessions_id_fk",
-          "tableFrom": "flashcard_review_attempts",
-          "tableTo": "study_sessions",
-          "columnsFrom": [
-            "study_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "flashcard_review_attempts_flashcard_id_flashcards_id_fk": {
-          "name": "flashcard_review_attempts_flashcard_id_flashcards_id_fk",
-          "tableFrom": "flashcard_review_attempts",
-          "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "flashcard_review_attempts_reel_position_check": {
-          "name": "flashcard_review_attempts_reel_position_check",
-          "value": "\"flashcard_review_attempts\".\"reel_position\" >= 0"
-        },
-        "flashcard_review_attempts_rating_check": {
-          "name": "flashcard_review_attempts_rating_check",
-          "value": "\"flashcard_review_attempts\".\"rating\" IS NULL OR \"flashcard_review_attempts\".\"rating\" IN ('again', 'hard', 'good', 'easy')"
-        },
-        "flashcard_review_attempts_rating_timestamp_check": {
-          "name": "flashcard_review_attempts_rating_timestamp_check",
-          "value": "(\"flashcard_review_attempts\".\"rating\" IS NULL AND \"flashcard_review_attempts\".\"rated_at\" IS NULL) OR (\"flashcard_review_attempts\".\"rating\" IS NOT NULL AND \"flashcard_review_attempts\".\"rated_at\" IS NOT NULL)"
-        }
-      }
-    },
-    "flashcards": {
-      "name": "flashcards",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "deck_id": {
-          "name": "deck_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "active": {
-          "name": "active",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": true
-        },
-        "question": {
-          "name": "question",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "answer": {
-          "name": "answer",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "flashcards_deck_id_idx": {
-          "name": "flashcards_deck_id_idx",
-          "columns": [
-            "deck_id"
-          ],
-          "isUnique": false
-        },
-        "flashcards_order_unique": {
-          "name": "flashcards_order_unique",
-          "columns": [
-            "deck_id",
-            "order"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {
-        "flashcards_deck_id_decks_id_fk": {
-          "name": "flashcards_deck_id_decks_id_fk",
-          "tableFrom": "flashcards",
-          "tableTo": "decks",
-          "columnsFrom": [
-            "deck_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {
-        "flashcards_order_check": {
-          "name": "flashcards_order_check",
-          "value": "\"flashcards\".\"order\" >= 0"
-        }
-      }
-    },
     "flashcard_progress": {
       "name": "flashcard_progress",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "flashcard_id": {
           "name": "flashcard_id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -621,6 +470,13 @@
         }
       },
       "indexes": {
+        "flashcard_progress_flashcard_id_unique": {
+          "name": "flashcard_progress_flashcard_id_unique",
+          "columns": [
+            "flashcard_id"
+          ],
+          "isUnique": true
+        },
         "flashcard_progress_deck_id_idx": {
           "name": "flashcard_progress_deck_id_idx",
           "columns": [
@@ -674,8 +530,8 @@
         }
       }
     },
-    "removed_decks": {
-      "name": "removed_decks",
+    "flashcard_review_attempts": {
+      "name": "flashcard_review_attempts",
       "columns": {
         "id": {
           "name": "id",
@@ -683,16 +539,139 @@
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
+        },
+        "study_session_id": {
+          "name": "study_session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "flashcard_id": {
+          "name": "flashcard_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reel_position": {
+          "name": "reel_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rating": {
+          "name": "rating",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rated_at": {
+          "name": "rated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "committed_at": {
+          "name": "committed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "flashcard_review_attempts_flashcard_id_idx": {
+          "name": "flashcard_review_attempts_flashcard_id_idx",
+          "columns": [
+            "flashcard_id"
+          ],
+          "isUnique": false
+        },
+        "flashcard_review_attempts_session_position_aggregation_idx": {
+          "name": "flashcard_review_attempts_session_position_aggregation_idx",
+          "columns": [
+            "study_session_id",
+            "reel_position",
+            "committed_at",
+            "rating",
+            "rated_at"
+          ],
+          "isUnique": false
+        },
+        "flashcard_review_attempts_session_reel_position_unique": {
+          "name": "flashcard_review_attempts_session_reel_position_unique",
+          "columns": [
+            "study_session_id",
+            "reel_position"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "flashcard_review_attempts_study_session_id_study_sessions_id_fk": {
+          "name": "flashcard_review_attempts_study_session_id_study_sessions_id_fk",
+          "tableFrom": "flashcard_review_attempts",
+          "tableTo": "study_sessions",
+          "columnsFrom": [
+            "study_session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "flashcard_review_attempts_flashcard_id_flashcards_id_fk": {
+          "name": "flashcard_review_attempts_flashcard_id_flashcards_id_fk",
+          "tableFrom": "flashcard_review_attempts",
+          "tableTo": "flashcards",
+          "columnsFrom": [
+            "flashcard_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "flashcard_review_attempts_reel_position_check": {
+          "name": "flashcard_review_attempts_reel_position_check",
+          "value": "\"flashcard_review_attempts\".\"reel_position\" >= 0"
+        },
+        "flashcard_review_attempts_rating_check": {
+          "name": "flashcard_review_attempts_rating_check",
+          "value": "\"flashcard_review_attempts\".\"rating\" IS NULL OR \"flashcard_review_attempts\".\"rating\" IN ('again', 'hard', 'good', 'easy')"
+        },
+        "flashcard_review_attempts_rating_timestamp_check": {
+          "name": "flashcard_review_attempts_rating_timestamp_check",
+          "value": "(\"flashcard_review_attempts\".\"rating\" IS NULL AND \"flashcard_review_attempts\".\"rated_at\" IS NULL) OR (\"flashcard_review_attempts\".\"rating\" IS NOT NULL AND \"flashcard_review_attempts\".\"rated_at\" IS NOT NULL)"
+        }
+      }
     },
-    "review_events": {
-      "name": "review_events",
+    "flashcard_review_events": {
+      "name": "flashcard_review_events",
       "columns": {
         "id": {
           "name": "id",
@@ -729,8 +708,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "finalized_at": {
-          "name": "finalized_at",
+        "committed_at": {
+          "name": "committed_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -738,15 +717,15 @@
         }
       },
       "indexes": {
-        "review_events_deck_id_idx": {
-          "name": "review_events_deck_id_idx",
+        "flashcard_review_events_deck_id_idx": {
+          "name": "flashcard_review_events_deck_id_idx",
           "columns": [
             "deck_id"
           ],
           "isUnique": false
         },
-        "review_events_flashcard_id_idx": {
-          "name": "review_events_flashcard_id_idx",
+        "flashcard_review_events_flashcard_id_idx": {
+          "name": "flashcard_review_events_flashcard_id_idx",
           "columns": [
             "flashcard_id"
           ],
@@ -756,10 +735,15 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "flashcard_review_events_rating_check": {
+          "name": "flashcard_review_events_rating_check",
+          "value": "\"flashcard_review_events\".\"rating\" IN ('again', 'hard', 'good', 'easy')"
+        }
+      }
     },
-    "study_session_items": {
-      "name": "study_session_items",
+    "flashcards": {
+      "name": "flashcards",
       "columns": {
         "id": {
           "name": "id",
@@ -768,80 +752,102 @@
           "notNull": true,
           "autoincrement": false
         },
-        "study_session_id": {
-          "name": "study_session_id",
+        "deck_id": {
+          "name": "deck_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "flashcard_id": {
-          "name": "flashcard_id",
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "has_audio": {
+          "name": "has_audio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "question": {
+          "name": "question",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "base_feed_position": {
-          "name": "base_feed_position",
-          "type": "integer",
+        "answer": {
+          "name": "answer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "reel_position": {
-          "name": "reel_position",
-          "type": "integer",
+        "lesson_id": {
+          "name": "lesson_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lesson_section_id": {
+          "name": "lesson_section_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {
-        "study_session_items_flashcard_id_idx": {
-          "name": "study_session_items_flashcard_id_idx",
+        "flashcards_deck_id_idx": {
+          "name": "flashcards_deck_id_idx",
           "columns": [
-            "flashcard_id"
+            "deck_id"
           ],
           "isUnique": false
         },
-        "study_session_items_session_position_unique": {
-          "name": "study_session_items_session_position_unique",
+        "flashcards_order_unique": {
+          "name": "flashcards_order_unique",
           "columns": [
-            "study_session_id",
-            "base_feed_position"
-          ],
-          "isUnique": true
-        },
-        "study_session_items_session_reel_position_unique": {
-          "name": "study_session_items_session_reel_position_unique",
-          "columns": [
-            "study_session_id",
-            "reel_position"
+            "deck_id",
+            "order"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "study_session_items_study_session_id_study_sessions_id_fk": {
-          "name": "study_session_items_study_session_id_study_sessions_id_fk",
-          "tableFrom": "study_session_items",
-          "tableTo": "study_sessions",
+        "flashcards_deck_id_decks_id_fk": {
+          "name": "flashcards_deck_id_decks_id_fk",
+          "tableFrom": "flashcards",
+          "tableTo": "decks",
           "columnsFrom": [
-            "study_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "study_session_items_flashcard_id_flashcards_id_fk": {
-          "name": "study_session_items_flashcard_id_flashcards_id_fk",
-          "tableFrom": "study_session_items",
-          "tableTo": "flashcards",
-          "columnsFrom": [
-            "flashcard_id"
+            "deck_id"
           ],
           "columnsTo": [
             "id"
@@ -853,15 +859,244 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
-        "study_session_items_base_feed_position_check": {
-          "name": "study_session_items_base_feed_position_check",
-          "value": "\"study_session_items\".\"base_feed_position\" >= 0"
+        "flashcards_active_check": {
+          "name": "flashcards_active_check",
+          "value": "\"flashcards\".\"active\" IN (0, 1)"
         },
-        "study_session_items_reel_position_check": {
-          "name": "study_session_items_reel_position_check",
-          "value": "\"study_session_items\".\"reel_position\" >= 0"
+        "flashcards_has_audio_check": {
+          "name": "flashcards_has_audio_check",
+          "value": "\"flashcards\".\"has_audio\" IN (0, 1)"
+        },
+        "flashcards_order_check": {
+          "name": "flashcards_order_check",
+          "value": "\"flashcards\".\"order\" >= 0"
         }
       }
+    },
+    "learner_preferences": {
+      "name": "learner_preferences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color_mode": {
+          "name": "color_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_island_position": {
+          "name": "study_island_position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rating_direction": {
+          "name": "rating_direction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "audio_enabled": {
+          "name": "audio_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "audio_side": {
+          "name": "audio_side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reading_enabled": {
+          "name": "reading_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reading_side": {
+          "name": "reading_side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "haptics_enabled": {
+          "name": "haptics_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "learner_preferences_singleton_idx": {
+          "name": "learner_preferences_singleton_idx",
+          "columns": [
+            "(1)"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "learner_preferences_color_mode_check": {
+          "name": "learner_preferences_color_mode_check",
+          "value": "\"learner_preferences\".\"color_mode\" IN ('light', 'dark', 'device')"
+        },
+        "learner_preferences_study_island_position_check": {
+          "name": "learner_preferences_study_island_position_check",
+          "value": "\"learner_preferences\".\"study_island_position\" IN ('left', 'bottom', 'right')"
+        },
+        "learner_preferences_rating_direction_check": {
+          "name": "learner_preferences_rating_direction_check",
+          "value": "\"learner_preferences\".\"rating_direction\" IN ('forward', 'reverse')"
+        },
+        "learner_preferences_audio_enabled_check": {
+          "name": "learner_preferences_audio_enabled_check",
+          "value": "\"learner_preferences\".\"audio_enabled\" IN (0, 1)"
+        },
+        "learner_preferences_audio_side_check": {
+          "name": "learner_preferences_audio_side_check",
+          "value": "\"learner_preferences\".\"audio_side\" IN ('primary', 'opposite')"
+        },
+        "learner_preferences_reading_enabled_check": {
+          "name": "learner_preferences_reading_enabled_check",
+          "value": "\"learner_preferences\".\"reading_enabled\" IN (0, 1)"
+        },
+        "learner_preferences_reading_side_check": {
+          "name": "learner_preferences_reading_side_check",
+          "value": "\"learner_preferences\".\"reading_side\" IN ('primary', 'opposite')"
+        },
+        "learner_preferences_haptics_enabled_check": {
+          "name": "learner_preferences_haptics_enabled_check",
+          "value": "\"learner_preferences\".\"haptics_enabled\" IN (0, 1)"
+        }
+      }
+    },
+    "lessons": {
+      "name": "lessons",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deck_id": {
+          "name": "deck_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "lessons_deck_id_idx": {
+          "name": "lessons_deck_id_idx",
+          "columns": [
+            "deck_id"
+          ],
+          "isUnique": false
+        },
+        "lessons_order_unique": {
+          "name": "lessons_order_unique",
+          "columns": [
+            "deck_id",
+            "order"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "lessons_deck_id_decks_id_fk": {
+          "name": "lessons_deck_id_decks_id_fk",
+          "tableFrom": "lessons",
+          "tableTo": "decks",
+          "columnsFrom": [
+            "deck_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "lessons_order_check": {
+          "name": "lessons_order_check",
+          "value": "\"lessons\".\"order\" >= 0"
+        }
+      }
+    },
+    "progress_backup_state": {
+      "name": "progress_backup_state",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "safety_copy_file_name": {
+          "name": "safety_copy_file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
     },
     "study_session_recurrences": {
       "name": "study_session_recurrences",
@@ -887,8 +1122,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "source_attempt_id": {
-          "name": "source_attempt_id",
+        "flashcard_review_attempt_id": {
+          "name": "flashcard_review_attempt_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -943,10 +1178,10 @@
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
         },
-        "study_session_recurrences_pending_source_attempt_idx": {
-          "name": "study_session_recurrences_pending_source_attempt_idx",
+        "study_session_recurrences_pending_flashcard_review_attempt_idx": {
+          "name": "study_session_recurrences_pending_flashcard_review_attempt_idx",
           "columns": [
-            "source_attempt_id"
+            "flashcard_review_attempt_id"
           ],
           "isUnique": true,
           "where": "\"study_session_recurrences\".\"consumed_at\" IS NULL"
@@ -979,12 +1214,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "study_session_recurrences_source_attempt_id_flashcard_review_attempts_id_fk": {
-          "name": "study_session_recurrences_source_attempt_id_flashcard_review_attempts_id_fk",
+        "study_session_recurrences_flashcard_review_attempt_id_flashcard_review_attempts_id_fk": {
+          "name": "study_session_recurrences_flashcard_review_attempt_id_flashcard_review_attempts_id_fk",
           "tableFrom": "study_session_recurrences",
           "tableTo": "flashcard_review_attempts",
           "columnsFrom": [
-            "source_attempt_id"
+            "flashcard_review_attempt_id"
           ],
           "columnsTo": [
             "id"
@@ -999,6 +1234,111 @@
         "study_session_recurrences_target_reel_position_check": {
           "name": "study_session_recurrences_target_reel_position_check",
           "value": "\"study_session_recurrences\".\"target_reel_position\" >= 0"
+        }
+      }
+    },
+    "study_session_reels": {
+      "name": "study_session_reels",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_session_id": {
+          "name": "study_session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "flashcard_id": {
+          "name": "flashcard_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "base_feed_position": {
+          "name": "base_feed_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reel_position": {
+          "name": "reel_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "study_session_reels_flashcard_id_idx": {
+          "name": "study_session_reels_flashcard_id_idx",
+          "columns": [
+            "flashcard_id"
+          ],
+          "isUnique": false
+        },
+        "study_session_reels_session_position_unique": {
+          "name": "study_session_reels_session_position_unique",
+          "columns": [
+            "study_session_id",
+            "base_feed_position"
+          ],
+          "isUnique": true
+        },
+        "study_session_reels_session_reel_position_unique": {
+          "name": "study_session_reels_session_reel_position_unique",
+          "columns": [
+            "study_session_id",
+            "reel_position"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "study_session_reels_study_session_id_study_sessions_id_fk": {
+          "name": "study_session_reels_study_session_id_study_sessions_id_fk",
+          "tableFrom": "study_session_reels",
+          "tableTo": "study_sessions",
+          "columnsFrom": [
+            "study_session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "study_session_reels_flashcard_id_flashcards_id_fk": {
+          "name": "study_session_reels_flashcard_id_flashcards_id_fk",
+          "tableFrom": "study_session_reels",
+          "tableTo": "flashcards",
+          "columnsFrom": [
+            "flashcard_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "study_session_reels_base_feed_position_check": {
+          "name": "study_session_reels_base_feed_position_check",
+          "value": "\"study_session_reels\".\"base_feed_position\" >= 0"
+        },
+        "study_session_reels_reel_position_check": {
+          "name": "study_session_reels_reel_position_check",
+          "value": "\"study_session_reels\".\"reel_position\" >= 0"
         }
       }
     },
@@ -1116,9 +1456,13 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "study_sessions_scope_check": {
+          "name": "study_sessions_scope_check",
+          "value": "\"study_sessions\".\"scope\" IN ('discover', 'focus')"
+        },
         "study_sessions_scope_deck_check": {
           "name": "study_sessions_scope_deck_check",
-          "value": "(\"study_sessions\".\"scope\" = 'mixed' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focused' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"
+          "value": "(\"study_sessions\".\"scope\" = 'discover' AND \"study_sessions\".\"deck_id\" IS NULL) OR (\"study_sessions\".\"scope\" = 'focus' AND \"study_sessions\".\"deck_id\" IS NOT NULL)"
         },
         "study_sessions_current_reel_position_check": {
           "name": "study_sessions_current_reel_position_check",
@@ -1143,6 +1487,14 @@
     "columns": {}
   },
   "internal": {
-    "indexes": {}
+    "indexes": {
+      "learner_preferences_singleton_idx": {
+        "columns": {
+          "(1)": {
+            "isExpression": true
+          }
+        }
+      }
+    }
   }
 }

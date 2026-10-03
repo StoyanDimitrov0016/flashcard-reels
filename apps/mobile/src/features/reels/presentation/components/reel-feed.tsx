@@ -3,19 +3,20 @@ import { useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/reels/domain/reel-feed";
 import type { FocusedCardState } from "@/features/reels/presentation/open-focused-feed";
+import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/study/domain/study-feed";
 
-import { useDeckAppearances } from "@/features/decks/presentation/controllers/use-deck-appearances";
-import { useDeckCollection } from "@/features/decks/presentation/controllers/use-deck-collection";
-import { getFirstEditableReelPosition } from "@/features/reels/domain/editable-reel-position";
+import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
+import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
+import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
+import { fontWeight } from "@/shared/presentation/typography";
 
 type ReelFeedProps = Readonly<{
   /** Space at the top of each card that overlaid chrome, such as the study feed header, uses. */
@@ -40,20 +41,8 @@ export function ReelFeed({
     initialFeed: preparedFeed,
     sourceCards,
   });
-  const {
-    answerAudioService,
-    extensionError,
-    fatalError,
-    feed,
-    onOccurrenceBecameActive,
-    onRatingSelected,
-    refreshError,
-    requestFeedExtension,
-    recallLevels,
-    revealedPositions,
-    retryFeedExtension,
-    toggleCard,
-  } = controller;
+  const { feed, cardState, activate, rate, toggle, extend, retryExtension, feedback } = controller;
+  const { fatal: fatalError, extension: extensionError, refresh: refreshError } = feedback;
   const { handleLayout, viewport } = useReelViewport();
   const feedListReference = useRef<FlashListRef<PreparedReelOccurrence>>(null);
   const { height, width } = viewport;
@@ -73,17 +62,14 @@ export function ReelFeed({
     ? activeReelPosition
     : undefined;
   const deckIds = [...new Set(sourceCards.map((card) => card.deckId))];
-  const { appearances, loading: appearancesLoading } = useDeckAppearances(deckIds);
-  const { decks, loading: decksLoading } = useDeckCollection(deckIds);
+  const { themeSelections, decks, loading: metadataLoading } = useDeckMetadata(deckIds);
   const cardCountsByDeckId = new Map<Flashcard["deckId"], number>();
   for (const card of sourceCards) {
     cardCountsByDeckId.set(card.deckId, (cardCountsByDeckId.get(card.deckId) ?? 0) + 1);
   }
 
   const metadataReady =
-    !appearancesLoading &&
-    !decksLoading &&
-    deckIds.every((deckId) => appearances.has(deckId) && decks.has(deckId));
+    !metadataLoading && deckIds.every((deckId) => themeSelections.has(deckId) && decks.has(deckId));
 
   useEffect(
     function announceRefreshFailure() {
@@ -97,28 +83,22 @@ export function ReelFeed({
   useEffect(
     function synchronizeActiveOccurrence() {
       if (activeOccurrenceReelPosition !== undefined) {
-        onOccurrenceBecameActive(activeOccurrenceReelPosition);
+        activate(activeOccurrenceReelPosition);
       }
     },
-    [activeOccurrenceReelPosition, onOccurrenceBecameActive]
+    [activeOccurrenceReelPosition, activate]
   );
 
   const renderItem: ListRenderItem<PreparedReelOccurrence> = ({ item }) => {
-    const appearance = appearances.get(item.card.deckId);
+    const themeSelection = themeSelections.get(item.card.deckId);
     const deck = decks.get(item.card.deckId);
-    if (!appearance || !deck) {
+    if (!themeSelection || !deck) {
       return null;
     }
 
     return (
       <ReelCard
-        appearance={appearance}
-        audioSource={answerAudioService.findSourceForFlashcard(
-          item.card.deckId,
-          deck.version,
-          item.card.id,
-          "answer"
-        )}
+        themeSelection={themeSelection}
         card={item.card}
         contentInsetTop={contentInsetTop}
         deck={deck}
@@ -126,10 +106,10 @@ export function ReelFeed({
         height={height}
         ratingEnabled={item.reelPosition >= getFirstEditableReelPosition(feed.furthestReelPosition)}
         isActive={item.reelPosition === activeReelPosition}
-        onFlip={() => toggleCard(item.reelPosition)}
-        onRate={(level) => onRatingSelected(item, level)}
-        recallLevel={recallLevels.get(item.reelPosition) ?? null}
-        revealed={revealedPositions.has(item.reelPosition)}
+        onFlip={() => toggle(item.reelPosition)}
+        onRate={(rating) => rate(item.reelPosition, rating)}
+        rating={cardState(item.reelPosition).rating}
+        revealed={cardState(item.reelPosition).revealed}
         occurrenceKey={item.key}
         reelPosition={item.reelPosition}
         showMainFeedLink={showMainFeedLink}
@@ -141,12 +121,11 @@ export function ReelFeed({
     activeIndex,
     activeReelPosition,
     furthestReelPosition: feed.furthestReelPosition,
-    recallLevels,
-    revealedPositions,
+    cardState,
   };
   const handleEndReached = useCallback(() => {
-    void requestFeedExtension().catch(() => undefined);
-  }, [requestFeedExtension]);
+    void extend().catch(() => undefined);
+  }, [extend]);
   const keyExtractor = useCallback((occurrence: PreparedReelOccurrence) => occurrence.key, []);
   if (fatalError) {
     throw fatalError;
@@ -159,7 +138,7 @@ export function ReelFeed({
           <Text accessibilityRole="alert" style={styles.noticeText}>
             More cards could not be loaded.
           </Text>
-          <Pressable accessibilityRole="button" onPress={retryFeedExtension}>
+          <Pressable accessibilityRole="button" onPress={retryExtension}>
             <Text style={styles.retryLabel}>Try again</Text>
           </Pressable>
         </View>
@@ -192,11 +171,11 @@ function createStyles(colors: AppColors) {
     extensionNotice: {
       alignItems: "center",
       backgroundColor: colors.surfaceRaised,
-      gap: 8,
-      padding: 12,
+      gap: sizes.spacing.medium,
+      padding: sizes.spacing.xLarge,
     },
     feed: { backgroundColor: colors.canvas, flex: 1 },
     noticeText: { color: colors.textSecondary, textAlign: "center" },
-    retryLabel: { color: colors.actionPrimary, fontWeight: "700" },
+    retryLabel: { color: colors.actionPrimary, fontWeight: fontWeight.bold },
   });
 }

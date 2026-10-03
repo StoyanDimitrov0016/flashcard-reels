@@ -4,24 +4,25 @@ import { afterEach, describe, expect, it } from "vitest";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import { SQLiteRemovedDeckRepository } from "@/features/decks/infrastructure/sqlite-removed-deck.repository";
+import { SQLiteDismissedBundledDeckRepository } from "@/features/decks/infrastructure/sqlite-dismissed-bundled-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
-import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation-transaction";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteFlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress-aggregation.transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
-import { createLearningScheduler } from "@/features/learning-engine/application/learning-engine-factories";
-import { SQLiteReviewAttemptFinalizationTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-finalization-transaction";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
+import { createLearningScheduler } from "@/features/learning-engine/infrastructure/learning-engine-factories";
+import { SQLiteReviewAttemptCommitTransaction } from "@/features/study/infrastructure/sqlite-review-attempt-commit.transaction";
 import {
   deckProgress,
   flashcardMemoryStates,
   flashcardReviewAttempts,
   flashcardProgress,
-  reviewEvents,
+  flashcardReviewEvents,
   studySessions,
 } from "@/infrastructure/sqlite/schema";
 
@@ -50,7 +51,7 @@ describe("archived deck progress", () => {
     const attemptId = testId(701);
     await database.drizzle.insert(studySessions).values({
       id: sessionId,
-      scope: "focused",
+      scope: "focus",
       deckId: TEST_DECK_ID,
       currentReelPosition: 1,
       furthestReelPosition: 1,
@@ -68,33 +69,43 @@ describe("archived deck progress", () => {
       createdAt: reviewedAt,
       updatedAt: reviewedAt,
     });
-    const finalization = new SQLiteReviewAttemptFinalizationTransaction(
+    const commit = new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
+      createLearningScheduler(),
+      database.rowIds
     );
-    expect(await finalization.finalizeAttempt(attemptId, reviewedAt, reviewedAt)).toBe(true);
-    const aggregation = new SQLiteFlashcardProgressAggregationTransaction(database.drizzle);
+    expect(await commit.commitAttempt(attemptId, reviewedAt, reviewedAt)).toBe(true);
+    const aggregation = new SQLiteFlashcardProgressAggregationTransaction(
+      database.drizzle,
+      database.rowIds
+    );
     await aggregation.aggregate(sessionId, 0, reviewedAt);
   }
 
   function packageForReinstall() {
     return {
-      id: TEST_DECK_ID,
-      title: "Reinstalled deck",
-      description: "",
-      version: 2,
-      createdAt: reviewedAt,
-      updatedAt: reviewedAt,
-      cards: [
-        {
-          id: cardId,
-          order: 0,
-          question: "Question",
-          answer: "Answer",
-          createdAt: reviewedAt,
-          updatedAt: reviewedAt,
-        },
-      ],
+      deck: {
+        schema: 1 as const,
+        id: TEST_DECK_ID,
+        authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+        title: "Reinstalled deck",
+        description: "",
+        revision: 2,
+        createdAt: reviewedAt,
+        updatedAt: reviewedAt,
+        cards: [
+          {
+            id: cardId,
+            question: "Question",
+            answer: "Answer",
+            lessonId: null,
+            audio: false,
+            createdAt: reviewedAt,
+            updatedAt: reviewedAt,
+          },
+        ],
+        lessons: [],
+      },
       audioFiles: new Map<string, Uint8Array>(),
       lessonFiles: new Map<string, string>(),
     };
@@ -102,10 +113,10 @@ describe("archived deck progress", () => {
 
   it("retains events and FSRS state after removing content, then pauses a reinstall until continued", async () => {
     await reviewedDeck();
-    expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(1);
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toHaveLength(1);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
 
-    expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(1);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toHaveLength(1);
     expect(await database.drizzle.select().from(flashcardProgress)).toHaveLength(1);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toHaveLength(1);
     expect(
@@ -120,11 +131,14 @@ describe("archived deck progress", () => {
     const archived = await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress();
     expect(archived[0]?.estimatedBytes).toBeGreaterThan(0);
 
-    const installer = new SQLiteDeckPackageInstallationTransaction(database.drizzle);
-    await installer.install(packageForReinstall(), reviewedAt);
-    expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
-      false
+    const installer = new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
     );
+    await installer.install(packageForReinstall(), reviewedAt);
+    expect(
+      await new SQLiteDismissedBundledDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)
+    ).toBe(false);
     expect(await new SQLiteDeckProgressRepository(database.drizzle).listPending()).toHaveLength(1);
     const availableFlashcards = new SQLiteFlashcardAvailabilityQuery(database.drizzle);
     expect(await availableFlashcards.listAvailableFlashcards()).toEqual([]);
@@ -147,7 +161,7 @@ describe("archived deck progress", () => {
     const reviewCount = 51;
     await database.drizzle.insert(studySessions).values({
       id: sessionId,
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: reviewCount - 1,
       furthestReelPosition: reviewCount - 1,
@@ -156,9 +170,10 @@ describe("archived deck progress", () => {
       lastActiveAt: reviewedAt,
       feedState: "{}",
     });
-    const finalization = new SQLiteReviewAttemptFinalizationTransaction(
+    const commit = new SQLiteReviewAttemptCommitTransaction(
       database.drizzle,
-      createLearningScheduler()
+      createLearningScheduler(),
+      database.rowIds
     );
     for (let position = 0; position < reviewCount; position += 1) {
       const attemptId = testId(720 + position);
@@ -174,22 +189,24 @@ describe("archived deck progress", () => {
         createdAt: ratedAt,
         updatedAt: ratedAt,
       });
-      // oxlint-disable-next-line no-await-in-loop -- FSRS transitions must be finalized in order.
-      expect(await finalization.finalizeAttempt(attemptId, ratedAt, ratedAt)).toBe(true);
+      // oxlint-disable-next-line no-await-in-loop -- FSRS transitions must be committed in order.
+      expect(await commit.commitAttempt(attemptId, ratedAt, ratedAt)).toBe(true);
     }
 
     const repository = new SQLiteDeckRepository(database.drizzle);
     const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
     const service = new DeckServiceImpl(
       repository,
-      new SQLiteDeckAppearanceRepository(database.drizzle),
-      new SQLiteDeckRemovalTransaction(database.drizzle),
+      new SQLiteDeckThemeSelectionRepository(database.drizzle, new SequenceIdGenerator()),
+      new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
       null,
-      graph.study
+      graph.runtime,
+      new SQLiteFlashcardRepository(database.drizzle),
+      new SQLiteFlashcardAvailabilityQuery(database.drizzle)
     );
     await service.remove(TEST_DECK_ID);
 
-    expect(await database.drizzle.select().from(reviewEvents)).toHaveLength(reviewCount);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toHaveLength(reviewCount);
     expect(await database.drizzle.select().from(flashcardProgress)).toMatchObject([
       { reviewCount },
     ]);
@@ -200,18 +217,18 @@ describe("archived deck progress", () => {
 
   it("permanently deletes saved progress when starting a reinstalled deck fresh", async () => {
     await reviewedDeck();
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
-    expect(await new SQLiteRemovedDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)).toBe(
-      true
-    );
-    await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
-      packageForReinstall(),
-      reviewedAt
-    );
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
+    expect(
+      await new SQLiteDismissedBundledDeckRepository(database.drizzle).wasRemoved(TEST_DECK_ID)
+    ).toBe(false);
+    await new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    ).install(packageForReinstall(), reviewedAt);
     const unrelatedSessionId = testId(702);
     await database.drizzle.insert(studySessions).values({
       id: unrelatedSessionId,
-      scope: "mixed",
+      scope: "discover",
       deckId: null,
       currentReelPosition: 0,
       furthestReelPosition: 0,
@@ -221,7 +238,7 @@ describe("archived deck progress", () => {
     });
     await new SQLiteSavedProgressDeletionTransaction(database.drizzle).deleteProgress(TEST_DECK_ID);
 
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
     expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
@@ -240,40 +257,42 @@ describe("archived deck progress", () => {
 
   it("lets the user delete an archive without reinstalling the deck", async () => {
     await reviewedDeck();
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     await new SQLiteSavedProgressDeletionTransaction(database.drizzle).deleteProgress(TEST_DECK_ID);
 
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
   });
 
   it("includes uninstalled deck progress in Reset all learning progress", async () => {
     await reviewedDeck();
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetAll(reviewedAt);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetAll(
+      reviewedAt
+    );
 
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardProgress)).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
   });
 
   it("clears durable review history when resetting one card", async () => {
     await reviewedDeck();
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetCard(
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetCard(
       cardId,
       reviewedAt
     );
 
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
     expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
@@ -281,14 +300,14 @@ describe("archived deck progress", () => {
 
   it("clears durable review history when resetting one deck", async () => {
     await reviewedDeck();
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetDeck(
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetDeck(
       TEST_DECK_ID,
       reviewedAt
     );
 
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
     expect(await database.drizzle.select().from(deckProgress)).toEqual([]);
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
@@ -296,21 +315,28 @@ describe("archived deck progress", () => {
 
   it("clears saved progress for cards absent from the reinstalled deck on deck reset", async () => {
     await reviewedDeck();
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     const replacement = packageForReinstall();
-    await new SQLiteDeckPackageInstallationTransaction(database.drizzle).install(
+    await new SQLiteDeckPackageInstallationTransaction(
+      database.drizzle,
+      new SequenceIdGenerator()
+    ).install(
       {
         ...replacement,
-        cards: [
-          {
-            id: testId(705),
-            order: 0,
-            question: "Replacement question",
-            answer: "Replacement answer",
-            createdAt: reviewedAt,
-            updatedAt: reviewedAt,
-          },
-        ],
+        deck: {
+          ...replacement.deck,
+          cards: [
+            {
+              id: testId(705),
+              question: "Replacement question",
+              answer: "Replacement answer",
+              lessonId: null,
+              audio: false,
+              createdAt: reviewedAt,
+              updatedAt: reviewedAt,
+            },
+          ],
+        },
       },
       reviewedAt
     );
@@ -318,7 +344,7 @@ describe("archived deck progress", () => {
       TEST_DECK_ID
     );
 
-    await new SQLiteLearningProgressResetTransaction(database.drizzle).resetDeck(
+    await new SQLiteLearningProgressResetTransaction(database.drizzle, database.rowIds).resetDeck(
       TEST_DECK_ID,
       reviewedAt
     );
@@ -330,8 +356,8 @@ describe("archived deck progress", () => {
         .where(eq(flashcardProgress.flashcardId, cardId))
     ).toEqual([]);
     expect(await database.drizzle.select().from(flashcardMemoryStates)).toEqual([]);
-    expect(await database.drizzle.select().from(reviewEvents)).toEqual([]);
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    expect(await database.drizzle.select().from(flashcardReviewEvents)).toEqual([]);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );
@@ -340,7 +366,7 @@ describe("archived deck progress", () => {
   it("does not archive an unstudied deck", async () => {
     database = new NodeSqliteDatabase();
     await seedDeck(database, TEST_DECK_ID, [cardId]);
-    await new SQLiteDeckRemovalTransaction(database.drizzle).remove(TEST_DECK_ID);
+    await new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds).remove(TEST_DECK_ID);
     expect(await new SQLiteArchivedProgressQuery(database.drizzle).listArchivedProgress()).toEqual(
       []
     );

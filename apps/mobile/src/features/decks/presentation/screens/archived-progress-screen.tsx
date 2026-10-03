@@ -34,7 +34,7 @@ export default function ArchivedProgressScreen() {
   return (
     <SafeAreaView edges={["top", "right", "left"]} style={styles.screen}>
       <SubScreenHeader
-        backLabel="Back to Controls"
+        backLabel="Back to Decks"
         onBack={() => router.back()}
         title="Archived progress"
       />

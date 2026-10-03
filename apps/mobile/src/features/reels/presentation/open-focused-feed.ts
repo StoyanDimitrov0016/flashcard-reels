@@ -1,15 +1,15 @@
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 export type FocusedCardState = Readonly<{
   cardId: string;
-  recallLevel: RecallLevel | null;
+  rating: Rating | null;
   revealed: boolean;
 }>;
 export type FocusedFeedOptions = Readonly<{ cardState?: FocusedCardState }>;
 type StartFocusedFeed = (
   deckId: DeckId,
-  anchorFlashcardId?: string,
+  anchorFlashcardId: string | null,
   options?: FocusedFeedOptions
 ) => void;
 
@@ -17,15 +17,9 @@ export function openFocusedFeed(
   deckId: DeckId,
   startFocusedFeed: StartFocusedFeed,
   navigate: (href: "/(tabs)/focus") => void,
-  anchorFlashcardId?: string,
+  anchorFlashcardId: string | null,
   options?: FocusedFeedOptions
 ): void {
-  if (anchorFlashcardId === undefined && options === undefined) {
-    startFocusedFeed(deckId);
-  } else if (options === undefined) {
-    startFocusedFeed(deckId, anchorFlashcardId);
-  } else {
-    startFocusedFeed(deckId, anchorFlashcardId, options);
-  }
+  startFocusedFeed(deckId, anchorFlashcardId, options);
   navigate("/(tabs)/focus");
 }

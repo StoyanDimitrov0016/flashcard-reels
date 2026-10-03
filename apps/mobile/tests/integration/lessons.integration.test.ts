@@ -1,16 +1,16 @@
-import { strToU8, zipSync } from "fflate";
+import type { Deck } from "@flashcard-reels/deck-contract";
+
 import { afterEach, describe, expect, it } from "vitest";
 
 import type {
   DeckAudioStorage,
+  DeckPackage,
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
-import type { DeckPackageDocument } from "@/features/decks/deck-installer/internal/deck-package.schema";
 
-import { ArchiveDeckPackageReader } from "@/features/decks/deck-installer/internal/archive-deck-package.reader";
+import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
-import { DECK_PACKAGE_LIMITS } from "@/features/decks/deck-installer/internal/deck-package-limits";
-import { createDeckPackageArchive } from "@/features/decks/deck-installer/internal/deck-package-writer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
@@ -20,21 +20,27 @@ import { SQLiteReadingListQuery } from "@/features/lessons/infrastructure/sqlite
 import { deckProgress } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
-import { OTHER_DECK_ID, TEST_DECK_ID, TestClock, testId } from "../support/study-fixtures";
+import {
+  OTHER_DECK_ID,
+  SequenceIdGenerator,
+  TEST_DECK_ID,
+  TestClock,
+  testId,
+} from "../support/study-fixtures";
 
 const timestamp = "2026-01-01T00:00:00.000Z";
 const lessonIds = [testId(901), testId(902), testId(903)] as const;
 
 class NoAudioStorage implements DeckAudioStorage {
-  async stage(deckPackage: { id: string; version: number }): Promise<StagedDeckAudio> {
-    return { deckId: deckPackage.id, token: "audio", version: deckPackage.version };
+  async stage(deckPackage: DeckPackage): Promise<StagedDeckAudio> {
+    return { deckId: deckPackage.deck.id, token: "audio", revision: deckPackage.deck.revision };
   }
   async activate(): Promise<void> {}
-  async removeVersion(): Promise<void> {}
-  async removeOtherVersions(): Promise<void> {}
+  async removeRevision(): Promise<void> {}
+  async removeOtherRevisions(): Promise<void> {}
 }
 
-type LessonInput = Readonly<{ id: string; title: string; order: number; markdown: string }>;
+type LessonInput = Readonly<{ id: string; title: string; markdown: string }>;
 
 function packageWithLessons(
   version: number,
@@ -42,30 +48,32 @@ function packageWithLessons(
   deckId = TEST_DECK_ID,
   title = "Scaling"
 ): Uint8Array {
-  const document: DeckPackageDocument = {
+  const document: Deck = {
     cards: [
       {
         answer: "Add resources to one machine.",
         createdAt: timestamp,
         id: deckId === TEST_DECK_ID ? testId(1) : testId(2),
-        order: 0,
+        lessonId: null,
+        audio: false,
         question: "What is vertical scaling?",
         updatedAt: timestamp,
       },
     ],
     createdAt: timestamp,
+    authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+    schema: 1,
     description: "Scaling basics",
     id: deckId,
-    lessons: lessonInputs.map(({ id, order, title: lessonTitle }) => ({
+    lessons: lessonInputs.map(({ id, title: lessonTitle }) => ({
       id,
-      order,
       title: lessonTitle,
     })),
     title,
     updatedAt: timestamp,
-    version,
+    revision: version,
   };
-  return createDeckPackageArchive(
+  return createContractDeckPackageArchive(
     document,
     {},
     Object.fromEntries(lessonInputs.map((lesson) => [lesson.id, lesson.markdown]))
@@ -75,8 +83,8 @@ function packageWithLessons(
 function createGraph(database: NodeSqliteDatabase) {
   return {
     installer: new DeckInstallerImpl(
-      new ArchiveDeckPackageReader(),
-      new SQLiteDeckPackageInstallationTransaction(database.drizzle),
+      new ContractDeckPackageReader(),
+      new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       new NoAudioStorage(),
       new TestClock(),
       { read: async () => new Uint8Array() },
@@ -86,26 +94,23 @@ function createGraph(database: NodeSqliteDatabase) {
       new SQLiteLessonRepository(database.drizzle),
       new SQLiteReadingListQuery(database.drizzle)
     ),
-    removal: new SQLiteDeckRemovalTransaction(database.drizzle),
+    removal: new SQLiteDeckRemovalTransaction(database.drizzle, database.rowIds),
   };
 }
 
 const introduction = {
   id: lessonIds[0],
   markdown: "# Why scale\n\nLoad grows.",
-  order: 0,
   title: "Why scale",
 };
 const vertical = {
   id: lessonIds[1],
   markdown: "Bigger machines.",
-  order: 1,
   title: "Vertical scaling",
 };
 const horizontal = {
   id: lessonIds[2],
   markdown: "More machines.",
-  order: 2,
   title: "Horizontal scaling",
 };
 
@@ -128,9 +133,9 @@ describe("deck lessons", () => {
         deckId: TEST_DECK_ID,
         deckTitle: "Scaling",
         lessons: [
-          { id: introduction.id, order: 0, title: "Why scale" },
-          { id: vertical.id, order: 1, title: "Vertical scaling" },
-          { id: horizontal.id, order: 2, title: "Horizontal scaling" },
+          { id: horizontal.id, order: 0, title: "Horizontal scaling" },
+          { id: introduction.id, order: 1, title: "Why scale" },
+          { id: vertical.id, order: 2, title: "Vertical scaling" },
         ],
       },
     ]);
@@ -146,7 +151,7 @@ describe("deck lessons", () => {
     await graph.installer.installFromBytes(packageWithLessons(1, [introduction, vertical]));
 
     await graph.installer.installFromBytes(
-      packageWithLessons(2, [{ ...vertical, markdown: "Edited.", order: 0 }])
+      packageWithLessons(2, [{ ...vertical, markdown: "Edited." }])
     );
 
     const [readingList] = await graph.lessons.listReadingLists();
@@ -178,11 +183,13 @@ describe("deck lessons", () => {
     const graph = createGraph(database);
     await graph.installer.installFromBytes(packageWithLessons(1, [introduction]));
     await database.drizzle.insert(deckProgress).values({
+      id: database.rowIds.generate(),
+
       deckId: TEST_DECK_ID,
       lastReviewedAt: timestamp,
-      resolution: "pending",
+      status: "pending",
       title: "Scaling",
-      version: 1,
+      revision: 1,
     });
 
     expect(await graph.lessons.listReadingLists()).toHaveLength(1);
@@ -197,67 +204,5 @@ describe("deck lessons", () => {
       graph.installer.installFromBytes(packageWithLessons(1, [introduction], OTHER_DECK_ID, "Copy"))
     ).rejects.toThrow(`Lesson ${introduction.id} already belongs to deck ${TEST_DECK_ID}`);
     expect(await graph.lessons.listReadingLists()).toHaveLength(1);
-  });
-});
-
-describe("deck package lesson validation", () => {
-  const reader = new ArchiveDeckPackageReader();
-  const deckJson = (lessons: readonly { id: string; order: number; title: string }[]) =>
-    strToU8(
-      JSON.stringify({
-        cards: [],
-        createdAt: timestamp,
-        description: "",
-        id: TEST_DECK_ID,
-        lessons,
-        title: "Scaling",
-        updatedAt: timestamp,
-        version: 1,
-      })
-    );
-  const listed = [{ id: introduction.id, order: 0, title: "Why scale" }];
-
-  it.each([
-    [
-      "an unlisted lesson file",
-      { "deck.json": deckJson([]), [`lessons/${introduction.id}.md`]: strToU8("Text") },
-      /unknown lesson/,
-    ],
-    ["a missing lesson file", { "deck.json": deckJson(listed) }, /Missing lesson file/],
-    [
-      "a lesson file with the wrong extension",
-      { "deck.json": deckJson(listed), [`lessons/${introduction.id}.txt`]: strToU8("Text") },
-      /Unexpected lesson filename/,
-    ],
-    [
-      "an empty lesson",
-      { "deck.json": deckJson(listed), [`lessons/${introduction.id}.md`]: strToU8("  \n") },
-      /Empty lesson file/,
-    ],
-    [
-      "an oversized lesson",
-      {
-        "deck.json": deckJson(listed),
-        [`lessons/${introduction.id}.md`]: new Uint8Array(
-          DECK_PACKAGE_LIMITS.maximumLessonFileBytes + 1
-        ).fill(65),
-      },
-      /Lesson file size .* exceeds limit/,
-    ],
-  ])("rejects %s", (_name, files, message) => {
-    expect(() => reader.read(zipSync(files))).toThrow(message);
-  });
-
-  it("rejects duplicate lesson IDs and gaps in lesson order", () => {
-    const duplicated = [
-      { id: introduction.id, order: 0, title: "One" },
-      { id: introduction.id, order: 2, title: "Two" },
-    ];
-    const files = {
-      "deck.json": deckJson(duplicated),
-      [`lessons/${introduction.id}.md`]: strToU8("Text"),
-    };
-
-    expect(() => reader.read(zipSync(files))).toThrow(/Duplicate lesson ID[\s\S]*contiguous/);
   });
 });

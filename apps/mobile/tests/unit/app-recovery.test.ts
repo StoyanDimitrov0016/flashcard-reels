@@ -14,11 +14,18 @@ vi.mock("react-native", () => ({
     },
   },
 }));
-vi.mock("expo-sqlite", () => ({ defaultDatabaseDirectory: "documents/SQLite" }));
+// Native modules report a filesystem path, not a URI. Expo Go app folders contain `%`.
+vi.mock("expo-sqlite", () => ({
+  defaultDatabaseDirectory: "/data/user/0/host/files/ExperienceData/%40me%2Fapp/SQLite",
+}));
+const DATABASE_URI = "file:///data/user/0/host/files/ExperienceData/%2540me%252Fapp/SQLite";
 vi.mock("expo-file-system", () => {
   class File {
     uri: string;
     constructor(...parts: (string | { uri: string })[]) {
+      if (typeof parts[0] === "string" && parts[0].startsWith("/")) {
+        throw new Error("URI is not absolute");
+      }
       this.uri = parts.map((part) => (typeof part === "string" ? part : part.uri)).join("/");
     }
     get name() {
@@ -42,7 +49,9 @@ vi.mock("expo-file-system", () => {
     list() {
       return [...state.files]
         .filter((path) => path.startsWith(this.uri + "/"))
-        .map((path) => new File(path));
+        .map((path) =>
+          path.startsWith("documents/deck-audio/.tmp-") ? new Directory(path) : new File(path)
+        );
     }
   }
   return {
@@ -69,10 +78,34 @@ beforeEach(() => {
 });
 
 describe("full app recovery", () => {
+  it("removes interrupted imports on cold startup without removing installed data", async () => {
+    vi.resetModules();
+    const storage = await import("@/infrastructure/app-recovery");
+    const staged = "documents/deck-audio/.tmp-interrupted";
+    const downloaded = "cache/deck-import-123.fcrdeck";
+    for (const path of [
+      "documents/deck-audio",
+      staged,
+      "documents/deck-audio/installed",
+      "cache",
+      downloaded,
+      "cache/other.file",
+      DATABASE_URI + "/flashcard-reels.db",
+    ]) {
+      state.files.add(path);
+    }
+    storage.prepareAppStorage();
+    expect(state.deleted).toEqual([staged, downloaded]);
+    expect(state.files.has("documents/deck-audio/installed")).toBe(true);
+    expect(state.files.has(DATABASE_URI + "/flashcard-reels.db")).toBe(true);
+    expect(state.files.has("cache/other.file")).toBe(true);
+    storage.prepareAppStorage();
+    expect(state.deleted).toEqual([staged, downloaded]);
+  });
   it("defers new reset requests across root retries until a cold launch", () => {
     prepareAppStorage();
     requestAppDataReset();
-    state.files.add("documents/SQLite/flashcard-reels.db");
+    state.files.add(DATABASE_URI + "/flashcard-reels.db");
     prepareAppStorage();
     expect(state.deleted).toEqual([]);
     expect(state.files.has(marker)).toBe(true);
@@ -84,7 +117,7 @@ describe("full app recovery", () => {
   });
 
   it("does not delete anything without an explicit request", () => {
-    state.files.add("documents/SQLite/flashcard-reels.db");
+    state.files.add(DATABASE_URI + "/flashcard-reels.db");
     applyPendingAppDataReset();
     expect(state.deleted).toEqual([]);
   });
@@ -92,11 +125,18 @@ describe("full app recovery", () => {
   it("deletes owned data and sidecars, preserving unrelated files", () => {
     for (const path of [
       marker,
-      "documents/SQLite/flashcard-reels.db",
-      "documents/SQLite/flashcard-reels.db-wal",
-      "documents/SQLite/flashcard-reels-v2.db",
-      "documents/SQLite/flashcard-reels-v2.db-wal",
-      "documents/SQLite/ExpoSQLiteStorage",
+      DATABASE_URI + "/flashcard-reels.db",
+      DATABASE_URI + "/flashcard-reels.db-wal",
+      DATABASE_URI + "/flashcard-reels-v2.db",
+      DATABASE_URI + "/flashcard-reels-v2.db-wal",
+      DATABASE_URI + "/flashcard-reels-v3.db",
+      DATABASE_URI + "/flashcard-reels-v3.db-wal",
+      DATABASE_URI + "/flashcard-reels-v4.db",
+      DATABASE_URI + "/flashcard-reels-v4.db-wal",
+      DATABASE_URI + "/flashcard-reels-v5.db",
+      DATABASE_URI + "/flashcard-reels-v5.db-wal",
+      DATABASE_URI + "/flashcard-reels-v7.db",
+      DATABASE_URI + "/flashcard-reels-v7.db-wal",
       "documents/deck-audio",
       "cache",
       "cache/deck-import-123.fcrdeck",
@@ -107,11 +147,18 @@ describe("full app recovery", () => {
     }
     applyPendingAppDataReset();
     expect(state.deleted).toEqual([
-      "documents/SQLite/flashcard-reels.db",
-      "documents/SQLite/flashcard-reels.db-wal",
-      "documents/SQLite/flashcard-reels-v2.db",
-      "documents/SQLite/flashcard-reels-v2.db-wal",
-      "documents/SQLite/ExpoSQLiteStorage",
+      DATABASE_URI + "/flashcard-reels.db",
+      DATABASE_URI + "/flashcard-reels.db-wal",
+      DATABASE_URI + "/flashcard-reels-v2.db",
+      DATABASE_URI + "/flashcard-reels-v2.db-wal",
+      DATABASE_URI + "/flashcard-reels-v3.db",
+      DATABASE_URI + "/flashcard-reels-v3.db-wal",
+      DATABASE_URI + "/flashcard-reels-v4.db",
+      DATABASE_URI + "/flashcard-reels-v4.db-wal",
+      DATABASE_URI + "/flashcard-reels-v5.db",
+      DATABASE_URI + "/flashcard-reels-v5.db-wal",
+      DATABASE_URI + "/flashcard-reels-v7.db",
+      DATABASE_URI + "/flashcard-reels-v7.db-wal",
       "documents/deck-audio",
       "cache/deck-import-123.fcrdeck",
       marker,
@@ -122,7 +169,7 @@ describe("full app recovery", () => {
 
   it("keeps the request after a partial failure and safely retries", () => {
     requestAppDataReset();
-    state.files.add("documents/SQLite/flashcard-reels.db");
+    state.files.add(DATABASE_URI + "/flashcard-reels.db");
     state.files.add("documents/deck-audio");
     state.failOn = "documents/deck-audio";
     let caught: unknown;

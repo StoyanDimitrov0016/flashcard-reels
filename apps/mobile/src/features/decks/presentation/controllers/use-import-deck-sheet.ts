@@ -27,6 +27,7 @@ export type DeckQrScanner = Readonly<{
   onOpenSettings: () => void;
   onRequestPermission: () => void;
   onRetry: () => void;
+  retryLabel: "Try again" | "Scan again";
   paused: boolean;
   permission: ReturnType<typeof useCameraPermissions>[0];
   processing: boolean;
@@ -34,6 +35,7 @@ export type DeckQrScanner = Readonly<{
 }>;
 
 type ImportDeckSheetOptions = Readonly<{
+  canRetryDownload?: boolean;
   onBrowse: () => Promise<boolean>;
   onClearError: () => void;
   onClose: () => void;
@@ -46,6 +48,7 @@ type ImportDeckSheetOptions = Readonly<{
  * so a result that arrives after the person went back or closed the sheet is ignored.
  */
 export function useImportDeckSheet({
+  canRetryDownload = false,
   onBrowse,
   onClearError,
   onClose,
@@ -63,8 +66,11 @@ export function useImportDeckSheet({
   const cameraActive = visible && screenFocused && appActive;
   const [processingScan, setProcessingScan] = useState(false);
   const [scanPaused, setScanPaused] = useState(false);
+  const [hasScannedUrl, setHasScannedUrl] = useState(false);
   const scanLocked = useRef(false);
   const scanSession = useRef(0);
+  const lastScannedUrl = useRef<string | null>(null);
+  const scanRequestInFlight = useRef(false);
 
   useEffect(function trackCameraForeground() {
     const subscription = AppState.addEventListener("change", (state) =>
@@ -135,6 +141,8 @@ export function useImportDeckSheet({
   };
 
   const showChoices = () => {
+    lastScannedUrl.current = null;
+    setHasScannedUrl(false);
     scanSession.current += 1;
     setMode("choices");
     setScanError(null);
@@ -151,6 +159,8 @@ export function useImportDeckSheet({
   };
 
   const beginScanning = async () => {
+    lastScannedUrl.current = null;
+    setHasScannedUrl(false);
     scanSession.current += 1;
     onClearError();
     scanLocked.current = false;
@@ -178,7 +188,24 @@ export function useImportDeckSheet({
       setScanPaused(true);
       return;
     }
-    const imported = await onScan(parsed.data);
+    lastScannedUrl.current = parsed.data;
+    setHasScannedUrl(true);
+    await runScan(parsed.data, session);
+  };
+
+  const runScan = async (url: string, session: number) => {
+    if (scanRequestInFlight.current) {
+      return;
+    }
+    scanRequestInFlight.current = true;
+    scanLocked.current = true;
+    setProcessingScan(true);
+    let imported: boolean;
+    try {
+      imported = await onScan(url);
+    } finally {
+      scanRequestInFlight.current = false;
+    }
     if (session !== scanSession.current) {
       return;
     }
@@ -212,8 +239,17 @@ export function useImportDeckSheet({
     },
     onOpenSettings: () => void openCameraSettings(),
     onRequestPermission: () => void askForCamera(),
+    retryLabel:
+      canRetryDownload && hasScannedUrl && scanError === null ? "Try again" : "Scan again",
     onRetry: () => {
+      if (scanLocked.current && processingScan) {
+        return;
+      }
       onClearError();
+      if (canRetryDownload && lastScannedUrl.current !== null && scanError === null) {
+        void runScan(lastScannedUrl.current, scanSession.current);
+        return;
+      }
       scanLocked.current = false;
       setScanPaused(false);
       setScanError(null);

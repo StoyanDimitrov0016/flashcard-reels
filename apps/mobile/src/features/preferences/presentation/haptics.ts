@@ -1,5 +1,4 @@
 import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
 
 import type { HapticEvent } from "@/features/preferences/domain/haptic-event";
 
@@ -9,19 +8,16 @@ export function triggerHaptic(event: HapticEvent): void {
   void playHaptic(event).catch(() => undefined);
 }
 
+/**
+ * These drive the vibration motor on Android, so they are felt even when the system's touch
+ * feedback is off. `performAndroidHapticsAsync` follows that setting, and its subtlest effects
+ * were often not felt at all.
+ */
 async function playHaptic(event: HapticEvent): Promise<void> {
-  if (Platform.OS === "android") {
-    let androidHaptic = Haptics.AndroidHaptics.Confirm;
-    if (event === "focus-completion") {
-      androidHaptic = Haptics.AndroidHaptics.Long_Press;
-    } else if (event === "rating-selection") {
-      androidHaptic = Haptics.AndroidHaptics.Segment_Tick;
-    }
-    await Haptics.performAndroidHapticsAsync(androidHaptic);
-    return;
-  }
   if (event === "rating-selection") {
-    await Haptics.selectionAsync();
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  } else if (event === "focus-completion") {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   } else {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }

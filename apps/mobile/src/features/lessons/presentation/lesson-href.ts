@@ -8,9 +8,10 @@ export function getLessonHref(lessonId: LessonId) {
   };
 }
 
-export function getDeckLessonsHref(deckId: DeckId) {
+/** A deck's lessons, optionally opened already narrowed to a search from the Reading tab. */
+export function getDeckLessonsHref(deckId: DeckId, query?: string) {
   return {
-    params: { deckId },
+    params: query ? { deckId, query } : { deckId },
     pathname: "/reading/[deckId]" as const,
   };
 }

@@ -6,6 +6,8 @@ import type {
 } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 
+import { buildDeckImportFileName } from "@/features/decks/domain/deck-import-file-name";
+import { getDeckDownloadErrorCode } from "@/features/decks/infrastructure/deck-download-error";
 import { OperationError } from "@/shared/errors/operation-error";
 import { reportError } from "@/shared/errors/report-error";
 
@@ -17,7 +19,7 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
     signal?: AbortSignal,
     onProgress?: (progress: DeckDownloadProgress) => void
   ): Promise<DeckPackageSelection> {
-    const destination = new File(Paths.cache, `deck-import-${Date.now()}.fcrdeck`);
+    const destination = new File(Paths.cache, buildDeckImportFileName(Date.now()));
     const controller = new AbortController();
     const cancel = () => controller.abort();
     signal?.addEventListener("abort", cancel, { once: true });
@@ -46,7 +48,10 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
       });
       const file = await task.downloadAsync();
       if (!file || controller.signal.aborted) {
-        throw new Error("Deck download was interrupted");
+        throw new OperationError({
+          code: "DECK_DOWNLOAD_FAILED",
+          message: "Deck download was interrupted",
+        });
       }
       return { uri: file.uri };
     } catch (cause) {
@@ -61,7 +66,7 @@ export class ExpoDeckPackageDownloader implements DeckPackageDownloader {
         throw cause;
       }
       throw new OperationError({
-        code: timedOut ? "DECK_DOWNLOAD_TIMED_OUT" : "DECK_DOWNLOAD_FAILED",
+        code: timedOut ? "DECK_DOWNLOAD_TIMED_OUT" : getDeckDownloadErrorCode(cause),
         message: timedOut ? "Deck download timed out" : "Deck download failed",
         cause,
         context: { operation: "deck-download" },

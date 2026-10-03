@@ -2,11 +2,19 @@ import { Directory, File, Paths } from "expo-file-system";
 import { defaultDatabaseDirectory } from "expo-sqlite";
 import { Platform } from "react-native";
 
+import { DeckImportFileNamePattern } from "@/features/decks/domain/deck-import-file-name";
 import { RecoveryError } from "@/infrastructure/errors/recovery-error";
 
 const RESET_MARKER = "flashcard-reels-reset-pending";
-const DATABASE_FILES = ["flashcard-reels.db", "flashcard-reels-v2.db", "ExpoSQLiteStorage"];
-const DeckImportFileNamePattern = /^deck-import-.*\.fcrdeck$/;
+const DATABASE_FILES = [
+  "flashcard-reels.db",
+  "flashcard-reels-v2.db",
+  "flashcard-reels-v3.db",
+  "flashcard-reels-v4.db",
+  "flashcard-reels-v5.db",
+  "flashcard-reels-v7.db",
+];
+
 let storagePrepared = false;
 
 /** Root retries must not apply a new request while storage is already open. */
@@ -14,6 +22,7 @@ export function prepareAppStorage(): void {
   if (!storagePrepared) {
     try {
       applyPendingAppDataReset();
+      removeInterruptedImports();
       storagePrepared = true;
     } catch (cause) {
       throw cause instanceof RecoveryError
@@ -26,6 +35,16 @@ export function prepareAppStorage(): void {
           });
     }
   }
+}
+
+/**
+ * expo-sqlite reports its directory as a filesystem path, while expo-file-system needs a file
+ * URI. Each segment is encoded, because Expo Go app folders contain `%` characters.
+ */
+function databaseDirectory(): Directory {
+  return new Directory(
+    `file://${defaultDatabaseDirectory.split("/").map(encodeURIComponent).join("/")}`
+  );
 }
 
 function resetMarker(): File {
@@ -62,9 +81,10 @@ export function applyPendingAppDataReset(): void {
     if (!marker.exists) {
       return;
     }
+    const databases = databaseDirectory();
     for (const name of DATABASE_FILES) {
       for (const suffix of ["", "-wal", "-shm", "-journal"]) {
-        const file = new File(defaultDatabaseDirectory, name + suffix);
+        const file = new File(databases, name + suffix);
         if (file.exists) {
           file.delete();
         }
@@ -91,5 +111,22 @@ export function applyPendingAppDataReset(): void {
       context: { operation: "apply-pending-reset" },
       message: "The pending app-data reset could not be applied",
     });
+  }
+}
+
+function removeInterruptedImports(): void {
+  if (Platform.OS === "web") {
+    return;
+  }
+  const audio = new Directory(Paths.document, "deck-audio");
+  for (const entry of audio.exists ? audio.list() : []) {
+    if (entry instanceof Directory && entry.name.startsWith(".tmp-")) {
+      entry.delete();
+    }
+  }
+  for (const entry of Paths.cache.exists ? Paths.cache.list() : []) {
+    if (entry instanceof File && DeckImportFileNamePattern.test(entry.name)) {
+      entry.delete();
+    }
   }
 }

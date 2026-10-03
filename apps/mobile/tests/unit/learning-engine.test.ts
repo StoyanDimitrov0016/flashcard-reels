@@ -7,7 +7,7 @@ import { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 import {
   createFeedComposer,
   createLearningScheduler,
-} from "@/features/learning-engine/application/learning-engine-factories";
+} from "@/features/learning-engine/infrastructure/learning-engine-factories";
 
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
 
@@ -165,10 +165,12 @@ describe("learning-engine feed composer", () => {
 function candidate(id: string, overrides: Partial<FeedCandidate> = {}): FeedCandidate {
   const card = new Flashcard({
     active: true,
+    hasAudio: false,
     answer: `Answer ${id}`,
     createdAt: REVIEWED_AT,
     deckId: "deck-1",
     id,
+    lessonId: null,
     order: 0,
     question: `Question ${id}`,
     updatedAt: REVIEWED_AT,

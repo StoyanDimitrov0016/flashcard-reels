@@ -1,7 +1,7 @@
 import { darkColors, lightColors, type AppColors } from "@flashcard-reels/design-tokens";
 import { describe, expect, it } from "vitest";
 
-import { contrastRatio } from "@/features/decks/presentation/deck-appearance-presets";
+import { contrastRatio } from "@/features/decks/presentation/deck-theme-presets";
 
 // WCAG AA: 4.5:1 for body text, 3:1 for secondary UI such as icons and muted metadata.
 const bodyText = 4.5;

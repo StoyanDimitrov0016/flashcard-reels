@@ -96,11 +96,11 @@ describe("lesson Markdown", () => {
     ]);
   });
 
-  it("caps deep headings at level three and joins indented list continuations", () => {
+  it("preserves deep heading structure and joins indented list continuations", () => {
     const blocks = parseLessonMarkdown("#### Detail\n- First line\n  continues here");
 
     expect(blocks).toEqual([
-      { content: [plain("Detail")], level: 3, type: "heading" },
+      { content: [plain("Detail")], level: 4, type: "heading" },
       { items: [[plain("First line continues here")]], ordered: false, start: 1, type: "list" },
     ]);
   });

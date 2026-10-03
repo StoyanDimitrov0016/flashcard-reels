@@ -9,6 +9,8 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import { type DeckId } from "@/features/decks/domain/deck.model";
 import { StudySessionScopeSchema } from "@/features/study/contracts/study-session.schema";
 import { StudySession, type StudySessionScope } from "@/features/study/domain/study-session.model";
+import { activeSessionsAffectedByDeck } from "@/features/study/infrastructure/active-sessions-affected-by-deck";
+import { parseDatabaseRow } from "@/infrastructure/sqlite/parse-database-row";
 import { studySessions } from "@/infrastructure/sqlite/schema";
 
 export class SQLiteStudySessionRepository<TRunResult = unknown> implements StudySessionRepository {
@@ -16,6 +18,14 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
 
   constructor(database: DrizzleDatabase<TRunResult>) {
     this.database = database;
+  }
+
+  async listActiveAffectedByDeck(deckId: DeckId, includeFocus: boolean): Promise<StudySession[]> {
+    const rows = await this.database
+      .select()
+      .from(studySessions)
+      .where(activeSessionsAffectedByDeck(deckId, { includeFocus }));
+    return rows.map((row) => this.toModel(row));
   }
 
   async complete(sessionId: string, completedAt: string): Promise<void> {
@@ -106,7 +116,7 @@ export class SQLiteStudySessionRepository<TRunResult = unknown> implements Study
       deckId: row.deckId,
       id: row.id,
       lastActiveAt: row.lastActiveAt,
-      scope: StudySessionScopeSchema.parse(row.scope),
+      scope: parseDatabaseRow(StudySessionScopeSchema, row.scope, "study_sessions", row.id),
       feedState: row.feedState,
     });
   }

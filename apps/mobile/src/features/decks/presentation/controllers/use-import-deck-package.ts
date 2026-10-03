@@ -9,6 +9,7 @@ import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
+import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 
 export type { DeckDownloadProgress };
 
@@ -33,20 +34,17 @@ export function useImportDeckPackage(): ImportState & {
   });
   const [downloadProgress, setDownloadProgress] = useState<DeckDownloadProgress | null>(null);
   const lastProgressAt = useRef(0);
-  const inFlight = useRef(false);
-  const mounted = useRef(true);
+  const flight = useSingleFlight(installAction);
   const downloadController = useRef<AbortController | null>(null);
 
   useEffect(function ownDeckDownloadLifetime() {
-    mounted.current = true;
     return function cancelDownloadOnUnmount() {
-      mounted.current = false;
       downloadController.current?.abort();
     };
   }, []);
 
   const updateImportState = (next: ImportState) => {
-    if (mounted.current) {
+    if (flight.isActive()) {
       setState(next);
     }
   };
@@ -54,20 +52,16 @@ export function useImportDeckPackage(): ImportState & {
   const reportProgress = (progress: DeckDownloadProgress) => {
     const now = Date.now();
     const finished = progress.totalBytes !== null && progress.bytesWritten >= progress.totalBytes;
-    if (mounted.current && (finished || now - lastProgressAt.current >= PROGRESS_INTERVAL_MS)) {
+    if (flight.isActive() && (finished || now - lastProgressAt.current >= PROGRESS_INTERVAL_MS)) {
       lastProgressAt.current = now;
       setDownloadProgress(progress);
     }
   };
 
-  const install = async (
+  async function installAction(
     getSelection: (signal?: AbortSignal) => Promise<DeckPackageSelection | null>,
     removeAfterInstall = false
-  ): Promise<DeckInstallResult | null> => {
-    if (inFlight.current || !mounted.current) {
-      return null;
-    }
-    inFlight.current = true;
+  ): Promise<DeckInstallResult | null> {
     setDownloadProgress(null);
     lastProgressAt.current = 0;
     const controller = removeAfterInstall ? new AbortController() : null;
@@ -77,7 +71,7 @@ export function useImportDeckPackage(): ImportState & {
     try {
       selection = await getSelection(controller?.signal);
       downloadController.current = null;
-      if (!selection || controller?.signal.aborted || !mounted.current) {
+      if (!selection || controller?.signal.aborted || !flight.isActive()) {
         updateImportState({ error: null, importing: false, downloading: false });
         return null;
       }
@@ -87,7 +81,7 @@ export function useImportDeckPackage(): ImportState & {
         invalidateDeckContent();
       }
       updateImportState({ error: null, importing: false, downloading: false });
-      return mounted.current ? result : null;
+      return flight.isActive() ? result : null;
     } catch (error) {
       if (controller?.signal.aborted) {
         updateImportState({ error: null, importing: false, downloading: false });
@@ -103,7 +97,6 @@ export function useImportDeckPackage(): ImportState & {
       return null;
     } finally {
       downloadController.current = null;
-      inFlight.current = false;
       if (removeAfterInstall && selection) {
         try {
           deckPackageDownloader.remove(selection);
@@ -113,18 +106,22 @@ export function useImportDeckPackage(): ImportState & {
         }
       }
     }
-  };
+  }
 
-  const importFromDevice = () => install(() => deckPackagePicker.pick());
-  const importFromUrl = (url: string) =>
-    install((signal) => deckPackageDownloader.download(url, signal, reportProgress), true);
+  const importFromDevice = async () => (await flight.run(() => deckPackagePicker.pick())) ?? null;
+  const importFromUrl = async (url: string) =>
+    (await flight.run(
+      (signal) => deckPackageDownloader.download(url, signal, reportProgress),
+      true
+    )) ?? null;
 
   return {
     ...state,
+    importing: flight.busy,
     downloadProgress,
     cancelDownload: () => downloadController.current?.abort(),
     clearImportError: () => {
-      if (mounted.current) {
+      if (flight.isActive()) {
         setState((current) => ({ ...current, error: null }));
       }
     },

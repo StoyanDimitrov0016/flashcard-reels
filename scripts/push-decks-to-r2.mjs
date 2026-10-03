@@ -11,7 +11,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 
-import { ArchiveDeckPackageReader } from "../apps/mobile/src/features/decks/deck-installer/internal/archive-deck-package.reader.ts";
+import { ContractDeckPackageReader } from "../apps/mobile/src/features/decks/deck-installer/internal/contract-deck-package.reader.ts";
 import {
   canPublish,
   publicationUploads,
@@ -83,8 +83,8 @@ function createPublishedDeckStore(client, bucket) {
       for (const key of keys) {
         const head = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
         const metadata = head.Metadata ?? {};
-        const version = Number(metadata.version);
-        if (!metadata["deck-id"] || !metadata.sha256 || !Number.isInteger(version)) {
+        const revision = Number(metadata.revision);
+        if (!metadata["deck-id"] || !metadata.sha256 || !Number.isInteger(revision)) {
           throw new Error(`Published object ${key} has no deck metadata; it cannot be compared.`);
         }
         entries.push({
@@ -92,7 +92,7 @@ function createPublishedDeckStore(client, bucket) {
           key,
           sha256: metadata.sha256,
           title: metadata.title ?? "",
-          version,
+          revision,
         });
       }
       return entries;
@@ -126,12 +126,12 @@ function printLessons(label, lessons) {
 
 function printReview(review) {
   for (const change of review.decks) {
-    const version =
-      change.publishedVersion === null
-        ? `v${change.version}`
-        : `v${change.publishedVersion} -> v${change.version}`;
+    const revision =
+      change.publishedRevision === null
+        ? `r${change.revision}`
+        : `r${change.publishedRevision} -> r${change.revision}`;
     console.log(
-      `\n${change.status.toUpperCase()}  ${change.title} (${change.fileName}) ${version}`
+      `\n${change.status.toUpperCase()}  ${change.title} (${change.fileName}) ${revision}`
     );
     for (const block of change.blocks) {
       console.log(`  BLOCKED: ${block}`);
@@ -199,7 +199,7 @@ const client = new S3Client({
 });
 const review = await reviewDeckPublication({
   candidates,
-  reader: new ArchiveDeckPackageReader(),
+  reader: new ContractDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),
 });
 printReview(review);
@@ -234,9 +234,9 @@ for (const upload of uploads) {
         "deck-id": upload.deckId,
         sha256: upload.sha256,
         title: upload.title,
-        version: String(upload.version),
+        revision: String(upload.revision),
       },
     })
   );
-  console.log(`uploaded ${upload.key}: ${upload.title} v${upload.version}`);
+  console.log(`uploaded ${upload.key}: ${upload.title} r${upload.revision}`);
 }

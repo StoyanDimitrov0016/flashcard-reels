@@ -1,7 +1,7 @@
 export type ArchivedDeckProgress = Readonly<{
   deckId: string;
   title: string;
-  version: number;
+  revision: number;
   lastReviewedAt: string;
   reviewCount: number;
   reviewedCardCount: number;

@@ -1,15 +1,15 @@
-import type { RecallLevel } from "@/features/study/domain/recall-level";
+import type { Rating } from "@/features/learning-engine/domain/rating";
 
 export type FlashcardReviewAttemptFields = Readonly<{
   id: string;
   flashcardId: string;
   studySessionId: string;
   reelPosition: number;
-  rating: RecallLevel | null;
+  rating: Rating | null;
   createdAt: string;
   ratedAt?: string | null;
   updatedAt: string;
-  finalizedAt: string | null;
+  committedAt: string | null;
 }>;
 
 export class FlashcardReviewAttempt {
@@ -17,11 +17,11 @@ export class FlashcardReviewAttempt {
   public readonly flashcardId: string;
   public readonly studySessionId: string;
   public readonly reelPosition: number;
-  public readonly rating: RecallLevel | null;
+  public readonly rating: Rating | null;
   public readonly createdAt: string;
   public readonly ratedAt: string | null;
   public readonly updatedAt: string;
-  public readonly finalizedAt: string | null;
+  public readonly committedAt: string | null;
 
   constructor(fields: FlashcardReviewAttemptFields) {
     this.id = fields.id;
@@ -32,6 +32,6 @@ export class FlashcardReviewAttempt {
     this.createdAt = fields.createdAt;
     this.ratedAt = fields.ratedAt ?? null;
     this.updatedAt = fields.updatedAt;
-    this.finalizedAt = fields.finalizedAt;
+    this.committedAt = fields.committedAt;
   }
 }

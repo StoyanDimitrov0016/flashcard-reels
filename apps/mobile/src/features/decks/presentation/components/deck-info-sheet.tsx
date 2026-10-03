@@ -5,7 +5,7 @@ import type { Deck } from "@/features/decks/domain/deck.model";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-import { explainFlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
+import { summarizeDeckReviews } from "@/features/flashcard-progress/presentation/review-summary";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
@@ -23,24 +23,7 @@ type DeckInfoSheetProps = Readonly<{
 export function DeckInfoSheet({ cards, deck, onClose, progress, visible }: DeckInfoSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const reviewedProgress = cards.flatMap((card) => {
-    const flashcardProgress = progress.get(card.id);
-    return flashcardProgress && flashcardProgress.reviewCount > 0 ? [flashcardProgress] : [];
-  });
-  const totalReviews = reviewedProgress.reduce(
-    (total, flashcardProgress) => total + flashcardProgress.reviewCount,
-    0
-  );
-  const recallScores = reviewedProgress.flatMap((flashcardProgress) => {
-    const score = explainFlashcardProgress(flashcardProgress).averageRecallScore;
-    return score === null ? [] : [score];
-  });
-  const averageRecall =
-    recallScores.length === 0
-      ? null
-      : Math.round(
-          (recallScores.reduce((total, score) => total + score, 0) / recallScores.length / 3) * 100
-        );
+  const metrics = summarizeDeckReviews(cards, progress);
 
   return (
     <AppBottomSheet onClose={onClose} visible={visible}>
@@ -53,10 +36,13 @@ export function DeckInfoSheet({ cards, deck, onClose, progress, visible }: DeckI
         <BottomSheetScrollView contentContainerStyle={styles.content} style={styles.scrollView}>
           {!!deck && <Text style={styles.description}>{deck.description}</Text>}
           <View style={styles.metrics}>
-            <Metric label="Cards" value={String(cards.length)} />
-            <Metric label="New" value={String(cards.length - reviewedProgress.length)} />
-            <Metric label="Reviews" value={String(totalReviews)} />
-            <Metric label="Recall" value={averageRecall === null ? "–" : `${averageRecall}%`} />
+            <Metric label="Cards" value={String(metrics.cardCount)} />
+            <Metric label="New" value={String(metrics.newCount)} />
+            <Metric label="Reviews" value={String(metrics.reviewCount)} />
+            <Metric
+              label="Recall"
+              value={metrics.recallPercentage === null ? "–" : `${metrics.recallPercentage}%`}
+            />
           </View>
         </BottomSheetScrollView>
       </View>

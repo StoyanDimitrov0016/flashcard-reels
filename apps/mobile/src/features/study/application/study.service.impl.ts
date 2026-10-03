@@ -1,651 +1,249 @@
-import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { FlashcardProgressAggregationTransaction } from "@/features/flashcard-progress/application/flashcard-progress-aggregation-transaction";
-import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { ReviewAttemptFinalizationTransaction } from "@/features/study/application/review-attempt-finalization-transaction";
-import type { ReviewAttemptTransaction } from "@/features/study/application/review-attempt-transaction";
-import type { StudySessionFeedTransaction } from "@/features/study/application/study-session-feed-transaction";
+import type { Rating } from "@/features/learning-engine/domain/rating";
+import type { FeedMaterializer } from "@/features/study/application/feed-materializer";
+import type { StudySessionOperations } from "@/features/study/application/study-session-operations";
 import type {
-  OpenStudySessionResult,
-  StudySessionLifecycleTransaction,
-} from "@/features/study/application/study-session-lifecycle-transaction";
-import type { StudySessionMaintenanceTransaction } from "@/features/study/application/study-session-maintenance-transaction";
-import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
+  DeckChange,
+  StudySessionSettlement,
+} from "@/features/study/application/study-session-settlement";
 import type { ReviewAttemptRepository } from "@/features/study/domain/review-attempt.repository";
-import type { StudySessionAggregationQuery } from "@/features/study/domain/study-session-aggregation.query";
-import type { StudySessionItemRepository } from "@/features/study/domain/study-session-item.repository";
 import type { StudySessionRecurrenceRepository } from "@/features/study/domain/study-session-recurrence.repository";
-import type { StudySession, StudySessionScope } from "@/features/study/domain/study-session.model";
+import type { StudySessionReelRepository } from "@/features/study/domain/study-session-reel.repository";
 import type { StudySessionRepository } from "@/features/study/domain/study-session.repository";
-import type { StudyService } from "@/features/study/domain/study.service";
+import type {
+  ActivationResult,
+  CardInput,
+  FeedInput,
+  OpenFeedInput,
+  RateCardResult,
+  StudyFeedService,
+  StudyFeedSnapshot,
+} from "@/features/study/domain/study.service";
 import type { Clock } from "@/shared/domain/clock";
-import type { IdGenerator } from "@/shared/domain/id-generator";
 
-import {
-  compareRatedAttempts,
-  isRatedReviewAttempt,
-  orderReviewAttemptsForFinalization,
-} from "@/features/study/application/review-attempt-finalization-order";
-import { FlashcardReviewAttempt } from "@/features/study/domain/flashcard-review-attempt.model";
-import { type RecallLevel } from "@/features/study/domain/recall-level";
-import { calculateRecurrenceTarget, type RandomSource } from "@/features/study/domain/recurrences";
-import {
-  AGGREGATION_CHECK_INTERVAL,
-  DETAILED_REVIEW_HISTORY_RETENTION,
-  EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE,
-  FOREGROUND_AGGREGATION_CHUNK_LIMIT,
-  PENDING_COMPLETED_SESSION_RECOVERY_LIMIT,
-  PERSISTED_SESSION_FEED_HISTORY_LIMIT,
-} from "@/features/study/domain/review-attempts";
-import { StudySessionItem } from "@/features/study/domain/study-session-item.model";
-import { StudySessionRecurrence } from "@/features/study/domain/study-session-recurrence.model";
+import { shouldExtendReelFeed } from "@/features/study/application/feed-extension-policy";
+import { shouldCompactSessionRuntimeData } from "@/features/study/application/feed-position-extension";
+import { doesRatingRecur } from "@/features/study/domain/recurrences";
+import { getFirstEditableReelPosition } from "@/features/study/domain/review-attempts";
+import { AppError } from "@/shared/errors/app-error";
+import { OperationError } from "@/shared/errors/operation-error";
 
-export type OpenStudySession = OpenStudySessionResult;
+type StudyServiceOptions = Readonly<{
+  operations: StudySessionOperations;
+  materializer: FeedMaterializer;
+  attempts: ReviewAttemptRepository;
+  sessions: StudySessionRepository;
+  reels: StudySessionReelRepository;
+  recurrences: StudySessionRecurrenceRepository;
+  clock: Clock;
+}>;
 
-export class StudyServiceImpl implements StudyService, StudySessionSettlement {
-  private readonly reviewAttemptRepository: ReviewAttemptRepository;
-  private readonly studySessionRecurrenceRepository: StudySessionRecurrenceRepository;
-  private readonly studySessionRepository: StudySessionRepository;
-  private readonly studySessionAggregationQuery: StudySessionAggregationQuery;
-  private readonly studySessionItemRepository: StudySessionItemRepository;
-  private readonly clock: Clock;
-  private readonly idGenerator: IdGenerator;
-  private readonly random: RandomSource;
-  private readonly reviewAttemptTransaction: ReviewAttemptTransaction;
-  private readonly reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction;
-  private readonly studySessionFeedTransaction: StudySessionFeedTransaction;
-  private readonly studySessionLifecycleTransaction: StudySessionLifecycleTransaction;
-  private readonly flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null;
-  private readonly studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null;
-  private readonly finalizationQueues = new Map<string, Promise<void>>();
-  private focusedSessionLifecycleQueue: Promise<void> = Promise.resolve();
+export class StudyServiceImpl implements StudyFeedService, StudySessionSettlement {
+  private readonly options: StudyServiceOptions;
 
-  constructor(
-    reviewAttemptRepository: ReviewAttemptRepository,
-    studySessionRepository: StudySessionRepository,
-    studySessionAggregationQuery: StudySessionAggregationQuery,
-    studySessionItemRepository: StudySessionItemRepository,
-    studySessionRecurrenceRepository: StudySessionRecurrenceRepository,
-    clock: Clock,
-    idGenerator: IdGenerator,
-    reviewAttemptTransaction: ReviewAttemptTransaction,
-    studySessionFeedTransaction: StudySessionFeedTransaction,
-    studySessionLifecycleTransaction: StudySessionLifecycleTransaction,
-    reviewAttemptFinalizationTransaction: ReviewAttemptFinalizationTransaction,
-    random: RandomSource = Math.random,
-    flashcardProgressAggregationTransaction: FlashcardProgressAggregationTransaction | null = null,
-    studySessionMaintenanceTransaction: StudySessionMaintenanceTransaction | null = null
-  ) {
-    this.reviewAttemptRepository = reviewAttemptRepository;
-    this.studySessionRecurrenceRepository = studySessionRecurrenceRepository;
-    this.studySessionRepository = studySessionRepository;
-    this.studySessionAggregationQuery = studySessionAggregationQuery;
-    this.studySessionItemRepository = studySessionItemRepository;
-    this.clock = clock;
-    this.idGenerator = idGenerator;
-    this.reviewAttemptTransaction = reviewAttemptTransaction;
-    this.reviewAttemptFinalizationTransaction = reviewAttemptFinalizationTransaction;
-    this.studySessionFeedTransaction = studySessionFeedTransaction;
-    this.studySessionLifecycleTransaction = studySessionLifecycleTransaction;
-    this.random = random;
-    this.flashcardProgressAggregationTransaction = flashcardProgressAggregationTransaction;
-    this.studySessionMaintenanceTransaction = studySessionMaintenanceTransaction;
+  constructor(options: StudyServiceOptions) {
+    this.options = options;
   }
 
-  async openSession(
-    scope: StudySessionScope,
-    deckId: DeckId | null,
-    replaceExisting: boolean
-  ): Promise<OpenStudySession> {
-    if ((scope === "mixed" && deckId !== null) || (scope === "focused" && deckId === null)) {
-      throw new Error("Study session scope and deck must agree");
-    }
-    return scope === "focused"
-      ? this.serializeFocusedSessionLifecycle(() =>
-          this.openSessionDirect(scope, deckId, replaceExisting)
-        )
-      : this.openSessionDirect(scope, deckId, replaceExisting);
+  async openFeed(input: OpenFeedInput): Promise<StudyFeedSnapshot> {
+    const feed = await this.options.materializer.prepareFeed(
+      input.cards,
+      input.scope,
+      input.deckId,
+      input.replaceExisting,
+      input.anchorFlashcardId
+    );
+    return this.snapshot(feed);
   }
 
-  async resumeFocusedSession(): Promise<StudySession | null> {
-    return this.serializeFocusedSessionLifecycle(async () => {
-      const activeSession = await this.studySessionRepository.findActiveByScope("focused");
-      if (!activeSession || activeSession.deckId === null) {
-        return null;
+  async activateCard(input: CardInput): Promise<ActivationResult> {
+    const { operations, sessions, recurrences, attempts, clock, materializer } = this.options;
+    const changed = await operations.serializeSession(input.sessionId, async () => {
+      const before = await this.requireSession(input.sessionId);
+      const occurrence = await this.occurrence(input);
+      await operations.startAttempt(occurrence.cardId, input.reelPosition, input.sessionId);
+      const position = await sessions.updateCurrentReelPosition(
+        input.sessionId,
+        input.reelPosition,
+        clock.now()
+      );
+      if (!position) {
+        throw new OperationError({
+          code: "STUDY_PERSISTENCE_FAILED",
+          message: "The current study position could not be saved",
+        });
       }
-      const resumed = await this.openSessionDirect("focused", activeSession.deckId, false);
-      return resumed.session;
+      const consumed = occurrence.recurrenceId
+        ? await recurrences.markConsumed(occurrence.recurrenceId, clock.now())
+        : false;
+      await materializer.recordVisibleCard(input.sessionId, occurrence.cardId);
+      const pending = await attempts.listUncommittedBeforeReelPosition(
+        input.sessionId,
+        getFirstEditableReelPosition(position.furthestReelPosition)
+      );
+      await operations.commitOutsideWindow(input.sessionId);
+      if (
+        shouldCompactSessionRuntimeData(before.furthestReelPosition, position.furthestReelPosition)
+      ) {
+        await operations.compactSessionRuntimeData(input.sessionId, position.furthestReelPosition);
+      }
+      const through =
+        input.loadedThroughReelPosition ??
+        (await this.options.reels.findMaxReelPosition(input.sessionId)) ??
+        -1;
+      return {
+        snapshotNeeded: consumed || pending.some((attempt) => doesRatingRecur(attempt.rating)),
+        extend: shouldExtendReelFeed(input.reelPosition, through + 1),
+      };
+    });
+    // Slow materialization runs after the one session queue releases rating and commit work.
+    if (changed.extend) {
+      try {
+        return { snapshot: await this.extendFeed(input), extensionError: null };
+      } catch (error) {
+        return {
+          snapshot: changed.snapshotNeeded ? await this.refreshFeed(input) : null,
+          extensionError: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    }
+    return {
+      snapshot: changed.snapshotNeeded ? await this.refreshFeed(input) : null,
+      extensionError: null,
+    };
+  }
+
+  async rateCard(
+    input: CardInput & Readonly<{ rating: Rating; expectedAttempt?: boolean }>
+  ): Promise<RateCardResult> {
+    const { operations, attempts } = this.options;
+    const saved = await operations.serializeSession(input.sessionId, async () => {
+      await this.requireSession(input.sessionId);
+      const existing = await attempts.findBySessionAndReelPosition(
+        input.sessionId,
+        input.reelPosition
+      );
+      if (!existing && input.expectedAttempt) {
+        throw new OperationError({
+          code: "STUDY_PERSISTENCE_FAILED",
+          message: "The selected rating could not be saved",
+        });
+      }
+      const occurrence = await this.occurrence(input);
+      const id =
+        existing?.id ??
+        (await operations.startAttempt(occurrence.cardId, input.reelPosition, input.sessionId));
+      const result = await operations.rateAttempt(id, input.rating);
+      if (result.status === "missing") {
+        await this.requireSession(input.sessionId);
+        throw new OperationError({
+          code: "STUDY_PERSISTENCE_FAILED",
+          message: "The selected rating could not be saved",
+        });
+      }
+      return {
+        status: result.status,
+        rating: result.status === "locked" ? result.rating : input.rating,
+        snapshotNeeded: doesRatingRecur(existing?.rating ?? null) || doesRatingRecur(input.rating),
+      };
+    });
+    if (!saved.snapshotNeeded) {
+      return { status: saved.status, rating: saved.rating, snapshot: null };
+    }
+    try {
+      return {
+        status: saved.status,
+        rating: saved.rating,
+        snapshot: await this.refreshFeed(input),
+      };
+    } catch (cause) {
+      if (cause instanceof AppError && cause.code === "STUDY_SESSION_ENDED") {
+        throw cause;
+      }
+      throw new OperationError({
+        code: "VIEW_LOAD_FAILED",
+        message: "The feed could not be refreshed",
+        context: { operation: "rated-feed.refresh", status: saved.status },
+        cause,
+      });
+    }
+  }
+
+  async extendFeed(input: FeedInput): Promise<StudyFeedSnapshot> {
+    return this.options.operations.serializeSession("feed:" + input.sessionId, async () => {
+      await this.requireSession(input.sessionId);
+      return this.snapshot(
+        await this.options.materializer.extendFeed(input.cards, input.sessionId)
+      );
     });
   }
 
-  private async openSessionDirect(
-    scope: StudySessionScope,
-    deckId: DeckId | null,
-    replaceExisting: boolean
-  ): Promise<OpenStudySession> {
-    await this.recoverPendingCompletedSessionAggregation();
+  async refreshFeed(input: FeedInput): Promise<StudyFeedSnapshot> {
+    await this.requireSession(input.sessionId);
+    return this.snapshot(await this.options.materializer.refreshFeed(input.cards, input.sessionId));
+  }
 
-    const createdAt = this.clock.now();
-    const opened = await this.studySessionLifecycleTransaction.open(
-      scope,
-      deckId,
-      replaceExisting,
-      createdAt,
-      this.idGenerator.generate()
-    );
-    if (opened.replacedSessionId !== null) {
-      await this.finalizeAndAggregateCompletedSession(opened.replacedSessionId);
+  async resumeFocusedSession() {
+    return this.options.operations.resumeFocusedSession();
+  }
+
+  async settleDeckChange(change: DeckChange): Promise<void> {
+    if (change.kind === "remove") {
+      await this.options.operations.settleBeforeDeckRemoval(change.deckId);
+    } else {
+      await this.options.operations.settleActiveSessionsAffectedByDeck(
+        change.deckId,
+        change.kind !== "first-install"
+      );
     }
-    await this.aggregateActiveSessionIfEligible(opened.session.id);
-    return opened;
-  }
-
-  private serializeFocusedSessionLifecycle<T>(operation: () => Promise<T>): Promise<T> {
-    const result = this.focusedSessionLifecycleQueue.then(operation, operation);
-    this.focusedSessionLifecycleQueue = result.then(
-      () => undefined,
-      () => undefined
-    );
-    return result;
-  }
-
-  async completeSession(sessionId: string): Promise<void> {
-    await this.finalizeAllAttempts(sessionId);
-    await this.studySessionRepository.complete(sessionId, this.clock.now());
-    await this.aggregateCompletedSession(sessionId);
   }
 
   async settleForProgressBackup(): Promise<void> {
-    // oxlint-disable no-await-in-loop -- Each session must be finalized before its snapshot is read.
-    for (const scope of ["mixed", "focused"] as const) {
-      const active = await this.studySessionRepository.findActiveByScope(scope);
-      if (active) {
-        await this.completeSession(active.id);
-      }
-    }
-    // oxlint-enable no-await-in-loop
-    // A completed session may need more than the foreground aggregation limit.
-    // oxlint-disable no-await-in-loop -- Each pass advances durable aggregation checkpoints.
-    while (true) {
-      const pending =
-        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(
-          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-        );
-      if (pending.length === 0) {
-        return;
-      }
-      for (const session of pending) {
-        await this.finalizeAndAggregateCompletedSession(session.id);
-        const updated = await this.studySessionRepository.findById(session.id);
-        if (
-          !updated ||
-          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
-        ) {
-          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
-        }
-      }
-    }
-    // oxlint-enable no-await-in-loop
+    await this.options.operations.settleForProgressBackup();
   }
 
-  async settleActiveSessionsAffectedByDeck(deckId: DeckId, includeFocused: boolean): Promise<void> {
-    const mixed = await this.studySessionRepository.findActiveByScope("mixed");
-    if (mixed) {
-      await this.completeSession(mixed.id);
-    }
-    if (!includeFocused) {
-      return;
-    }
-    const focused = await this.studySessionRepository.findActiveByScope("focused");
-    if (focused?.deckId === deckId) {
-      await this.completeSession(focused.id);
-    }
-  }
-
-  async settleBeforeDeckRemoval(deckId: DeckId): Promise<void> {
-    await this.settleActiveSessionsAffectedByDeck(deckId, true);
-
-    // Removing cards also removes their session attempts. Finish completed
-    // sessions with pending reviews for this deck before removing its content.
-    // oxlint-disable no-await-in-loop -- The next batch depends on the committed aggregation checkpoints.
-    while (true) {
-      const pending =
-        await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregationForDeck(
-          deckId,
-          PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-        );
-      if (pending.length === 0) {
-        return;
-      }
-      for (const session of pending) {
-        await this.finalizeAndAggregateCompletedSession(session.id);
-        const updated = await this.studySessionRepository.findById(session.id);
-        if (
-          !updated ||
-          updated.aggregatedThroughReelPosition <= session.aggregatedThroughReelPosition
-        ) {
-          throw new Error(`Could not finish flashcard progress aggregation for ${session.id}`);
-        }
-      }
-    }
-    // oxlint-enable no-await-in-loop
-  }
-
-  async compactSessionRuntimeData(sessionId: string, furthestReelPosition: number): Promise<void> {
-    const maintenance = this.studySessionMaintenanceTransaction;
-    if (!maintenance) {
-      return;
-    }
-    const minimumRetainedReelPosition = furthestReelPosition - PERSISTED_SESSION_FEED_HISTORY_LIMIT;
-    if (minimumRetainedReelPosition > 0) {
-      await maintenance.compact(sessionId, minimumRetainedReelPosition);
-    }
-  }
-
-  async findSession(sessionId: string): Promise<StudySession | null> {
-    return this.studySessionRepository.findById(sessionId);
-  }
-
-  async findSessionByScope(scope: StudySessionScope): Promise<StudySession | null> {
-    return this.studySessionRepository.findActiveByScope(scope);
-  }
-
-  async recoverPendingCompletedSessionAggregation(
-    limit = PENDING_COMPLETED_SESSION_RECOVERY_LIMIT
-  ): Promise<void> {
-    if (!this.flashcardProgressAggregationTransaction) {
-      return;
-    }
-    const pending =
-      await this.studySessionAggregationQuery.findCompletedSessionsPendingAggregation(limit);
-    const recoverNext = async (index: number): Promise<void> => {
-      const session = pending[index];
-      if (!session) {
-        return;
-      }
-      await this.finalizeAndAggregateCompletedSession(session.id);
-      await recoverNext(index + 1);
-    };
-    await recoverNext(0);
-  }
-
-  /** Returns aggregation eligibility; it never advances the durable checkpoint. */
-  async getAggregationEligibility(sessionId: string): Promise<Readonly<{
-    shouldCheck: boolean;
-    safeThroughReelPosition: number;
-  }> | null> {
-    const session = await this.studySessionRepository.findById(sessionId);
-    if (!session) {
-      return null;
-    }
-
-    const candidate = session.furthestReelPosition - DETAILED_REVIEW_HISTORY_RETENTION;
-    if (candidate <= session.aggregatedThroughReelPosition) {
-      return {
-        safeThroughReelPosition: session.aggregatedThroughReelPosition,
-        shouldCheck: false,
-      };
-    }
-
-    const unfinished = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
-      sessionId,
-      candidate + 1
-    );
-    const safeThroughReelPosition = unfinished.reduce(
-      (safePosition, attempt) => Math.min(safePosition, attempt.reelPosition - 1),
-      candidate
-    );
-    return {
-      safeThroughReelPosition,
-      shouldCheck:
-        safeThroughReelPosition > session.aggregatedThroughReelPosition &&
-        safeThroughReelPosition - session.aggregatedThroughReelPosition >=
-          AGGREGATION_CHECK_INTERVAL,
-    };
-  }
-
-  async appendSessionItems(
-    sessionId: string,
-    cards: readonly Flashcard[],
-    feedState: string,
-    baseFeedPositionStart = 0,
-    reelPositions = cards.map((_card, index) => baseFeedPositionStart + index)
-  ): Promise<void> {
-    if (cards.length !== reelPositions.length) {
-      throw new Error("Session item cards and reel positions must have the same length");
-    }
-    const items = cards.map(
-      (card, index) =>
-        new StudySessionItem({
-          flashcardId: card.id,
-          id: this.idGenerator.generate(),
-          baseFeedPosition: baseFeedPositionStart + index,
-          reelPosition: reelPositions[index] ?? 0,
-          studySessionId: sessionId,
-        })
-    );
-    await this.studySessionFeedTransaction.append(sessionId, items, feedState);
-  }
-
-  async updateSessionFeedState(sessionId: string, feedState: string): Promise<void> {
-    await this.studySessionFeedTransaction.updateState(sessionId, feedState);
-  }
-
-  async listSessionItems(sessionId: string): Promise<StudySessionItem[]> {
-    return this.studySessionItemRepository.listBySessionId(sessionId);
-  }
-
-  async findMaxSessionBaseFeedPosition(sessionId: string): Promise<number | null> {
-    return this.studySessionItemRepository.findMaxBaseFeedPosition(sessionId);
-  }
-
-  async findMaxSessionReelPosition(sessionId: string): Promise<number | null> {
-    return this.studySessionItemRepository.findMaxReelPosition(sessionId);
-  }
-
-  async listSessionItemsInReelPositionRange(
-    sessionId: string,
-    fromReelPosition: number,
-    throughReelPosition: number
-  ): Promise<StudySessionItem[]> {
-    return this.studySessionItemRepository.listBySessionIdInReelPositionRange(
-      sessionId,
-      fromReelPosition,
-      throughReelPosition
-    );
-  }
-
-  async listSessionRecurrences(sessionId: string): Promise<StudySessionRecurrence[]> {
-    return this.studySessionRecurrenceRepository.listBySessionId(sessionId);
-  }
-
-  async listPendingRecurrenceFlashcardIdsFromTargetPosition(
-    sessionId: string,
-    fromTargetReelPosition: number
-  ): Promise<string[]> {
-    return this.studySessionRecurrenceRepository.listPendingFlashcardIdsFromTargetPosition(
-      sessionId,
-      fromTargetReelPosition
-    );
-  }
-
-  async listSessionRecurrencesInTargetRange(
-    sessionId: string,
-    fromTargetReelPosition: number,
-    throughTargetReelPosition: number
-  ): Promise<StudySessionRecurrence[]> {
-    return this.studySessionRecurrenceRepository.listBySessionIdInTargetRange(
-      sessionId,
-      fromTargetReelPosition,
-      throughTargetReelPosition
-    );
-  }
-
-  async updateSessionReelPosition(sessionId: string, currentReelPosition: number) {
-    return this.studySessionRepository.updateCurrentReelPosition(
-      sessionId,
-      currentReelPosition,
-      this.clock.now()
-    );
-  }
-
-  async startAttempt(
-    flashcardId: string,
-    reelPosition: number,
-    studySessionId: string
-  ): Promise<string> {
-    const session = await this.studySessionRepository.findById(studySessionId);
+  private async requireSession(id: string) {
+    const session = await this.options.sessions.findById(id);
     if (!session || session.completedAt !== null) {
-      throw new Error(`Cannot start a review attempt for inactive session ${studySessionId}`);
+      throw new OperationError({
+        code: "STUDY_SESSION_ENDED",
+        message: "The study session has ended",
+      });
     }
+    return session;
+  }
 
-    const existingAttempt = await this.reviewAttemptRepository.findBySessionAndReelPosition(
-      studySessionId,
-      reelPosition
+  private async occurrence(input: CardInput) {
+    const { reels, recurrences } = this.options;
+    const items = await reels.listBySessionIdInReelPositionRange(
+      input.sessionId,
+      input.reelPosition,
+      input.reelPosition
     );
-    if (existingAttempt) {
-      return existingAttempt.id;
+    const returns = await recurrences.listBySessionIdInTargetRange(
+      input.sessionId,
+      input.reelPosition,
+      input.reelPosition
+    );
+    const recurrence = returns[0];
+    const cardId = items[0]?.flashcardId ?? recurrence?.flashcardId;
+    if (!cardId || !input.cards.some((card) => card.id === cardId)) {
+      throw new Error(`Missing flashcard at reel ${input.reelPosition}`);
     }
-
-    const createdAt = this.clock.now();
-    const attempt = new FlashcardReviewAttempt({
-      createdAt,
-      flashcardId,
-      finalizedAt: null,
-      id: this.idGenerator.generate(),
-      reelPosition,
-      rating: null,
-      ratedAt: null,
-      studySessionId,
-      updatedAt: createdAt,
-    });
-    await this.reviewAttemptTransaction.createAttempt(attempt);
-    return attempt.id;
+    return { cardId, recurrenceId: recurrence?.consumedAt === null ? recurrence.id : null };
   }
 
-  async listReviewAttemptsInReelPositionRange(
-    sessionId: string,
-    fromReelPosition: number,
-    throughReelPosition: number
-  ): Promise<FlashcardReviewAttempt[]> {
-    return this.reviewAttemptRepository.listBySessionAndReelPositionRange(
-      sessionId,
-      fromReelPosition,
-      throughReelPosition
+  private async snapshot(feed: StudyFeedSnapshot["feed"]): Promise<StudyFeedSnapshot> {
+    const attempts = await this.options.attempts.listBySessionAndReelPositionRange(
+      feed.studySessionId,
+      feed.loadedFromReelPosition,
+      feed.loadedThroughReelPosition
     );
-  }
-
-  async rateAttempt(attemptId: string, rating: RecallLevel): Promise<boolean> {
-    const attempt = await this.reviewAttemptRepository.findById(attemptId);
-    if (!attempt || attempt.finalizedAt !== null) {
-      return false;
-    }
-
-    const updatedAt = this.clock.now();
-    const proposedTargetReelPosition = calculateRecurrenceTarget(
-      attempt.reelPosition,
-      rating,
-      this.random
-    );
-    const recurrence =
-      proposedTargetReelPosition === null
-        ? null
-        : new StudySessionRecurrence({
-            consumedAt: null,
-            createdAt: updatedAt,
-            flashcardId: attempt.flashcardId,
-            id: this.idGenerator.generate(),
-            sourceAttemptId: attempt.id,
-            studySessionId: attempt.studySessionId,
-            targetReelPosition: proposedTargetReelPosition,
-          });
-
-    return this.reviewAttemptTransaction.rateAttempt(
-      attemptId,
-      rating,
-      updatedAt,
-      recurrence,
-      proposedTargetReelPosition
-    );
-  }
-
-  async consumeRecurrence(recurrenceId: string): Promise<boolean> {
-    return this.studySessionRecurrenceRepository.markConsumed(recurrenceId, this.clock.now());
-  }
-
-  async finalizeAttempt(attemptId: string): Promise<void> {
-    const attempt = await this.reviewAttemptRepository.findById(attemptId);
-    if (!attempt) {
-      return;
-    }
-    await this.serializeFinalization(attempt.studySessionId, async () => {
-      const currentAttempt = await this.reviewAttemptRepository.findById(attemptId);
-      if (!currentAttempt || currentAttempt.finalizedAt !== null) {
-        return;
-      }
-      const allUnfinalized = await this.reviewAttemptRepository.listUnfinalizedBySessionId(
-        currentAttempt.studySessionId
-      );
-      const remainingIds = new Set(allUnfinalized.map((candidate) => candidate.id));
-      if (this.isBlockedByEarlierReview(currentAttempt, allUnfinalized, remainingIds)) {
-        return;
-      }
-      await this.finalizeAttemptNow(currentAttempt.id);
-    });
-  }
-
-  async finalizeAttemptsOutsideEditableWindow(studySessionId: string): Promise<void> {
-    await this.serializeFinalization(studySessionId, async () => {
-      const session = await this.studySessionRepository.findById(studySessionId);
-      if (!session) {
-        return;
-      }
-      const firstEditablePosition =
-        session.furthestReelPosition - EDITABLE_REVIEW_ATTEMPT_WINDOW_SIZE + 1;
-      if (firstEditablePosition > 0) {
-        const attempts = await this.reviewAttemptRepository.listUnfinalizedBeforeReelPosition(
-          studySessionId,
-          firstEditablePosition
-        );
-        await this.finalizeAttemptsInOrder(studySessionId, attempts);
-      }
-      await this.aggregateActiveSessionIfEligible(studySessionId);
-    });
-  }
-
-  private async finalizeAndAggregateCompletedSession(sessionId: string): Promise<void> {
-    await this.finalizeAllAttempts(sessionId);
-    await this.aggregateCompletedSession(sessionId);
-  }
-
-  private async finalizeAllAttempts(studySessionId: string): Promise<void> {
-    await this.serializeFinalization(studySessionId, async () => {
-      const attempts =
-        await this.reviewAttemptRepository.listUnfinalizedBySessionId(studySessionId);
-      await this.finalizeAttemptsInOrder(studySessionId, attempts);
-    });
-  }
-
-  private async finalizeAttemptsInOrder(
-    studySessionId: string,
-    attempts: readonly FlashcardReviewAttempt[]
-  ): Promise<void> {
-    const allUnfinalized =
-      await this.reviewAttemptRepository.listUnfinalizedBySessionId(studySessionId);
-    const remainingIds = new Set(allUnfinalized.map((attempt) => attempt.id));
-    const orderedAttempts = orderReviewAttemptsForFinalization(attempts);
-    for (const attempt of orderedAttempts) {
-      if (this.isBlockedByEarlierReview(attempt, allUnfinalized, remainingIds)) {
-        continue;
-      }
-
-      // oxlint-disable-next-line no-await-in-loop -- Each transition must observe the state committed by the previous review.
-      const finalized = await this.finalizeAttemptNow(attempt.id);
-      if (finalized) {
-        remainingIds.delete(attempt.id);
+    const ratings = new Map<number, Rating>();
+    for (const attempt of attempts) {
+      if (attempt.rating !== null) {
+        ratings.set(attempt.reelPosition, attempt.rating);
       }
     }
-  }
-
-  private isBlockedByEarlierReview(
-    attempt: FlashcardReviewAttempt,
-    attempts: readonly FlashcardReviewAttempt[],
-    remainingIds: ReadonlySet<string>
-  ): boolean {
-    if (!isRatedReviewAttempt(attempt)) {
-      return false;
-    }
-    return attempts.some(
-      (candidate) =>
-        candidate.id !== attempt.id &&
-        remainingIds.has(candidate.id) &&
-        candidate.flashcardId === attempt.flashcardId &&
-        isRatedReviewAttempt(candidate) &&
-        compareRatedAttempts(candidate, attempt) < 0
-    );
-  }
-
-  private async finalizeAttemptNow(attemptId: string): Promise<boolean> {
-    const finalizedAt = this.clock.now();
-    return this.reviewAttemptFinalizationTransaction.finalizeAttempt(
-      attemptId,
-      finalizedAt,
-      finalizedAt
-    );
-  }
-
-  private async serializeFinalization(
-    studySessionId: string,
-    operation: () => Promise<void>
-  ): Promise<void> {
-    const previous = this.finalizationQueues.get(studySessionId) ?? Promise.resolve();
-    const next = previous.catch(() => undefined).then(operation);
-    this.finalizationQueues.set(studySessionId, next);
-    void next.then(
-      () => this.clearFinalizationQueue(studySessionId, next),
-      () => this.clearFinalizationQueue(studySessionId, next)
-    );
-    await next;
-  }
-
-  private clearFinalizationQueue(studySessionId: string, completed: Promise<void>): void {
-    if (this.finalizationQueues.get(studySessionId) === completed) {
-      this.finalizationQueues.delete(studySessionId);
-    }
-  }
-
-  private async aggregateActiveSessionIfEligible(studySessionId: string): Promise<void> {
-    if (!this.flashcardProgressAggregationTransaction) {
-      return;
-    }
-    const eligibility = await this.getAggregationEligibility(studySessionId);
-    if (!eligibility?.shouldCheck) {
-      return;
-    }
-    await this.flashcardProgressAggregationTransaction.aggregate(
-      studySessionId,
-      eligibility.safeThroughReelPosition,
-      this.clock.now()
-    );
-  }
-
-  private async aggregateCompletedSession(studySessionId: string): Promise<void> {
-    const aggregation = this.flashcardProgressAggregationTransaction;
-    if (!aggregation) {
-      return;
-    }
-    const maximumAttemptPosition =
-      await this.reviewAttemptRepository.findMaxReelPosition(studySessionId);
-    if (maximumAttemptPosition === null) {
-      return;
-    }
-
-    const aggregateNextChunk = async (
-      remainingChunks: number,
-      session: StudySession | null
-    ): Promise<void> => {
-      if (
-        remainingChunks <= 0 ||
-        !session ||
-        session.aggregatedThroughReelPosition >= maximumAttemptPosition
-      ) {
-        return;
-      }
-      const result = await aggregation.aggregate(
-        studySessionId,
-        maximumAttemptPosition,
-        this.clock.now()
-      );
-      if (result.throughReelPosition <= session.aggregatedThroughReelPosition) {
-        return;
-      }
-      await aggregateNextChunk(
-        remainingChunks - 1,
-        await this.studySessionRepository.findById(studySessionId)
-      );
-    };
-    await aggregateNextChunk(
-      FOREGROUND_AGGREGATION_CHUNK_LIMIT,
-      await this.studySessionRepository.findById(studySessionId)
-    );
+    return { feed, ratings };
   }
 }

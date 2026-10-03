@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
+import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
 import {
   completeReelActivation,
   shouldCompactSessionRuntimeData,
-} from "@/features/reels/application/reel-position-extension";
-import { getLocalReelIndex } from "@/features/reels/presentation/hooks/use-reel-feed";
+} from "@/features/study/application/feed-position-extension";
 
 async function failIfCalled(): Promise<void> {
   throw new Error("must not run");
 }
 
-async function failFinalizationForTest(): Promise<void> {
-  throw new Error("finalization must not run");
+async function failCommitForTest(): Promise<void> {
+  throw new Error("commit must not run");
 }
 
 describe("absolute reel position mapping", () => {
@@ -42,7 +42,7 @@ describe("session runtime compaction eligibility", () => {
 });
 
 describe("reel activation ordering", () => {
-  it("runs persistence, recurrence, visibility, ratings, finalization, compaction, and extension", async () => {
+  it("runs persistence, recurrence, visibility, ratings, commit, compaction, and extension", async () => {
     const events: string[] = [];
     const record = (event: string) => async () => {
       events.push(event);
@@ -55,7 +55,7 @@ describe("reel activation ordering", () => {
       },
       record("recurrence"),
       record("visible"),
-      record("finalization"),
+      record("commit"),
       record("compaction"),
       record("extension"),
       record("ratings")
@@ -66,7 +66,7 @@ describe("reel activation ordering", () => {
       "recurrence",
       "visible",
       "ratings",
-      "finalization",
+      "commit",
       "compaction",
       "extension",
     ]);
@@ -86,13 +86,13 @@ describe("reel activation ordering", () => {
     ).resolves.toBe(false);
   });
 
-  it("does not finalize after pending rating persistence rejects", async () => {
+  it("does not commit after pending rating persistence rejects", async () => {
     await expect(
       completeReelActivation(
         async () => true,
         async () => undefined,
         async () => undefined,
-        failFinalizationForTest,
+        failCommitForTest,
         async () => undefined,
         async () => undefined,
         async () => {

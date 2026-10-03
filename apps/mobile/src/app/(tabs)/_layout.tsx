@@ -5,7 +5,6 @@ import { StyleSheet, View, type Animated } from "react-native";
 
 import { DeckLessonsProvider } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { StudyFeedHeader } from "@/features/reels/presentation/components/study-feed-header";
-import { FeedScopeProvider } from "@/features/reels/presentation/context/feed-scope-context";
 import { reportError } from "@/shared/errors/report-error";
 import {
   AppTabBar,
@@ -32,10 +31,10 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return <ViewErrorState allowAppRecovery error={error} retry={retry} scope="section" />;
 }
 
-// Swipe order follows the screen order below. For you and Focus share the Study item.
+// Swipe order follows the screen order below. Discover and Focus share the Study item.
 const forYouRoute = "(discover)";
 const focusRoute = "focus";
-const destinationRoutes = [forYouRoute, focusRoute, "reading", "library", "progress", "controls"];
+const destinationRoutes = [forYouRoute, focusRoute, "reading", "decks", "settings"];
 
 const tabItems: readonly AppTabItem[] = [
   {
@@ -51,22 +50,16 @@ const tabItems: readonly AppTabItem[] = [
     routeNames: ["reading"],
   },
   {
-    accessibilityLabel: "Library tab",
+    accessibilityLabel: "Decks tab",
     icon: { android: "library_books", ios: "books.vertical.fill", web: "library_books" },
-    key: "library",
-    routeNames: ["library"],
+    key: "decks",
+    routeNames: ["decks"],
   },
   {
-    accessibilityLabel: "Progress tab",
-    icon: { android: "bar_chart", ios: "chart.bar.fill", web: "bar_chart" },
-    key: "progress",
-    routeNames: ["progress"],
-  },
-  {
-    accessibilityLabel: "Controls tab",
+    accessibilityLabel: "Settings tab",
     icon: { android: "settings", ios: "gearshape.fill", web: "settings" },
-    key: "controls",
-    routeNames: ["controls"],
+    key: "settings",
+    routeNames: ["settings"],
   },
 ];
 
@@ -103,41 +96,39 @@ export default function TabLayout() {
 
   return (
     <DeckLessonsProvider>
-      <FeedScopeProvider>
-        <TabBarInsetProvider inset={tabBarHeight}>
-          <View style={styles.root}>
-            <TopTabs
-              tabBar={({ navigation, position, state }: TabBarRenderProps) => (
-                <>
-                  <PagerPositionReporter onPosition={setPagerPosition} position={position} />
-                  <AppTabBar
-                    activeRouteName={state.routes[state.index]?.name ?? forYouRoute}
-                    items={tabItems}
-                    onSelect={(routeName) => navigation.navigate(routeName)}
-                  />
-                </>
-              )}
-              tabBarPosition="bottom"
-              screenOptions={{
-                animationEnabled: false,
-                sceneStyle: { backgroundColor: colors.canvas },
-                swipeEnabled: true,
-              }}
-            >
-              {destinationRoutes.map((name) => (
-                <TopTabs.Screen key={name} name={name} />
-              ))}
-            </TopTabs>
-            {pagerPosition && (
-              <StudyFeedHeader
-                focusIndex={destinationRoutes.indexOf(focusRoute)}
-                forYouIndex={destinationRoutes.indexOf(forYouRoute)}
-                position={pagerPosition}
-              />
+      <TabBarInsetProvider inset={tabBarHeight}>
+        <View style={styles.root}>
+          <TopTabs
+            tabBar={({ navigation, position, state }: TabBarRenderProps) => (
+              <>
+                <PagerPositionReporter onPosition={setPagerPosition} position={position} />
+                <AppTabBar
+                  activeRouteName={state.routes[state.index]?.name ?? forYouRoute}
+                  items={tabItems}
+                  onSelect={(routeName) => navigation.navigate(routeName)}
+                />
+              </>
             )}
-          </View>
-        </TabBarInsetProvider>
-      </FeedScopeProvider>
+            tabBarPosition="bottom"
+            screenOptions={{
+              animationEnabled: false,
+              sceneStyle: { backgroundColor: colors.canvas },
+              swipeEnabled: true,
+            }}
+          >
+            {destinationRoutes.map((name) => (
+              <TopTabs.Screen key={name} name={name} />
+            ))}
+          </TopTabs>
+          {pagerPosition && (
+            <StudyFeedHeader
+              focusIndex={destinationRoutes.indexOf(focusRoute)}
+              forYouIndex={destinationRoutes.indexOf(forYouRoute)}
+              position={pagerPosition}
+            />
+          )}
+        </View>
+      </TabBarInsetProvider>
     </DeckLessonsProvider>
   );
 }

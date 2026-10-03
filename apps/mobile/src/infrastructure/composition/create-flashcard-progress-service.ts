@@ -1,24 +1,26 @@
 import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
-import type { StudyService } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
 import { FlashcardProgressServiceImpl } from "@/features/flashcard-progress/application/flashcard-progress.service.impl";
 import { SQLiteFlashcardProgressQuery } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.query";
 import { SQLiteFlashcardProgressRepository } from "@/features/flashcard-progress/infrastructure/sqlite-flashcard-progress.repository";
-import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset-transaction";
+import { SQLiteLearningProgressResetTransaction } from "@/features/flashcard-progress/infrastructure/sqlite-learning-progress-reset.transaction";
 
 type CreateFlashcardProgressServiceOptions = Readonly<{
   database: DrizzleDatabase;
   clock: Clock;
-  studyService: StudyService & StudySessionSettlement;
+  idGenerator: IdGenerator;
+  studyService: StudySessionSettlement;
   flashcardService: FlashcardService;
 }>;
 
 export function createFlashcardProgressService({
   database,
   clock,
+  idGenerator,
   studyService,
   flashcardService,
 }: CreateFlashcardProgressServiceOptions) {
@@ -26,7 +28,7 @@ export function createFlashcardProgressService({
   return new FlashcardProgressServiceImpl(
     new SQLiteFlashcardProgressQuery(database, progressRepository),
     clock,
-    new SQLiteLearningProgressResetTransaction(database),
+    new SQLiteLearningProgressResetTransaction(database, idGenerator),
     studyService,
     flashcardService
   );

@@ -76,6 +76,7 @@ vi.mock("@/shared/presentation/components/app-bottom-sheet", () => ({
 import { ImportDeckSheet } from "@/features/decks/presentation/components/import-deck-sheet";
 
 const props = {
+  canRetryDownload: false,
   downloadProgress: null,
   downloading: false,
   errorMessage: null,

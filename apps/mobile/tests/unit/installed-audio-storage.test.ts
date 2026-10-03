@@ -67,7 +67,7 @@ vi.mock("expo-file-system", () => ({
   Paths: { document: "document" },
 }));
 
-import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { InstalledAudioStorage } from "@/features/decks/deck-installer/internal/installed-audio-storage";
 
 describe("installed audio lookup", () => {
@@ -76,54 +76,58 @@ describe("installed audio lookup", () => {
     existingDirectories.clear();
   });
 
-  it("uses the exact deck, version, card, and side path", () => {
-    existingFiles.add("document/deck-audio/deck-a/2/card.answer.mp3");
-    existingFiles.add("document/deck-audio/deck-b/1/card.question.mp3");
-    existingFiles.add("document/deck-audio/deck-b/2/misleading-card.answer.mp3");
+  it("uses the exact deck, revision, and card path", () => {
+    existingFiles.add("document/deck-audio/deck-a/2/card.mp3");
+    existingFiles.add("document/deck-audio/deck-b/1/card.mp3");
+    existingFiles.add("document/deck-audio/deck-b/2/misleading-card.mp3");
     const storage = new InstalledAudioStorage();
 
-    expect(storage.findSourceForFlashcard("deck-a", 2, "card", "answer")).toEqual({
-      uri: "document/deck-audio/deck-a/2/card.answer.mp3",
+    expect(storage.findSourceForFlashcard("deck-a", 2, "card")).toEqual({
+      uri: "document/deck-audio/deck-a/2/card.mp3",
     });
-    expect(storage.findSourceForFlashcard("deck-a", 1, "card", "answer")).toBeNull();
-    expect(storage.findSourceForFlashcard("deck-b", 1, "card", "answer")).toBeNull();
-    expect(storage.findSourceForFlashcard("deck-b", 1, "card", "question")).toEqual({
-      uri: "document/deck-audio/deck-b/1/card.question.mp3",
+    expect(storage.findSourceForFlashcard("deck-a", 1, "card")).toBeNull();
+    expect(storage.findSourceForFlashcard("deck-b", 1, "card")).toEqual({
+      uri: "document/deck-audio/deck-b/1/card.mp3",
     });
   });
 
-  it("passes every required lookup coordinate through the application service", () => {
+  it("passes deck, revision, and card through the application service", () => {
     const repository = { findSourceForFlashcard: vi.fn(() => ({ uri: "installed.mp3" })) };
-    const service = new AnswerAudioServiceImpl(repository);
+    const service = new FlashcardAudioServiceImpl(repository);
 
-    expect(service.findSourceForFlashcard("deck", 7, "card", "question")).toEqual({
+    expect(service.findSourceForFlashcard("deck", 7, "card", true)).toEqual({
       uri: "installed.mp3",
     });
-    expect(repository.findSourceForFlashcard).toHaveBeenCalledWith("deck", 7, "card", "question");
+    expect(repository.findSourceForFlashcard).toHaveBeenCalledWith("deck", 7, "card");
   });
 
   it("replaces orphaned same-version audio during activation", async () => {
     const storage = new InstalledAudioStorage();
     const deckPackage = {
-      audioFiles: new Map([["audio/card.answer.mp3", new Uint8Array([1, 2, 3])]]),
+      audioFiles: new Map([["card", new Uint8Array([1, 2, 3])]]),
       lessonFiles: new Map<string, string>(),
-      cards: [],
-      createdAt: "2026-01-01T00:00:00.000Z",
-      description: "",
-      id: "deck-a",
-      title: "Deck",
-      updatedAt: "2026-01-01T00:00:00.000Z",
-      version: 2,
+      deck: {
+        schema: 1 as const,
+        authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
+        cards: [],
+        lessons: [],
+        createdAt: "2026-01-01T00:00:00.000Z",
+        description: "",
+        id: "deck-a",
+        title: "Deck",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        revision: 2,
+      },
     };
     existingDirectories.add("document/deck-audio/deck-a/2");
-    existingFiles.add("document/deck-audio/deck-a/2/stale.answer.mp3");
+    existingFiles.add("document/deck-audio/deck-a/2/stale.mp3");
 
     const staged = await storage.stage(deckPackage);
     await storage.activate(staged);
 
-    expect(existingFiles).not.toContain("document/deck-audio/deck-a/2/stale.answer.mp3");
-    expect(storage.findSourceForFlashcard("deck-a", 2, "card", "answer")).toEqual({
-      uri: "document/deck-audio/deck-a/2/card.answer.mp3",
+    expect(existingFiles).not.toContain("document/deck-audio/deck-a/2/stale.mp3");
+    expect(storage.findSourceForFlashcard("deck-a", 2, "card")).toEqual({
+      uri: "document/deck-audio/deck-a/2/card.mp3",
     });
   });
 });

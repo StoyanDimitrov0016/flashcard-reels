@@ -1,48 +1,59 @@
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
-import type { StudyService } from "@/features/study/domain/study.service";
 import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
+import type { IdGenerator } from "@/shared/domain/id-generator";
 
-import { AnswerAudioServiceImpl } from "@/features/audio/application/answer-audio.service.impl";
+import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
 import { SavedProgressServiceImpl } from "@/features/decks/application/saved-progress.service.impl";
 import { ExpoDeckPackageDownloader } from "@/features/decks/infrastructure/expo-deck-package.downloader";
 import { ExpoDeckPackagePicker } from "@/features/decks/infrastructure/expo-deck-package.picker";
 import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sqlite-archived-progress.query";
-import { SQLiteDeckAppearanceRepository } from "@/features/decks/infrastructure/sqlite-deck-appearance.repository";
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
+import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
+import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
+import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
 import { createDeckPackageServices } from "@/infrastructure/deck-package-services";
 
 type CreateDeckServicesOptions = Readonly<{
   database: DrizzleDatabase;
   clock: Clock;
-  studyService: StudyService & StudySessionSettlement;
+  idGenerator: IdGenerator;
+  studyService: StudySessionSettlement;
 }>;
 
-export function createDeckServices({ database, clock, studyService }: CreateDeckServicesOptions) {
+export function createDeckServices({
+  database,
+  clock,
+  idGenerator,
+  studyService,
+}: CreateDeckServicesOptions) {
   const deckRepository = new SQLiteDeckRepository(database);
-  const { answerAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices({
+  const { flashcardAudioRepository, deckAudioRemover, deckInstaller } = createDeckPackageServices({
     database,
     clock,
     deckRepository,
+    idGenerator,
     sessionSettlement: studyService,
   });
 
   return {
-    answerAudioService: new AnswerAudioServiceImpl(answerAudioRepository),
+    flashcardAudioService: new FlashcardAudioServiceImpl(flashcardAudioRepository),
     deckInstaller,
     deckPackageDownloader: new ExpoDeckPackageDownloader(),
     deckPackagePicker: new ExpoDeckPackagePicker(),
     deckService: new DeckServiceImpl(
       deckRepository,
-      new SQLiteDeckAppearanceRepository(database),
-      new SQLiteDeckRemovalTransaction(database),
+      new SQLiteDeckThemeSelectionRepository(database, idGenerator),
+      new SQLiteDeckRemovalTransaction(database, idGenerator),
       deckAudioRemover,
-      studyService
+      studyService,
+      new SQLiteFlashcardRepository(database),
+      new SQLiteFlashcardAvailabilityQuery(database)
     ),
     savedProgressService: new SavedProgressServiceImpl(
       new SQLiteArchivedProgressQuery(database),
