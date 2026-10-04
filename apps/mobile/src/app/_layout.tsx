@@ -1,3 +1,4 @@
+import { NavigationBar } from "expo-navigation-bar";
 import {
   Stack,
   ThemeProvider,
@@ -7,7 +8,7 @@ import { SQLiteProvider, type SQLiteDatabase } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { DeckThemeSelectionProvider } from "@/features/decks/presentation/context/deck-theme-selection-context";
@@ -61,6 +62,16 @@ export function SuspenseFallback() {
 }
 
 export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
+
+function TransparentNavigationBar() {
+  const { resolvedScheme } = useAppTheme();
+
+  if (Platform.OS !== "android") {
+    return null;
+  }
+
+  return <NavigationBar hidden={false} style={resolvedScheme === "dark" ? "light" : "dark"} />;
+}
 
 function AppNavigation() {
   const { colors, resolvedScheme } = useAppTheme();
@@ -191,6 +202,7 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider resolvedScheme={resolvedScheme}>
+      <TransparentNavigationBar />
       <RootLayoutContent />
     </AppThemeProvider>
   );
