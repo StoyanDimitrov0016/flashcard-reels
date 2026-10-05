@@ -2,6 +2,7 @@ import {
   parseDeckPackage,
   parseDeckManifest,
   DECK_SCHEMA_CONSTRAINTS,
+  UnsupportedDeckSchemaError,
 } from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
@@ -1071,6 +1072,39 @@ describe("deck package installation", () => {
     expect(completedMixedSession?.completedAt).not.toBeNull();
     expect(activeFocusedSession?.completedAt).toBeNull();
   });
+
+  it.each([1, 2, 3])(
+    "rejects schema %s without changing content, progress, or audio",
+    async (schema) => {
+      database = new NodeSqliteDatabase();
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const first = card(testId(31), 0);
+      const { importer, audio } = createImporter(
+        database,
+        clock,
+        undefined,
+        undefined,
+        graph.runtime
+      );
+      await importer.installFromBytes(validArchive(1, [first]));
+      const sessionId = await reviewCard(graph, database, first.id, false);
+      const attempts = await graph.study.listAttemptsInRange(sessionId, 0, 0);
+      const staged = audio.staged.length;
+      const versions = new Set(audio.activeVersions);
+      await expect(
+        importer.installFromBytes(archive({ ...rawDeck(2, [first]), schema }))
+      ).rejects.toBeInstanceOf(UnsupportedDeckSchemaError);
+      expect(
+        await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+      ).toEqual({ revision: 1 });
+      expect(await graph.study.listAttemptsInRange(sessionId, 0, 0)).toEqual(attempts);
+      const retainedSession = await graph.sessions.findById(sessionId);
+      expect(retainedSession?.completedAt).toBeNull();
+      expect(audio.staged).toHaveLength(staged);
+      expect(audio.activeVersions).toEqual(versions);
+    }
+  );
 
   it.each([
     ["malformed deck.json", zipSync({ "deck.json": strToU8("{") })],

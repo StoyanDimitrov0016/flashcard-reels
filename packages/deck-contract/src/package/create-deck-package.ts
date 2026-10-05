@@ -28,7 +28,8 @@ export function createDeckPackage({ deck, audio }: DeckPackage): Uint8Array {
     }
   }
   const archive: Zippable = {};
-  for (const [path, content] of Object.entries(files).toSorted(([left], [right]) =>
+  // oxlint-disable-next-line unicorn/no-array-sort -- Sort a new entries array for native ES2022 runtimes.
+  for (const [path, content] of Object.entries(files).sort(([left], [right]) =>
     left.localeCompare(right)
   )) {
     // ZIP records store local wall-clock fields, without a timezone.

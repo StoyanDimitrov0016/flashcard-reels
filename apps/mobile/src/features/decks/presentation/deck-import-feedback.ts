@@ -1,4 +1,4 @@
-import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+import { DeckPackageParseError, UnsupportedDeckSchemaError } from "@flashcard-reels/deck-contract";
 
 import {
   DeckPackageAuthorError,
@@ -40,7 +40,7 @@ export function getDeckImportErrorFeedback(error: unknown): DeckImportFeedback {
       tone: "error",
     };
   }
-  if (error instanceof DeckPackageParseError) {
+  if (error instanceof DeckPackageParseError || error instanceof UnsupportedDeckSchemaError) {
     return { message: getErrorFeedback(error).message, tone: "error" };
   }
   if (error instanceof DeckPackageRevisionError) {

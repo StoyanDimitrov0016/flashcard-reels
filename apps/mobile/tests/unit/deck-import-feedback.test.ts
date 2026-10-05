@@ -1,4 +1,4 @@
-import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+import { DeckPackageParseError, UnsupportedDeckSchemaError } from "@flashcard-reels/deck-contract";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -40,6 +40,10 @@ describe("deck import presentation feedback", () => {
   });
 
   it.each([
+    [
+      new UnsupportedDeckSchemaError(3),
+      "This deck file uses an unsupported format. Download the current version of the deck.",
+    ],
     [
       new OperationError({ code: "DECK_DOWNLOAD_FAILED", message: "HTTP 404" }),
       "Couldn't download the deck. Check your connection and try again.",
