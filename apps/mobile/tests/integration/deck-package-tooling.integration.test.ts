@@ -1,4 +1,4 @@
-import { parseDeck, parseDeckPackage, parseLessonDocument } from "@flashcard-reels/deck-contract";
+import { parseDeckManifest, parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { spawnSync } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -27,83 +27,6 @@ describe("deck package tooling independence", () => {
       temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true }))
     );
   });
-
-  it("converts legacy destinations once while retaining source identity and shared links", async () => {
-    const source = await temporaryProject();
-    const demo = parseDeck(
-      JSON.parse(await readFile(path.join(process.cwd(), "data", "demo-deck", "deck.json"), "utf8"))
-    );
-    const lesson = demo.lessons[0];
-    const card = demo.cards[0];
-    if (!lesson || !card) {
-      throw new Error("Missing demo fixture identity");
-    }
-    const original = {
-      ...demo,
-      schema: 2,
-      revision: 1,
-      cards: [
-        { ...card, audio: false, lessonId: lesson.id, lessonSectionId: "limits~2" },
-        {
-          ...card,
-          id: "55555555-5555-4555-8555-555555555555",
-          audio: false,
-          lessonId: lesson.id,
-          lessonSectionId: "limits~2",
-        },
-      ],
-      lessons: [lesson],
-    };
-    const manifest = path.join(source, "deck.json");
-    const markdown = path.join(source, "lessons", `${lesson.id}.md`);
-    await mkdir(path.dirname(markdown));
-    await writeFile(manifest, JSON.stringify(original));
-    await writeFile(
-      markdown,
-      `# ${lesson.title}\n## Limits\nFirst.\n## Limits\nSecond.\n\`\`\`md\n## Example only\n\`\`\``
-    );
-    const originalManifestText = await readFile(manifest, "utf8");
-    const originalMarkdownText = await readFile(markdown, "utf8");
-    const first = runTool("migrate-lesson-section-ids.mjs", source);
-    expect(first.status, first.stderr).toBe(0);
-    const convertedManifest = await readFile(manifest, "utf8");
-    const convertedMarkdown = await readFile(markdown, "utf8");
-    const converted = parseDeck(JSON.parse(convertedManifest));
-    expect(converted).toMatchObject({ id: demo.id, schema: 3, revision: 2 });
-    expect(converted.cards.map((entry) => entry.id)).toEqual(
-      original.cards.map((entry) => entry.id)
-    );
-    expect(converted.cards[0]?.lessonSectionId).toBe(converted.cards[1]?.lessonSectionId);
-    const sections = parseLessonDocument(convertedMarkdown, lesson.title).sections;
-    expect(sections).toHaveLength(2);
-    expect(converted.cards[0]?.lessonSectionId).toBe(sections[1]?.id);
-    // Model interruption after replacing the lesson but before replacing the manifest.
-    const journal = path.join(source, ".lesson-section-migration.json");
-    await writeFile(
-      journal,
-      JSON.stringify([
-        { path: `lessons/${lesson.id}.md`, before: originalMarkdownText, after: convertedMarkdown },
-        { path: "deck.json", before: originalManifestText, after: convertedManifest },
-      ])
-    );
-    await writeFile(manifest, originalManifestText);
-    const laterEdit = `${convertedMarkdown}\nAn author's later edit.`;
-    await writeFile(markdown, laterEdit);
-    const conflict = runTool("migrate-lesson-section-ids.mjs", source);
-    expect(conflict.status).not.toBe(0);
-    expect(conflict.stderr).toContain("Source changed during section migration");
-    expect(await readFile(manifest, "utf8")).toBe(originalManifestText);
-    expect(await readFile(markdown, "utf8")).toBe(laterEdit);
-    await writeFile(markdown, convertedMarkdown);
-    const second = runTool("migrate-lesson-section-ids.mjs", source);
-    expect(second.status, second.stderr).toBe(0);
-    expect(second.stdout).toContain("Recovered section migration");
-    expect(await readFile(manifest, "utf8")).toBe(convertedManifest);
-    expect(await readFile(markdown, "utf8")).toBe(convertedMarkdown);
-    const third = runTool("migrate-lesson-section-ids.mjs", source);
-    expect(third.status, third.stderr).toBe(0);
-    expect(await readFile(manifest, "utf8")).toBe(convertedManifest);
-  }, 30_000);
 
   // Builds the demo twice in separate Node processes, so it needs more time under a parallel run.
   it("generates the demo from its isolated authoring source", async () => {
@@ -141,7 +64,7 @@ describe("deck package tooling independence", () => {
     expect(generated).toEqual(checkedIn);
     expect(parseDeckPackage(generated).deck).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-      revision: 3,
+      revision: 4,
     });
   }, 30_000);
 
@@ -200,7 +123,7 @@ describe("deck package tooling independence", () => {
       revision: 1,
     });
     expect(v1.deck.cards).toHaveLength(3);
-    expect(v1.audioFiles.get("b1000000-0000-4000-8000-000000000001")).toEqual(
+    expect(v1.audio.get("b1000000-0000-4000-8000-000000000001")).toEqual(
       new Uint8Array(Buffer.from("fixture-audio-unchanged\n"))
     );
     expect(v2.deck.cards.map(({ id }) => id)).toEqual([
@@ -211,7 +134,7 @@ describe("deck package tooling independence", () => {
     expect(v2.deck.cards.find(({ id }) => id.endsWith("0002"))?.answer).toBe(
       "The second version answer."
     );
-    expect(v2.audioFiles.has("b1000000-0000-4000-8000-000000000002")).toBe(true);
+    expect(v2.audio.has("b1000000-0000-4000-8000-000000000002")).toBe(true);
   }, 10_000);
 
   it("inspects valid packages and reports invalid packages with a non-zero exit", async () => {
@@ -243,10 +166,12 @@ describe("deck package tooling independence", () => {
   it("generates a lesson deck from its source directory with optional audio", async () => {
     const project = await temporaryProject();
     const source = path.join(project, "system-design-foundations");
-    await cp(path.join(process.cwd(), "data", "decks", "system-design-foundations"), source, {
+    await cp(path.join(process.cwd(), "data", "demo-deck"), source, {
       recursive: true,
     });
-    const document = parseDeck(JSON.parse(await readFile(path.join(source, "deck.json"), "utf8")));
+    const document = parseDeckManifest(
+      new Uint8Array(await readFile(path.join(source, "deck.json")))
+    );
     const [firstCard] = document.cards;
     if (!firstCard) {
       throw new Error("Expected a card in the lesson deck");
@@ -270,12 +195,12 @@ describe("deck package tooling independence", () => {
     const generated = parseDeckPackage(new Uint8Array(await readFile(output)));
     expect(generated.deck.id).toBe(document.id);
     expect(generated.deck.cards).toHaveLength(document.cards.length);
-    expect(generated.lessonFiles.size).toBe(document.lessons?.length);
-    expect(generated.audioFiles.has(firstCard?.id ?? "")).toBe(true);
+    expect(generated.deck.lessons).toHaveLength(document.lessons.length);
+    expect(generated.audio.has(firstCard?.id ?? "")).toBe(true);
 
     await writeFile(path.join(source, "audio", "stray.mp3"), new Uint8Array([1]));
     const rejected = runTool("generate-deck-package.mjs", source, output);
     expect(rejected.status).not.toBe(0);
-    expect(rejected.stderr).toContain("Audio file stray.mp3 does not match a card");
+    expect(rejected.stderr).toContain("Unreferenced archive file");
   }, 10_000);
 });

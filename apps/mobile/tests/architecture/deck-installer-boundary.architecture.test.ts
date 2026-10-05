@@ -39,29 +39,7 @@ describe("deck-installer module boundary", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("keeps tooling reuse of installer internals explicit and narrow", () => {
-    const expectedInternalImports = new Map([
-      [
-        "recreate-r2-decks.mjs",
-        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
-      ],
-      [
-        "generate-deck-package.mjs",
-        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
-      ],
-      [
-        "generate-demo-deck-package.mjs",
-        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
-      ],
-      [
-        "generate-test-deck-package.mjs",
-        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
-      ],
-      [
-        "generate-technical-deck-packages.mjs",
-        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
-      ],
-    ]);
+  it("keeps tooling independent of mobile installer internals", () => {
     const violations = scriptFiles().flatMap((file) => {
       const name = path.basename(file);
       const source = readFileSync(file, "utf8");
@@ -69,9 +47,8 @@ describe("deck-installer module boundary", () => {
         .map((match) => match[1])
         .filter((specifier): specifier is string => Boolean(specifier))
         .filter((specifier) => specifier.includes("/deck-installer/internal/"));
-      const expected = expectedInternalImports.get(name) ?? [];
       return imports
-        .filter((specifier) => !expected.includes(specifier))
+        .filter((specifier) => Boolean(specifier))
         .map((specifier) => `${name}: ${specifier}`);
     });
 

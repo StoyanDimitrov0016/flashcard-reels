@@ -31,7 +31,8 @@ export function createDeckPackage({ deck, audio }: DeckPackage): Uint8Array {
   for (const [path, content] of Object.entries(files).toSorted(([left], [right]) =>
     left.localeCompare(right)
   )) {
-    archive[path] = [content, { mtime: new Date("1980-01-01T00:00:00Z") }];
+    // ZIP records store local wall-clock fields, without a timezone.
+    archive[path] = [content, { mtime: new Date(1980, 0, 1, 0, 0, 0) }];
   }
   const bytes = zipSync(archive, { level: 6 });
   parseDeckPackage(bytes);

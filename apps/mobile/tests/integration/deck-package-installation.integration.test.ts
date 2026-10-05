@@ -1,3 +1,4 @@
+import { parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { parseDeck } from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
@@ -35,7 +36,6 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 
 import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
-import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
@@ -282,7 +282,6 @@ function createImporter(
   return {
     audio,
     importer: new DeckInstallerImpl(
-      new ContractDeckPackageReader(),
       installation,
       audio,
       clock,
@@ -345,11 +344,10 @@ describe("deck package installation", () => {
       database.drizzle,
       new SequenceIdGenerator()
     );
-    await installation.install(
-      new ContractDeckPackageReader().read(validArchive(1, [card(testId(1), 0)])),
-      timestamp,
-      { theme: "cyan", coverAsset: "react" }
-    );
+    await installation.install(parseDeckPackage(validArchive(1, [card(testId(1), 0)])), timestamp, {
+      theme: "cyan",
+      coverAsset: "react",
+    });
     const theme = await new SQLiteDeckThemeSelectionRepository(
       database.drizzle,
       database.rowIds

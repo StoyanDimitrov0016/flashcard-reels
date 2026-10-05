@@ -1,40 +1,9 @@
-import type { Deck, DeckPackage, Flashcard, Lesson } from "@flashcard-reels/deck-contract";
-
-import type { DeckPackageReader } from "./deck-package.model.ts";
-
-type PublicationDeckPackage = Readonly<
-  Omit<Deck, "cards" | "lessons"> & {
-    cards: readonly (Flashcard & { order: number })[];
-    lessons: readonly (Lesson & { order: number })[];
-    audioFiles: DeckPackage["audioFiles"];
-    lessonFiles: DeckPackage["lessonFiles"];
-  }
->;
-
-function toPublicationDeckPackage(deckPackage: DeckPackage): PublicationDeckPackage {
-  const { deck, audioFiles, lessonFiles } = deckPackage;
-  return {
-    ...deck,
-    cards: deck.cards.map((card, order) => ({
-      id: card.id,
-      question: card.question,
-      answer: card.answer,
-      lessonId: card.lessonId,
-      lessonSectionId: card.lessonSectionId ?? null,
-      audio: card.audio,
-      createdAt: card.createdAt,
-      updatedAt: card.updatedAt,
-      order,
-    })),
-    lessons: deck.lessons.map((lesson, order) => ({
-      id: lesson.id,
-      title: lesson.title,
-      order,
-    })),
-    audioFiles,
-    lessonFiles,
-  };
-}
+import {
+  compareDeckPackages,
+  parseDeckPackage,
+  type DeckPackage,
+  type DeckComparison,
+} from "@flashcard-reels/deck-contract";
 
 /**
  * Publication review for deck tooling. The app never publishes decks; the R2 upload script uses
@@ -105,13 +74,12 @@ export type DeckPublicationUpload = Readonly<{
 type ReviewOptions = Readonly<{
   candidates: readonly DeckPublicationCandidate[];
   store: PublishedDeckStore;
-  reader: DeckPackageReader;
   keyPrefix?: string;
 }>;
 
 type ReadCandidate = Readonly<{
   candidate: DeckPublicationCandidate;
-  deck: PublicationDeckPackage;
+  deck: DeckPackage;
 }>;
 
 type DeckIdInventory = Readonly<{
@@ -120,21 +88,6 @@ type DeckIdInventory = Readonly<{
   lessons: readonly Readonly<{ id: string }>[];
 }>;
 
-type DeckComparison = Pick<
-  DeckPublicationChange,
-  | "addedCards"
-  | "changedCards"
-  | "removedCards"
-  | "reorderedCardCount"
-  | "addedLessons"
-  | "changedLessons"
-  | "removedLessons"
-  | "reorderedLessonCount"
-  | "metadataChanged"
-  | "audioChanged"
-  | "warnings"
->;
-
 /**
  * Reads every candidate and every relevant published package before deciding anything, so a
  * store failure rejects the whole review and nothing can be uploaded from a partial comparison.
@@ -142,7 +95,6 @@ type DeckComparison = Pick<
 export async function reviewDeckPublication({
   candidates,
   store,
-  reader,
   keyPrefix = "decks/",
 }: ReviewOptions): Promise<DeckPublicationReview> {
   if (!keyPrefix.endsWith("/") || keyPrefix.startsWith("/") || keyPrefix.includes("..")) {
@@ -150,7 +102,7 @@ export async function reviewDeckPublication({
   }
   const readCandidates: ReadCandidate[] = candidates.map((candidate) => ({
     candidate,
-    deck: toPublicationDeckPackage(reader.read(candidate.bytes)),
+    deck: parseDeckPackage(candidate.bytes),
   }));
   const publishedEntries = await store.listPublishedDecks();
   if (publishedEntries.some((entry) => !entry.key.startsWith(keyPrefix))) {
@@ -162,7 +114,7 @@ export async function reviewDeckPublication({
   const candidateCounts = new Map<string, number>();
   const fileNameCounts = new Map<string, number>();
   for (const { candidate, deck } of readCandidates) {
-    candidateCounts.set(deck.id, (candidateCounts.get(deck.id) ?? 0) + 1);
+    candidateCounts.set(deck.deck.id, (candidateCounts.get(deck.deck.id) ?? 0) + 1);
     fileNameCounts.set(candidate.fileName, (fileNameCounts.get(candidate.fileName) ?? 0) + 1);
   }
   for (const [deckId, count] of candidateCounts) {
@@ -176,24 +128,24 @@ export async function reviewDeckPublication({
     }
   }
 
-  const publishedDecks = new Map<string, PublicationDeckPackage>();
+  const publishedDecks = new Map<string, DeckPackage>();
   const publishedIds: DeckIdInventory[] = [];
   for (const published of publishedEntries) {
     // Read one package at a time so the review does not retain every published audio file.
     // oxlint-disable-next-line no-await-in-loop
     const bytes = await store.readPublishedDeck(published.key);
-    const deck = toPublicationDeckPackage(reader.read(bytes));
-    if (deck.id !== published.deckId || deck.revision !== published.revision) {
+    const deck = parseDeckPackage(bytes);
+    if (deck.deck.id !== published.deckId || deck.deck.revision !== published.revision) {
       throw new Error(`Published metadata disagrees with package ${published.key}`);
     }
     publishedIds.push({
-      id: deck.id,
-      cards: deck.cards.map(({ id }) => ({ id })),
-      lessons: deck.lessons.map(({ id }) => ({ id })),
+      id: deck.deck.id,
+      cards: deck.deck.cards.map(({ id }) => ({ id })),
+      lessons: deck.deck.lessons.map(({ id }) => ({ id })),
     });
-    const candidate = readCandidates.find(({ deck: item }) => item.id === deck.id);
+    const candidate = readCandidates.find(({ deck: item }) => item.deck.id === deck.deck.id);
     if (candidate && candidate.candidate.sha256 !== published.sha256) {
-      publishedDecks.set(deck.id, deck);
+      publishedDecks.set(deck.deck.id, deck);
     }
   }
   if (publishedByDeckId.size !== publishedEntries.length) {
@@ -201,14 +153,14 @@ export async function reviewDeckPublication({
   }
 
   const changes = readCandidates.map(({ candidate, deck }) => {
-    const published = publishedByDeckId.get(deck.id) ?? null;
+    const published = publishedByDeckId.get(deck.deck.id) ?? null;
     return reviewDeck({
       candidate,
       deck,
       published,
       publishedDeck:
         published && published.sha256 !== candidate.sha256
-          ? (publishedDecks.get(deck.id) ?? null)
+          ? (publishedDecks.get(deck.deck.id) ?? null)
           : null,
       publishedEntries,
       keyPrefix,
@@ -225,7 +177,7 @@ export async function reviewDeckPublication({
   }
 
   catalogBlocks.push(
-    ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck), ...publishedIds])
+    ...findCrossDeckIds([...readCandidates.map(({ deck }) => deck.deck), ...publishedIds])
   );
 
   return { blocks: catalogBlocks, decks: changes };
@@ -265,9 +217,9 @@ export function publicationUploads(
 
 type ReviewDeckOptions = Readonly<{
   candidate: DeckPublicationCandidate;
-  deck: PublicationDeckPackage;
+  deck: DeckPackage;
   published: PublishedDeckEntry | null;
-  publishedDeck: PublicationDeckPackage | null;
+  publishedDeck: DeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
   keyPrefix: string;
 }>;
@@ -285,25 +237,25 @@ function reviewDeck({
     throw new Error("Candidate file names cannot contain directory separators");
   }
   const base = {
-    deckId: deck.id,
+    deckId: deck.deck.id,
     fileName: candidate.fileName,
     key,
-    title: deck.title,
-    revision: deck.revision,
+    title: deck.deck.title,
+    revision: deck.deck.revision,
   };
 
   if (!published) {
     const warnings = publishedEntries
-      .filter((entry) => entry.title === deck.title)
+      .filter((entry) => entry.title === deck.deck.title)
       .map(
         (entry) =>
-          `A published deck with a different ID (${entry.deckId}) already has the title "${deck.title}". Check that the deck ID did not change by accident.`
+          `A published deck with a different ID (${entry.deckId}) already has the title "${deck.deck.title}". Check that the deck ID did not change by accident.`
       );
     return {
       ...base,
       ...unchangedComparison(),
-      addedCards: deck.cards.map(toPublicationCard),
-      addedLessons: (deck.lessons ?? []).map(toPublicationLesson),
+      addedCards: deck.deck.cards.map(toPublicationCard),
+      addedLessons: (deck.deck.lessons ?? []).map(toPublicationLesson),
       blocks: [],
       publishedRevision: null,
       status: "new",
@@ -312,11 +264,13 @@ function reviewDeck({
   }
 
   const blocks: string[] = [];
-  if (publishedDeck && publishedDeck.authorId !== deck.authorId) {
-    blocks.push(`Deck ${deck.id} cannot change author ID across revisions.`);
+  if (publishedDeck && publishedDeck.deck.authorId !== deck.deck.authorId) {
+    blocks.push(`Deck ${deck.deck.id} cannot change author ID across revisions.`);
   }
 
-  const comparison = publishedDeck ? compareDecks(publishedDeck, deck) : unchangedComparison();
+  const comparison = publishedDeck
+    ? compareDeckPackages(publishedDeck, deck)
+    : unchangedComparison();
   const contentChanged =
     comparison.addedCards.length > 0 ||
     comparison.changedCards.length > 0 ||
@@ -329,20 +283,20 @@ function reviewDeck({
     comparison.metadataChanged ||
     comparison.audioChanged;
 
-  if (deck.revision < published.revision) {
+  if (deck.deck.revision < published.revision) {
     blocks.push(
-      `Revision ${deck.revision} is lower than the published revision ${published.revision}.`
+      `Revision ${deck.deck.revision} is lower than the published revision ${published.revision}.`
     );
-  } else if (contentChanged && deck.revision === published.revision) {
+  } else if (contentChanged && deck.deck.revision === published.revision) {
     blocks.push(
-      `Content changed but the revision is still ${deck.revision}. Installed apps would ignore this update; raise the revision.`
+      `Content changed but the revision is still ${deck.deck.revision}. Installed apps would ignore this update; raise the revision.`
     );
   }
 
   let status: DeckPublicationStatus;
   if (blocks.length > 0) {
     status = "blocked";
-  } else if (contentChanged || deck.revision !== published.revision) {
+  } else if (contentChanged || deck.deck.revision !== published.revision) {
     status = "updated";
   } else {
     status = "unchanged";
@@ -367,99 +321,6 @@ function unchangedComparison(): DeckComparison {
   };
 }
 
-function compareDecks(
-  published: PublicationDeckPackage,
-  candidate: PublicationDeckPackage
-): DeckComparison {
-  const publishedCards = new Map(published.cards.map((card) => [card.id, card]));
-  const candidateCards = new Map(candidate.cards.map((card) => [card.id, card]));
-  const addedCards = candidate.cards.filter((card) => !publishedCards.has(card.id));
-  const removedCards = published.cards.filter((card) => !candidateCards.has(card.id));
-  const keptCards = candidate.cards.flatMap((card) => {
-    const publishedCard = publishedCards.get(card.id);
-    return publishedCard ? [{ card, publishedCard }] : [];
-  });
-  const changedCards = keptCards
-    .filter(
-      ({ card, publishedCard }) =>
-        card.question !== publishedCard.question ||
-        card.answer !== publishedCard.answer ||
-        card.lessonId !== publishedCard.lessonId ||
-        (card.lessonSectionId ?? null) !== (publishedCard.lessonSectionId ?? null)
-    )
-    .map(({ card }) => card);
-  const reorderedCardCount = keptCards.filter(
-    ({ card, publishedCard }) => card.order !== publishedCard.order
-  ).length;
-
-  const warnings: string[] = [];
-  for (const removed of removedCards) {
-    const replacement = addedCards.find(
-      (added) => added.question === removed.question || added.answer === removed.answer
-    );
-    if (replacement) {
-      warnings.push(
-        `Card "${removed.question}" was removed (${removed.id}) and a card with the same text was added (${replacement.id}). If it teaches the same thing, keep the original ID so learners keep their progress.`
-      );
-    }
-  }
-
-  return {
-    addedCards: addedCards.map(toPublicationCard),
-    audioChanged: !sameAudio(published.audioFiles, candidate.audioFiles),
-    changedCards: changedCards.map(toPublicationCard),
-    metadataChanged:
-      published.authorId !== candidate.authorId ||
-      published.schema !== candidate.schema ||
-      published.title !== candidate.title ||
-      published.description !== candidate.description ||
-      published.createdAt !== candidate.createdAt ||
-      published.updatedAt !== candidate.updatedAt ||
-      keptCards.some(
-        ({ card, publishedCard }) =>
-          card.createdAt !== publishedCard.createdAt || card.updatedAt !== publishedCard.updatedAt
-      ),
-    removedCards: removedCards.map(toPublicationCard),
-    reorderedCardCount,
-    ...compareLessons(published, candidate),
-    warnings,
-  };
-}
-
-function compareLessons(
-  published: PublicationDeckPackage,
-  candidate: PublicationDeckPackage
-): Pick<
-  DeckComparison,
-  "addedLessons" | "changedLessons" | "removedLessons" | "reorderedLessonCount"
-> {
-  const publishedLessons = new Map((published.lessons ?? []).map((lesson) => [lesson.id, lesson]));
-  const candidateLessons = candidate.lessons ?? [];
-  const candidateIds = new Set(candidateLessons.map((lesson) => lesson.id));
-  const kept = candidateLessons.flatMap((lesson) => {
-    const publishedLesson = publishedLessons.get(lesson.id);
-    return publishedLesson ? [{ lesson, publishedLesson }] : [];
-  });
-  return {
-    addedLessons: candidateLessons
-      .filter((lesson) => !publishedLessons.has(lesson.id))
-      .map(toPublicationLesson),
-    changedLessons: kept
-      .filter(
-        ({ lesson, publishedLesson }) =>
-          lesson.title !== publishedLesson.title ||
-          candidate.lessonFiles.get(lesson.id) !== published.lessonFiles.get(lesson.id)
-      )
-      .map(({ lesson }) => toPublicationLesson(lesson)),
-    removedLessons: (published.lessons ?? [])
-      .filter((lesson) => !candidateIds.has(lesson.id))
-      .map(toPublicationLesson),
-    reorderedLessonCount: kept.filter(
-      ({ lesson, publishedLesson }) => lesson.order !== publishedLesson.order
-    ).length,
-  };
-}
-
 function findCrossDeckIds(decks: readonly DeckIdInventory[]): string[] {
   const owners = new Map<string, Readonly<{ kind: string; deckIds: Set<string> }>>();
   const addOwner = (id: string, kind: string, deckId: string) => {
@@ -481,34 +342,6 @@ function findCrossDeckIds(decks: readonly DeckIdInventory[]): string[] {
       ([id, owner]) =>
         `${owner.kind} ${id} appears in more than one deck: ${[...owner.deckIds].join(", ")}.`
     );
-}
-
-function sameAudio(
-  left: ReadonlyMap<string, Uint8Array>,
-  right: ReadonlyMap<string, Uint8Array>
-): boolean {
-  if (left.size !== right.size) {
-    return false;
-  }
-  for (const [path, leftBytes] of left) {
-    const rightBytes = right.get(path);
-    if (!rightBytes || !sameBytes(leftBytes, rightBytes)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
-  if (left.byteLength !== right.byteLength) {
-    return false;
-  }
-  for (let index = 0; index < left.byteLength; index += 1) {
-    if (left[index] !== right[index]) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function toPublicationLesson(lesson: Readonly<{ id: string; title: string }>): PublicationLesson {

@@ -1,3 +1,4 @@
+import { parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { parseLessonDocument } from "@flashcard-reels/deck-contract";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { readFile } from "node:fs/promises";
@@ -11,7 +12,6 @@ import type {
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 
 import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
-import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
@@ -60,11 +60,10 @@ describe("built-in demo package", () => {
     const bytes = new Uint8Array(
       await readFile(path.join(process.cwd(), "assets", "decks", demoId + ".fcrdeck"))
     );
-    const reader = new ContractDeckPackageReader();
-    const parsed = reader.read(bytes);
+
+    const parsed = parseDeckPackage(bytes);
     const audio = new ResolvingAudioStorage();
     const installer = new DeckInstallerImpl(
-      reader,
       new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       audio,
       new TestClock(),
