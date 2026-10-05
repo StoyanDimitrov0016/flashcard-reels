@@ -34,7 +34,7 @@ export function validateDeckRelationships(deck: Deck): void {
       (flashcard.lessonId === null || deck.schema === 1)
     ) {
       issues.push({
-        message: "A section reference requires a lesson and package schema 2",
+        message: "A section reference requires a lesson and package schema 2 or 3",
         path: ["cards", index, "lessonSectionId"],
       });
     }

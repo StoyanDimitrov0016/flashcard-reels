@@ -25,10 +25,10 @@ const LessonSchema = z.compile(
   })
 );
 
-/** Schema 2 adds optional section references; schema 1 packages remain readable. */
+/** Schema 3 uses explicit section identities; schema 1 and 2 packages remain readable. */
 export const DeckSchema = z.compile(
   z.strictObject({
-    schema: z.union([z.literal(1), z.literal(DECK_SCHEMA_VERSION)]),
+    schema: z.union([z.literal(1), z.literal(2), z.literal(DECK_SCHEMA_VERSION)]),
     id: IdSchema,
     authorId: IdSchema,
     revision: z.number().int().min(CONSTRAINTS.minRevision),

@@ -6,7 +6,7 @@ import { readDeckManifest } from "./read-deck-manifest.ts";
 
 export type DeckPackage = Readonly<{ deck: Deck }> & DeckAssets;
 
-/** Reads and validates a contract-1 package, including every referenced asset. */
+/** Reads and validates a supported deck package, including every referenced asset. */
 export function parseDeckPackage(bytes: Uint8Array): DeckPackage {
   const files = extractDeckArchive(bytes);
   const deck = readDeckManifest(files);

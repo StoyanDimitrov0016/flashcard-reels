@@ -1,6 +1,7 @@
 export { parseLessonMarkdown, withoutRepeatedTitle } from "./lessons/lesson-markdown.ts";
 export type { LessonBlock, LessonInline } from "./lessons/lesson-markdown.ts";
 export { parseLessonDocument } from "./lessons/lesson-document.ts";
+export { assignLessonSectionIds } from "./lessons/assign-lesson-section-ids.ts";
 export type { LessonDocument, LessonSection } from "./lessons/lesson-document.ts";
 export { validateLessonReferences } from "./lessons/validate-lesson-references.ts";
 export { parseDeck } from "./validation/parse-deck.ts";
@@ -9,6 +10,7 @@ export { DECK_PACKAGE_LIMITS, DECK_SCHEMA_CONSTRAINTS } from "./deck.constants.t
 export { DeckContractError } from "./errors/deck-contract-error.ts";
 export { DeckParseError } from "./errors/deck-parse-error.ts";
 export { DeckPackageParseError } from "./errors/deck-package-parse-error.ts";
+export { LessonMarkdownParseError } from "./errors/lesson-markdown-parse-error.ts";
 export type { DeckParseIssue, DeckPackageParseIssue } from "./errors/deck-parse-issue.ts";
 export type { DeckContractErrorCode, DeckContractErrorContext } from "./errors/deck-error-types.ts";
 export type { Deck, Flashcard, Lesson } from "./deck.schemas.ts";

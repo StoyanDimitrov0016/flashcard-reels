@@ -5,6 +5,7 @@ import {
   DeckContractError,
   DeckPackageParseError,
   DeckParseError,
+  LessonMarkdownParseError,
   parseDeck,
   parseDeckPackage,
   type Deck,
@@ -59,6 +60,56 @@ function findZipEndRecord(bytes: Uint8Array): number {
 }
 
 describe("deck contract", () => {
+  it("validates permanent destinations and rejects missing, duplicate, malformed, or orphan markers", () => {
+    const sectionId = "55555555-5555-4555-8555-555555555555";
+    const deck = createDeck();
+    deck.schema = 3;
+    const card = deck.cards[0];
+    if (!card) {
+      throw new Error("Missing fixture card");
+    }
+    card.lessonSectionId = sectionId;
+    const files = createPackageFiles();
+    files["deck.json"] = strToU8(JSON.stringify(deck));
+    const marker = `<!-- section: ${sectionId} -->`;
+    const valid = `# Lesson\n${marker}\n## Renamed explanation\nText.`;
+    files[`lessons/${lessonId}.md`] = strToU8(valid);
+    expect(parseDeckPackage(zipSync(files)).deck.cards[0]?.lessonSectionId).toBe(sectionId);
+    const invalidLessons: readonly (readonly [string, string])[] = [
+      [valid.replace(marker + "\n", ""), "permanent section marker"],
+      [valid + `\n${marker}\n## Another section`, "duplicate section marker"],
+      [valid.replace(sectionId, "bad-id"), "Invalid"],
+      [valid + `\n<!-- section: 66666666-6666-4666-8666-666666666666 -->`, "no heading"],
+      [
+        valid.replace("## Renamed explanation", "An ordinary paragraph"),
+        "precede the next heading",
+      ],
+      ["# Lesson\nText.", "missing section"],
+    ];
+    for (const [markdown, error] of invalidLessons) {
+      files[`lessons/${lessonId}.md`] = strToU8(markdown);
+      expect(() => parseDeckPackage(zipSync(files))).toThrow(error);
+    }
+    card.lessonSectionId = null;
+    files["deck.json"] = strToU8(JSON.stringify(deck));
+    files[`lessons/${lessonId}.md`] = strToU8("# Lesson\n## Missing marker\nText.");
+    expect(() => parseDeckPackage(zipSync(files))).toThrow("permanent section marker");
+    files[`lessons/${lessonId}.md`] = strToU8("# Lesson\n<!-- section: broken -->\n## Topic");
+    try {
+      parseDeckPackage(zipSync(files));
+      expect.fail("Expected invalid section metadata");
+    } catch (error) {
+      expect(error).toBeInstanceOf(DeckPackageParseError);
+      if (!(error instanceof DeckPackageParseError)) {
+        throw error;
+      }
+      expect(error.code).toBe("DECK_PACKAGE_INVALID");
+      expect(error.cause).toBeInstanceOf(LessonMarkdownParseError);
+      expect(error.context).toEqual({ lessonId, line: 2 });
+      expect(error.issues[0]?.path).toEqual(["lessons", 0]);
+    }
+  });
+
   it("allows multiple cards to reference one generated section and optional links", () => {
     const deck = createDeck();
     deck.schema = 2;

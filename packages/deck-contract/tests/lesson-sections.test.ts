@@ -3,6 +3,37 @@ import { describe, expect, it } from "vitest";
 import { parseLessonDocument } from "../src/index.ts";
 
 describe("lesson section destinations", () => {
+  it("keeps explicit identities after renaming, moving, and reordering duplicate headings", () => {
+    const first = "11111111-1111-4111-8111-111111111111";
+    const second = "22222222-2222-4222-8222-222222222222";
+    const parent = "33333333-3333-4333-8333-333333333333";
+    const original = `<!-- section: ${first} -->\n## Limits\nFirst explanation.\n<!-- section: ${second} -->\n## Limits\nSecond explanation.`;
+    const edited = `<!-- section: ${second} -->\n\n## Limits\nSecond explanation.\n<!-- section: ${parent} -->\n## Scaling\n<!-- section: ${first} -->\n### Hardware ceiling\nFirst explanation.`;
+    const before = parseLessonDocument(original, "Lesson");
+    const after = parseLessonDocument(edited, "Lesson");
+    expect(before.sections.map((section) => section.id)).toEqual([first, second]);
+    expect(after.sections.find((section) => section.id === first)).toMatchObject({
+      title: "Hardware ceiling",
+      parentId: parent,
+      depth: 3,
+    });
+    const target = after.sections.find((section) => section.id === second);
+    if (!target) {
+      throw new Error("Missing explicit destination");
+    }
+    expect(after.blocks[target.startBlock + 1]).toMatchObject({
+      type: "paragraph",
+      content: [expect.objectContaining({ text: "Second explanation." })],
+    });
+    expect(
+      after.blocks.some(
+        (block) =>
+          block.type === "paragraph" &&
+          block.content.some((inline) => inline.text.includes("<!-- section:"))
+      )
+    ).toBe(false);
+  });
+
   it("includes nested explanations in the parent section and stops before the next topic", () => {
     const document = parseLessonDocument(
       "# Scaling\nIntro\n\n## Vertical scaling\nMore resources.\n\n### Limitations\n- Hardware ceiling\n\n#### Example\nA larger machine.\n\n## Horizontal scaling\nMore machines.",
@@ -68,6 +99,12 @@ describe("lesson section destinations", () => {
         "Lesson"
       ).sections.map((section) => section.id)
     ).toEqual(["real-section"]);
+    expect(
+      parseLessonDocument(
+        "```md\n<!-- section: invalid-example -->\n## Example only\n```",
+        "Lesson"
+      ).sections
+    ).toEqual([]);
     expect(parseLessonDocument("An explanation without headings.", "Lesson")).toMatchObject({
       sections: [],
       blocks: [expect.objectContaining({ type: "paragraph" })],

@@ -17,7 +17,7 @@ export type LessonDocument = Readonly<{
 const HeadingSeparatorPattern = /[^\p{L}\p{N}]+/gu;
 const EdgeHyphenPattern = /^-+|-+$/g;
 
-/** Heading paths are content references, not permanent identities across heading edits. */
+/** Explicit section identities survive heading edits; legacy headings retain derived paths. */
 export function parseLessonDocument(markdown: string, title: string): LessonDocument {
   const blocks = withoutRepeatedTitle(parseLessonMarkdown(markdown), title);
   const sections: LessonSection[] = [];
@@ -52,7 +52,7 @@ export function parseLessonDocument(markdown: string, title: string): LessonDocu
     const base = parentId ? `${parentId}/${slug}` : slug;
     const occurrence = (occurrences.get(base) ?? 0) + 1;
     occurrences.set(base, occurrence);
-    const id = occurrence === 1 ? base : `${base}~${occurrence}`;
+    const id = block.sectionId ?? (occurrence === 1 ? base : `${base}~${occurrence}`);
     ancestors.push(sections.length);
     sections.push({
       id,

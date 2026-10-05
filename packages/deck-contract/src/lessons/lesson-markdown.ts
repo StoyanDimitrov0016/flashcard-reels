@@ -1,3 +1,5 @@
+import { LessonMarkdownParseError } from "../errors/lesson-markdown-parse-error.ts";
+
 /**
  * Parses the lesson Markdown subset: headings, paragraphs, bold, italic, bulleted and numbered
  * lists, inline code, and fenced code blocks. Everything else stays readable plain text. Links
@@ -14,7 +16,12 @@ export type LessonInline = Readonly<{
 type LessonHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type LessonBlock =
-  | Readonly<{ type: "heading"; level: LessonHeadingLevel; content: readonly LessonInline[] }>
+  | Readonly<{
+      type: "heading";
+      level: LessonHeadingLevel;
+      content: readonly LessonInline[];
+      sectionId?: string;
+    }>
   | Readonly<{ type: "paragraph"; content: readonly LessonInline[] }>
   | Readonly<{
       type: "list";
@@ -26,6 +33,9 @@ export type LessonBlock =
 
 const FencePattern = /^\s*(```|~~~)/;
 const HeadingPattern = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
+const SectionMarkerPattern =
+  /^<!-- section: ([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}) -->$/;
+const SectionMarkerStartPattern = /^\s*<!--\s*section\b/i;
 const BulletItemPattern = /^\s*[-*+]\s+(.*)$/;
 const OrderedItemPattern = /^\s*(\d{1,9})[.)]\s+(.*)$/;
 const IndentedContinuationPattern = /^\s{2,}\S/;
@@ -35,10 +45,21 @@ const WordCharacterPattern = /[A-Za-z0-9]/;
 type ListState = { ordered: boolean; start: number; items: string[] };
 
 export function parseLessonMarkdown(markdown: string): LessonBlock[] {
+  return parseLessonMarkdownSource(markdown).blocks;
+}
+
+/** Source positions are authoring metadata, never persisted card references. */
+export function parseLessonMarkdownSource(markdown: string): {
+  blocks: LessonBlock[];
+  headingLines: number[];
+} {
   const lines = markdown.replaceAll("\r\n", "\n").replaceAll("\r", "\n").split("\n");
   const blocks: LessonBlock[] = [];
+  const headingLines: number[] = [];
   let paragraph: string[] = [];
   let list: ListState | null = null;
+  let pendingSectionId: string | undefined;
+  const sectionIds = new Set<string>();
 
   const flushParagraph = () => {
     if (paragraph.length > 0) {
@@ -61,6 +82,23 @@ export function parseLessonMarkdown(markdown: string): LessonBlock[] {
   let index = 0;
   while (index < lines.length) {
     const line = lines[index] ?? "";
+
+    if (SectionMarkerStartPattern.test(line)) {
+      const marker = SectionMarkerPattern.exec(line);
+      const sectionId = marker?.[1];
+      if (!sectionId || pendingSectionId || sectionIds.has(sectionId)) {
+        throw new LessonMarkdownParseError("Invalid or duplicate section marker", index + 1);
+      }
+      flushParagraph();
+      flushList();
+      sectionIds.add(sectionId);
+      pendingSectionId = sectionId;
+      index += 1;
+      continue;
+    }
+    if (pendingSectionId && line.trim().length > 0 && !HeadingPattern.test(line)) {
+      throw new LessonMarkdownParseError("Section marker must precede the next heading", index + 1);
+    }
 
     const fence = FencePattern.exec(line);
     if (fence) {
@@ -90,11 +128,14 @@ export function parseLessonMarkdown(markdown: string): LessonBlock[] {
       flushParagraph();
       flushList();
       const depth = heading[1]?.length ?? 1;
+      headingLines.push(index);
       blocks.push({
         content: parseInline(heading[2] ?? ""),
         level: toHeadingLevel(depth),
         type: "heading",
+        ...(pendingSectionId ? { sectionId: pendingSectionId } : {}),
       });
+      pendingSectionId = undefined;
       index += 1;
       continue;
     }
@@ -128,7 +169,10 @@ export function parseLessonMarkdown(markdown: string): LessonBlock[] {
 
   flushParagraph();
   flushList();
-  return blocks;
+  if (pendingSectionId) {
+    throw new LessonMarkdownParseError("Section marker has no heading", lines.length);
+  }
+  return { blocks, headingLines };
 }
 
 function toHeadingLevel(depth: number): LessonHeadingLevel {
@@ -236,6 +280,7 @@ export function withoutRepeatedTitle(blocks: readonly LessonBlock[], title: stri
   if (
     first?.type === "heading" &&
     first.level === 1 &&
+    first.sectionId === undefined &&
     normalizeTitle(first.content.map((segment) => segment.text).join("")) === normalizeTitle(title)
   ) {
     return rest;
