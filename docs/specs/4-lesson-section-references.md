@@ -1,6 +1,9 @@
 # 4 - Lesson section references
 
-Status: experimental implementation on `feat/lesson-section-references`; device acceptance pending.
+Status: schema 3 stable identities implemented on the unpushed feature branch; device acceptance pending.
+The [stable identity review](../reviews/2026-10-05-stable-section-identities.md) supersedes the
+generated-reference representation below. It records the explicit UUID markers now used for new
+packages; the heading-path design here describes legacy schema 2 behavior.
 The owner requested heading-derived segmentation, optional shared destinations, and an expanded
 demo on a separate branch. The reference contract remains reviewable before merging to develop.
 
