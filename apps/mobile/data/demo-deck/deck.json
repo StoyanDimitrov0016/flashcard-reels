@@ -1,12 +1,12 @@
 {
-  "schema": 3,
+  "schema": 4,
   "id": "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-  "revision": 3,
+  "revision": 4,
   "title": "Flashcard Reels Demo",
   "description": "A 20-card sampler of JavaScript, scaling, caching, and reliable requests, with connected lesson sections.",
   "createdAt": "2026-09-09T00:00:00.000Z",
-  "updatedAt": "2026-10-05T12:53:09.784Z",
+  "updatedAt": "2026-10-05T16:38:45.339Z",
   "cards": [
     {
       "id": "328c777f-291d-40de-8f4e-c2f972c35b7a",
@@ -212,23 +212,130 @@
   "lessons": [
     {
       "id": "6681c407-dbed-4bf7-bf4e-f792f5aaaef3",
-      "title": "Values and types"
+      "title": "Values and types",
+      "intro": true,
+      "sections": [
+        {
+          "id": "d70d5edc-4d19-45aa-9a35-cecbf9989801",
+          "title": "Primitives"
+        },
+        {
+          "id": "c98c2cee-773f-4368-9061-f90f7585cb5e",
+          "title": "Objects"
+        },
+        {
+          "id": "8cced538-4379-4037-9c44-2685248a8e4c",
+          "title": "Why it matters"
+        }
+      ]
     },
     {
       "id": "e3bf0848-3efc-4415-9a92-7c0482c6593a",
-      "title": "null and undefined"
+      "title": "null and undefined",
+      "intro": true,
+      "sections": [
+        {
+          "id": "cd90b88d-daee-4271-9d51-d2f9f4767957",
+          "title": "undefined"
+        },
+        {
+          "id": "c3edcd74-4871-4071-9467-3351b9dd34a3",
+          "title": "null"
+        },
+        {
+          "id": "6409d42e-c306-4f01-a592-5bb8bb01f56c",
+          "title": "The practical difference"
+        },
+        {
+          "id": "c6fe6ded-fd17-4c67-9da4-778922b897a1",
+          "title": "A famous quirk"
+        }
+      ]
     },
     {
       "id": "e59e619e-cb53-449b-8f26-ce5b93b0e120",
-      "title": "Scaling systems"
+      "title": "Scaling systems",
+      "intro": true,
+      "sections": [
+        {
+          "id": "98efbada-a1ad-42c5-a255-631514658ec8",
+          "title": "Vertical scaling"
+        },
+        {
+          "id": "2c399930-4dbd-4dfc-8cd3-2d06bc05cba2",
+          "title": "Benefits"
+        },
+        {
+          "id": "fc249d38-bc33-46bb-89bb-ee5939ab3d15",
+          "title": "Limitations"
+        },
+        {
+          "id": "018b3341-47ec-42ac-8d70-aa3feef72637",
+          "title": "Example"
+        },
+        {
+          "id": "046f9304-51d2-46ca-b0a5-503f403866fc",
+          "title": "Horizontal scaling"
+        },
+        {
+          "id": "1f869c62-3000-4368-83e4-bb4b251c2867",
+          "title": "State and coordination"
+        },
+        {
+          "id": "d1a9d5ca-17f5-4bd3-b0f7-0b840b0d9555",
+          "title": "Limitations"
+        }
+      ]
     },
     {
       "id": "758b4314-f1bd-497d-8fbd-8b2eff2dc391",
-      "title": "Caching and freshness"
+      "title": "Caching and freshness",
+      "intro": true,
+      "sections": [
+        {
+          "id": "f48373d3-8f2d-4d28-b27f-6630096f2fbd",
+          "title": "Cache-aside"
+        },
+        {
+          "id": "94eab322-7484-4c94-8a03-d3aab5cd87a3",
+          "title": "Read flow"
+        },
+        {
+          "id": "e58957e9-6e76-4067-8e50-4f5e2c1fa3ac",
+          "title": "Expiration and invalidation"
+        },
+        {
+          "id": "9d835706-183e-42cb-ab71-5e3208a0e0eb",
+          "title": "Cache stampedes"
+        }
+      ]
     },
     {
       "id": "39877304-de1b-47f6-86af-a2030f958ee1",
-      "title": "Reliable requests"
+      "title": "Reliable requests",
+      "intro": true,
+      "sections": [
+        {
+          "id": "bb1ecb96-78fb-424b-badf-6dc5c68cae1a",
+          "title": "Timeouts"
+        },
+        {
+          "id": "a5cd6f0d-6826-47ba-860f-ec4c043927e1",
+          "title": "Choosing a timeout"
+        },
+        {
+          "id": "9a42aa8d-f657-4220-ae54-01bf2110832e",
+          "title": "Retries"
+        },
+        {
+          "id": "2abf8482-2374-467a-9323-c8022efcf9c8",
+          "title": "Safe retries"
+        },
+        {
+          "id": "4bef36c9-3a9f-46e6-99ce-33588bb687f0",
+          "title": "Idempotency"
+        }
+      ]
     }
   ]
 }
