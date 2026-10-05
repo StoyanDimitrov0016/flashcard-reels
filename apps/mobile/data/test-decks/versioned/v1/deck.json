@@ -15,7 +15,8 @@
       "audio": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null
+      "lessonId": null,
+      "lessonSectionId": null
     },
     {
       "id": "b1000000-0000-4000-8000-000000000002",
@@ -24,7 +25,8 @@
       "audio": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null
+      "lessonId": null,
+      "lessonSectionId": null
     },
     {
       "id": "b1000000-0000-4000-8000-000000000003",
@@ -33,7 +35,8 @@
       "audio": false,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null
+      "lessonId": null,
+      "lessonSectionId": null
     }
   ],
   "lessons": []

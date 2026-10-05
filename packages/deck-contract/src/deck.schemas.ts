@@ -5,30 +5,36 @@ import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./d
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });
 
-const FlashcardSchema = z.compile(
+export const FlashcardSchema = z.compile(
   z.strictObject({
     id: IdSchema,
     question: z.string().min(CONSTRAINTS.minTextLength),
     answer: z.string().min(CONSTRAINTS.minTextLength),
     lessonId: IdSchema.nullable(),
-    lessonSectionId: z.string().min(1).max(512).nullable().optional(),
+    lessonSectionId: IdSchema.nullable(),
     audio: z.boolean(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
   })
 );
 
-const LessonSchema = z.compile(
+const LessonSectionManifestSchema = z.strictObject({
+  id: IdSchema,
+  title: z.string().trim().min(CONSTRAINTS.minTextLength),
+});
+
+const LessonManifestSchema = z.compile(
   z.strictObject({
     id: IdSchema,
     title: z.string().min(CONSTRAINTS.minTextLength),
+    intro: z.boolean(),
+    sections: z.array(LessonSectionManifestSchema).max(CONSTRAINTS.maxSectionsPerLesson),
   })
 );
 
-/** Schema 3 uses explicit section identities; schema 1 and 2 packages remain readable. */
-export const DeckSchema = z.compile(
+export const DeckManifestSchema = z.compile(
   z.strictObject({
-    schema: z.union([z.literal(1), z.literal(2), z.literal(DECK_SCHEMA_VERSION)]),
+    schema: z.literal(DECK_SCHEMA_VERSION),
     id: IdSchema,
     authorId: IdSchema,
     revision: z.number().int().min(CONSTRAINTS.minRevision),
@@ -37,10 +43,9 @@ export const DeckSchema = z.compile(
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
     cards: z.array(FlashcardSchema).min(CONSTRAINTS.minFlashcards).max(CONSTRAINTS.maxFlashcards),
-    lessons: z.array(LessonSchema).max(CONSTRAINTS.maxLessons),
+    lessons: z.array(LessonManifestSchema).max(CONSTRAINTS.maxLessons),
   })
 );
 
 export type Flashcard = z.infer<typeof FlashcardSchema>;
-export type Lesson = z.infer<typeof LessonSchema>;
-export type Deck = z.infer<typeof DeckSchema>;
+export type DeckManifest = z.infer<typeof DeckManifestSchema>;
