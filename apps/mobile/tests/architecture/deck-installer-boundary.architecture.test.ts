@@ -42,6 +42,10 @@ describe("deck-installer module boundary", () => {
   it("keeps tooling reuse of installer internals explicit and narrow", () => {
     const expectedInternalImports = new Map([
       [
+        "recreate-r2-decks.mjs",
+        ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
+      ],
+      [
         "generate-deck-package.mjs",
         ["../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts"],
       ],
