@@ -1,7 +1,6 @@
 # 7 - Lesson sections as entities
 
-Status: ready for implementation after the owner signs off "Hard-to-reverse decisions" and
-completes Part 0. Supersedes the section representation in
+Status: ready for implementation. Supersedes the section representation in
 [4 - Lesson section references](4-lesson-section-references.md) and the comment markers recorded in
 [the stable section identities review](../reviews/2026-10-05-stable-section-identities.md).
 Scope: `packages/deck-contract`, deck sources and tooling, and `apps/mobile`. `apps/web` receives
@@ -325,11 +324,12 @@ Commit each part separately. Run each touched workspace's checks per `AGENTS.md`
 Parts 2–6 may leave other workspaces failing in between; the full root validation must pass after
 Part 7.
 
-### Part 0 - Owner, on the implementation machine
+### Part 0 - Fetch the curated decks
 
-Download the seven curated packages from `dev/decks/` (schema 3, revision 4, audio included), for
-example through the portal's Preview deployment, and unzip each into its own directory under
-`apps/mobile/data/decks/` (ignored by Git). An unzipped package has the source directory layout.
+Using the R2 credentials in `apps/web/.env.local` (read-only access), download the seven curated
+packages from `dev/decks/` (schema 3, revision 4, audio included) and unzip each into its own
+directory under `apps/mobile/data/decks/` (ignored by Git). An unzipped package has the source
+directory layout. This is a read; publishing remains forbidden.
 
 ### Part 1 - Convert content while the old parser still exists
 
