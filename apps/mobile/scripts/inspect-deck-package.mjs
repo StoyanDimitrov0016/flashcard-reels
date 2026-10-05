@@ -28,7 +28,7 @@ try {
       const linkedCards = deck.cards.filter(
         (card) => card.lessonId === lesson.id && card.lessonSectionId === section.id
       ).length;
-      console.log(`  ${section.id} — ${linkedCards} linked cards`);
+      console.log(`  ${section.id} — ${section.title} — ${linkedCards} linked cards`);
     }
   }
   console.log(`Package size: ${bytes.byteLength} bytes`);

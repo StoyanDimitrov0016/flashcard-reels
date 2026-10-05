@@ -1,4 +1,4 @@
-import { parseDeck, parseDeckPackage } from "@flashcard-reels/deck-contract";
+import { parseDeck, parseDeckPackage, parseLessonDocument } from "@flashcard-reels/deck-contract";
 import { spawnSync } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -27,6 +27,83 @@ describe("deck package tooling independence", () => {
       temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true }))
     );
   });
+
+  it("converts legacy destinations once while retaining source identity and shared links", async () => {
+    const source = await temporaryProject();
+    const demo = parseDeck(
+      JSON.parse(await readFile(path.join(process.cwd(), "data", "demo-deck", "deck.json"), "utf8"))
+    );
+    const lesson = demo.lessons[0];
+    const card = demo.cards[0];
+    if (!lesson || !card) {
+      throw new Error("Missing demo fixture identity");
+    }
+    const original = {
+      ...demo,
+      schema: 2,
+      revision: 1,
+      cards: [
+        { ...card, audio: false, lessonId: lesson.id, lessonSectionId: "limits~2" },
+        {
+          ...card,
+          id: "55555555-5555-4555-8555-555555555555",
+          audio: false,
+          lessonId: lesson.id,
+          lessonSectionId: "limits~2",
+        },
+      ],
+      lessons: [lesson],
+    };
+    const manifest = path.join(source, "deck.json");
+    const markdown = path.join(source, "lessons", `${lesson.id}.md`);
+    await mkdir(path.dirname(markdown));
+    await writeFile(manifest, JSON.stringify(original));
+    await writeFile(
+      markdown,
+      `# ${lesson.title}\n## Limits\nFirst.\n## Limits\nSecond.\n\`\`\`md\n## Example only\n\`\`\``
+    );
+    const originalManifestText = await readFile(manifest, "utf8");
+    const originalMarkdownText = await readFile(markdown, "utf8");
+    const first = runTool("migrate-lesson-section-ids.mjs", source);
+    expect(first.status, first.stderr).toBe(0);
+    const convertedManifest = await readFile(manifest, "utf8");
+    const convertedMarkdown = await readFile(markdown, "utf8");
+    const converted = parseDeck(JSON.parse(convertedManifest));
+    expect(converted).toMatchObject({ id: demo.id, schema: 3, revision: 2 });
+    expect(converted.cards.map((entry) => entry.id)).toEqual(
+      original.cards.map((entry) => entry.id)
+    );
+    expect(converted.cards[0]?.lessonSectionId).toBe(converted.cards[1]?.lessonSectionId);
+    const sections = parseLessonDocument(convertedMarkdown, lesson.title).sections;
+    expect(sections).toHaveLength(2);
+    expect(converted.cards[0]?.lessonSectionId).toBe(sections[1]?.id);
+    // Model interruption after replacing the lesson but before replacing the manifest.
+    const journal = path.join(source, ".lesson-section-migration.json");
+    await writeFile(
+      journal,
+      JSON.stringify([
+        { path: `lessons/${lesson.id}.md`, before: originalMarkdownText, after: convertedMarkdown },
+        { path: "deck.json", before: originalManifestText, after: convertedManifest },
+      ])
+    );
+    await writeFile(manifest, originalManifestText);
+    const laterEdit = `${convertedMarkdown}\nAn author's later edit.`;
+    await writeFile(markdown, laterEdit);
+    const conflict = runTool("migrate-lesson-section-ids.mjs", source);
+    expect(conflict.status).not.toBe(0);
+    expect(conflict.stderr).toContain("Source changed during section migration");
+    expect(await readFile(manifest, "utf8")).toBe(originalManifestText);
+    expect(await readFile(markdown, "utf8")).toBe(laterEdit);
+    await writeFile(markdown, convertedMarkdown);
+    const second = runTool("migrate-lesson-section-ids.mjs", source);
+    expect(second.status, second.stderr).toBe(0);
+    expect(second.stdout).toContain("Recovered section migration");
+    expect(await readFile(manifest, "utf8")).toBe(convertedManifest);
+    expect(await readFile(markdown, "utf8")).toBe(convertedMarkdown);
+    const third = runTool("migrate-lesson-section-ids.mjs", source);
+    expect(third.status, third.stderr).toBe(0);
+    expect(await readFile(manifest, "utf8")).toBe(convertedManifest);
+  }, 30_000);
 
   // Builds the demo twice in separate Node processes, so it needs more time under a parallel run.
   it("generates the demo from its isolated authoring source", async () => {
@@ -64,7 +141,7 @@ describe("deck package tooling independence", () => {
     expect(generated).toEqual(checkedIn);
     expect(parseDeckPackage(generated).deck).toMatchObject({
       id: "7f6f98a7-a84d-4cc8-b744-3d0b53e3c873",
-      revision: 2,
+      revision: 3,
     });
   }, 30_000);
 

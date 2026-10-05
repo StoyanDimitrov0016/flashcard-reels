@@ -4,6 +4,8 @@ Every piece of data a JavaScript program works with is a **value**: a number, a 
 object, a function, `null`, or `undefined`. Each value has a type, and the type decides what you
 can do with it.
 
+<!-- section: d70d5edc-4d19-45aa-9a35-cecbf9989801 -->
+
 ## Primitives
 
 **Primitives** are the simple building blocks: strings, numbers, booleans, `null`, `undefined`,
@@ -14,6 +16,8 @@ produce new values instead.
 const name = "reels";
 const loud = name.toUpperCase(); // "REELS"; name is still "reels"
 ```
+
+<!-- section: c98c2cee-773f-4368-9061-f90f7585cb5e -->
 
 ## Objects
 
@@ -26,6 +30,8 @@ it:
 ```
 
 Arrays and functions are objects too, which is why you can attach properties to a function.
+
+<!-- section: 8cced538-4379-4037-9c44-2685248a8e4c -->
 
 ## Why it matters
 

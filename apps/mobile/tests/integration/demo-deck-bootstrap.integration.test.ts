@@ -78,14 +78,14 @@ describe("built-in demo package", () => {
     await expect(installer.installFromFile({ uri: "bundled-demo" })).resolves.toMatchObject({
       deckId: demoId,
       status: "installed",
-      revision: 2,
+      revision: 3,
     });
-    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(2);
+    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(3);
     const audioCard = parsed.deck.cards[0];
     if (!audioCard) {
       throw new Error("Demo package has no cards");
     }
-    expect(audio.find(demoId, 2, audioCard.id)).not.toBeNull();
+    expect(audio.find(demoId, 3, audioCard.id)).not.toBeNull();
 
     // Query freshly constructed repositories, rather than relying on the parsed package in memory.
     const flashcards = new SQLiteFlashcardRepository(database.drizzle);
@@ -106,7 +106,7 @@ describe("built-in demo package", () => {
       })
     );
 
-    const linked = parsed.deck.cards.find((card) => card.lessonSectionId === "vertical-scaling");
+    const linked = parsed.deck.cards.find((card) => card.question === "What is vertical scaling?");
     if (!linked) {
       throw new Error("Missing linked scaling card");
     }
@@ -125,23 +125,37 @@ describe("built-in demo package", () => {
 
     const updatedDeck = {
       ...parsed.deck,
-      revision: 3,
-      cards: parsed.deck.cards.map((card) =>
-        card.id === linked.id ? { ...card, lessonSectionId: "vertical-scaling/limitations" } : card
-      ),
+      revision: 4,
     };
     await installer.installFromBytes(
       createContractDeckPackageArchive(
         updatedDeck,
         Object.fromEntries(parsed.audioFiles),
-        Object.fromEntries(parsed.lessonFiles)
+        Object.fromEntries(
+          [...parsed.lessonFiles].map(([id, content]) => [
+            id,
+            content.replace("## Vertical scaling", "## Scaling one machine"),
+          ])
+        )
       )
     );
     expect(await new SQLiteFlashcardRepository(database.drizzle).findById(linked.id)).toMatchObject(
       {
-        lessonSectionId: "vertical-scaling/limitations",
+        lessonSectionId: linked.lessonSectionId,
       }
     );
+    if (!linked.lessonId) {
+      throw new Error("Missing linked lesson");
+    }
+    const reloaded = await new SQLiteLessonRepository(database.drizzle).findById(linked.lessonId);
+    if (!reloaded) {
+      throw new Error("Missing installed lesson");
+    }
+    expect(
+      parseLessonDocument(reloaded.content, reloaded.title).sections.find(
+        (section) => section.id === linked.lessonSectionId
+      )?.title
+    ).toBe("Scaling one machine");
     expect(await database.drizzle.select().from(flashcardProgress)).toMatchObject([
       { flashcardId: linked.id, reviewCount: 1, goodCount: 1 },
     ]);
@@ -150,7 +164,7 @@ describe("built-in demo package", () => {
     files["deck.json"] = strToU8(
       JSON.stringify({
         ...updatedDeck,
-        revision: 4,
+        revision: 5,
         cards: updatedDeck.cards.map((card) =>
           card.id === linked.id
             ? Object.assign({}, card, { lessonSectionId: "missing-section" })
@@ -159,10 +173,10 @@ describe("built-in demo package", () => {
       })
     );
     await expect(installer.installFromBytes(zipSync(files))).rejects.toThrow("missing section");
-    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(3);
+    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(4);
     expect(await new SQLiteFlashcardRepository(database.drizzle).findById(linked.id)).toMatchObject(
       {
-        lessonSectionId: "vertical-scaling/limitations",
+        lessonSectionId: linked.lessonSectionId,
       }
     );
   });

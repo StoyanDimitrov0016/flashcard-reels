@@ -22,6 +22,7 @@
     "decks:generate": "node scripts/generate-deck-package.mjs",
     "decks:curated:prepare": "node scripts/prepare-curated-decks.mjs",
     "decks:inspect": "node scripts/inspect-deck-package.mjs",
+    "decks:sections:migrate": "node scripts/migrate-lesson-section-ids.mjs",
     "decks:test:generate": "node scripts/generate-test-deck-package.mjs",
     "decks:check": "node scripts/assert-bundled-deck-packages.mjs",
     "test": "vitest run",
