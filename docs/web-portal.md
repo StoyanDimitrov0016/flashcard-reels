@@ -40,8 +40,8 @@ DECK_PREFIX
 ```
 
 Set `DECK_PREFIX=decks/` for Vercel Production and `DECK_PREFIX=dev/decks/` for Preview
-and local R2-backed development. An unset prefix preserves the existing `decks/` catalog.
-Blank values and malformed prefixes are rejected; prefixes must use lowercase path segments and
+and local R2-backed development. The prefix is required; there is no default catalog.
+Missing or blank values and malformed prefixes are rejected; prefixes must use lowercase path segments and
 end in `/`. Configure Preview explicitly: Next.js uses production mode for preview builds too.
 Changing this deployment configuration requires restarting or redeploying the portal, because each
 server instance captures its catalog and caches for its lifetime. The storage adapter enforces the

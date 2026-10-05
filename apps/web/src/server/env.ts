@@ -33,7 +33,7 @@ const R2EnvironmentSchema = z.compile(
 const DeckPrefixPattern = /^(?:[a-z0-9][a-z0-9_-]*\/)+$/;
 export const DeckCatalogEnvironmentSchema = z.compile(
   z.object({
-    DECK_PREFIX: z.string().min(1).max(128).regex(DeckPrefixPattern).default("decks/"),
+    DECK_PREFIX: z.string().min(1).max(128).regex(DeckPrefixPattern),
   })
 );
 export const DeckTransferEnvironmentSchema = z.compile(

@@ -1,15 +1,18 @@
 import {
-  parseDeck,
-  validateLessonReferences,
-  type Deck,
+  parseDeckManifest,
+  deckPackagePaths,
+  readDeckContent as resolveDeckContent,
+  DeckPackageParseError,
+  type DeckManifest,
+  type DeckPackageParseIssue,
+  type Lesson,
   type Flashcard,
 } from "@flashcard-reels/deck-contract";
-import { strFromU8 } from "fflate";
 
 import type { ZipRangeReader } from "@/server/decks/zip-range-reader";
 
 export type DeckCard = Flashcard;
-export type DeckLesson = Readonly<{ id: string; title: string; markdown: string }>;
+export type DeckLesson = Lesson;
 
 export type DeckSummary = Readonly<{
   id: string;
@@ -27,27 +30,34 @@ export type DeckSummary = Readonly<{
 export type DeckContent = DeckSummary &
   Readonly<{ cards: readonly DeckCard[]; lessons: readonly DeckLesson[] }>;
 
-async function readDocument(reader: ZipRangeReader): Promise<Deck> {
+async function readDocument(reader: ZipRangeReader): Promise<DeckManifest> {
   const bytes = await reader.read("deck.json");
   if (!bytes) {
-    throw new Error("Invalid deck package: missing deck.json");
+    throw new DeckPackageParseError([{ path: ["deck.json"], message: "Missing manifest" }]);
   }
-  const document = parseDeck(JSON.parse(strFromU8(bytes)));
-  const expected = new Set([
-    "deck.json",
-    ...document.cards.filter((card) => card.audio).map((card) => `audio/${card.id}.mp3`),
-    ...document.lessons.map((lesson) => `lessons/${lesson.id}.md`),
-  ]);
-  if (
-    reader.entries.length !== expected.size ||
-    reader.entries.some((entry) => !expected.has(entry.name) || entry.uncompressedSize === 0)
-  ) {
-    throw new Error("Invalid deck package: assets do not match deck.json");
+  const document = parseDeckManifest(bytes);
+  const expected = deckPackagePaths(document);
+  const present = new Set(reader.entries.map((entry) => entry.name));
+  const issues: DeckPackageParseIssue[] = [];
+  for (const path of expected) {
+    if (!present.has(path)) {
+      issues.push({ path: [path], message: "Missing declared file" });
+    }
+  }
+  for (const entry of reader.entries) {
+    if (!expected.has(entry.name)) {
+      issues.push({ path: [entry.name], message: "Unexpected file" });
+    } else if (entry.uncompressedSize === 0) {
+      issues.push({ path: [entry.name], message: "Empty declared file" });
+    }
+  }
+  if (issues.length > 0) {
+    throw new DeckPackageParseError(issues);
   }
   return document;
 }
 
-function summarize(document: Deck, key: string, sizeBytes: number): DeckSummary {
+function summarize(document: DeckManifest, key: string, sizeBytes: number): DeckSummary {
   return {
     audioCount: document.cards.filter((card) => card.audio).length,
     cardCount: document.cards.length,
@@ -76,26 +86,43 @@ export async function readDeckContent(
   sizeBytes: number
 ): Promise<DeckContent> {
   const document = await readDocument(reader);
-  const lessons = await Promise.all(
-    document.lessons.map(async (lesson) => {
-      const bytes = await reader.read(`lessons/${lesson.id}.md`);
-      if (!bytes) {
-        throw new Error(`Invalid deck package: missing lesson ${lesson.id}`);
-      }
-      const markdown = strFromU8(bytes);
-      if (!markdown.trim()) {
-        throw new Error(`Invalid deck package: empty lesson ${lesson.id}`);
-      }
-      return { id: lesson.id, markdown, title: lesson.title };
-    })
+  const texts = new Map<string, string>();
+  const issues: DeckPackageParseIssue[] = [];
+  await Promise.all(
+    [...deckPackagePaths(document)]
+      .filter((path) => path.endsWith(".md"))
+      .map(async (path) => {
+        const bytes = await reader.read(path);
+        if (bytes) {
+          try {
+            texts.set(path, new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+          } catch (error) {
+            if (!(error instanceof TypeError)) {
+              throw error;
+            }
+            issues.push({ path: [path], message: "Lesson text is not valid UTF-8" });
+          }
+        }
+      })
   );
-  validateLessonReferences(
-    document,
-    new Map(lessons.map((lesson) => [lesson.id, lesson.markdown]))
-  );
+  let resolved;
+  try {
+    resolved = resolveDeckContent(document, (path) => texts.get(path));
+  } catch (error) {
+    if (!(error instanceof DeckPackageParseError)) {
+      throw error;
+    }
+    issues.push(...error.issues);
+  }
+  if (issues.length > 0) {
+    throw new DeckPackageParseError(issues);
+  }
+  if (!resolved) {
+    throw new Error("Content resolution did not produce a deck");
+  }
   return {
     ...summarize(document, key, sizeBytes),
-    cards: document.cards,
-    lessons,
+    cards: resolved.cards,
+    lessons: resolved.lessons,
   };
 }

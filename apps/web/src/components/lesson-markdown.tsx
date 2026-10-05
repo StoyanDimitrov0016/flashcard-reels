@@ -2,21 +2,6 @@ import Markdown, { type Components } from "react-markdown";
 
 // Typography follows the mobile reader: comfortable body text, quiet headings, Notion-style code.
 const components: Components = {
-  a: ({ children, href }) => (
-    <a
-      className="text-link underline underline-offset-2 hover:text-link/80"
-      href={href}
-      rel="noreferrer"
-      target="_blank"
-    >
-      {children}
-    </a>
-  ),
-  blockquote: ({ children }) => (
-    <blockquote className="border-l-3 border-input pl-4 text-muted-foreground">
-      {children}
-    </blockquote>
-  ),
   code: ({ children, className }) =>
     className ? (
       <code className="font-mono text-[13px] leading-6">{children}</code>
@@ -25,14 +10,6 @@ const components: Components = {
         {children}
       </code>
     ),
-  h1: ({ children }) => (
-    <h2 className="mt-8 text-2xl font-semibold tracking-tight first:mt-0">{children}</h2>
-  ),
-  h2: ({ children }) => <h3 className="mt-8 text-xl font-semibold tracking-tight">{children}</h3>,
-  h3: ({ children }) => <h4 className="mt-6 text-[17px] font-semibold">{children}</h4>,
-  hr: () => <hr className="my-8 border-border" />,
-  // Lessons never load remote media; show the image description instead.
-  img: ({ alt }) => (alt ? <span className="text-muted-foreground italic">{alt}</span> : null),
   li: ({ children }) => <li className="pl-1">{children}</li>,
   ol: ({ children }) => (
     <ol className="ml-5 list-decimal space-y-1.5 marker:text-subtle-foreground">{children}</ol>

@@ -1,4 +1,8 @@
-import { DECK_PACKAGE_LIMITS, DECK_SCHEMA_CONSTRAINTS } from "@flashcard-reels/deck-contract";
+import {
+  DECK_PACKAGE_LIMITS,
+  DECK_SCHEMA_CONSTRAINTS,
+  DeckPackageParseError,
+} from "@flashcard-reels/deck-contract";
 import { inflateSync } from "fflate";
 
 /**
@@ -31,14 +35,16 @@ const LocalHeaderSize = 30;
 const StoredMethod = 0;
 const DeflatedMethod = 8;
 const MaximumEntries =
-  1 + DECK_SCHEMA_CONSTRAINTS.maxFlashcards + DECK_SCHEMA_CONSTRAINTS.maxLessons;
+  1 +
+  DECK_SCHEMA_CONSTRAINTS.maxFlashcards +
+  DECK_SCHEMA_CONSTRAINTS.maxLessons * (1 + DECK_SCHEMA_CONSTRAINTS.maxSectionsPerLesson);
 
 function view(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }
 
 function invalid(message: string): never {
-  throw new Error(`Invalid deck package: ${message}`);
+  throw new DeckPackageParseError([{ path: [], message }]);
 }
 
 function findEndRecord(tail: Uint8Array): number {
@@ -97,7 +103,7 @@ function parseCentralDirectory(directory: Uint8Array, entryCount: number): ZipEn
       expandedSize > DECK_PACKAGE_LIMITS.maxUncompressedBytes ||
       (name === "deck.json" && uncompressedSize > DECK_PACKAGE_LIMITS.maxManifestFileBytes) ||
       (name.startsWith("audio/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxAudioFileBytes) ||
-      (name.startsWith("lessons/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxLessonFileBytes)
+      (name.startsWith("lessons/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxLessonTextFileBytes)
     ) {
       invalid(`entry exceeds size limit: ${name}`);
     }

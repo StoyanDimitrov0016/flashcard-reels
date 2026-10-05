@@ -1,6 +1,6 @@
 import type * as S3Module from "@aws-sdk/client-s3";
 
-import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { GetObjectCommand, type ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 type R2Command = GetObjectCommand | ListObjectsV2Command;
@@ -38,12 +38,10 @@ function configureR2(prefix?: string) {
 }
 
 describe("R2 catalog isolation", () => {
-  it("keeps the existing production catalog when the prefix is unset", async () => {
+  it("rejects an unset catalog prefix before accessing storage", () => {
     configureR2();
-    transport.send.mockResolvedValue({ Contents: [] });
-    await createR2DeckStorage().listDeckObjects();
-    expect(transport.send.mock.calls[0]?.[0]).toBeInstanceOf(ListObjectsV2Command);
-    expect(transport.send.mock.calls[0]?.[0].input).toMatchObject({ Prefix: "decks/" });
+    expect(() => createR2DeckStorage()).toThrow();
+    expect(transport.send).not.toHaveBeenCalled();
   });
 
   it("uses the configured catalog for every listing page, range read, and signed download", async () => {

@@ -1,4 +1,10 @@
-import { parseDeck } from "@flashcard-reels/deck-contract";
+import {
+  createDeckPackage,
+  parseDeckPackage,
+  parseDeckManifest,
+  DeckPackageParseError,
+  UnsupportedDeckSchemaError,
+} from "@flashcard-reels/deck-contract";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
@@ -11,6 +17,7 @@ const timestampMs = Date.parse(timestamp);
 const scalingId = "3f9c2d4e-8a61-4b7f-9c2e-1d5a6b7c8d90";
 const reactId = "7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
 const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
+const sectionId = "c4f02b37-b8c4-4d17-8430-15c12614c012";
 const authorId = "a5f43c1e-7890-4abc-8def-1234567890ab";
 const cardIds = ["0b7e6f1a-2c3d-4e5f-8a9b-0c1d2e3f4a5b", "1c8f7a2b-3d4e-4f5a-9b0c-1d2e3f4a5b6c"];
 
@@ -22,7 +29,7 @@ type PackageOptions = Readonly<{
   audioBytes?: number;
 }>;
 
-// Mirrors the mobile writer's layout: deck.json, then audio, then lessons.
+// Produce valid fixtures through the shared public writer.
 function deckPackage({
   id,
   title,
@@ -40,6 +47,7 @@ function deckPackage({
       createdAt: timestamp,
       id: cardIds[index] ?? "",
       lessonId: null,
+      lessonSectionId: null,
       question: card.question,
       updatedAt: timestamp,
     })),
@@ -47,26 +55,30 @@ function deckPackage({
     createdAt: timestamp,
     description: `${title} basics`,
     id,
-    lessons: withLesson ? [{ id: lessonId, title: "Why scale" }] : [],
+    lessons: withLesson
+      ? [
+          {
+            id: lessonId,
+            title: "Why scale",
+            intro: "Load grows.",
+            sections: [{ id: sectionId, title: "Vertical scaling", body: "More resources." }],
+          },
+        ]
+      : [],
     revision,
-    schema: 1,
+    schema: 4 as const,
     title,
     updatedAt: timestamp,
   };
-  const files: Record<string, Uint8Array> = { "deck.json": strToU8(JSON.stringify(document)) };
+  const audio = new Map<string, Uint8Array>();
   if (audioBytes > 0) {
-    // Random-looking bytes do not compress, like real MP3 audio.
-    files[`audio/${cardIds[0]}.mp3`] = Uint8Array.from(
-      { length: audioBytes },
-      (_, index) => (index * 7919) % 251
+    audio.set(
+      cardIds[0] ?? "",
+      Uint8Array.from({ length: audioBytes }, (_, index) => (index * 7919) % 251)
     );
   }
-  if (withLesson) {
-    files[`lessons/${lessonId}.md`] = strToU8("# Why scale\n\nLoad grows.");
-  }
-  return zipSync(files);
+  return createDeckPackage({ deck: document, audio });
 }
-
 class MemoryStorage implements DeckStorage {
   bytesRead = 0;
   readonly readsByKey = new Map<string, number>();
@@ -109,36 +121,68 @@ class MemoryStorage implements DeckStorage {
 }
 
 describe("deck library", () => {
+  it.each([1, 2, 3])("skips schema %s with a typed unsupported-format error", async (schema) => {
+    const storage = new MemoryStorage();
+    const files = unzipSync(deckPackage({ id: scalingId, title: "Scaling" }));
+    const manifest = parseDeckManifest(files["deck.json"] ?? new Uint8Array());
+    files["deck.json"] = strToU8(JSON.stringify({ ...manifest, schema }));
+    storage.put("decks/scaling.fcrdeck", zipSync(files));
+    const errors: unknown[] = [];
+    expect(
+      await createDeckLibrary({
+        storage,
+        onUnreadableDeck: (_key, error) => errors.push(error),
+      }).listDecks()
+    ).toEqual([]);
+    expect(errors[0]).toBeInstanceOf(UnsupportedDeckSchemaError);
+    expect(errors[0]).toMatchObject({ context: { schema } });
+  });
+
+  it("reports invalid intro and section bodies together and preserves the downloadable package", async () => {
+    const storage = new MemoryStorage();
+    const key = "decks/scaling.fcrdeck";
+    const valid = deckPackage({ id: scalingId, title: "Scaling", withLesson: true });
+    storage.put(key, valid);
+    const download = await storage.createDownload(key);
+    expect(parseDeckPackage(download.bytes).deck.lessons[0]?.sections[0]?.id).toBe(sectionId);
+    const files = unzipSync(valid);
+    files[`lessons/${lessonId}/intro.md`] = strToU8("[Link](https://example.com)");
+    files[`lessons/${lessonId}/${sectionId}.md`] = strToU8("# Forbidden heading");
+    storage.put(key, zipSync(files), "r2");
+    await expect(createDeckLibrary({ storage }).getDeckContent(scalingId)).rejects.toMatchObject({
+      code: "DECK_PACKAGE_INVALID",
+      issues: [
+        expect.objectContaining({ lessonId, sectionId: null, line: 1 }),
+        expect.objectContaining({ lessonId, sectionId, line: 1 }),
+      ],
+    });
+  });
+
   it("resolves section-linked packages without audio and rejects broken destinations", async () => {
     const storage = new MemoryStorage();
     const files = unzipSync(
       deckPackage({ id: scalingId, title: "Scaling", withLesson: true, audioBytes: 400_000 })
     );
-    const manifest = parseDeck(JSON.parse(strFromU8(files["deck.json"] ?? new Uint8Array())));
-    manifest.schema = 2;
+    const manifest = parseDeckManifest(files["deck.json"] ?? new Uint8Array());
+
     for (const card of manifest.cards) {
       card.lessonId = lessonId;
-      card.lessonSectionId = "vertical-scaling";
+      card.lessonSectionId = sectionId;
     }
-    files[`lessons/${lessonId}.md`] = strToU8(
-      "# Why scale\n\n## Vertical scaling\nMore resources."
-    );
     files["deck.json"] = strToU8(JSON.stringify(manifest));
     storage.put("decks/scaling.fcrdeck", zipSync(files));
     const content = await createDeckLibrary({ storage }).getDeckContent(scalingId);
-    expect(content?.cards.map((card) => card.lessonSectionId)).toEqual([
-      "vertical-scaling",
-      "vertical-scaling",
-    ]);
+    expect(content?.cards.map((card) => card.lessonSectionId)).toEqual([sectionId, sectionId]);
     expect(storage.bytesRead).toBeLessThan(80_000);
 
-    files[`lessons/${lessonId}.md`] = strToU8("# Why scale\n\n## Renamed section\nMore resources.");
+    files[`lessons/${lessonId}/${sectionId}.md`] = strToU8(
+      "# Heading is forbidden\nMore resources."
+    );
     storage.put("decks/scaling.fcrdeck", zipSync(files), "r2");
-    await expect(createDeckLibrary({ storage }).getDeckContent(scalingId)).rejects.toThrow(
-      "missing section vertical-scaling"
+    await expect(createDeckLibrary({ storage }).getDeckContent(scalingId)).rejects.toBeInstanceOf(
+      DeckPackageParseError
     );
   });
-
   it("lists published decks by title with their card, lesson, and audio counts", async () => {
     const storage = new MemoryStorage();
     storage.put(
@@ -168,7 +212,12 @@ describe("deck library", () => {
       "What is vertical scaling?",
     ]);
     expect(deck?.lessons).toEqual([
-      { id: lessonId, markdown: "# Why scale\n\nLoad grows.", title: "Why scale" },
+      {
+        id: lessonId,
+        intro: "Load grows.",
+        title: "Why scale",
+        sections: [{ id: sectionId, title: "Vertical scaling", body: "More resources." }],
+      },
     ]);
     // The end-of-archive scan reads at most 64 KiB; everything else is small entries.
     expect(storage.bytesRead).toBeLessThan(80_000);
@@ -179,7 +228,7 @@ describe("deck library", () => {
     const original = unzipSync(
       deckPackage({ audioBytes: 100, id: scalingId, title: "Scaling", withLesson: true })
     );
-    const manifest = parseDeck(JSON.parse(strFromU8(original["deck.json"] ?? new Uint8Array())));
+    const manifest = parseDeckManifest(original["deck.json"] ?? new Uint8Array());
     manifest.cards.reverse();
     original["deck.json"] = strToU8(JSON.stringify(manifest));
     storage.put("decks/scaling.fcrdeck", zipSync(original));
@@ -382,7 +431,7 @@ describe("deck library", () => {
       readRange: async (objectKey, start, end) => {
         // Summary reads succeed; fail when the content reader reaches the lesson data.
         const bytes = await storage.readRange(objectKey, start, end);
-        if (fail && strFromU8(bytes).startsWith("# Why scale")) {
+        if (fail && strFromU8(bytes).startsWith("Load grows.")) {
           throw new Error("Temporary storage failure");
         }
         return bytes;
