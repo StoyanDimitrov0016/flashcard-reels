@@ -1,6 +1,6 @@
 # 7 - Lesson sections as entities
 
-Status: implemented; dev R2 migrated to schema 4, revision 5. Owner phone acceptance and v7 backup restore pending. Supersedes the section representation in
+Status: implemented; dev R2 migrated to schema 4, revision 6 with [restored curated card section links](../reviews/2026-10-05-curated-section-link-repair.md). Owner phone acceptance and v7 backup restore pending. Supersedes the section representation in
 [4 - Lesson section references](4-lesson-section-references.md) and the comment markers recorded in
 [the stable section identities review](../reviews/2026-10-05-stable-section-identities.md).
 Scope: `packages/deck-contract`, deck sources and tooling, and `apps/mobile`. `apps/web` receives
