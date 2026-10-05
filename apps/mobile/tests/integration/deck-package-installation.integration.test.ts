@@ -1,5 +1,8 @@
-import { parseDeckPackage } from "@flashcard-reels/deck-contract";
-import { parseDeck } from "@flashcard-reels/deck-contract";
+import {
+  parseDeckPackage,
+  parseDeckManifest,
+  DECK_SCHEMA_CONSTRAINTS,
+} from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -64,7 +67,10 @@ import {
 const timestamp = "2026-01-01T00:00:00.000Z";
 const maximumCardCount = 1_000;
 const maximumAudioFileBytes = 5 * 1024 * 1024;
-const maximumArchiveEntries = 1 + 1_000 + 200;
+const maximumArchiveEntries =
+  1 +
+  DECK_SCHEMA_CONSTRAINTS.maxFlashcards +
+  DECK_SCHEMA_CONSTRAINTS.maxLessons * (1 + DECK_SCHEMA_CONSTRAINTS.maxSectionsPerLesson);
 
 class MemoryAudioStorage implements DeckAudioStorage {
   readonly staged: StagedDeckAudio[] = [];
@@ -198,12 +204,13 @@ function rawDeck(
         question: item.question,
         answer: item.answer,
         lessonId: item.lessonId,
+        lessonSectionId: null,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
         audio: true,
       })),
     authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-    schema: 1,
+    schema: 4,
     lessons: [],
     createdAt: timestamp,
     description: "Scenario deck",
@@ -215,7 +222,7 @@ function rawDeck(
 }
 
 function deck(version: number, cards: readonly ReturnType<typeof card>[] = [], id = TEST_DECK_ID) {
-  return parseDeck(rawDeck(version, cards, id));
+  return parseDeckManifest(strToU8(JSON.stringify(rawDeck(version, cards, id))));
 }
 
 function card(id: string, order: number, answer = `Answer ${id}`) {
@@ -451,7 +458,7 @@ describe("deck package installation", () => {
         "SELECT author_id, package_schema, revision FROM decks WHERE id = ?",
         TEST_DECK_ID
       )
-    ).toEqual({ author_id: manifest.authorId, package_schema: 1, revision: 1 });
+    ).toEqual({ author_id: manifest.authorId, package_schema: 4, revision: 1 });
     expect(
       await database.getAllAsync(
         'SELECT id, "order" AS card_order FROM flashcards WHERE deck_id = ? ORDER BY "order"',

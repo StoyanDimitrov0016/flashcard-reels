@@ -161,12 +161,24 @@ CREATE TABLE `learner_preferences` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `learner_preferences_singleton_idx` ON `learner_preferences` ((1));--> statement-breakpoint
+CREATE TABLE `lesson_sections` (
+	`id` text PRIMARY KEY NOT NULL,
+	`lesson_id` text NOT NULL,
+	`order` integer NOT NULL,
+	`title` text NOT NULL,
+	`body` text NOT NULL,
+	FOREIGN KEY (`lesson_id`) REFERENCES `lessons`(`id`) ON UPDATE no action ON DELETE cascade,
+	CONSTRAINT "lesson_sections_order_check" CHECK("lesson_sections"."order" >= 0)
+);
+--> statement-breakpoint
+CREATE INDEX `lesson_sections_lesson_id_idx` ON `lesson_sections` (`lesson_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `lesson_sections_order_unique` ON `lesson_sections` (`lesson_id`,`order`);--> statement-breakpoint
 CREATE TABLE `lessons` (
 	`id` text PRIMARY KEY NOT NULL,
 	`deck_id` text NOT NULL,
 	`order` integer NOT NULL,
 	`title` text NOT NULL,
-	`content` text NOT NULL,
+	`intro` text,
 	FOREIGN KEY (`deck_id`) REFERENCES `decks`(`id`) ON UPDATE no action ON DELETE cascade,
 	CONSTRAINT "lessons_order_check" CHECK("lessons"."order" >= 0)
 );
