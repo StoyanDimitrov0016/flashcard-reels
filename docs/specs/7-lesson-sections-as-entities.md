@@ -1,6 +1,6 @@
 # 7 - Lesson sections as entities
 
-Status: implemented; owner phone acceptance, v7 backup restore, and R2 format cutover pending. Supersedes the section representation in
+Status: implemented; dev R2 migrated to schema 4, revision 5. Owner phone acceptance and v7 backup restore pending. Supersedes the section representation in
 [4 - Lesson section references](4-lesson-section-references.md) and the comment markers recorded in
 [the stable section identities review](../reviews/2026-10-05-stable-section-identities.md).
 Scope: `packages/deck-contract`, deck sources and tooling, and `apps/mobile`. `apps/web` receives
@@ -451,6 +451,10 @@ are installed.
 Owner step after implementation: publish the seven packages from `apps/mobile/build/` with
 `--environment=dev`, replacing the schema 3 packages there. Production stays untouched until
 release.
+
+Completed on 2026-10-05 at the owner's explicit request: all seven existing `dev/decks/` keys
+now contain schema 4, revision 5 packages. Preflight matched the schema 3 backups and checked
+card content, section identities/order, and audio; uploaded bytes were downloaded and verified.
 
 ## Time budget
 
