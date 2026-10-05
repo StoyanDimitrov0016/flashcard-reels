@@ -2,6 +2,7 @@ import type { DeckManifest } from "../deck.types.ts";
 import type { DeckPackageParseIssue } from "../errors/deck-parse-issue.ts";
 
 import { decodeUtf8 } from "../content/decode-utf8.ts";
+import { DECK_PACKAGE_LIMITS } from "../deck.constants.ts";
 import { DeckManifestSchema } from "../deck.schemas.ts";
 import { DeckPackageParseError } from "../errors/deck-package-parse-error.ts";
 import { UnsupportedDeckSchemaError } from "../errors/unsupported-deck-schema-error.ts";
@@ -52,6 +53,9 @@ export function decodeDeckManifest(
 export function parseDeckManifest(bytes: Uint8Array): DeckManifest {
   const issues: DeckPackageParseIssue[] = [];
   const manifest = decodeDeckManifest(bytes, issues);
+  if (bytes.byteLength > DECK_PACKAGE_LIMITS.maxManifestFileBytes) {
+    issues.push({ path: ["deck.json"], message: "Manifest file exceeds size limit" });
+  }
   if (manifest) {
     issues.push(...validateManifestRelationships(manifest));
   }

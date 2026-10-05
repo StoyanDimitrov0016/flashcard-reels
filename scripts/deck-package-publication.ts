@@ -85,7 +85,7 @@ type ReadCandidate = Readonly<{
 type DeckIdInventory = Readonly<{
   id: string;
   cards: readonly Readonly<{ id: string }>[];
-  lessons: readonly Readonly<{ id: string }>[];
+  lessons: readonly Readonly<{ id: string; sections: readonly Readonly<{ id: string }>[] }>[];
 }>;
 
 /**
@@ -141,7 +141,10 @@ export async function reviewDeckPublication({
     publishedIds.push({
       id: deck.deck.id,
       cards: deck.deck.cards.map(({ id }) => ({ id })),
-      lessons: deck.deck.lessons.map(({ id }) => ({ id })),
+      lessons: deck.deck.lessons.map(({ id, sections }) => ({
+        id,
+        sections: sections.map(({ id: sectionId }) => ({ id: sectionId })),
+      })),
     });
     const candidate = readCandidates.find(({ deck: item }) => item.deck.id === deck.deck.id);
     if (candidate && candidate.candidate.sha256 !== published.sha256) {
@@ -334,6 +337,9 @@ function findCrossDeckIds(decks: readonly DeckIdInventory[]): string[] {
     }
     for (const lesson of deck.lessons ?? []) {
       addOwner(lesson.id, "Lesson", deck.id);
+      for (const section of lesson.sections) {
+        addOwner(section.id, "Section", deck.id);
+      }
     }
   }
   return [...owners.entries()]

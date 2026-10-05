@@ -306,6 +306,47 @@ describe("deck publication review", () => {
     const lessons = [{ id: lessonId, title: "Why scale", intro: null, sections: [] }];
     const verticalId = "81111111-1111-4111-8111-111111111111";
     const horizontalId = "82222222-2222-4222-8222-222222222222";
+    it.each(["candidate", "published"])(
+      "blocks a section ID reused by another %s deck",
+      async (source) => {
+        const first = candidate(
+          deckDocument({
+            lessons: [
+              {
+                id: lessonId,
+                title: "First",
+                intro: null,
+                sections: [{ id: verticalId, title: "Section", body: "Body." }],
+              },
+            ],
+          })
+        );
+        const second = candidate(
+          deckDocument({
+            id: otherDeckId,
+            cards: deckCards({ 0: { id: replacementCardId } }).slice(0, 1),
+            lessons: [
+              {
+                id: horizontalId,
+                title: "Second",
+                intro: null,
+                sections: [{ id: verticalId, title: "Section", body: "Body." }],
+              },
+            ],
+          }),
+          "Other.fcrdeck"
+        );
+        const result =
+          source === "candidate"
+            ? await review(storeWith(), first, second)
+            : await review(storeWith(first), second);
+        expect(result.blocks).toContain(
+          `Section ${verticalId} appears in more than one deck: ${source === "candidate" ? `${deckId}, ${otherDeckId}` : `${otherDeckId}, ${deckId}`}.`
+        );
+        expect(canPublish(result)).toBe(false);
+        expect(publicationUploads(result, [first, second])).toEqual([]);
+      }
+    );
     const withLesson = (markdown: string, revision = 1, id = deckId) =>
       candidate(
         deckDocument({

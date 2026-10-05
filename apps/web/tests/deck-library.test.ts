@@ -121,6 +121,27 @@ class MemoryStorage implements DeckStorage {
 }
 
 describe("deck library", () => {
+  it("reports corrupt DEFLATE data as a typed package error", async () => {
+    const storage = new MemoryStorage();
+    const bytes = deckPackage({ id: scalingId, title: "Scaling" });
+    const metadata = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const dataStart = 30 + metadata.getUint16(26, true) + metadata.getUint16(28, true);
+    // Reserved DEFLATE block type, with otherwise valid ZIP metadata.
+    bytes[dataStart] = 7;
+    storage.put("decks/scaling.fcrdeck", bytes);
+    const errors: unknown[] = [];
+    expect(
+      await createDeckLibrary({
+        storage,
+        onUnreadableDeck: (_key, error) => errors.push(error),
+      }).listDecks()
+    ).toEqual([]);
+    expect(errors[0]).toBeInstanceOf(DeckPackageParseError);
+    expect(errors[0]).toMatchObject({
+      issues: [{ path: ["deck.json"], message: "Could not decompress ZIP entry" }],
+      cause: { code: 1 },
+    });
+  });
   it.each([1, 2, 3])("skips schema %s with a typed unsupported-format error", async (schema) => {
     const storage = new MemoryStorage();
     const files = unzipSync(deckPackage({ id: scalingId, title: "Scaling" }));

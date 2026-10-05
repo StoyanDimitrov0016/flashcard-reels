@@ -3,7 +3,7 @@ import {
   DECK_SCHEMA_CONSTRAINTS,
   DeckPackageParseError,
 } from "@flashcard-reels/deck-contract";
-import { inflateSync } from "fflate";
+import { FlateErrorCode, inflateSync } from "fflate";
 
 /**
  * Reads individual ZIP entries through byte-range requests. A deck package is mostly audio, so the
@@ -34,6 +34,12 @@ const MaximumCommentSize = 0xffff;
 const LocalHeaderSize = 30;
 const StoredMethod = 0;
 const DeflatedMethod = 8;
+const InvalidDeflateCodes: ReadonlySet<number> = new Set([
+  FlateErrorCode.UnexpectedEOF,
+  FlateErrorCode.InvalidBlockType,
+  FlateErrorCode.InvalidLengthLiteral,
+  FlateErrorCode.InvalidDistance,
+]);
 const MaximumEntries =
   1 +
   DECK_SCHEMA_CONSTRAINTS.maxFlashcards +
@@ -211,7 +217,23 @@ export async function openZipRangeReader(
         return compressed;
       }
       if (entry.method === DeflatedMethod) {
-        const expanded = inflateSync(compressed, { out: new Uint8Array(entry.uncompressedSize) });
+        let expanded: Uint8Array;
+        try {
+          expanded = inflateSync(compressed, { out: new Uint8Array(entry.uncompressedSize) });
+        } catch (cause) {
+          if (
+            !(cause instanceof Error) ||
+            !("code" in cause) ||
+            typeof cause.code !== "number" ||
+            !InvalidDeflateCodes.has(cause.code)
+          ) {
+            throw cause;
+          }
+          throw new DeckPackageParseError(
+            [{ path: [name], message: "Could not decompress ZIP entry" }],
+            { cause }
+          );
+        }
         if (expanded.byteLength !== entry.uncompressedSize) {
           invalid(`uncompressed size differs: ${name}`);
         }

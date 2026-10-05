@@ -103,6 +103,11 @@ function parseManifestInput(input: unknown) {
 }
 
 describe("schema 4 deck contract", () => {
+  it("enforces the manifest byte limit for manifest-only reads", () => {
+    const input = manifest();
+    input.description = "x".repeat(DECK_PACKAGE_LIMITS.maxManifestFileBytes);
+    expect(() => parseManifestInput(input)).toThrow(DeckPackageParseError);
+  });
   it("round-trips all content through reproducible archives and directory files", () => {
     const source = fixture();
     expect(parseDeckPackage(createDeckPackage(source))).toEqual(source);
