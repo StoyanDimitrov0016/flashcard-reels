@@ -1,5 +1,7 @@
 # Stable lesson section identities and development catalog
 
+Status: section representation superseded by [spec 7](../specs/7-lesson-sections-as-entities.md); the review below is historical and its phone acceptance checklist still applies.
+
 Implemented on `feat/stable-sections-and-dev-catalog`, based on `develop`; phone acceptance is pending. This supersedes the heading-path identity
 decision in [the original spec](../specs/4-lesson-section-references.md). The original review remains
 a historical account of schema 2.

@@ -1,6 +1,6 @@
 # 4 - Lesson section references
 
-Status: schema 3 stable identities implemented on the unpushed feature branch; device acceptance pending.
+Status: superseded by [7 - Lesson sections as entities](7-lesson-sections-as-entities.md); the design below is historical.
 The [stable identity review](../reviews/2026-10-05-stable-section-identities.md) supersedes the
 generated-reference representation below. It records the explicit UUID markers now used for new
 packages; the heading-path design here describes legacy schema 2 behavior.

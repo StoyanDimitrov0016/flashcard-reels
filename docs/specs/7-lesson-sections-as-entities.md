@@ -1,6 +1,6 @@
 # 7 - Lesson sections as entities
 
-Status: ready for implementation. Supersedes the section representation in
+Status: implemented; owner phone acceptance, v7 backup restore, and R2 format cutover pending. Supersedes the section representation in
 [4 - Lesson section references](4-lesson-section-references.md) and the comment markers recorded in
 [the stable section identities review](../reviews/2026-10-05-stable-section-identities.md).
 Scope: `packages/deck-contract`, deck sources and tooling, and `apps/mobile`. `apps/web` receives
@@ -222,11 +222,11 @@ Add `marked` as a contract dependency at the version `react-native-marked` resol
 
 ### Errors
 
-| Situation | Error | Code | Context |
-|---|---|---|---|
-| Not a ZIP, limits exceeded, missing or extra files, malformed JSON, schema violations, broken references, disallowed Markdown | `DeckPackageParseError` with all issues | `DECK_PACKAGE_INVALID` | issue paths, lesson ID and line where relevant |
-| `schema` is a number other than 4 | `UnsupportedDeckSchemaError` | `DECK_SCHEMA_UNSUPPORTED` (new) | `{ schema }` |
-| `createDeckPackage` given content that does not parse | the parse error, unchanged | as above | — |
+| Situation                                                                                                                     | Error                                   | Code                            | Context                                        |
+| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------- | ---------------------------------------------- |
+| Not a ZIP, limits exceeded, missing or extra files, malformed JSON, schema violations, broken references, disallowed Markdown | `DeckPackageParseError` with all issues | `DECK_PACKAGE_INVALID`          | issue paths, lesson ID and line where relevant |
+| `schema` is a number other than 4                                                                                             | `UnsupportedDeckSchemaError`            | `DECK_SCHEMA_UNSUPPORTED` (new) | `{ schema }`                                   |
+| `createDeckPackage` given content that does not parse                                                                         | the parse error, unchanged              | as above                        | —                                              |
 
 `DeckParseError` disappears: manifest problems are package problems and are reported as
 `DeckPackageParseError` issues with `deck.json` paths. The contract throws no plain `Error` for
