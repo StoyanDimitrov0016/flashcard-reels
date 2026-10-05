@@ -109,6 +109,27 @@ function editedCards(answer: string) {
 }
 
 describe("deck publication review", () => {
+  it("publishes development candidates only within the development prefix", async () => {
+    const item = candidate(deckDocument());
+    const result = await reviewDeckPublication({
+      candidates: [item],
+      reader: new ContractDeckPackageReader(),
+      store: storeWith(),
+      keyPrefix: "dev/decks/",
+    });
+    expect(publicationUploads(result, [item])).toMatchObject([
+      { key: "dev/decks/Scaling.fcrdeck" },
+    ]);
+    await expect(
+      reviewDeckPublication({
+        candidates: [item],
+        reader: new ContractDeckPackageReader(),
+        store: storeWith(item),
+        keyPrefix: "dev/decks/",
+      })
+    ).rejects.toThrow("outside the selected prefix");
+  });
+
   it("reports unchanged decks and uploads nothing", async () => {
     const published = candidate(deckDocument());
 

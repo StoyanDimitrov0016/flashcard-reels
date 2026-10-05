@@ -106,6 +106,7 @@ type ReviewOptions = Readonly<{
   candidates: readonly DeckPublicationCandidate[];
   store: PublishedDeckStore;
   reader: DeckPackageReader;
+  keyPrefix?: string;
 }>;
 
 type ReadCandidate = Readonly<{
@@ -134,8 +135,6 @@ type DeckComparison = Pick<
   | "warnings"
 >;
 
-const publishedKeyPrefix = "decks/";
-
 /**
  * Reads every candidate and every relevant published package before deciding anything, so a
  * store failure rejects the whole review and nothing can be uploaded from a partial comparison.
@@ -144,12 +143,19 @@ export async function reviewDeckPublication({
   candidates,
   store,
   reader,
+  keyPrefix = "decks/",
 }: ReviewOptions): Promise<DeckPublicationReview> {
+  if (!keyPrefix.endsWith("/") || keyPrefix.startsWith("/") || keyPrefix.includes("..")) {
+    throw new Error("Publication prefix must be a relative prefix ending in /");
+  }
   const readCandidates: ReadCandidate[] = candidates.map((candidate) => ({
     candidate,
     deck: toPublicationDeckPackage(reader.read(candidate.bytes)),
   }));
   const publishedEntries = await store.listPublishedDecks();
+  if (publishedEntries.some((entry) => !entry.key.startsWith(keyPrefix))) {
+    throw new Error("Published catalog contains an object outside the selected prefix");
+  }
   const publishedByDeckId = new Map(publishedEntries.map((entry) => [entry.deckId, entry]));
   const catalogBlocks: string[] = [];
 
@@ -205,6 +211,7 @@ export async function reviewDeckPublication({
           ? (publishedDecks.get(deck.id) ?? null)
           : null,
       publishedEntries,
+      keyPrefix,
     });
   });
 
@@ -262,6 +269,7 @@ type ReviewDeckOptions = Readonly<{
   published: PublishedDeckEntry | null;
   publishedDeck: PublicationDeckPackage | null;
   publishedEntries: readonly PublishedDeckEntry[];
+  keyPrefix: string;
 }>;
 
 function reviewDeck({
@@ -270,8 +278,12 @@ function reviewDeck({
   published,
   publishedDeck,
   publishedEntries,
+  keyPrefix,
 }: ReviewDeckOptions): DeckPublicationChange {
-  const key = published?.key ?? `${publishedKeyPrefix}${candidate.fileName}`;
+  const key = published?.key ?? `${keyPrefix}${candidate.fileName}`;
+  if (candidate.fileName.includes("/") || candidate.fileName.includes("\\")) {
+    throw new Error("Candidate file names cannot contain directory separators");
+  }
   const base = {
     deckId: deck.id,
     fileName: candidate.fileName,

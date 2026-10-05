@@ -20,10 +20,20 @@ import {
 import { getR2Environment } from "../apps/web/src/server/env.ts";
 
 const ConfirmationWord = "publish";
-const PublishedKeyPrefix = "decks/";
 
 const argumentsList = process.argv.slice(2);
 const dryRun = argumentsList.includes("--dry-run");
+const environmentArgument = argumentsList.find((argument) => argument.startsWith("--environment="));
+const publicationEnvironment = environmentArgument?.slice("--environment=".length);
+if (publicationEnvironment !== "dev" && publicationEnvironment !== "prod") {
+  throw new Error("Select --environment=dev (dev/decks/) or --environment=prod (decks/)");
+}
+const PublishedKeyPrefix = publicationEnvironment === "dev" ? "dev/decks/" : "decks/";
+for (const argument of argumentsList) {
+  if (argument.startsWith("--") && argument !== "--dry-run" && argument !== environmentArgument) {
+    throw new Error(`Unknown argument: ${argument}`);
+  }
+}
 const sourcePaths = argumentsList.filter((argument) => !argument.startsWith("--"));
 if (sourcePaths.length === 0) {
   sourcePaths.push("flashcard-reels-decks.zip");
@@ -188,6 +198,7 @@ async function confirmUpload(uploadCount) {
 }
 
 const candidates = await readCandidates(sourcePaths);
+console.log(`Publication target: ${publicationEnvironment} (${PublishedKeyPrefix})`);
 const environment = getR2Environment();
 const client = new S3Client({
   region: "auto",
@@ -201,6 +212,7 @@ const review = await reviewDeckPublication({
   candidates,
   reader: new ContractDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),
+  keyPrefix: PublishedKeyPrefix,
 });
 printReview(review);
 
