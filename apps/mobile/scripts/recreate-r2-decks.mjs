@@ -1,88 +1,136 @@
-// Rebuild schema 4 R2 snapshots with regenerated local audio. Never writes to R2.
-import {
-  compareDeckPackages,
-  createDeckPackage,
-  parseDeckFiles,
-  parseDeckPackage,
-} from "@flashcard-reels/deck-contract";
+// Rebuild curated packages from downloaded R2 snapshots in build/r2-source and
+// generated local card audio. Outputs and R2 snapshots stay outside Git.
+import { parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { zipSync } from "fflate";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, mkdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { readDeckSource } from "./read-deck-source.mjs";
+import { createContractDeckPackageArchive } from "../src/features/decks/deck-installer/internal/contract-deck-package-writer.ts";
 
 const root = process.cwd();
+const r2Directory = path.join(root, "build", "r2-source");
+const deckSources = path.join(root, "data", "decks");
+const outputDirectory = path.join(root, "build", "r2-regenerated");
+const bundlePath = path.resolve(root, "..", "..", "flashcard-reels-decks.zip");
+
 const published = new Map();
-for (const file of await readdir("build/r2-source")) {
-  if (!file.endsWith(".fcrdeck")) {
+for (const fileName of await readdir(r2Directory)) {
+  if (!fileName.endsWith(".fcrdeck")) {
     continue;
   }
-  const parsed = parseDeckPackage(
-    new Uint8Array(await readFile(path.resolve("build/r2-source", file)))
-  );
+  const bytes = new Uint8Array(await readFile(path.join(r2Directory, fileName)));
+  const parsed = parseDeckPackage(bytes);
   if (published.has(parsed.deck.id)) {
     throw new Error(`Duplicate R2 deck ID: ${parsed.deck.id}`);
   }
   published.set(parsed.deck.id, parsed);
 }
+
 const archive = {};
 const usedIds = new Set();
-await mkdir("build/r2-regenerated", { recursive: true });
-for (const entry of await readdir("data/decks", { withFileTypes: true })) {
-  if (!entry.isDirectory()) {
-    continue;
+const sourceEntries = await readdir(deckSources, { withFileTypes: true });
+const sourceNames = sourceEntries
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .toSorted();
+
+for (const sourceName of sourceNames) {
+  const sourceDirectory = path.join(deckSources, sourceName);
+  const localDeck = JSON.parse(await readFile(path.join(sourceDirectory, "deck.json"), "utf8"));
+  const r2 = published.get(localDeck.id);
+  if (!r2) {
+    throw new Error(`${sourceName}: no matching R2 package`);
   }
-  const source = parseDeckFiles(await readDeckSource(path.resolve("data/decks", entry.name)));
-  const previous = published.get(source.deck.id);
-  if (!previous) {
-    throw new Error(`${entry.name}: no matching R2 snapshot`);
-  }
-  const comparison = compareDeckPackages(previous, source);
+  const deck = r2.deck;
   if (
-    comparison.addedCards.length ||
-    comparison.changedCards.length ||
-    comparison.removedCards.length ||
-    comparison.reorderedCardCount ||
-    comparison.addedLessons.length ||
-    comparison.changedLessons.length ||
-    comparison.removedLessons.length ||
-    comparison.reorderedLessonCount ||
-    source.deck.authorId !== previous.deck.authorId
+    localDeck.authorId !== deck.authorId ||
+    localDeck.cards.length !== deck.cards.length ||
+    localDeck.lessons.length !== deck.lessons.length
   ) {
-    throw new Error(`${entry.name}: content differs from R2 snapshot`);
+    throw new Error(`${sourceName}: local identity or counts differ from R2`);
   }
-  const updatedAt = new Date().toISOString();
-  const updated = {
-    ...source,
-    deck: {
-      ...source.deck,
-      revision: previous.deck.revision + 1,
-      updatedAt,
-      cards: source.deck.cards.map((card) => Object.assign({}, card, { updatedAt })),
-    },
+  for (const [index, card] of deck.cards.entries()) {
+    const local = localDeck.cards[index];
+    if (
+      local.id !== card.id ||
+      local.question !== card.question ||
+      local.answer !== card.answer ||
+      local.lessonId !== card.lessonId
+    ) {
+      throw new Error(`${sourceName}: card ${index} differs from R2`);
+    }
+  }
+  for (const [index, lesson] of deck.lessons.entries()) {
+    const local = localDeck.lessons[index];
+    const markdown = await readFile(
+      path.join(sourceDirectory, "lessons", `${lesson.id}.md`),
+      "utf8"
+    );
+    if (
+      local.id !== lesson.id ||
+      local.title !== lesson.title ||
+      markdown !== r2.lessonFiles.get(lesson.id)
+    ) {
+      throw new Error(`${sourceName}: lesson ${index} differs from R2`);
+    }
+  }
+
+  const audioFiles = {};
+  const modificationTimes = [];
+  for (const card of deck.cards) {
+    const audioPath = path.join(sourceDirectory, "audio", `${card.id}.mp3`);
+    audioFiles[card.id] = new Uint8Array(await readFile(audioPath));
+    const audioStats = await stat(audioPath);
+    modificationTimes.push(audioStats.mtimeMs);
+  }
+  const updatedAt = new Date(Math.max(...modificationTimes)).toISOString();
+  if (updatedAt <= deck.updatedAt) {
+    throw new Error(`${sourceName}: regenerated audio is not newer than the R2 deck`);
+  }
+  const updatedDeck = {
+    ...deck,
+    revision: deck.revision + 1,
+    updatedAt,
+    cards: deck.cards.map((card) => ({ ...card, audio: true, updatedAt })),
   };
   for (const id of [
-    updated.deck.id,
-    ...updated.deck.cards.map((card) => card.id),
-    ...updated.deck.lessons.flatMap((lesson) => [
-      lesson.id,
-      ...lesson.sections.map((section) => section.id),
-    ]),
+    updatedDeck.id,
+    ...updatedDeck.cards.map((card) => card.id),
+    ...updatedDeck.lessons.map((lesson) => lesson.id),
   ]) {
     if (usedIds.has(id)) {
       throw new Error(`ID appears in multiple decks: ${id}`);
     }
     usedIds.add(id);
   }
-  const file = `${updated.deck.id}.fcrdeck`;
-  const bytes = createDeckPackage(updated);
-  await writeFile(path.resolve("build/r2-regenerated", file), bytes);
-  archive[file] = bytes;
-  console.log(`${entry.name}: r${previous.deck.revision} -> r${updated.deck.revision}, valid`);
+
+  const lessonFiles = Object.fromEntries(r2.lessonFiles);
+  const packageBytes = createContractDeckPackageArchive(updatedDeck, audioFiles, lessonFiles);
+  const parsed = parseDeckPackage(packageBytes);
+  if (
+    parsed.audioFiles.size !== updatedDeck.cards.length ||
+    parsed.lessonFiles.size !== updatedDeck.lessons.length
+  ) {
+    throw new Error(`${sourceName}: regenerated package assets are incomplete`);
+  }
+  await mkdir(outputDirectory, { recursive: true });
+  const fileName = `${updatedDeck.id}.fcrdeck`;
+  await writeFile(path.join(outputDirectory, fileName), packageBytes);
+  await mkdir(path.join(outputDirectory, "manifests"), { recursive: true });
+  await writeFile(
+    path.join(outputDirectory, "manifests", `${sourceName}.json`),
+    `${JSON.stringify(updatedDeck, null, 2)}\n`
+  );
+  archive[fileName] = packageBytes;
+  console.log(
+    `${sourceName}: r${deck.revision} -> r${updatedDeck.revision}, ${updatedDeck.cards.length} audio cards, ${updatedDeck.lessons.length} lessons, ${packageBytes.length} bytes, valid`
+  );
 }
+
 if (Object.keys(archive).length !== published.size) {
-  throw new Error("Local source count differs from R2 snapshots");
+  throw new Error(
+    `Local sources ${Object.keys(archive).length} do not match R2 packages ${published.size}`
+  );
 }
-const output = path.resolve(root, "../..", "flashcard-reels-decks.zip");
-await writeFile(output, zipSync(archive, { level: 0 }));
-console.log(`Wrote ${output}`);
+await writeFile(bundlePath, zipSync(archive, { level: 0 }));
+console.log(`Wrote ${bundlePath}`);

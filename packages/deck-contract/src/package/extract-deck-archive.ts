@@ -8,10 +8,12 @@ import { DeckPackageParseError } from "../errors/deck-package-parse-error.ts";
 import { rejectDeckPackage } from "./reject-deck-package.ts";
 import { validateZipMetadata } from "./validate-zip-metadata.ts";
 
+const AudioPathPattern = /^audio\/[0-9a-f-]{36}\.mp3$/i;
+const LessonPathPattern = /^lessons\/[0-9a-f-]{36}\.md$/i;
+
 function checkEntryPath(name: string): void {
-  // The exact file set is checked after extraction to collect all content issues.
-  if (name.includes("\\") || name.startsWith("/") || name.split("/").includes("..")) {
-    rejectDeckPackage(`Unsafe archive path: ${name}`, [name]);
+  if (name !== "deck.json" && !AudioPathPattern.test(name) && !LessonPathPattern.test(name)) {
+    rejectDeckPackage(`Unexpected archive path: ${name}`, [name]);
   }
 }
 
@@ -28,7 +30,7 @@ function checkExtractedSizes(files: Record<string, Uint8Array>): void {
     if (path === "deck.json" && content.byteLength > LIMITS.maxManifestFileBytes) {
       rejectDeckPackage("Manifest file exceeds size limit", [path]);
     }
-    if (path.startsWith("lessons/") && content.byteLength > LIMITS.maxLessonTextFileBytes) {
+    if (path.startsWith("lessons/") && content.byteLength > LIMITS.maxLessonFileBytes) {
       rejectDeckPackage(`Lesson file exceeds size limit: ${path}`, [path]);
     }
   }
@@ -43,8 +45,7 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
 
   const paths = new Set<string>();
   let declaredBytes = 0;
-  const maximumFiles =
-    1 + CONSTRAINTS.maxFlashcards + CONSTRAINTS.maxLessons * (1 + CONSTRAINTS.maxSectionsPerLesson);
+  const maximumFiles = 1 + CONSTRAINTS.maxFlashcards + CONSTRAINTS.maxLessons;
 
   function inspectEntry({ name, size, originalSize, compression }: UnzipFileInfo): boolean {
     checkEntryPath(name);
@@ -75,7 +76,7 @@ export function extractDeckArchive(bytes: Uint8Array): Record<string, Uint8Array
     if (name === "deck.json" && originalSize > LIMITS.maxManifestFileBytes) {
       rejectDeckPackage("Manifest file exceeds size limit", [name]);
     }
-    if (name.startsWith("lessons/") && originalSize > LIMITS.maxLessonTextFileBytes) {
+    if (name.startsWith("lessons/") && originalSize > LIMITS.maxLessonFileBytes) {
       rejectDeckPackage(`Lesson file exceeds size limit: ${name}`, [name]);
     }
 

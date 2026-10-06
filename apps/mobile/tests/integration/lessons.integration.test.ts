@@ -1,4 +1,5 @@
-import { createDeckPackage, type Deck, type LessonSection } from "@flashcard-reels/deck-contract";
+import type { Deck } from "@flashcard-reels/deck-contract";
+
 import { afterEach, describe, expect, it } from "vitest";
 
 import type {
@@ -7,6 +8,8 @@ import type {
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 
+import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
@@ -14,7 +17,7 @@ import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-dec
 import { LessonServiceImpl } from "@/features/lessons/application/lesson.service.impl";
 import { SQLiteLessonRepository } from "@/features/lessons/infrastructure/sqlite-lesson.repository";
 import { SQLiteReadingListQuery } from "@/features/lessons/infrastructure/sqlite-reading-list.query";
-import { deckProgress, lessonSections } from "@/infrastructure/sqlite/schema";
+import { deckProgress } from "@/infrastructure/sqlite/schema";
 
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import {
@@ -37,12 +40,7 @@ class NoAudioStorage implements DeckAudioStorage {
   async removeOtherRevisions(): Promise<void> {}
 }
 
-type LessonInput = Readonly<{
-  id: string;
-  title: string;
-  intro: string | null;
-  sections: readonly LessonSection[];
-}>;
+type LessonInput = Readonly<{ id: string; title: string; markdown: string }>;
 
 function packageWithLessons(
   version: number,
@@ -57,7 +55,6 @@ function packageWithLessons(
         createdAt: timestamp,
         id: deckId === TEST_DECK_ID ? testId(1) : testId(2),
         lessonId: null,
-        lessonSectionId: null,
         audio: false,
         question: "What is vertical scaling?",
         updatedAt: timestamp,
@@ -65,20 +62,28 @@ function packageWithLessons(
     ],
     createdAt: timestamp,
     authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-    schema: 4,
+    schema: 1,
     description: "Scaling basics",
     id: deckId,
-    lessons: lessonInputs,
+    lessons: lessonInputs.map(({ id, title: lessonTitle }) => ({
+      id,
+      title: lessonTitle,
+    })),
     title,
     updatedAt: timestamp,
     revision: version,
   };
-  return createDeckPackage({ deck: document, audio: new Map() });
+  return createContractDeckPackageArchive(
+    document,
+    {},
+    Object.fromEntries(lessonInputs.map((lesson) => [lesson.id, lesson.markdown]))
+  );
 }
 
 function createGraph(database: NodeSqliteDatabase) {
   return {
     installer: new DeckInstallerImpl(
+      new ContractDeckPackageReader(),
       new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       new NoAudioStorage(),
       new TestClock(),
@@ -95,23 +100,17 @@ function createGraph(database: NodeSqliteDatabase) {
 
 const introduction = {
   id: lessonIds[0],
-  intro: "Load grows.",
-  sections: [],
+  markdown: "# Why scale\n\nLoad grows.",
   title: "Why scale",
 };
 const vertical = {
   id: lessonIds[1],
-  intro: null,
-  sections: [
-    { id: testId(910), title: "First", body: "Bigger machines." },
-    { id: testId(911), title: "Second", body: "Tradeoffs." },
-  ],
+  markdown: "Bigger machines.",
   title: "Vertical scaling",
 };
 const horizontal = {
   id: lessonIds[2],
-  intro: null,
-  sections: [{ id: testId(912), title: "Distributed", body: "More machines." }],
+  markdown: "More machines.",
   title: "Horizontal scaling",
 };
 
@@ -141,12 +140,9 @@ describe("deck lessons", () => {
       },
     ]);
     expect(await graph.lessons.findById(introduction.id)).toMatchObject({
-      intro: "Load grows.",
-      sections: [],
+      content: "# Why scale\n\nLoad grows.",
       deckId: TEST_DECK_ID,
     });
-    const installedVertical = await graph.lessons.findById(vertical.id);
-    expect(installedVertical?.sections).toEqual(vertical.sections);
   });
 
   it("replaces lessons when a new deck version edits or removes them", async () => {
@@ -155,9 +151,7 @@ describe("deck lessons", () => {
     await graph.installer.installFromBytes(packageWithLessons(1, [introduction, vertical]));
 
     await graph.installer.installFromBytes(
-      packageWithLessons(2, [
-        { ...vertical, sections: [{ id: testId(911), title: "Edited", body: "Edited." }] },
-      ])
+      packageWithLessons(2, [{ ...vertical, markdown: "Edited." }])
     );
 
     const [readingList] = await graph.lessons.listReadingLists();
@@ -165,17 +159,14 @@ describe("deck lessons", () => {
       { id: vertical.id, order: 0, title: "Vertical scaling" },
     ]);
     const editedLesson = await graph.lessons.findById(vertical.id);
-    expect(editedLesson?.sections).toEqual([{ id: testId(911), title: "Edited", body: "Edited." }]);
+    expect(editedLesson?.content).toBe("Edited.");
     expect(await graph.lessons.findById(introduction.id)).toBeNull();
-    expect(await database.drizzle.select({ id: lessonSections.id }).from(lessonSections)).toEqual([
-      { id: testId(911) },
-    ]);
   });
 
   it("removes lessons with their deck and omits decks without lessons", async () => {
     database = new NodeSqliteDatabase();
     const graph = createGraph(database);
-    await graph.installer.installFromBytes(packageWithLessons(1, [introduction, vertical]));
+    await graph.installer.installFromBytes(packageWithLessons(1, [introduction]));
     await graph.installer.installFromBytes(packageWithLessons(1, [], OTHER_DECK_ID, "No lessons"));
 
     const readingLists = await graph.lessons.listReadingLists();
@@ -185,7 +176,6 @@ describe("deck lessons", () => {
 
     expect(await graph.lessons.listReadingLists()).toEqual([]);
     expect(await graph.lessons.findById(introduction.id)).toBeNull();
-    expect(await database.drizzle.select().from(lessonSections)).toEqual([]);
   });
 
   it("keeps lessons readable while a reinstalled deck waits for the saved-progress choice", async () => {
@@ -214,20 +204,5 @@ describe("deck lessons", () => {
       graph.installer.installFromBytes(packageWithLessons(1, [introduction], OTHER_DECK_ID, "Copy"))
     ).rejects.toThrow(`Lesson ${introduction.id} already belongs to deck ${TEST_DECK_ID}`);
     expect(await graph.lessons.listReadingLists()).toHaveLength(1);
-  });
-
-  it("rejects a section identity owned by another deck and rolls back its installation", async () => {
-    database = new NodeSqliteDatabase();
-    const graph = createGraph(database);
-    await graph.installer.installFromBytes(packageWithLessons(1, [vertical]));
-    await expect(
-      graph.installer.installFromBytes(
-        packageWithLessons(1, [{ ...vertical, id: testId(920) }], OTHER_DECK_ID, "Copy")
-      )
-    ).rejects.toThrow(`Section ${testId(910)} already belongs to deck ${TEST_DECK_ID}`);
-    const preservedVertical = await graph.lessons.findById(vertical.id);
-    expect(preservedVertical?.sections).toEqual(vertical.sections);
-    expect(await graph.lessons.listReadingLists()).toHaveLength(1);
-    expect(await graph.lessons.findById(testId(920))).toBeNull();
   });
 });

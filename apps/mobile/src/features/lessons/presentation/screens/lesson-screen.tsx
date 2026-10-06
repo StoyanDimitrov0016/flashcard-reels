@@ -7,7 +7,7 @@ import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 import { findAdjacentLessons } from "@/features/lessons/presentation/adjacent-lessons";
-import { LessonArticle } from "@/features/lessons/presentation/components/lesson-article";
+import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import { LessonPager } from "@/features/lessons/presentation/components/lesson-pager";
 import {
   ReadingProgressBar,
@@ -32,7 +32,7 @@ export default function LessonScreen() {
   const styles = createStyles(colors);
   const router = useRouter();
   const lessonId = useLessonRouteId();
-  const { lesson, loading } = useLesson({ lessonId });
+  const { blocks, lesson, loading } = useLesson({ lessonId });
   const { readingLists } = useReadingLists();
   const deckLessons = lesson
     ? (readingLists.find((list) => list.deckId === lesson.deckId)?.lessons ?? [])
@@ -87,7 +87,7 @@ export default function LessonScreen() {
               <Text accessibilityRole="header" style={styles.title}>
                 {lesson.title}
               </Text>
-              <LessonArticle lesson={lesson} />
+              <LessonMarkdownView blocks={blocks} />
               <View style={styles.navigation}>
                 <LessonPager next={next} onOpenLesson={openLesson} previous={previous} />
               </View>

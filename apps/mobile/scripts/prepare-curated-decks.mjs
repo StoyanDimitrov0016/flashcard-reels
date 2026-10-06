@@ -1,64 +1,68 @@
-import {
-  createDeckPackage,
-  parseDeckFiles,
-  parseDeckPackage,
-} from "@flashcard-reels/deck-contract";
+import { parseDeck, parseDeckPackage } from "@flashcard-reels/deck-contract";
 import { zipSync } from "fflate";
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 
-import { readDeckSource } from "./read-deck-source.mjs";
-
+const run = promisify(execFile);
 const root = process.cwd();
-const sources = process.argv.slice(2);
-if (sources.length === 0) {
-  const sourceRoot = path.resolve("data/decks");
-  const entries = await readdir(sourceRoot, { withFileTypes: true });
-  sources.push(
-    ...entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => path.join(sourceRoot, entry.name))
-  );
-}
+const sources = path.join(root, "data", "decks");
+const output = path.resolve(root, "..", "..", "flashcard-reels-decks.zip");
 const archive = {};
-const usedIds = new Set();
+/** @type {Map<string, string>} */
+const usedIds = new Map();
 let cardCount = 0;
 let lessonCount = 0;
 let audioCount = 0;
-await mkdir("build/curated-decks", { recursive: true });
-for (const directory of sources) {
-  const source = parseDeckFiles(await readDeckSource(path.resolve(directory)));
-  const { deck, audio } = source;
-  for (const id of [
-    deck.id,
-    ...deck.cards.map((card) => card.id),
-    ...deck.lessons.flatMap((lesson) => [
-      lesson.id,
-      ...lesson.sections.map((section) => section.id),
-    ]),
-  ]) {
-    if (usedIds.has(id)) {
-      throw new Error(`ID ${id} appears in multiple curated decks`);
-    }
-    usedIds.add(id);
+
+/** @param {string} id @param {string} kind @param {string} directory */
+function claimId(id, kind, directory) {
+  const owner = usedIds.get(id);
+  if (owner) {
+    throw new Error(`${kind} ID ${id} appears in both ${owner} and ${directory}`);
   }
-  const bytes = createDeckPackage(source);
+  usedIds.set(id, directory);
+}
+
+const sourceEntries = await readdir(sources, { withFileTypes: true });
+for (const directory of sourceEntries
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .toSorted()) {
+  const source = path.join(sources, directory);
+  const deck = parseDeck(JSON.parse(await readFile(path.join(source, "deck.json"), "utf8")));
+  const packagePath = path.join(root, "build", "curated-decks", `${deck.id}.fcrdeck`);
+  const { stdout } = await run(
+    process.execPath,
+    [path.join(root, "scripts", "generate-deck-package.mjs"), source, packagePath],
+    { cwd: root }
+  );
+  process.stdout.write(stdout);
+
+  const bytes = new Uint8Array(await readFile(packagePath));
   const parsed = parseDeckPackage(bytes);
   if (JSON.stringify(parsed.deck) !== JSON.stringify(deck)) {
-    throw new Error(`${directory}: generated content differs from its source`);
+    throw new Error(`${directory}: generated manifest differs from its source`);
   }
-  const file = `${deck.id}.fcrdeck`;
-  await writeFile(path.resolve("build/curated-decks", file), bytes);
-  archive[file] = bytes;
+  claimId(deck.id, "deck", directory);
+  for (const card of deck.cards) {
+    claimId(card.id, "card", directory);
+  }
+  for (const lesson of deck.lessons) {
+    claimId(lesson.id, "lesson", directory);
+  }
+  archive[`${deck.id}.fcrdeck`] = bytes;
   cardCount += deck.cards.length;
   lessonCount += deck.lessons.length;
-  audioCount += audio.size;
+  audioCount += parsed.audioFiles.size;
 }
-if (sources.length === 0) {
+
+if (Object.keys(archive).length === 0) {
   throw new Error("No curated deck sources found");
 }
-const output = path.resolve(root, "../..", "flashcard-reels-decks.zip");
 await writeFile(output, zipSync(archive, { level: 0 }));
 console.log(
-  `Prepared ${sources.length} decks, ${cardCount} cards, ${lessonCount} lessons, ${audioCount} combined audio files in ${path.relative(root, output)}.`
+  `Prepared ${Object.keys(archive).length} decks, ${cardCount} cards, ${lessonCount} lessons, ` +
+    `${audioCount} combined audio files in ${path.relative(root, output)}.`
 );

@@ -1,5 +1,5 @@
 {
-  "schema": 4,
+  "schema": 1,
   "id": "a1000000-0000-4000-8000-000000000001",
   "authorId": "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
   "revision": 1,
@@ -15,8 +15,7 @@
       "audio": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null,
-      "lessonSectionId": null
+      "lessonId": null
     },
     {
       "id": "b1000000-0000-4000-8000-000000000002",
@@ -25,8 +24,7 @@
       "audio": true,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null,
-      "lessonSectionId": null
+      "lessonId": null
     },
     {
       "id": "b1000000-0000-4000-8000-000000000003",
@@ -35,8 +33,7 @@
       "audio": false,
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lessonId": null,
-      "lessonSectionId": null
+      "lessonId": null
     }
   ],
   "lessons": []

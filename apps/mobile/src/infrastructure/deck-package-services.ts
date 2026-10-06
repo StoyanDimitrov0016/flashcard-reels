@@ -6,6 +6,7 @@ import type { DrizzleDatabase } from "@/infrastructure/sqlite/drizzle-database";
 import type { Clock } from "@/shared/domain/clock";
 import type { IdGenerator } from "@/shared/domain/id-generator";
 
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { ExpoDeckPackageFileReader } from "@/features/decks/deck-installer/internal/expo-deck-package-file.reader";
 import { InstalledAudioStorage } from "@/features/decks/deck-installer/internal/installed-audio-storage";
@@ -28,6 +29,7 @@ export function createDeckPackageServices({
 }: CreateDeckPackageServicesOptions) {
   const audioStorage = new InstalledAudioStorage();
   const installer = new DeckInstallerImpl(
+    new ContractDeckPackageReader(),
     new SQLiteDeckPackageInstallationTransaction(database, idGenerator),
     audioStorage,
     clock,

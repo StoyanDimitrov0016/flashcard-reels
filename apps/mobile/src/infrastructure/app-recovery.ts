@@ -13,7 +13,6 @@ const DATABASE_FILES = [
   "flashcard-reels-v4.db",
   "flashcard-reels-v5.db",
   "flashcard-reels-v7.db",
-  "flashcard-reels-v8.db",
 ];
 
 let storagePrepared = false;

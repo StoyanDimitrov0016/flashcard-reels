@@ -1,4 +1,4 @@
-import { createElement, type ComponentProps, type ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -41,15 +41,6 @@ vi.mock("react-native", async () => {
     View: component,
     Pressable: component,
     ActivityIndicator: component,
-    Animated: {
-      View: component,
-      Value: class {
-        interpolate() {
-          return 0;
-        }
-      },
-    },
-    Easing: { inOut: vi.fn(), cubic: vi.fn() },
     StyleSheet: { create: (styles: unknown) => styles },
     Linking: { openSettings: vi.fn() },
     AppState: {
@@ -96,13 +87,10 @@ const props = {
   onScan: vi.fn(),
   visible: true,
 };
-function renderScanner(
-  visible = true,
-  overrides: Partial<ComponentProps<typeof ImportDeckSheet>> = {}
-) {
+function renderScanner(visible = true) {
   harness.cursor = 0;
   harness.effects = [];
-  return renderToStaticMarkup(createElement(ImportDeckSheet, { ...props, visible, ...overrides }));
+  return renderToStaticMarkup(createElement(ImportDeckSheet, { ...props, visible }));
 }
 
 describe("scanner visibility and feedback separation", () => {
@@ -125,20 +113,6 @@ describe("scanner visibility and feedback separation", () => {
   it("does not mount a camera preview while the app is in the background", () => {
     harness.appState = "background";
     expect(renderScanner()).not.toContain("camera-preview");
-  });
-
-  it("advances from download to installation while the scanner is still processing", () => {
-    harness.slots = ["scanner", null, null, true, true, false, true];
-    const downloading = renderScanner(true, { importing: true, downloading: true });
-    expect(downloading).toContain("Downloading deck");
-    expect(downloading).toContain("Cancel download");
-
-    const installing = renderScanner(true, { importing: true, downloading: false });
-    expect(installing).toContain("Installing deck");
-    expect(installing).toContain("Checking cards, lessons, and audio");
-    expect(installing).not.toContain("Downloading deck");
-    expect(installing).not.toContain("Cancel download");
-    expect(installing).not.toContain("camera-preview");
   });
 
   it("preserves a scanned-code failure when foreground permission refresh succeeds", async () => {

@@ -23,7 +23,7 @@ export class InstalledAudioStorage
     const temporary = new Directory(root, `.tmp-${token}`);
     temporary.create({ intermediates: true });
     try {
-      for (const [cardId, bytes] of deckPackage.audio) {
+      for (const [cardId, bytes] of deckPackage.audioFiles) {
         new File(temporary, `${cardId}.mp3`).write(bytes);
       }
     } catch (error) {

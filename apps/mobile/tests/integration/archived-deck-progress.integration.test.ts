@@ -85,7 +85,7 @@ describe("archived deck progress", () => {
   function packageForReinstall() {
     return {
       deck: {
-        schema: 4 as const,
+        schema: 1 as const,
         id: TEST_DECK_ID,
         authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
         title: "Reinstalled deck",
@@ -99,7 +99,6 @@ describe("archived deck progress", () => {
             question: "Question",
             answer: "Answer",
             lessonId: null,
-            lessonSectionId: null,
             audio: false,
             createdAt: reviewedAt,
             updatedAt: reviewedAt,
@@ -107,7 +106,8 @@ describe("archived deck progress", () => {
         ],
         lessons: [],
       },
-      audio: new Map<string, Uint8Array>(),
+      audioFiles: new Map<string, Uint8Array>(),
+      lessonFiles: new Map<string, string>(),
     };
   }
 
@@ -331,7 +331,6 @@ describe("archived deck progress", () => {
               question: "Replacement question",
               answer: "Replacement answer",
               lessonId: null,
-              lessonSectionId: null,
               audio: false,
               createdAt: reviewedAt,
               updatedAt: reviewedAt,

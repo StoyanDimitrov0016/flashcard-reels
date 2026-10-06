@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { DeckLesson } from "@/server/decks";
 
 import { LessonMarkdown } from "@/components/lesson-markdown";
+import { withoutRepeatedTitle } from "@/lib/lesson-text";
 import { cn } from "@/lib/utils";
 
 import { LessonList } from "./lesson-list";
@@ -53,14 +54,8 @@ export function LessonsView({ deckId, lessons, selectedLessonId }: LessonsViewPr
           Lesson {lessonIndex + 1} of {lessons.length}
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight">{lesson.title}</h2>
-        <div className="mt-6 space-y-8">
-          {lesson.intro !== null && <LessonMarkdown markdown={lesson.intro} />}
-          {lesson.sections.map((section) => (
-            <section className="space-y-4" key={section.id}>
-              <h3 className="text-xl font-semibold tracking-tight">{section.title}</h3>
-              <LessonMarkdown markdown={section.body} />
-            </section>
-          ))}
+        <div className="mt-6">
+          <LessonMarkdown markdown={withoutRepeatedTitle(lesson.markdown, lesson.title)} />
         </div>
         <LessonPager
           deckId={deckId}

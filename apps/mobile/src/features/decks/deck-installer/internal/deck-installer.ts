@@ -1,11 +1,10 @@
-import { parseDeckPackage } from "@flashcard-reels/deck-contract";
-
 import type {
   BundledAppearance,
   DeckAudioStorage,
   DeckPackage,
   DeckPackageFileReader,
   DeckPackageInstallationTransaction,
+  DeckPackageReader,
   InstalledDeckIdentityRepository,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 import type { StudySessionSettlement } from "@/features/study/application/study-session-settlement";
@@ -22,6 +21,7 @@ import {
 
 /** Internal orchestration. Consumers use only the DeckInstaller interface exported by this module. */
 export class DeckInstallerImpl implements DeckInstaller {
+  private readonly reader: DeckPackageReader;
   private readonly installation: DeckPackageInstallationTransaction;
   private readonly audioStorage: DeckAudioStorage;
   private readonly clock: Clock;
@@ -30,6 +30,7 @@ export class DeckInstallerImpl implements DeckInstaller {
   private readonly sessionSettlement: StudySessionSettlement | null;
 
   constructor(
+    reader: DeckPackageReader,
     installation: DeckPackageInstallationTransaction,
     audioStorage: DeckAudioStorage,
     clock: Clock,
@@ -37,6 +38,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     identityRepository: InstalledDeckIdentityRepository,
     sessionSettlement: StudySessionSettlement | null = null
   ) {
+    this.reader = reader;
     this.installation = installation;
     this.audioStorage = audioStorage;
     this.clock = clock;
@@ -53,7 +55,7 @@ export class DeckInstallerImpl implements DeckInstaller {
     bytes: Uint8Array,
     appearance?: BundledAppearance
   ): Promise<DeckInstallResult> {
-    const deckPackage = parseDeckPackage(bytes);
+    const deckPackage = this.reader.read(bytes);
     return withDeckOperation(deckPackage.deck.id, () => this.install(deckPackage, appearance));
   }
 

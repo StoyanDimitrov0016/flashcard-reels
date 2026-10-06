@@ -92,7 +92,7 @@ describe("deck theme selection persistence", () => {
     await new SQLiteDeckPackageInstallationTransaction(database.drizzle, database.rowIds).install(
       {
         deck: {
-          schema: 4,
+          schema: 1,
           id: TEST_DECK_ID,
           authorId: testId(500),
           title: "Reinstalled",
@@ -103,7 +103,8 @@ describe("deck theme selection persistence", () => {
           cards: [],
           lessons: [],
         },
-        audio: new Map(),
+        audioFiles: new Map(),
+        lessonFiles: new Map(),
       },
       "2026-01-01T00:00:00.000Z"
     );

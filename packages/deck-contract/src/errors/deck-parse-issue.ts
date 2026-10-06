@@ -3,12 +3,7 @@ export type DeckParseIssue = Readonly<{
   message: string;
 }>;
 
-export type DeckPackageParseIssue = DeckParseIssue &
-  Readonly<{
-    lessonId?: string;
-    sectionId?: string | null;
-    line?: number;
-  }>;
+export type DeckPackageParseIssue = DeckParseIssue;
 
 export function formatDeckParseIssues(issues: readonly DeckParseIssue[]): string {
   return issues

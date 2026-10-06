@@ -1,4 +1,4 @@
-import { DeckPackageParseError, UnsupportedDeckSchemaError } from "@flashcard-reels/deck-contract";
+import { DeckPackageParseError, DeckParseError } from "@flashcard-reels/deck-contract";
 
 import { AppError } from "@/shared/errors/app-error";
 
@@ -7,13 +7,7 @@ export type ErrorFeedback = Readonly<{
 }>;
 
 export function getErrorFeedback(error: unknown): ErrorFeedback {
-  if (error instanceof UnsupportedDeckSchemaError) {
-    return {
-      message:
-        "This deck file uses an unsupported format. Download the current version of the deck.",
-    };
-  }
-  if (error instanceof DeckPackageParseError) {
+  if (error instanceof DeckPackageParseError || error instanceof DeckParseError) {
     return { message: "That deck package is invalid or damaged." };
   }
   if (!(error instanceof AppError)) {

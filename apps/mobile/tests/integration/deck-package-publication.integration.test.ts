@@ -1,14 +1,17 @@
-import { createDeckPackage, parseDeckPackage, type Deck } from "@flashcard-reels/deck-contract";
+import type { Deck } from "@flashcard-reels/deck-contract";
+
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
+import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import {
   canPublish,
   publicationUploads,
   reviewDeckPublication,
   type DeckPublicationCandidate,
   type PublishedDeckStore,
-} from "../../../../scripts/deck-package-publication";
+} from "@/features/decks/deck-installer/internal/deck-package-publication";
 
 const deckId = "3f9c2d4e-8a61-4b7f-9c2e-1d5a6b7c8d90";
 const otherDeckId = "7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d";
@@ -34,7 +37,6 @@ function deckCards(edits: Readonly<Record<number, CardEdit>> = {}) {
     createdAt: timestamp,
     id: edits[index]?.id ?? cardIds[index] ?? "",
     lessonId: null,
-    lessonSectionId: null,
     audio: false,
     question,
     updatedAt: timestamp,
@@ -45,7 +47,7 @@ function deckDocument(overrides: Partial<Deck> = {}): Deck {
   return {
     cards: deckCards(),
     lessons: [],
-    schema: 4,
+    schema: 1,
     authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
     createdAt: timestamp,
     description: "Scaling basics",
@@ -63,28 +65,25 @@ function candidate(
   audioFiles: Record<string, Uint8Array> = {},
   lessonFiles: Record<string, string> = {}
 ): DeckPublicationCandidate {
-  const bytes = createDeckPackage({
-    deck: {
+  const bytes = createContractDeckPackageArchive(
+    {
       ...document,
-      cards: document.cards.map((card) =>
-        Object.assign({}, card, { audio: card.id in audioFiles })
-      ),
-      lessons: document.lessons.map((lesson) =>
-        Object.assign({}, lesson, { intro: lessonFiles[lesson.id] ?? lesson.intro })
-      ),
+      cards: document.cards.map((card) => ({ ...card, audio: card.id in audioFiles })),
     },
-    audio: new Map(Object.entries(audioFiles)),
-  });
+    audioFiles,
+    lessonFiles
+  );
   return { bytes, fileName, sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 
 function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore {
+  const reader = new ContractDeckPackageReader();
   const objects = new Map(published.map((item) => [`decks/${item.fileName}`, item]));
   return {
     listPublishedDecks: () =>
       Promise.resolve(
         [...objects.entries()].map(([key, item]) => {
-          const deck = parseDeckPackage(item.bytes).deck;
+          const deck = reader.read(item.bytes).deck;
           return {
             deckId: deck.id,
             key,
@@ -102,7 +101,7 @@ function storeWith(...published: DeckPublicationCandidate[]): PublishedDeckStore
 }
 
 function review(store: PublishedDeckStore, ...candidates: DeckPublicationCandidate[]) {
-  return reviewDeckPublication({ candidates, store });
+  return reviewDeckPublication({ candidates, reader: new ContractDeckPackageReader(), store });
 }
 
 function editedCards(answer: string) {
@@ -110,25 +109,6 @@ function editedCards(answer: string) {
 }
 
 describe("deck publication review", () => {
-  it("publishes development candidates only within the development prefix", async () => {
-    const item = candidate(deckDocument());
-    const result = await reviewDeckPublication({
-      candidates: [item],
-      store: storeWith(),
-      keyPrefix: "dev/decks/",
-    });
-    expect(publicationUploads(result, [item])).toMatchObject([
-      { key: "dev/decks/Scaling.fcrdeck" },
-    ]);
-    await expect(
-      reviewDeckPublication({
-        candidates: [item],
-        store: storeWith(item),
-        keyPrefix: "dev/decks/",
-      })
-    ).rejects.toThrow("outside the selected prefix");
-  });
-
   it("reports unchanged decks and uploads nothing", async () => {
     const published = candidate(deckDocument());
 
@@ -303,50 +283,7 @@ describe("deck publication review", () => {
 
   describe("lessons", () => {
     const lessonId = "4f1c0d5e-6a7b-4c8d-9e0f-1a2b3c4d5e6f";
-    const lessons = [{ id: lessonId, title: "Why scale", intro: null, sections: [] }];
-    const verticalId = "81111111-1111-4111-8111-111111111111";
-    const horizontalId = "82222222-2222-4222-8222-222222222222";
-    it.each(["candidate", "published"])(
-      "blocks a section ID reused by another %s deck",
-      async (source) => {
-        const first = candidate(
-          deckDocument({
-            lessons: [
-              {
-                id: lessonId,
-                title: "First",
-                intro: null,
-                sections: [{ id: verticalId, title: "Section", body: "Body." }],
-              },
-            ],
-          })
-        );
-        const second = candidate(
-          deckDocument({
-            id: otherDeckId,
-            cards: deckCards({ 0: { id: replacementCardId } }).slice(0, 1),
-            lessons: [
-              {
-                id: horizontalId,
-                title: "Second",
-                intro: null,
-                sections: [{ id: verticalId, title: "Section", body: "Body." }],
-              },
-            ],
-          }),
-          "Other.fcrdeck"
-        );
-        const result =
-          source === "candidate"
-            ? await review(storeWith(), first, second)
-            : await review(storeWith(first), second);
-        expect(result.blocks).toContain(
-          `Section ${verticalId} appears in more than one deck: ${source === "candidate" ? `${deckId}, ${otherDeckId}` : `${otherDeckId}, ${deckId}`}.`
-        );
-        expect(canPublish(result)).toBe(false);
-        expect(publicationUploads(result, [first, second])).toEqual([]);
-      }
-    );
+    const lessons = [{ id: lessonId, title: "Why scale" }];
     const withLesson = (markdown: string, revision = 1, id = deckId) =>
       candidate(
         deckDocument({
@@ -363,18 +300,8 @@ describe("deck publication review", () => {
     function withSectionLink(sectionId: string, revision = 1) {
       return candidate(
         deckDocument({
-          lessons: [
-            {
-              ...lessons[0],
-              id: lessonId,
-              title: "Why scale",
-              intro: null,
-              sections: [
-                { id: verticalId, title: "Vertical scaling", body: "Add resources." },
-                { id: horizontalId, title: "Horizontal scaling", body: "Add machines." },
-              ],
-            },
-          ],
+          schema: 2,
+          lessons,
           revision,
           cards: deckCards().map((card, index) =>
             Object.assign(card, {
@@ -383,14 +310,19 @@ describe("deck publication review", () => {
             })
           ),
         }),
-        "Scaling.fcrdeck"
+        "Scaling.fcrdeck",
+        {},
+        {
+          [lessonId]:
+            "# Why scale\n## Vertical scaling\nAdd resources.\n## Horizontal scaling\nAdd machines.",
+        }
       );
     }
 
     it("reports a card as changed when its lesson section link changes", async () => {
       const result = await review(
-        storeWith(withSectionLink(verticalId)),
-        withSectionLink(horizontalId, 2)
+        storeWith(withSectionLink("vertical-scaling")),
+        withSectionLink("horizontal-scaling", 2)
       );
 
       expect(result.decks[0]).toMatchObject({
@@ -403,8 +335,8 @@ describe("deck publication review", () => {
 
     it("does not report a card as changed when its lesson section link is unchanged", async () => {
       const result = await review(
-        storeWith(withSectionLink(verticalId)),
-        withSectionLink(verticalId)
+        storeWith(withSectionLink("vertical-scaling")),
+        withSectionLink("vertical-scaling")
       );
 
       expect(result.decks[0]).toMatchObject({

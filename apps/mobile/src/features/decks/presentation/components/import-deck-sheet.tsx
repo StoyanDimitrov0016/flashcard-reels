@@ -168,7 +168,7 @@ function ScannerContent({
     return (
       <DeckImportProgress
         onCancel={onCancelDownload}
-        phase={downloading ? "downloading" : "installing"}
+        phase={downloading || scanner.processing ? "downloading" : "installing"}
         progress={downloadProgress}
         showSteps
       />

@@ -2,7 +2,7 @@
 
 The [internal web portal](https://flashcard-reels.vercel.app/) is a Next.js catalog for browsing and transferring curated Flashcard Reels decks. It is not a second study client and does not store mobile progress.
 
-After signing in with the shared team password, users can search decks, browse cards and reveal answers, read a deck's lessons, download `.fcrdeck` packages, and display a phone-transfer QR code. The catalog lists packages under its configured `DECK_PREFIX` in the R2 bucket, so publishing a deck needs no portal change.
+After signing in with the shared team password, users can search decks, browse cards and reveal answers, read a deck's lessons, download `.fcrdeck` packages, and display a phone-transfer QR code. The catalog lists every package uploaded under `decks/` in the R2 bucket, so publishing a deck needs no portal change.
 
 ## Server cache
 
@@ -36,21 +36,7 @@ R2_ACCOUNT_ID
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME
-DECK_PREFIX
 ```
-
-Set `DECK_PREFIX=decks/` for Vercel Production and `DECK_PREFIX=dev/decks/` for Preview
-and local R2-backed development. The prefix is required; there is no default catalog.
-Missing or blank values and malformed prefixes are rejected; prefixes must use lowercase path segments and
-end in `/`. Configure Preview explicitly: Next.js uses production mode for preview builds too.
-Changing this deployment configuration requires restarting or redeploying the portal, because each
-server instance captures its catalog and caches for its lifetime. The storage adapter enforces the
-same prefix for listing, byte reads, and signed downloads. A prefix is logical catalog separation;
-separate buckets and credentials would be needed for storage permission isolation.
-
-The publisher independently requires `--environment=dev` or `--environment=prod`; it never chooses
-an upload destination from the portal's `DECK_PREFIX`. Local file storage still reads the configured
-`LOCAL_DECKS_DIR`, without applying R2 prefix settings.
 
 Leave `DECK_TRANSFER_ORIGIN` unset on Vercel. The app derives the origin from the incoming HTTPS request, which keeps production and custom-domain links correct. Set it only when a deliberate fixed origin is needed, such as a private development host; public plain HTTP is rejected.
 

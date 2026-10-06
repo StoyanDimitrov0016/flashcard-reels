@@ -32,4 +32,3 @@ learning history, or the study flow.
 - [4 - Lesson section references](4-lesson-section-references.md)
 - [5 - Learner data completion before the release](5-learner-data-completion.md)
 - [6 - Deep modules and robustness](6-deep-modules-and-robustness.md)
-- [7 - Lesson sections as entities](7-lesson-sections-as-entities.md)

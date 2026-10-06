@@ -123,30 +123,12 @@ export const lessons = sqliteTable(
       .references(() => decks.id, { onDelete: "cascade" }),
     order: integer("order").notNull(),
     title: text("title").notNull(),
-    intro: text("intro"),
+    content: text("content").notNull(),
   },
   (table) => [
     check("lessons_order_check", sql`${table.order} >= 0`),
     index("lessons_deck_id_idx").on(table.deckId),
     unique("lessons_order_unique").on(table.deckId, table.order),
-  ]
-);
-
-export const lessonSections = sqliteTable(
-  "lesson_sections",
-  {
-    id: text("id").primaryKey().notNull(),
-    lessonId: text("lesson_id")
-      .notNull()
-      .references(() => lessons.id, { onDelete: "cascade" }),
-    order: integer("order").notNull(),
-    title: text("title").notNull(),
-    body: text("body").notNull(),
-  },
-  (table) => [
-    check("lesson_sections_order_check", sql`${table.order} >= 0`),
-    unique("lesson_sections_order_unique").on(table.lessonId, table.order),
-    index("lesson_sections_lesson_id_idx").on(table.lessonId),
   ]
 );
 
@@ -423,7 +405,6 @@ export const databaseSchema = {
   deckThemeSelections,
   flashcards,
   lessons,
-  lessonSections,
   flashcardProgress,
   flashcardMemoryStates,
   flashcardReviewEvents,

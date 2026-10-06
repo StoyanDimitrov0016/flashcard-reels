@@ -104,9 +104,10 @@ describe("installed audio lookup", () => {
   it("replaces orphaned same-version audio during activation", async () => {
     const storage = new InstalledAudioStorage();
     const deckPackage = {
-      audio: new Map([["card", new Uint8Array([1, 2, 3])]]),
+      audioFiles: new Map([["card", new Uint8Array([1, 2, 3])]]),
+      lessonFiles: new Map<string, string>(),
       deck: {
-        schema: 4 as const,
+        schema: 1 as const,
         authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
         cards: [],
         lessons: [],

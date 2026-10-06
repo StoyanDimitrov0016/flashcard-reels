@@ -6,11 +6,10 @@ import type { LessonSummary } from "@/features/lessons/domain/lesson.model";
 
 import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { resolveDeckTheme } from "@/features/decks/presentation/deck-theme-presets";
-import { LessonArticle } from "@/features/lessons/presentation/components/lesson-article";
+import { LessonMarkdownView } from "@/features/lessons/presentation/components/lesson-markdown-view";
 import { LessonSheetNavigation } from "@/features/lessons/presentation/components/lesson-sheet-navigation";
 import { useLesson } from "@/features/lessons/presentation/controllers/use-lesson";
 import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
-import { reportError } from "@/shared/errors/report-error";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
@@ -43,7 +42,7 @@ export function SheetLessonReader({
 }: SheetLessonReaderProps) {
   const { colors, resolvedScheme } = useAppTheme();
   const height = useLessonSheetHeight();
-  const { lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
+  const { blocks, sections, lesson: loadedLesson, loading } = useLesson({ lessonId: lesson.id });
   const { themeSelections } = useDeckMetadata([deckId], false);
   const themeSelection = themeSelections.get(deckId);
   const accent = themeSelection
@@ -56,19 +55,7 @@ export function SheetLessonReader({
   const [contentHeight, setContentHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const scrollableHeight = Math.max(contentHeight - viewportHeight, 0);
-  const targetSection = loadedLesson?.sections.find((section) => section.id === sectionId);
-
-  useEffect(
-    function reportMissingSection() {
-      if (loadedLesson && sectionId !== null && !targetSection) {
-        reportError(
-          new Error(`Section ${sectionId} is missing from lesson ${loadedLesson.id}`),
-          "Lesson section reference mismatch"
-        );
-      }
-    },
-    [loadedLesson, sectionId, targetSection]
-  );
+  const targetSection = sections.find((section) => section.id === sectionId);
 
   useEffect(
     function positionRelatedSection() {
@@ -113,9 +100,9 @@ export function SheetLessonReader({
             ref={scrollRef}
             style={styles.scrollView}
           >
-            <LessonArticle
-              lesson={loadedLesson}
-              targetSectionId={targetSection?.id}
+            <LessonMarkdownView
+              blocks={blocks}
+              targetSection={targetSection}
               sectionColor={accent}
               onTargetLayout={setTargetY}
               onDocumentLayout={setDocumentY}

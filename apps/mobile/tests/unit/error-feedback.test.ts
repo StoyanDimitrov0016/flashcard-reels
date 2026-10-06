@@ -1,4 +1,4 @@
-import { DeckPackageParseError } from "@flashcard-reels/deck-contract";
+import { DeckPackageParseError, DeckParseError } from "@flashcard-reels/deck-contract";
 import { describe, expect, it } from "vitest";
 
 import { AppError } from "@/shared/errors/app-error";
@@ -6,11 +6,7 @@ import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedbac
 
 describe("error feedback", () => {
   it("handles manifest parse errors explicitly", () => {
-    expect(
-      getErrorFeedback(
-        new DeckPackageParseError([{ path: ["deck.json", "id"], message: "Invalid" }])
-      )
-    ).toEqual({
+    expect(getErrorFeedback(new DeckParseError([{ path: ["id"], message: "Invalid" }]))).toEqual({
       message: "That deck package is invalid or damaged.",
     });
   });

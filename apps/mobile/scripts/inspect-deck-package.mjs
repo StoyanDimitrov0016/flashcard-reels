@@ -1,4 +1,4 @@
-import { parseDeckPackage } from "@flashcard-reels/deck-contract";
+import { parseDeckPackage, parseLessonDocument } from "@flashcard-reels/deck-contract";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -11,7 +11,7 @@ if (!inputPath || extraArguments.length > 0) {
 const resolvedPath = path.resolve(process.cwd(), inputPath);
 try {
   const bytes = new Uint8Array(await readFile(resolvedPath));
-  const { deck, audio } = parseDeckPackage(bytes);
+  const { deck, audioFiles, lessonFiles } = parseDeckPackage(bytes);
 
   console.log(`File: ${resolvedPath}`);
   console.log(`Deck ID: ${deck.id}`);
@@ -19,15 +19,16 @@ try {
   console.log(`Schema: ${deck.schema}`);
   console.log(`Revision: ${deck.revision}`);
   console.log(`Cards: ${deck.cards.length}`);
-  console.log(`Combined audio: ${audio.size}`);
+  console.log(`Combined audio: ${audioFiles.size}`);
   console.log(`Lessons: ${deck.lessons.length}`);
   for (const lesson of deck.lessons) {
     console.log(`Lesson: ${lesson.title} (${lesson.id})`);
-    for (const section of lesson.sections) {
+    for (const section of parseLessonDocument(lessonFiles.get(lesson.id) ?? "", lesson.title)
+      .sections) {
       const linkedCards = deck.cards.filter(
         (card) => card.lessonId === lesson.id && card.lessonSectionId === section.id
       ).length;
-      console.log(`  ${section.id} — ${section.title} — ${linkedCards} linked cards`);
+      console.log(`  ${section.id} — ${linkedCards} linked cards`);
     }
   }
   console.log(`Package size: ${bytes.byteLength} bytes`);

@@ -1,4 +1,4 @@
-import { parseDeckPackage, createDeckPackage } from "@flashcard-reels/deck-contract";
+import { parseLessonDocument } from "@flashcard-reels/deck-contract";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -10,6 +10,8 @@ import type {
   StagedDeckAudio,
 } from "@/features/decks/deck-installer/internal/deck-package.model";
 
+import { createContractDeckPackageArchive } from "@/features/decks/deck-installer/internal/contract-deck-package-writer";
+import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
@@ -35,7 +37,7 @@ class ResolvingAudioStorage implements DeckAudioStorage {
     if (!this.staged) {
       throw new Error("Missing staged demo");
     }
-    for (const cardId of this.staged.audio.keys()) {
+    for (const cardId of this.staged.audioFiles.keys()) {
       this.files.add([staged.deckId, staged.revision, `${cardId}.mp3`].join("/"));
     }
   }
@@ -58,10 +60,11 @@ describe("built-in demo package", () => {
     const bytes = new Uint8Array(
       await readFile(path.join(process.cwd(), "assets", "decks", demoId + ".fcrdeck"))
     );
-
-    const parsed = parseDeckPackage(bytes);
+    const reader = new ContractDeckPackageReader();
+    const parsed = reader.read(bytes);
     const audio = new ResolvingAudioStorage();
     const installer = new DeckInstallerImpl(
+      reader,
       new SQLiteDeckPackageInstallationTransaction(database.drizzle, new SequenceIdGenerator()),
       audio,
       new TestClock(),
@@ -70,19 +73,19 @@ describe("built-in demo package", () => {
     );
 
     expect(parsed.deck.cards).toHaveLength(20);
-    expect(parsed.audio.size).toBe(6);
-    expect(parsed.deck.lessons).toHaveLength(5);
+    expect(parsed.audioFiles.size).toBe(6);
+    expect(parsed.lessonFiles.size).toBe(5);
     await expect(installer.installFromFile({ uri: "bundled-demo" })).resolves.toMatchObject({
       deckId: demoId,
       status: "installed",
-      revision: 4,
+      revision: 2,
     });
-    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(4);
+    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(2);
     const audioCard = parsed.deck.cards[0];
     if (!audioCard) {
       throw new Error("Demo package has no cards");
     }
-    expect(audio.find(demoId, 4, audioCard.id)).not.toBeNull();
+    expect(audio.find(demoId, 2, audioCard.id)).not.toBeNull();
 
     // Query freshly constructed repositories, rather than relying on the parsed package in memory.
     const flashcards = new SQLiteFlashcardRepository(database.drizzle);
@@ -96,14 +99,14 @@ describe("built-in demo package", () => {
           if (!lesson) {
             throw new Error("Referenced demo lesson was not installed");
           }
-          expect(lesson.sections.map((section) => section.id)).toContain(
-            installedCard.lessonSectionId
-          );
+          expect(
+            parseLessonDocument(lesson.content, lesson.title).sections.map((section) => section.id)
+          ).toContain(installedCard.lessonSectionId);
         }
       })
     );
 
-    const linked = parsed.deck.cards.find((card) => card.question === "What is vertical scaling?");
+    const linked = parsed.deck.cards.find((card) => card.lessonSectionId === "vertical-scaling");
     if (!linked) {
       throw new Error("Missing linked scaling card");
     }
@@ -122,32 +125,22 @@ describe("built-in demo package", () => {
 
     const updatedDeck = {
       ...parsed.deck,
-      revision: 5,
-      lessons: parsed.deck.lessons.map((lesson) =>
-        Object.assign({}, lesson, {
-          sections: lesson.sections.map((section) =>
-            Object.assign({}, section, {
-              title: section.id === linked.lessonSectionId ? "Scaling one machine" : section.title,
-            })
-          ),
-        })
+      revision: 3,
+      cards: parsed.deck.cards.map((card) =>
+        card.id === linked.id ? { ...card, lessonSectionId: "vertical-scaling/limitations" } : card
       ),
     };
-    await installer.installFromBytes(createDeckPackage({ deck: updatedDeck, audio: parsed.audio }));
+    await installer.installFromBytes(
+      createContractDeckPackageArchive(
+        updatedDeck,
+        Object.fromEntries(parsed.audioFiles),
+        Object.fromEntries(parsed.lessonFiles)
+      )
+    );
     expect(await new SQLiteFlashcardRepository(database.drizzle).findById(linked.id)).toMatchObject(
       {
-        lessonSectionId: linked.lessonSectionId,
+        lessonSectionId: "vertical-scaling/limitations",
       }
-    );
-    if (!linked.lessonId) {
-      throw new Error("Missing linked lesson");
-    }
-    const reloaded = await new SQLiteLessonRepository(database.drizzle).findById(linked.lessonId);
-    if (!reloaded) {
-      throw new Error("Missing installed lesson");
-    }
-    expect(reloaded.sections.find((section) => section.id === linked.lessonSectionId)?.title).toBe(
-      "Scaling one machine"
     );
     expect(await database.drizzle.select().from(flashcardProgress)).toMatchObject([
       { flashcardId: linked.id, reviewCount: 1, goodCount: 1 },
@@ -156,25 +149,20 @@ describe("built-in demo package", () => {
     const files = unzipSync(bytes);
     files["deck.json"] = strToU8(
       JSON.stringify({
-        ...JSON.parse(new TextDecoder().decode(files["deck.json"])),
-        revision: 6,
+        ...updatedDeck,
+        revision: 4,
         cards: updatedDeck.cards.map((card) =>
           card.id === linked.id
-            ? Object.assign({}, card, { lessonSectionId: "99999999-9999-4999-8999-999999999999" })
+            ? Object.assign({}, card, { lessonSectionId: "missing-section" })
             : card
         ),
       })
     );
-    await expect(installer.installFromBytes(zipSync(files))).rejects.toThrow(
-      "section outside its lesson"
-    );
-    expect(await database.drizzle.select().from(flashcardProgress)).toMatchObject([
-      { flashcardId: linked.id, reviewCount: 1, goodCount: 1 },
-    ]);
-    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(5);
+    await expect(installer.installFromBytes(zipSync(files))).rejects.toThrow("missing section");
+    expect(await new SQLiteDeckRepository(database.drizzle).findRevision(demoId)).toBe(3);
     expect(await new SQLiteFlashcardRepository(database.drizzle).findById(linked.id)).toMatchObject(
       {
-        lessonSectionId: linked.lessonSectionId,
+        lessonSectionId: "vertical-scaling/limitations",
       }
     );
   });
