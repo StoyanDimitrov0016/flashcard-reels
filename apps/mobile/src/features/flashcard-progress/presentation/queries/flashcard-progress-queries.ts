@@ -1,16 +1,15 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
-import type { DeckService } from "@/features/decks/domain/deck.service";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
-import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
+import type { FlashcardProgressCapability } from "@/features/flashcard-progress/presentation/dependencies/use-flashcard-progress";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
 
 import {
   explainFlashcardProgress,
   type FlashcardProgressExplanation,
 } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
+import { loadViewData } from "@/shared/presentation/query/load-view-data";
 
 export type FlashcardProgressListRow = Readonly<{
   card: Flashcard;
@@ -19,18 +18,11 @@ export type FlashcardProgressListRow = Readonly<{
   progress: FlashcardProgress | null;
 }>;
 
-type ProgressListOptions = Readonly<{
-  deckService: DeckService;
-  flashcardService: FlashcardService;
-  flashcardProgressService: FlashcardProgressService;
-  progressRevision: number;
-}>;
-
 async function loadProgressList({
   deckService,
   flashcardService,
   flashcardProgressService,
-}: ProgressListOptions): Promise<FlashcardProgressListRow[]> {
+}: FlashcardProgressCapability): Promise<FlashcardProgressListRow[]> {
   const cards = await flashcardService.list();
   const progressByCardId = await flashcardProgressService.findByFlashcardIds(
     cards.map((card) => card.id)
@@ -49,12 +41,16 @@ async function loadProgressList({
   });
 }
 
-/** Learning progress reads. Keys carry the progress revision until it becomes invalidation. */
+/** Learning progress reads. `services` are stable dependencies; other inputs are in the key. */
 export const flashcardProgressQueries = {
-  list: (options: ProgressListOptions) =>
+  list: (services: FlashcardProgressCapability, progressRevision: number) =>
     queryOptions({
-      queryKey: ["flashcard-progress", "list", options.progressRevision],
-      queryFn: () => loadProgressList(options),
+      queryKey: ["learning-progress", "list", progressRevision],
+      queryFn: () =>
+        loadViewData(
+          { operation: "flashcard-progress-list.load", message: "Could not load progress" },
+          () => loadProgressList(services)
+        ),
       placeholderData: keepPreviousData,
     }),
 };

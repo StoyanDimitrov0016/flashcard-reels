@@ -86,7 +86,7 @@ describe("deck detail loading", () => {
   it("returns an expected missing-deck state instead of throwing into a route boundary", async () => {
     const hook = renderDetails("deleted-deck");
     await waitFor(() => expect(hook.result.current.loading).toBe(false));
-    expect(hook.result.current).toMatchObject({ deck: null, cards: [], error: null });
+    expect(hook.result.current).toMatchObject({ deck: null, cards: [] });
     expect(harness.progress).not.toHaveBeenCalled();
     expect(harness.boundaryError).toBeNull();
   });

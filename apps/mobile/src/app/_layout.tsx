@@ -1,4 +1,3 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { NavigationBar } from "expo-navigation-bar";
 import {
   Stack,
@@ -35,7 +34,8 @@ import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 // Must run before the first render, so it is imported for its side effect here.
 import { revealApp } from "@/shared/presentation/native-splash";
-import { createQueryClient } from "@/shared/presentation/query-client";
+import { AppQueryProvider } from "@/shared/presentation/query/app-query-provider";
+import { useQueryAwareRetry } from "@/shared/presentation/query/use-query-aware-retry";
 import { AppThemeProvider, getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 
 import "../../global.css";
@@ -46,6 +46,7 @@ type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const resolvedScheme = useColorScheme() === "dark" ? "dark" : "light";
+  const retryApp = useQueryAwareRetry(retry);
   useEffect(function revealErrorState() {
     revealApp();
   }, []);
@@ -53,7 +54,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <AppRecoveryProvider capability={appRecoveryCapability}>
       <AppThemeProvider resolvedScheme={resolvedScheme}>
-        <GlobalErrorState error={error} retry={retry} />
+        <GlobalErrorState error={error} retry={retryApp} />
       </AppThemeProvider>
     </AppRecoveryProvider>
   );
@@ -158,7 +159,6 @@ function prepareLocalStorage(): Error | null {
 
 function RootLayoutContent() {
   const [preparationError] = useState(prepareLocalStorage);
-  const [queryClient] = useState(createQueryClient);
   const [databaseReady, setDatabaseReady] = useState(false);
   const initializeAppDatabase = useCallback(async (database: SQLiteDatabase) => {
     await initializeDatabase(database);
@@ -178,7 +178,7 @@ function RootLayoutContent() {
           onError={handleSQLiteProviderError}
           onInit={initializeAppDatabase}
         >
-          <QueryClientProvider client={queryClient}>
+          <AppQueryProvider>
             <DeckContentProvider>
               <DeckThemeSelectionProvider>
                 <LearningProgressRevisionProvider>
@@ -188,7 +188,7 @@ function RootLayoutContent() {
                 </LearningProgressRevisionProvider>
               </DeckThemeSelectionProvider>
             </DeckContentProvider>
-          </QueryClientProvider>
+          </AppQueryProvider>
         </SQLiteProvider>
       </View>
     </AppRecoveryProvider>

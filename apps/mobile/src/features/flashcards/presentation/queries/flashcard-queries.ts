@@ -1,20 +1,27 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { FlashcardService } from "@/features/flashcards/domain/flashcard.service";
+import type { FlashcardsCapability } from "@/features/flashcards/presentation/dependencies/use-flashcards";
 
-type FlashcardListOptions = Readonly<{
-  flashcardService: FlashcardService;
-  /** Null lists every installed card. */
-  deckId: DeckId | null;
-  contentRevision: number;
-}>;
+import { loadViewData } from "@/shared/presentation/query/load-view-data";
 
-/** Flashcard reads. Keys carry the deck content revision until revisions become invalidation. */
+/** Flashcard reads. `services` are stable dependencies; every other input is part of the key. */
 export const flashcardQueries = {
-  list: ({ flashcardService, deckId, contentRevision }: FlashcardListOptions) =>
+  /** A null deck lists every installed card. */
+  list: (services: FlashcardsCapability, deckId: DeckId | null, contentRevision: number) =>
     queryOptions({
       queryKey: ["flashcards", "list", deckId, contentRevision],
-      queryFn: () => (deckId ? flashcardService.listByDeckId(deckId) : flashcardService.list()),
+      queryFn: () =>
+        loadViewData(
+          {
+            operation: "flashcards.load",
+            message: "Could not load flashcards",
+            context: { deckId },
+          },
+          () =>
+            deckId
+              ? services.flashcardService.listByDeckId(deckId)
+              : services.flashcardService.list()
+        ),
     }),
 };

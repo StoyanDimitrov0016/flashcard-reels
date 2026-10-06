@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
 
-import { createQueryClient } from "@/shared/presentation/query-client";
+import { createQueryClient } from "@/shared/presentation/query/query-client";
 
 type QueryWrapperProps = Readonly<{ children: ReactNode }>;
 

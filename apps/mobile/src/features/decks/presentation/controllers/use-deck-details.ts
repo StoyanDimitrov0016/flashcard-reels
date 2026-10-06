@@ -7,34 +7,20 @@ import { useDeckThemeSelectionRevision } from "@/features/decks/presentation/con
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { deckQueries, emptyDeckDetails } from "@/features/decks/presentation/queries/deck-queries";
 import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
-import { toOperationError } from "@/shared/errors/normalize-error";
 
+/** `enabled` pauses reads while the deck is being deleted. */
 export function useDeckDetails(deckId: DeckId | null, enabled = true) {
-  const { deckService, flashcardProgressService } = useDecks();
   const { revision: contentRevision } = useDeckContentRevision();
   const { themeSelectionRevision } = useDeckThemeSelectionRevision();
   const { revision: progressRevision } = useLearningProgressRevision();
-  const { data, error, isPending } = useQuery(
-    deckQueries.details({
-      deckService,
-      flashcardProgressService,
-      deckId,
-      enabled,
+  const { data, isPending } = useQuery({
+    ...deckQueries.details(useDecks(), deckId, {
       contentRevision,
       themeSelectionRevision,
       progressRevision,
-    })
-  );
-  if (deckId === null) {
-    return { ...emptyDeckDetails, error: null, loading: false };
-  }
-  if (error) {
-    throw toOperationError(error, {
-      code: "VIEW_LOAD_FAILED",
-      context: { deckId, operation: "deck-details.load" },
-      message: "Could not load deck cards",
-    });
-  }
+    }),
+    enabled,
+  });
 
-  return { ...(data ?? emptyDeckDetails), error: null, loading: isPending };
+  return { ...(data ?? emptyDeckDetails), loading: deckId !== null && isPending };
 }

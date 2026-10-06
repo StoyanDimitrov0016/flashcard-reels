@@ -1,24 +1,34 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 import type { LessonId } from "@/features/lessons/domain/lesson.model";
-import type { LessonService } from "@/features/lessons/domain/lesson.service";
+import type { LessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
 
-type LessonDetailOptions = Readonly<{
-  lessonService: LessonService;
-  lessonId: LessonId | null;
-  contentRevision: number;
-}>;
+import { loadViewData } from "@/shared/presentation/query/load-view-data";
 
-/** Lesson reads. Keys carry the deck content revision until revisions become query invalidation. */
+/** Lesson reads. `services` are stable dependencies; every other input is part of the key. */
 export const lessonQueries = {
-  readingLists: (lessonService: LessonService, contentRevision: number) =>
+  readingLists: (services: LessonsCapability, contentRevision: number) =>
     queryOptions({
       queryKey: ["lessons", "reading-lists", contentRevision],
-      queryFn: () => lessonService.listReadingLists(),
+      queryFn: () =>
+        loadViewData({ operation: "lessons.list", message: "Could not load lessons" }, () =>
+          services.lessonService.listReadingLists()
+        ),
     }),
-  detail: ({ lessonService, lessonId, contentRevision }: LessonDetailOptions) =>
+  detail: (services: LessonsCapability, lessonId: LessonId | null, contentRevision: number) =>
     queryOptions({
       queryKey: ["lessons", "detail", lessonId, contentRevision],
-      queryFn: lessonId === null ? skipToken : () => lessonService.findById(lessonId),
+      queryFn:
+        lessonId === null
+          ? skipToken
+          : () =>
+              loadViewData(
+                {
+                  operation: "lessons.load",
+                  message: "Could not load this lesson",
+                  context: { lessonId },
+                },
+                () => services.lessonService.findById(lessonId)
+              ),
     }),
 };

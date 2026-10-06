@@ -39,7 +39,7 @@ import {
   useFeedScope,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
-import { createQueryClient } from "@/shared/presentation/query-client";
+import { createQueryClient } from "@/shared/presentation/query/query-client";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";

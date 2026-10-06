@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { reportError } from "@/shared/errors/report-error";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
+import { useQueryAwareRetry } from "@/shared/presentation/query/use-query-aware-retry";
 
 const viewTitles: Readonly<Record<string, string>> = {
   "/": "Couldn’t load Discover",
@@ -33,6 +34,7 @@ export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isHomeRoute = pathname === "/";
+  const retryView = useQueryAwareRetry(retry);
 
   useEffect(
     function reportViewFailure() {
@@ -45,7 +47,7 @@ export function ViewErrorBoundary({ error, retry }: ViewErrorBoundaryProps) {
     <ViewErrorState
       error={error}
       onHomeAction={isHomeRoute ? undefined : () => router.replace("/(tabs)/(discover)")}
-      retry={retry}
+      retry={retryView}
       scope="screen"
       title={resolveViewTitle(pathname)}
     />

@@ -2,11 +2,14 @@ import { keepPreviousData, queryOptions, skipToken } from "@tanstack/react-query
 
 import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck, DeckId } from "@/features/decks/domain/deck.model";
-import type { DeckDetails, DeckService } from "@/features/decks/domain/deck.service";
+import type { DeckDetails } from "@/features/decks/domain/deck.service";
+import type { DecksCapability } from "@/features/decks/presentation/dependencies/use-decks";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
-import type { FlashcardProgressService } from "@/features/flashcard-progress/domain/flashcard-progress.service";
 
 import { OperationError } from "@/shared/errors/operation-error";
+import { loadViewData } from "@/shared/presentation/query/load-view-data";
+
+type DeckQueryServices = Pick<DecksCapability, "deckService" | "flashcardProgressService">;
 
 export type DeckDetailsData = DeckDetails &
   Readonly<{ progress: ReadonlyMap<string, FlashcardProgress> }>;
@@ -22,49 +25,29 @@ export const emptyDeckDetails: DeckDetailsData = {
   progress: new Map(),
 };
 
-type CatalogOptions = Readonly<{
-  deckService: DeckService;
-  contentRevision: number;
-  themeSelectionRevision: number;
-}>;
-type DetailsOptions = Readonly<{
-  deckService: DeckService;
-  flashcardProgressService: FlashcardProgressService;
-  deckId: DeckId | null;
-  enabled: boolean;
+type DeckRevisions = Readonly<{
   contentRevision: number;
   themeSelectionRevision: number;
   progressRevision: number;
 }>;
-type MetadataOptions = Readonly<{
-  deckService: DeckService;
-  deckIds: readonly DeckId[];
-  /** When true, a missing deck is an error rather than an absent entry. */
-  requireDecks: boolean;
-  themeSelectionRevision: number;
-}>;
 
-async function loadDetails(
-  deckService: DeckService,
-  flashcardProgressService: FlashcardProgressService,
-  deckId: DeckId
-): Promise<DeckDetailsData> {
-  const details = await deckService.getDetails(deckId);
+async function loadDetails(services: DeckQueryServices, deckId: DeckId): Promise<DeckDetailsData> {
+  const details = await services.deckService.getDetails(deckId);
   if (!details.deck) {
     return emptyDeckDetails;
   }
-  const progress = await flashcardProgressService.findByFlashcardIds(
+  const progress = await services.flashcardProgressService.findByFlashcardIds(
     details.cards.map((card) => card.id)
   );
   return { ...details, progress };
 }
 
-async function loadMetadata({
-  deckService,
-  deckIds,
-  requireDecks,
-}: MetadataOptions): Promise<DeckMetadata> {
-  const entries = await deckService.findWithThemes(deckIds);
+async function loadMetadata(
+  services: DeckQueryServices,
+  deckIds: readonly DeckId[],
+  requireDecks: boolean
+): Promise<DeckMetadata> {
+  const entries = await services.deckService.findWithThemes(deckIds);
   const decks = new Map(
     entries.flatMap((entry) => (entry.deck ? [[entry.deck.id, entry.deck] as const] : []))
   );
@@ -91,25 +74,27 @@ async function loadMetadata({
 }
 
 /**
- * Deck reads. Keys carry the revisions they depend on until revisions become query invalidation.
+ * Deck reads. `services` are stable dependencies; every other input is part of the key.
  * Screens keep showing the previous result while a new key loads.
  */
 export const deckQueries = {
-  catalog: ({ deckService, contentRevision, themeSelectionRevision }: CatalogOptions) =>
+  catalog: (
+    services: DeckQueryServices,
+    { contentRevision, themeSelectionRevision }: Omit<DeckRevisions, "progressRevision">
+  ) =>
     queryOptions({
       queryKey: ["decks", "catalog", contentRevision, themeSelectionRevision],
-      queryFn: () => deckService.getCatalog(),
+      queryFn: () =>
+        loadViewData({ operation: "deck-catalog.load", message: "Could not load decks" }, () =>
+          services.deckService.getCatalog()
+        ),
       placeholderData: keepPreviousData,
     }),
-  details: ({
-    deckService,
-    flashcardProgressService,
-    deckId,
-    enabled,
-    contentRevision,
-    themeSelectionRevision,
-    progressRevision,
-  }: DetailsOptions) =>
+  details: (
+    services: DeckQueryServices,
+    deckId: DeckId | null,
+    { contentRevision, themeSelectionRevision, progressRevision }: DeckRevisions
+  ) =>
     queryOptions({
       queryKey: [
         "decks",
@@ -120,21 +105,31 @@ export const deckQueries = {
         progressRevision,
       ],
       queryFn:
-        enabled && deckId !== null
-          ? () => loadDetails(deckService, flashcardProgressService, deckId)
-          : skipToken,
+        deckId === null
+          ? skipToken
+          : () =>
+              loadViewData(
+                {
+                  operation: "deck-details.load",
+                  message: "Could not load deck cards",
+                  context: { deckId },
+                },
+                () => loadDetails(services, deckId)
+              ),
       placeholderData: keepPreviousData,
     }),
-  metadata: (options: MetadataOptions) =>
+  metadata: (
+    services: DeckQueryServices,
+    deckIds: readonly DeckId[],
+    requireDecks: boolean,
+    themeSelectionRevision: number
+  ) =>
     queryOptions({
-      queryKey: [
-        "decks",
-        "metadata",
-        [...options.deckIds],
-        options.requireDecks,
-        options.themeSelectionRevision,
-      ],
-      queryFn: () => loadMetadata(options),
+      queryKey: ["decks", "metadata", deckIds, requireDecks, themeSelectionRevision],
+      queryFn: () =>
+        loadViewData({ operation: "decks.load", message: "Could not load decks" }, () =>
+          loadMetadata(services, deckIds, requireDecks)
+        ),
       placeholderData: keepPreviousData,
     }),
 };

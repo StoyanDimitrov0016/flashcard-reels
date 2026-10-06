@@ -14,6 +14,7 @@ import {
 import { ViewErrorBoundary } from "@/shared/presentation/components/view-error-boundary";
 import { ViewErrorState } from "@/shared/presentation/components/view-error-state";
 import { TabBarInsetProvider } from "@/shared/presentation/context/tab-bar-inset-context";
+import { useQueryAwareRetry } from "@/shared/presentation/query/use-query-aware-retry";
 import { useAppTheme } from "@/shared/presentation/theme";
 
 export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
@@ -21,6 +22,7 @@ export const unstable_settings = { screenErrorBoundary: ViewErrorBoundary };
 type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const retrySection = useQueryAwareRetry(retry);
   useEffect(
     function reportTabsFailure() {
       reportError(error, "Tabs section failure");
@@ -28,7 +30,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     [error]
   );
 
-  return <ViewErrorState allowAppRecovery error={error} retry={retry} scope="section" />;
+  return <ViewErrorState allowAppRecovery error={error} retry={retrySection} scope="section" />;
 }
 
 // Swipe order follows the screen order below. Discover and Focus share the Study item.

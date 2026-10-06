@@ -3,6 +3,7 @@
   "extends": ["../../.oxlintrc.json"],
   "ignorePatterns": [".next/**", "next-env.d.ts"],
   "plugins": ["import", "jsx-a11y", "nextjs", "oxc", "react", "typescript", "unicorn", "vitest"],
+  "jsPlugins": ["../../scripts/linting/index.mjs", "@tanstack/eslint-plugin-query"],
   "settings": {
     "next": {
       "rootDir": "."
@@ -23,7 +24,22 @@
     "react/react-in-jsx-scope": "off",
     "react/style-prop-object": "off",
     "jsx-a11y/control-has-associated-label": "off",
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "@tanstack/query/exhaustive-deps": [
+      "error",
+      {
+        "allowlist": {
+          "variables": ["services"]
+        }
+      }
+    ],
+    "@tanstack/query/no-rest-destructuring": "error",
+    "@tanstack/query/stable-query-client": "error",
+    "@tanstack/query/no-unstable-deps": "error",
+    "@tanstack/query/infinite-query-property-order": "error",
+    "@tanstack/query/no-void-query-fn": "error",
+    "@tanstack/query/mutation-property-order": "error",
+    "@tanstack/query/prefer-query-options": "error"
   },
   "overrides": [
     {
