@@ -144,33 +144,26 @@ function AppPreferences() {
   );
 }
 
+/** Synchronous and idempotent, so it runs once while the root first renders. */
+function prepareLocalStorage(): Error | null {
+  try {
+    prepareAppStorage();
+    return null;
+  } catch (error) {
+    return toError(error, "Could not prepare app storage");
+  }
+}
+
 function RootLayoutContent() {
-  const [prepared, setPrepared] = useState(false);
+  const [preparationError] = useState(prepareLocalStorage);
   const [databaseReady, setDatabaseReady] = useState(false);
-  const [preparationError, setPreparationError] = useState<Error | null>(null);
   const initializeAppDatabase = useCallback(async (database: SQLiteDatabase) => {
     await initializeDatabase(database);
     setDatabaseReady(true);
   }, []);
 
-  useEffect(function prepareLocalStorage() {
-    try {
-      prepareAppStorage();
-      setPrepared(true);
-    } catch (error) {
-      setPreparationError(toError(error, "Could not prepare app storage"));
-    }
-  }, []);
-
   if (preparationError) {
     throw preparationError;
-  }
-  if (!prepared) {
-    return (
-      <AppRecoveryProvider capability={appRecoveryCapability}>
-        <StartupLoadingState />
-      </AppRecoveryProvider>
-    );
   }
 
   return (

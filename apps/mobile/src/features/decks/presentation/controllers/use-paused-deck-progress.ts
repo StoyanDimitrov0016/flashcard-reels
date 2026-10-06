@@ -84,7 +84,7 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
     [paused, selected, suspendPrompt]
   );
 
-  const resolution = useSingleFlight(async (startFresh: boolean): Promise<void> => {
+  const resolution = useSingleFlight(async (signal, startFresh: boolean): Promise<void> => {
     if (!selected) {
       return;
     }
@@ -97,7 +97,7 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
       }
       invalidateDeckContent();
       invalidateLearningProgress();
-      if (!resolution.isActive()) {
+      if (signal.aborted) {
         return;
       }
       setSelected(null);
@@ -128,9 +128,6 @@ export function usePausedDeckProgress({ suspendPrompt }: PausedDeckProgressOptio
     },
     close: () => {
       if (!confirmingStartFresh) {
-        if (!resolution.isActive()) {
-          return;
-        }
         setSelected(null);
       }
     },

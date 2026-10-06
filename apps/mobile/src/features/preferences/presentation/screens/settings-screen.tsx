@@ -53,10 +53,10 @@ export default function SettingsScreen() {
   const [resetCompleted, setResetCompleted] = useState(false);
   const { resetAllProgress } = useResetAllProgress();
   const haptics = useHaptics();
-  const reset = useSingleFlight(async (): Promise<void> => {
+  const reset = useSingleFlight(async (signal): Promise<void> => {
     try {
       await resetAllProgress();
-      if (!reset.isActive()) {
+      if (signal.aborted) {
         return;
       }
       haptics.resetCompleted();
@@ -65,9 +65,7 @@ export default function SettingsScreen() {
     } catch (error) {
       reportError(error, "Learning progress reset failure");
       setResetError(getErrorFeedback(error).message);
-      if (reset.isActive()) {
-        setResetPresented(true);
-      }
+      setResetPresented(true);
     }
   });
   const resetting = reset.busy;

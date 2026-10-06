@@ -18,46 +18,31 @@ export function useDeleteDeck(): DeleteDeckState & {
   const { deckService } = useDecks();
   const invalidateDeckContent = useInvalidateDeckContent();
   const { invalidateLearningProgress } = useLearningProgressRevision();
-  const [state, setState] = useState<DeleteDeckState>({ deleting: false, error: null });
-  const flight = useSingleFlight(deleteDeckAction);
-
-  const updateDeleteState = (next: DeleteDeckState) => {
-    if (flight.isActive()) {
-      setState(next);
-    }
-  };
-
-  async function deleteDeckAction(deckId: DeckId): Promise<boolean> {
-    updateDeleteState({ deleting: true, error: null });
+  const [error, setError] = useState<Error | null>(null);
+  const flight = useSingleFlight(async (signal, deckId: DeckId): Promise<boolean> => {
+    setError(null);
     try {
       await deckService.remove(deckId);
       invalidateDeckContent();
       invalidateLearningProgress();
-      updateDeleteState({ deleting: false, error: null });
-      return flight.isActive();
-    } catch (error) {
-      const normalized = toOperationError(error, {
+      // The caller navigates on success, which only makes sense while its screen exists.
+      return !signal.aborted;
+    } catch (cause) {
+      const normalized = toOperationError(cause, {
         code: "DECK_OPERATION_FAILED",
         context: { deckId, operation: "deck-delete" },
         message: "Could not delete deck",
       });
       reportError(normalized, "Deck delete failure");
-      updateDeleteState({
-        deleting: false,
-        error: normalized,
-      });
+      setError(normalized);
       return false;
     }
-  }
+  });
 
   return {
-    ...state,
-    clearDeleteError: () => {
-      if (flight.isActive()) {
-        setState((current) => ({ ...current, error: null }));
-      }
-    },
+    clearDeleteError: () => setError(null),
     deleteDeck: async (deckId) => (await flight.run(deckId)) ?? false,
     deleting: flight.busy,
+    error,
   };
 }

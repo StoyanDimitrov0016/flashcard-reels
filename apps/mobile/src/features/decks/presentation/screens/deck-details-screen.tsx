@@ -173,14 +173,14 @@ export default function DeckDetailsScreen() {
     />
   );
   const audioSource = useFlashcardAudioSource(deck, selectedCard);
-  const reset = useSingleFlight(async (): Promise<void> => {
+  const reset = useSingleFlight(async (signal): Promise<void> => {
     if (deckId === null) {
       return;
     }
     setResetError(null);
     try {
       await resetDeckProgress(deckId);
-      if (!reset.isActive()) {
+      if (signal.aborted) {
         return;
       }
       haptics.resetCompleted();

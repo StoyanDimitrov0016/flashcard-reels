@@ -1,36 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-/** Acquire synchronously, before React renders the busy state. */
+/**
+ * Runs one action at a time. The guard is taken synchronously, so a second tap before React renders
+ * the busy state is ignored. Each action receives a signal that aborts when the owner unmounts, so
+ * it can skip side effects, such as haptics or navigation, that no longer have a screen.
+ */
 export function useSingleFlight<Args extends unknown[], Result>(
-  action: (...args: Args) => Promise<Result>
+  action: (signal: AbortSignal, ...args: Args) => Promise<Result>
 ) {
   const inFlight = useRef(false);
-  const active = useRef(true);
+  const lifetime = useRef<AbortController | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(function ownActionLifetime() {
-    active.current = true;
-    return function releaseActionLifetime() {
-      active.current = false;
+    const controller = new AbortController();
+    lifetime.current = controller;
+    return function endActionLifetime() {
+      controller.abort();
     };
   }, []);
 
-  const isActive = useCallback(() => active.current, []);
-  const run = useCallback(
-    async (...args: Args): Promise<Result | undefined> => {
-      if (inFlight.current || !active.current) {
-        return undefined;
-      }
-      inFlight.current = true;
-      setBusy(true);
-      try {
-        return await action(...args);
-      } finally {
-        inFlight.current = false;
-        setBusy(false);
-      }
-    },
-    [action]
-  );
+  async function run(...args: Args): Promise<Result | undefined> {
+    const signal = lifetime.current?.signal;
+    if (inFlight.current || !signal || signal.aborted) {
+      return undefined;
+    }
+    inFlight.current = true;
+    setBusy(true);
+    try {
+      return await action(signal, ...args);
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
 
-  return { run, busy, isActive };
+  return { run, busy };
 }

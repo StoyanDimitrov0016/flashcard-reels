@@ -40,4 +40,23 @@ describe("single action flight", () => {
     await expect(run()).resolves.toBeUndefined();
     expect(action).not.toHaveBeenCalled();
   });
+  it("aborts the running action signal when the owner unmounts", async () => {
+    const pending = deferred<boolean>();
+    let received: AbortSignal | undefined;
+    const hook = renderHook(() =>
+      useSingleFlight(async (signal: AbortSignal) => {
+        received = signal;
+        await pending.promise;
+        return !signal.aborted;
+      })
+    );
+    let result: Promise<boolean | undefined> = Promise.resolve(undefined);
+    act(() => {
+      result = hook.result.current.run();
+    });
+    expect(received?.aborted).toBe(false);
+    hook.unmount();
+    pending.resolve(true);
+    await expect(result).resolves.toBe(false);
+  });
 });

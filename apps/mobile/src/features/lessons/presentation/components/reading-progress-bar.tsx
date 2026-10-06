@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Animated, StyleSheet, View, useAnimatedValue } from "react-native";
 
 import { useAppTheme } from "@/shared/presentation/theme";
 
@@ -8,7 +8,7 @@ import { useAppTheme } from "@/shared/presentation/theme";
  * `Animated.ScrollView` and pass the rest to `ReadingProgressBar`.
  */
 export function useReadingProgress() {
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollY = useAnimatedValue(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
 

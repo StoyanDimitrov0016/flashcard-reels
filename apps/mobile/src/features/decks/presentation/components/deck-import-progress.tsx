@@ -1,6 +1,14 @@
 import { SymbolView } from "expo-symbols";
-import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useAnimatedValue,
+} from "react-native";
 
 import type { DeckDownloadProgress } from "@/features/decks/presentation/controllers/use-import-deck-package";
 
@@ -84,7 +92,7 @@ function ProgressBar({ fraction }: ProgressBarProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const [trackWidth, setTrackWidth] = useState(0);
-  const sweep = useRef(new Animated.Value(0)).current;
+  const sweep = useAnimatedValue(0);
   const indeterminate = fraction === null;
 
   useEffect(

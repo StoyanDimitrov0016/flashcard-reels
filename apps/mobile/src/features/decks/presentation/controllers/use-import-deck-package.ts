@@ -43,22 +43,17 @@ export function useImportDeckPackage(): ImportState & {
     };
   }, []);
 
-  const updateImportState = (next: ImportState) => {
-    if (flight.isActive()) {
-      setState(next);
-    }
-  };
-
   const reportProgress = (progress: DeckDownloadProgress) => {
     const now = Date.now();
     const finished = progress.totalBytes !== null && progress.bytesWritten >= progress.totalBytes;
-    if (flight.isActive() && (finished || now - lastProgressAt.current >= PROGRESS_INTERVAL_MS)) {
+    if (finished || now - lastProgressAt.current >= PROGRESS_INTERVAL_MS) {
       lastProgressAt.current = now;
       setDownloadProgress(progress);
     }
   };
 
   async function installAction(
+    signal: AbortSignal,
     getSelection: (signal?: AbortSignal) => Promise<DeckPackageSelection | null>,
     removeAfterInstall = false
   ): Promise<DeckInstallResult | null> {
@@ -66,25 +61,26 @@ export function useImportDeckPackage(): ImportState & {
     lastProgressAt.current = 0;
     const controller = removeAfterInstall ? new AbortController() : null;
     downloadController.current = controller;
-    updateImportState({ error: null, importing: true, downloading: removeAfterInstall });
+    setState({ error: null, importing: true, downloading: removeAfterInstall });
     let selection: DeckPackageSelection | null = null;
     try {
       selection = await getSelection(controller?.signal);
       downloadController.current = null;
-      if (!selection || controller?.signal.aborted || !flight.isActive()) {
-        updateImportState({ error: null, importing: false, downloading: false });
+      // Nothing installs once the screen that started the import is gone.
+      if (!selection || controller?.signal.aborted || signal.aborted) {
+        setState({ error: null, importing: false, downloading: false });
         return null;
       }
-      updateImportState({ error: null, importing: true, downloading: false });
+      setState({ error: null, importing: true, downloading: false });
       const result = await deckInstaller.installFromFile(selection);
       if (shouldInvalidateDeckContent(result)) {
         invalidateDeckContent();
       }
-      updateImportState({ error: null, importing: false, downloading: false });
-      return flight.isActive() ? result : null;
+      setState({ error: null, importing: false, downloading: false });
+      return signal.aborted ? null : result;
     } catch (error) {
       if (controller?.signal.aborted) {
-        updateImportState({ error: null, importing: false, downloading: false });
+        setState({ error: null, importing: false, downloading: false });
         return null;
       }
       const normalized = toOperationError(error, {
@@ -93,7 +89,7 @@ export function useImportDeckPackage(): ImportState & {
         message: "Could not import deck package",
       });
       reportError(normalized, "Deck import failure");
-      updateImportState({ error: normalized, importing: false, downloading: false });
+      setState({ error: normalized, importing: false, downloading: false });
       return null;
     } finally {
       downloadController.current = null;
@@ -120,11 +116,7 @@ export function useImportDeckPackage(): ImportState & {
     importing: flight.busy,
     downloadProgress,
     cancelDownload: () => downloadController.current?.abort(),
-    clearImportError: () => {
-      if (flight.isActive()) {
-        setState((current) => ({ ...current, error: null }));
-      }
-    },
+    clearImportError: () => setState((current) => ({ ...current, error: null })),
     importFromDevice,
     importFromUrl,
   };

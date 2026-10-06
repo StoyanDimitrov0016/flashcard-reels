@@ -16,7 +16,8 @@ vi.mock("react", () => ({
   },
   useState: (initial: unknown) => {
     let current = initial;
-    const observesDeleteState = typeof initial === "object";
+    // The hook keeps only the delete error in state; busy comes from the single flight.
+    const observesDeleteState = initial === null;
     if (observesDeleteState) {
       harness.state = current;
     }
@@ -58,7 +59,7 @@ describe("deck deletion feedback lifetime", () => {
     await expect(useDeleteDeck().deleteDeck("deck")).resolves.toBe(true);
     expect(harness.content).toHaveBeenCalledOnce();
     expect(harness.progress).toHaveBeenCalledOnce();
-    expect(harness.state).toMatchObject({ deleting: false, error: null });
+    expect(harness.state).toBeNull();
   });
 
   it("does not publish success or navigate from a screen that has already unmounted", async () => {
@@ -102,11 +103,8 @@ describe("deck deletion feedback lifetime", () => {
     await expect(hook.deleteDeck("deck")).resolves.toBe(false);
     expect(harness.content).not.toHaveBeenCalled();
     expect(harness.report).toHaveBeenCalledOnce();
-    expect(harness.state).toMatchObject({
-      deleting: false,
-      error: { code: "DECK_OPERATION_FAILED" },
-    });
+    expect(harness.state).toMatchObject({ code: "DECK_OPERATION_FAILED" });
     hook.clearDeleteError();
-    expect(harness.state).toMatchObject({ error: null });
+    expect(harness.state).toBeNull();
   });
 });
