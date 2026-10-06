@@ -22,7 +22,27 @@ export type FocusedSessionEvaluation = Readonly<{
   requestedDeckAvailable: boolean;
 }>;
 
-/** Opens the feed over the same cached cards the screen shows. */
+/** A Focus start owns only the session identity; its changing feed is read separately. */
+function focusStartOptions(services: ReelsCapability, request: FeedRequest) {
+  return queryOptions({
+    queryKey: [...queryScopes.focusStartFeeds, "start", request],
+    queryFn: async ({ client }) => {
+      const cards = await client.query(flashcardQueries.list(services, request.deckId));
+      const snapshot = await services.studyService.openFeed({
+        cards,
+        scope: request.scope,
+        deckId: request.deckId,
+        replaceExisting: true,
+        anchorFlashcardId: request.anchorFlashcardId,
+      });
+      return snapshot.feed.studySessionId;
+    },
+    staleTime: "static",
+    gcTime: Infinity,
+  });
+}
+
+/** Reads the current position and occurrences, without repeating a successful Focus replacement. */
 async function openFeed(
   services: ReelsCapability,
   client: QueryClient,
@@ -31,12 +51,18 @@ async function openFeed(
   return loadViewData(
     { operation: "reel-feed.prepare", message: "Could not prepare reel feed" },
     async () => {
+      if (request.focusStartRevision !== null) {
+        const sessionId = await client.query(focusStartOptions(services, request));
+        const cards = await client.query(flashcardQueries.list(services, request.deckId));
+        const snapshot = await services.studyService.refreshFeed({ sessionId, cards });
+        return snapshot.feed;
+      }
       const cards = await client.query(flashcardQueries.list(services, request.deckId));
       const snapshot = await services.studyService.openFeed({
         cards,
         scope: request.scope,
         deckId: request.deckId,
-        replaceExisting: request.focusStartRevision !== null,
+        replaceExisting: false,
         anchorFlashcardId: request.anchorFlashcardId,
       });
       return snapshot.feed;
@@ -58,17 +84,17 @@ const defaultGcTime = 5 * 60 * 1000;
 
 /**
  * Study session reads. Opening a feed has a side effect (it may create or replace a session), so
- * these queries never refetch on their own: only an explicit change rebuilds them (see
- * query-scopes). `services` are stable dependencies; every other input is part of the key.
+ * feeds reload on mount and after explicit data changes, not on app focus or reconnect. A Focus
+ * replacement is cached separately from its changing snapshot. `services` are stable dependencies;
+ * every other input is part of the key.
  */
 export const studyQueries = {
   /**
    * The scope's prepared feed.
    * - A resumable feed opens or resumes the session, and is rebuilt after content or progress
    *   changes.
-   * - A Focus start replaces the deck's session once. Its result stays cached for the app's
-   *   lifetime, so a remounted feed reuses it, and invalidation cannot rerun it. A failed start is
-   *   not cached, so retrying starts again.
+   * - A Focus start replaces the deck's session once, then reads that session's latest snapshot
+   *   on each mount. Data invalidation cannot replay the replacement. A failed start can retry.
    */
   feed: (services: ReelsCapability, request: FeedRequest) => {
     const startsFocus = request.focusStartRevision !== null;
@@ -78,8 +104,11 @@ export const studyQueries = {
         request,
       ],
       queryFn: ({ client }) => openFeed(services, client, request),
-      staleTime: startsFocus ? "static" : Infinity,
-      gcTime: startsFocus ? Infinity : defaultGcTime,
+      staleTime: Infinity,
+      gcTime: defaultGcTime,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     });
   },
   /** Whether a Focus session can resume, and whether its requested deck is still installed. */

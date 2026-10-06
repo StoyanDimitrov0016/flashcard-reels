@@ -12,7 +12,7 @@ export const queryScopes = {
   savedProgress: ["saved-progress"],
   /** Feeds that open or resume a session; they are rebuilt from scratch after a change. */
   resumableFeeds: ["study", "feed", "resume"],
-  /** Feeds that replaced a session for one Focus start; they never run twice. */
+  /** One-time Focus start identities and their snapshots; invalidation never replays a start. */
   focusStartFeeds: ["study", "feed", "focus-start"],
   focusedSession: ["study", "focused-session"],
 } as const;
@@ -55,8 +55,8 @@ const changesRebuildingFeeds: ReadonlySet<DataChange> = new Set([
  * prepared feed is rebuilt once, because each rebuild opens the session again.
  *
  * A prepared feed may reference cards or progress that just changed, so it is dropped rather than
- * shown while it refetches. Focus-start feeds are left alone: rerunning one would replace its
- * session again.
+ * shown while it refetches. The Focus owner reconciles ended or replaced sessions before mounting
+ * a resumed feed; explicit Focus starts are left alone here and reload their snapshot on mount.
  */
 export async function invalidateChangedData(
   client: QueryClient,

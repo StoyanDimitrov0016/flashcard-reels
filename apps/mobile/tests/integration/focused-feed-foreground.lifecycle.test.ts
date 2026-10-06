@@ -16,54 +16,75 @@ vi.mock("react-native", () => ({
   },
 }));
 
-import type { StudySession } from "@/features/study/domain/study-session.model";
-
-import { useFocusedFeedLifecycle } from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
+import {
+  useFocusedFeedLifecycle,
+  type FocusedFeedEvaluation,
+} from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
 import { createQueryWrapper } from "../support/query-client";
-import { createScenarioGraph } from "../support/sqlite-study-scenario";
-import { SequenceIdGenerator, TestClock } from "../support/study-fixtures";
+import { createScenarioGraph, seedDeck } from "../support/sqlite-study-scenario";
+import {
+  OTHER_DECK_ID,
+  SequenceIdGenerator,
+  TestClock,
+  TEST_DECK_ID,
+  testId,
+} from "../support/study-fixtures";
 
 afterEach(cleanup);
 describe("Focus foreground evaluation", () => {
-  it("joins a running evaluation, then evaluates again on a later foreground", async () => {
+  it("reconciles a persisted Focus replacement on foreground without hiding the current feed", async () => {
     const database = new NodeSqliteDatabase();
     try {
       const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
-      const initial = deferred<StudySession | null>();
-      const resume = vi
-        .spyOn(graph.study, "resumeFocusedSession")
-        .mockReturnValueOnce(initial.promise);
+      await seedDeck(database, TEST_DECK_ID, [testId(1)]);
+      await seedDeck(database, OTHER_DECK_ID, [testId(2)]);
+      const first = await graph.study.openSession("focus", TEST_DECK_ID, false);
       harness.services = { studyService: graph.runtime, deckService: {} };
-      const evaluated = vi.fn();
+      const evaluated = vi.fn<(evaluation: FocusedFeedEvaluation) => void>();
       const failed = vi.fn();
       const mounted = renderHook(() => useFocusedFeedLifecycle(evaluated, failed, null), {
         wrapper: createQueryWrapper(),
       });
 
-      act(() => {
-        harness.foreground?.("active");
-        harness.foreground?.("active");
+      await waitFor(() =>
+        expect(evaluated.mock.lastCall?.[0]).toMatchObject({
+          session: { id: first.session.id, deckId: TEST_DECK_ID },
+          requestedDeckAvailable: true,
+        })
+      );
+
+      const replacement = await graph.study.openSession("focus", OTHER_DECK_ID, true);
+      const entered = deferred<void>();
+      const release = deferred<void>();
+      const resume = graph.runtime.resumeFocusedSession.bind(graph.runtime);
+      vi.spyOn(graph.runtime, "resumeFocusedSession").mockImplementationOnce(async () => {
+        entered.resolve();
+        await release.promise;
+        return resume();
       });
-      await act(async () => {
-        initial.resolve(null);
-      });
-      await waitFor(() => expect(mounted.result.current.evaluating).toBe(false));
-      expect(resume).toHaveBeenCalledTimes(1);
-      expect(evaluated).toHaveBeenCalledTimes(1);
 
       act(() => {
         harness.foreground?.("active");
       });
-      await waitFor(() => expect(evaluated).toHaveBeenCalledTimes(2));
-      expect(resume).toHaveBeenCalledTimes(2);
-      // A foreground evaluation keeps the current feed instead of showing Focus as restoring.
+      await entered.promise;
       expect(mounted.result.current.evaluating).toBe(false);
+      await act(async () => release.resolve());
+      await waitFor(() =>
+        expect(evaluated.mock.lastCall?.[0]).toMatchObject({
+          session: { id: replacement.session.id, deckId: OTHER_DECK_ID },
+          requestedDeckAvailable: true,
+        })
+      );
+      expect(await graph.sessions.findActiveByScope("focus")).toMatchObject({
+        id: replacement.session.id,
+      });
       expect(failed).not.toHaveBeenCalled();
     } finally {
       cleanup();
+      vi.restoreAllMocks();
       database.close();
     }
   });

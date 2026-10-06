@@ -22,9 +22,11 @@ export function usePreparedReelFeed({
   anchorFlashcardId = null,
   focusStartRevision = null,
 }: PreparedReelFeedOptions): PreparedReelFeed | null {
-  const { data } = useQuery(
+  const { data, isFetching } = useQuery(
     studyQueries.feed(useReels(), { scope, deckId, anchorFlashcardId, focusStartRevision })
   );
 
-  return data ?? null;
+  // A mounted controller takes its initial position from this result. Never initialize it from
+  // an older cached snapshot while the current position is still being read.
+  return isFetching ? null : (data ?? null);
 }
