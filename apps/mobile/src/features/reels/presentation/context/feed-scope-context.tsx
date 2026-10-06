@@ -1,21 +1,13 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useReducer,
-  useState,
-} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createContext, type ReactNode, useCallback, useContext, useReducer } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { FocusedFeedOptions } from "@/features/reels/presentation/open-focused-feed";
-import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import {
   useFocusedFeedLifecycle,
   type FocusedFeedEvaluation,
 } from "@/features/reels/presentation/controllers/use-focused-feed-lifecycle";
-import { createFocusStartRequests } from "@/features/reels/presentation/focus-start-requests";
 import {
   confirmFocusedFeedSession,
   createFocusedFeedState,
@@ -25,6 +17,7 @@ import {
 } from "@/features/reels/presentation/focused-feed-state";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 export type {
   FocusTransition,
@@ -42,18 +35,12 @@ type FeedScopeContextValue = Readonly<{
     options?: FocusedFeedOptions
   ) => void;
   confirmFocusedFeedSession: (sessionId: string, expectedRevision: number) => void;
-  /** Runs a start's session-replacing preparation once, however often its feed remounts. */
-  shareFocusStart: (
-    revision: number,
-    prepare: () => Promise<PreparedReelFeed>
-  ) => Promise<PreparedReelFeed>;
 }>;
 
 type FeedScopeOwnerState = Readonly<{
   focusedFeed: FocusedFeedState;
   lifecycleResolved: boolean;
   restorationError: Error | null;
-  retryKey: number;
 }>;
 
 type FeedScopeEvent =
@@ -77,7 +64,6 @@ const initialOwnerState: FeedScopeOwnerState = {
   focusedFeed: { revision: 0, status: "empty" },
   lifecycleResolved: false,
   restorationError: null,
-  retryKey: 0,
 };
 
 function reduceFeedScope(state: FeedScopeOwnerState, event: FeedScopeEvent): FeedScopeOwnerState {
@@ -88,19 +74,13 @@ function reduceFeedScope(state: FeedScopeOwnerState, event: FeedScopeEvent): Fee
         : { status: "empty", revision: state.focusedFeed.revision + 1 },
       lifecycleResolved: true,
       restorationError: null,
-      retryKey: state.retryKey,
     };
   }
   if (event.type === "lifecycle-failed") {
     return { ...state, lifecycleResolved: true, restorationError: event.error };
   }
   if (event.type === "retry-lifecycle") {
-    return {
-      ...state,
-      lifecycleResolved: false,
-      restorationError: null,
-      retryKey: state.retryKey + 1,
-    };
+    return { ...state, lifecycleResolved: false, restorationError: null };
   }
   if (event.type === "start") {
     return {
@@ -127,7 +107,7 @@ type FeedScopeProviderProps = Readonly<{ children: ReactNode }>;
 
 export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const [ownerState, dispatch] = useReducer(reduceFeedScope, initialOwnerState);
-  const [focusStarts] = useState(createFocusStartRequests);
+  const queryClient = useQueryClient();
   const handleLifecycleEvaluation = useCallback(
     ({ session, requestedDeckAvailable }: FocusedFeedEvaluation) => {
       dispatch({
@@ -151,21 +131,23 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
       type: "lifecycle-failed",
     });
   }, []);
-  const retryFocusedFeedRestoration = useCallback(() => {
-    dispatch({ type: "retry-lifecycle" });
-  }, []);
-  const evaluatingFocusedFeed = useFocusedFeedLifecycle(
+  const focusedFeedLifecycle = useFocusedFeedLifecycle(
     handleLifecycleEvaluation,
     handleLifecycleFailure,
-    ownerState.retryKey,
     ownerState.focusedFeed.status === "ready" ? ownerState.focusedFeed.deckId : null
   );
+  const retryFocusedFeedRestoration = () => {
+    dispatch({ type: "retry-lifecycle" });
+    focusedFeedLifecycle.retry();
+  };
 
   const startFocusedFeed = useCallback(
     (deckId: DeckId, anchorFlashcardId: string | null, options?: FocusedFeedOptions) => {
+      // Only the latest start can still be showing, so earlier starts' feeds are released.
+      queryClient.removeQueries({ queryKey: queryScopes.focusStartFeeds });
       dispatch({ anchorFlashcardId, deckId, options, type: "start" });
     },
-    []
+    [queryClient]
   );
   const confirmSession = useCallback((sessionId: string, expectedRevision: number) => {
     dispatch({ expectedRevision, sessionId, type: "confirm" });
@@ -174,10 +156,9 @@ export function FeedScopeProvider({ children }: FeedScopeProviderProps) {
   const contextValue = {
     confirmFocusedFeedSession: confirmSession,
     focusedFeed: ownerState.focusedFeed,
-    focusRestoring: !ownerState.lifecycleResolved || evaluatingFocusedFeed,
+    focusRestoring: !ownerState.lifecycleResolved || focusedFeedLifecycle.evaluating,
     restorationError: ownerState.restorationError,
     retryFocusedFeedRestoration,
-    shareFocusStart: focusStarts.share,
     startFocusedFeed,
   };
 

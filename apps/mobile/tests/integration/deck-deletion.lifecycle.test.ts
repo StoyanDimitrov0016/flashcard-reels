@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { Component, createElement, useEffect, useState, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,15 +21,7 @@ import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl"
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
 import { SQLiteDeckThemeSelectionRepository } from "@/features/decks/infrastructure/sqlite-deck-theme-selection.repository";
 import { SQLiteDeckRepository } from "@/features/decks/infrastructure/sqlite-deck.repository";
-import {
-  DeckContentProvider,
-  useDeckContentRevision,
-} from "@/features/decks/presentation/context/deck-content-context";
 import { useDeleteDeck } from "@/features/decks/presentation/controllers/use-delete-deck";
-import {
-  LearningProgressRevisionProvider,
-  useLearningProgressRevision,
-} from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { FlashcardServiceImpl } from "@/features/flashcards/application/flashcard.service.impl";
 import { SQLiteFlashcardAvailabilityQuery } from "@/features/flashcards/infrastructure/sqlite-flashcard-availability.query";
 import { SQLiteFlashcardRepository } from "@/features/flashcards/infrastructure/sqlite-flashcard.repository";
@@ -40,6 +32,7 @@ import {
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
 import { createQueryClient } from "@/shared/presentation/query/query-client";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
@@ -57,7 +50,6 @@ import {
 } from "../support/study-fixtures";
 
 let observedFeed: PreparedReelFeed | null = null;
-let observedLoading = true;
 
 class Boundary extends Component<Readonly<{ children: ReactNode }>, { error: Error | null }> {
   override state: { error: Error | null } = { error: null };
@@ -72,13 +64,8 @@ class Boundary extends Component<Readonly<{ children: ReactNode }>, { error: Err
   }
 }
 
-function MixedFeedProbe({ cards }: Readonly<{ cards: Flashcard[] }>) {
-  const feed = usePreparedReelFeed({
-    cards,
-    scope: "discover",
-    deckId: null,
-    replaceExistingSession: false,
-  });
+function MixedFeedProbe() {
+  const feed = usePreparedReelFeed({ scope: "discover", deckId: null });
   useEffect(
     function observeMixedFeed() {
       observedFeed = feed;
@@ -88,20 +75,11 @@ function MixedFeedProbe({ cards }: Readonly<{ cards: Flashcard[] }>) {
   return null;
 }
 function MixedScreenProbe() {
-  const { cards, loading } = useFlashcards(null);
-  useEffect(
-    function observeMixedLoading() {
-      observedLoading = loading;
-      if (loading) {
-        observedFeed = null;
-      }
-    },
-    [loading]
-  );
+  const { loading } = useFlashcards(null);
   if (loading) {
     return null;
   }
-  return createElement(MixedFeedProbe, { cards });
+  return createElement(MixedFeedProbe);
 }
 function Providers({ children }: Readonly<{ children: ReactNode }>) {
   const [queryClient] = useState(createQueryClient);
@@ -112,18 +90,10 @@ function Providers({ children }: Readonly<{ children: ReactNode }>) {
       QueryClientProvider,
       { client: queryClient },
       createElement(
-        DeckContentProvider,
+        FeedScopeProvider,
         null,
-        createElement(
-          LearningProgressRevisionProvider,
-          null,
-          createElement(
-            FeedScopeProvider,
-            null,
-            children,
-            harness.mixed && createElement(MixedScreenProbe)
-          )
-        )
+        children,
+        harness.mixed && createElement(MixedScreenProbe)
       )
     )
   );
@@ -139,7 +109,6 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     harness.mixed = false;
     harness.report.mockClear();
     observedFeed = null;
-    observedLoading = true;
     database = new NodeSqliteDatabase();
     await seedDeck(database, TEST_DECK_ID, [makeFlashcard(1).id, makeFlashcard(2).id]);
     await seedDeck(database, OTHER_DECK_ID, [makeFlashcard(3, OTHER_DECK_ID).id]);
@@ -180,8 +149,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     await act(async () => {
       expect(await result.current.deleteDeck(TEST_DECK_ID)).toBe(true);
     });
-    expect(observedLoading).toBe(true);
-    expect(observedFeed).toBeNull();
+    await waitFor(() => expect(observedFeed).toBeNull());
     expect(prepare).toHaveBeenCalledTimes(previousCalls);
     await act(async () => {
       reload.resolve(await flashcardService.list());
@@ -257,37 +225,21 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     const cards = await flashcardService.list();
     const { result } = renderHook(
       () => ({
-        feed: usePreparedReelFeed({
-          cards,
-          scope: "discover",
-          deckId: null,
-          replaceExistingSession: false,
-        }),
-        ...useLearningProgressRevision(),
+        feed: usePreparedReelFeed({ scope: "discover", deckId: null }),
+        client: useQueryClient(),
       }),
       { wrapper: Providers }
     );
     await waitFor(() => expect(result.current.feed).not.toBeNull());
     const preparation = deferred<PreparedReelFeed>();
     vi.spyOn(graph.feed, "prepareFeed").mockImplementationOnce(() => preparation.promise);
-    act(() => result.current.invalidateLearningProgress());
-    expect(result.current.feed).toBeNull();
+    act(() => void invalidateChangedData(result.current.client, ["learning-progress"]));
+    // Notifications are batched into the next tick; the stale feed is gone before any rebuild.
+    await waitFor(() => expect(result.current.feed).toBeNull());
     await act(async () =>
       preparation.resolve(await graph.feed.prepareFeed(cards, "discover", null, false, null))
     );
     await waitFor(() => expect(result.current.feed).not.toBeNull());
-  });
-
-  it("ignores an obsolete card-load result after a newer content revision", async () => {
-    const slow = deferred<Flashcard[]>();
-    vi.spyOn(flashcardService, "list").mockImplementationOnce(() => slow.promise);
-    const { result } = renderHook(() => ({ ...useFlashcards(null), ...useDeckContentRevision() }), {
-      wrapper: Providers,
-    });
-    act(() => result.current.invalidateDeckContent());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    await act(async () => slow.resolve([]));
-    expect(result.current.cards).toHaveLength(3);
   });
 
   it("handles deleting the last deck without turning an empty feed into a failure", async () => {
@@ -328,7 +280,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
     await act(async () => {
       await result.current.deleteDeck(TEST_DECK_ID);
     });
-    expect(observedLoading).toBe(true);
+    await waitFor(() => expect(observedFeed).toBeNull());
     await act(async () => gate.resolve());
     await waitFor(() => expect(failures).toHaveLength(1));
     expect(failures[0]).toMatchObject({ code: "SQLITE_CONSTRAINT_FOREIGNKEY" });

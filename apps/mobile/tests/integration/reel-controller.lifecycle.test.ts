@@ -1,5 +1,7 @@
 /** @vitest-environment jsdom */
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const harness = vi.hoisted(() => ({ services: undefined as unknown, toast: vi.fn() }));
@@ -10,11 +12,9 @@ vi.mock("@/shared/errors/report-error", () => ({ reportError: vi.fn() }));
 import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 import type { StudyFeedSnapshot } from "@/features/study/domain/study.service";
 
-import {
-  LearningProgressRevisionProvider,
-  useLearningProgressRevision,
-} from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
+import { createQueryClient } from "@/shared/presentation/query/query-client";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
@@ -155,21 +155,20 @@ describe("mounted Discover ratings", () => {
     const initialFeed = await graph.feed.prepareFeed(sourceCards, "discover", null, false, null);
     await beforeMount?.(graph, initialFeed);
     harness.services = { studyService: graph.runtime };
-    const mounted = renderHook(
-      () => ({
-        ...useReelController({ initialFeed, sourceCards }),
-        revision: useLearningProgressRevision().revision,
-      }),
-      {
-        wrapper: LearningProgressRevisionProvider,
-      }
-    );
+    const client: QueryClient = createQueryClient();
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    const mounted = renderHook(() => useReelController({ initialFeed, sourceCards }), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) =>
+        createElement(QueryClientProvider, { client }, children),
+    });
+    const progressInvalidated = () =>
+      invalidate.mock.calls.some(([filters]) => filters?.queryKey === queryScopes.learningProgress);
     await waitFor(() => expect(mounted.result.current.feedback.fatal).toBeNull());
     const occurrence = initialFeed.occurrences[0];
     if (!occurrence) {
       throw new Error("Missing fixture occurrence");
     }
-    return { graph, mounted, occurrence, initialFeed };
+    return { graph, mounted, occurrence, initialFeed, progressInvalidated };
   }
 
   it("keeps the saved rating and feed when a committed attempt is rated", async () => {
@@ -198,7 +197,7 @@ describe("mounted Discover ratings", () => {
   });
 
   it("reloads after a deck reset while Discover is mounted", async () => {
-    const { graph, mounted, occurrence } = await mountFeed();
+    const { graph, mounted, occurrence, progressInvalidated } = await mountFeed();
     await graph.flashcardProgress.resetDeckProgress(TEST_DECK_ID);
 
     act(() => mounted.result.current.rate(occurrence.reelPosition, "good"));
@@ -207,11 +206,11 @@ describe("mounted Discover ratings", () => {
     });
 
     expect(mounted.result.current.feedback.fatal).toBeNull();
-    expect(mounted.result.current.revision).toBe(1);
+    expect(progressInvalidated()).toBe(true);
   });
 
   it("keeps a missing attempt in an active session fatal", async () => {
-    const { graph, mounted, occurrence } = await mountFeed();
+    const { graph, mounted, occurrence, progressInvalidated } = await mountFeed();
     act(() => mounted.result.current.rate(occurrence.reelPosition, "good"));
     await waitFor(() => expect(mounted.result.current.cardState(0).rating).toBe("good"));
     await database.runAsync("DELETE FROM flashcard_review_attempts");
@@ -221,7 +220,7 @@ describe("mounted Discover ratings", () => {
         code: "STUDY_PERSISTENCE_FAILED",
       })
     );
-    expect(mounted.result.current.revision).toBe(0);
+    expect(progressInvalidated()).toBe(false);
     expect(await graph.study.rateAttempt(testId(9999), "good")).toEqual({ status: "missing" });
   });
 });

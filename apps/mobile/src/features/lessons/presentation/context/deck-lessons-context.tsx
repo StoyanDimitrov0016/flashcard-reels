@@ -1,5 +1,6 @@
 import { BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { createContext, type ReactNode, useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -9,13 +10,12 @@ import type {
   LessonSummary,
 } from "@/features/lessons/domain/lesson.model";
 
-import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { findAdjacentLessons } from "@/features/lessons/presentation/adjacent-lessons";
 import { LessonList } from "@/features/lessons/presentation/components/lesson-list";
 import { SheetLessonReader } from "@/features/lessons/presentation/components/sheet-lesson-reader";
 import { useLessonSheetHeight } from "@/features/lessons/presentation/controllers/use-lesson-sheet-height";
 import { useLessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
-import { reportError } from "@/shared/errors/report-error";
+import { lessonQueries } from "@/features/lessons/presentation/queries/lesson-queries";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
 import { sizes } from "@/shared/presentation/sizes";
@@ -27,6 +27,11 @@ type DeckLessonsContextValue = Readonly<{
 }>;
 
 const DeckLessonsContext = createContext<DeckLessonsContextValue | null>(null);
+const noReadingLists: ReadonlyMap<DeckId, DeckReadingList> = new Map();
+
+function indexByDeck(lists: readonly DeckReadingList[]): ReadonlyMap<DeckId, DeckReadingList> {
+  return new Map(lists.map((list) => [list.deckId, list]));
+}
 
 type DeckLessonsProviderProps = Readonly<{ children: ReactNode }>;
 
@@ -35,36 +40,17 @@ type DeckLessonsProviderProps = Readonly<{ children: ReactNode }>;
  * deck's lessons and reads them, so closing it returns to the same card.
  */
 export function DeckLessonsProvider({ children }: DeckLessonsProviderProps) {
-  const { lessonService } = useLessonsCapability();
-  const { revision } = useDeckContentRevision();
-  const [readingLists, setReadingLists] = useState<ReadonlyMap<DeckId, DeckReadingList>>(
-    () => new Map()
-  );
+  // Without lessons the Reading button stays hidden; studying is unaffected, so this never throws.
+  const { data: readingLists = noReadingLists } = useQuery({
+    ...lessonQueries.readingLists(useLessonsCapability()),
+    select: indexByDeck,
+    throwOnError: false,
+    meta: { errorReport: "Deck lessons load failure" },
+  });
   const [sectionId, setSectionId] = useState<string | null>(null);
   const [opening, setOpening] = useState(0);
   const [openDeckId, setOpenDeckId] = useState<DeckId | null>(null);
   const [openLesson, setOpenLesson] = useState<LessonSummary | null>(null);
-
-  useEffect(
-    function loadDeckLessons() {
-      let active = true;
-      lessonService
-        .listReadingLists()
-        .then((lists) => {
-          if (active) {
-            setReadingLists(new Map(lists.map((list) => [list.deckId, list])));
-          }
-        })
-        .catch((error: unknown) => {
-          // Without lessons the Reading button stays hidden; studying is unaffected.
-          reportError(error, "Deck lessons load failure");
-        });
-      return function cancelDeckLessonsLoad() {
-        active = false;
-      };
-    },
-    [lessonService, revision]
-  );
 
   const value: DeckLessonsContextValue = {
     hasLesson: (deckId, lessonId) =>

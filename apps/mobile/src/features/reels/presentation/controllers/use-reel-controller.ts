@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -6,13 +7,13 @@ import type { FocusedCardState } from "@/features/reels/presentation/open-focuse
 import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 import type { StudyFeedSnapshot } from "@/features/study/domain/study.service";
 
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
 import { mergeMountedReelOccurrences } from "@/features/reels/presentation/mounted-reel-occurrences";
 import { AppError } from "@/shared/errors/app-error";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 type ReelControllerOptions = Readonly<{
   initialFeed: PreparedReelFeed;
@@ -27,7 +28,7 @@ export function useReelController({
 }: ReelControllerOptions) {
   const { studyService } = useReels();
 
-  const { invalidateLearningProgress } = useLearningProgressRevision();
+  const queryClient = useQueryClient();
 
   const [feed, setFeed] = useState(initialFeed);
 
@@ -94,7 +95,7 @@ export function useReelController({
       if (error instanceof AppError && error.code === "STUDY_SESSION_ENDED") {
         if (!ended.current) {
           ended.current = true;
-          invalidateLearningProgress();
+          void invalidateChangedData(queryClient, ["learning-progress"]);
         }
         return;
       }
@@ -108,7 +109,7 @@ export function useReelController({
         setFatal(normalized);
       }
     },
-    [invalidateLearningProgress]
+    [queryClient]
   );
 
   const applyRatings = useCallback((next: ReadonlyMap<number, Rating>) => {

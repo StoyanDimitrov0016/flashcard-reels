@@ -1,15 +1,16 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 import type { DeckDownloadProgress } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
 
-import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 export type { DeckDownloadProgress };
 
@@ -26,7 +27,7 @@ export function useImportDeckPackage(): ImportState & {
   clearImportError: () => void;
 } {
   const { deckInstaller, deckPackageDownloader, deckPackagePicker } = useDecks();
-  const invalidateDeckContent = useInvalidateDeckContent();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<ImportState>({
     error: null,
     importing: false,
@@ -74,7 +75,7 @@ export function useImportDeckPackage(): ImportState & {
       setState({ error: null, importing: true, downloading: false });
       const result = await deckInstaller.installFromFile(selection);
       if (shouldInvalidateDeckContent(result)) {
-        invalidateDeckContent();
+        void invalidateChangedData(queryClient, ["deck-content"]);
       }
       setState({ error: null, importing: false, downloading: false });
       return signal.aborted ? null : result;

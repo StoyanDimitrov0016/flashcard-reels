@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
-import { createElement, useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 const harness = vi.hoisted(() => ({ services: undefined as unknown, toast: vi.fn() }));
 vi.mock("@/infrastructure/app-services", () => ({ useAppServices: () => harness.services }));
@@ -18,24 +18,15 @@ import { SQLiteArchivedProgressQuery } from "@/features/decks/infrastructure/sql
 import { SQLiteDeckProgressRepository } from "@/features/decks/infrastructure/sqlite-deck-progress.repository";
 import { SQLiteSavedProgressContinuationTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-continuation.transaction";
 import { SQLiteSavedProgressDeletionTransaction } from "@/features/decks/infrastructure/sqlite-saved-progress-deletion.transaction";
-import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
 import { usePausedDeckProgress } from "@/features/decks/presentation/controllers/use-paused-deck-progress";
-import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { deckProgress } from "@/infrastructure/sqlite/schema";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
+import { createQueryWrapper } from "../support/query-client";
 import { seedDeck } from "../support/sqlite-study-scenario";
 import { TEST_DECK_ID, testId } from "../support/study-fixtures";
 
-type ProvidersProps = Readonly<{ children: ReactNode }>;
-function Providers({ children }: ProvidersProps) {
-  return createElement(
-    DeckContentProvider,
-    null,
-    createElement(LearningProgressRevisionProvider, null, children)
-  );
-}
 afterEach(cleanup);
 describe("paused progress actions", () => {
   it("runs only one continuation for two taps before a render", async () => {
@@ -67,7 +58,7 @@ describe("paused progress actions", () => {
         });
       harness.services = { savedProgressService: service };
       const hook = renderHook(() => usePausedDeckProgress({ suspendPrompt: false }), {
-        wrapper: Providers,
+        wrapper: createQueryWrapper(),
       });
       await waitFor(() => expect(hook.result.current.selected?.deckId).toBe(TEST_DECK_ID));
       act(() => {

@@ -8,6 +8,7 @@ import type { FlashcardProgress } from "@/features/flashcard-progress/domain/fla
 
 import { OperationError } from "@/shared/errors/operation-error";
 import { loadViewData } from "@/shared/presentation/query/load-view-data";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 type DeckQueryServices = Pick<DecksCapability, "deckService" | "flashcardProgressService">;
 
@@ -24,12 +25,6 @@ export const emptyDeckDetails: DeckDetailsData = {
   themeSelection: null,
   progress: new Map(),
 };
-
-type DeckRevisions = Readonly<{
-  contentRevision: number;
-  themeSelectionRevision: number;
-  progressRevision: number;
-}>;
 
 async function loadDetails(services: DeckQueryServices, deckId: DeckId): Promise<DeckDetailsData> {
   const details = await services.deckService.getDetails(deckId);
@@ -74,36 +69,22 @@ async function loadMetadata(
 }
 
 /**
- * Deck reads. `services` are stable dependencies; every other input is part of the key.
- * Screens keep showing the previous result while a new key loads.
+ * Deck reads. `services` are stable dependencies; every other input is part of the key. Writes
+ * invalidate the decks scope (see query-scopes). Screens keep showing the previous result while a
+ * different deck loads.
  */
 export const deckQueries = {
-  catalog: (
-    services: DeckQueryServices,
-    { contentRevision, themeSelectionRevision }: Omit<DeckRevisions, "progressRevision">
-  ) =>
+  catalog: (services: DeckQueryServices) =>
     queryOptions({
-      queryKey: ["decks", "catalog", contentRevision, themeSelectionRevision],
+      queryKey: [...queryScopes.decks, "catalog"],
       queryFn: () =>
         loadViewData({ operation: "deck-catalog.load", message: "Could not load decks" }, () =>
           services.deckService.getCatalog()
         ),
-      placeholderData: keepPreviousData,
     }),
-  details: (
-    services: DeckQueryServices,
-    deckId: DeckId | null,
-    { contentRevision, themeSelectionRevision, progressRevision }: DeckRevisions
-  ) =>
+  details: (services: DeckQueryServices, deckId: DeckId | null) =>
     queryOptions({
-      queryKey: [
-        "decks",
-        "details",
-        deckId,
-        contentRevision,
-        themeSelectionRevision,
-        progressRevision,
-      ],
+      queryKey: [...queryScopes.decks, "details", deckId],
       queryFn:
         deckId === null
           ? skipToken
@@ -118,14 +99,9 @@ export const deckQueries = {
               ),
       placeholderData: keepPreviousData,
     }),
-  metadata: (
-    services: DeckQueryServices,
-    deckIds: readonly DeckId[],
-    requireDecks: boolean,
-    themeSelectionRevision: number
-  ) =>
+  metadata: (services: DeckQueryServices, deckIds: readonly DeckId[], requireDecks: boolean) =>
     queryOptions({
-      queryKey: ["decks", "metadata", deckIds, requireDecks, themeSelectionRevision],
+      queryKey: [...queryScopes.decks, "metadata", deckIds, requireDecks],
       queryFn: () =>
         loadViewData({ operation: "decks.load", message: "Could not load decks" }, () =>
           loadMetadata(services, deckIds, requireDecks)

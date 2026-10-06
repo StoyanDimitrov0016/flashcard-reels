@@ -1,13 +1,13 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 
-import { useInvalidateDeckContent } from "@/features/decks/presentation/context/deck-content-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
 import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 type DeleteDeckState = Readonly<{ deleting: boolean; error: Error | null }>;
 
@@ -16,15 +16,13 @@ export function useDeleteDeck(): DeleteDeckState & {
   clearDeleteError: () => void;
 } {
   const { deckService } = useDecks();
-  const invalidateDeckContent = useInvalidateDeckContent();
-  const { invalidateLearningProgress } = useLearningProgressRevision();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
   const flight = useSingleFlight(async (signal, deckId: DeckId): Promise<boolean> => {
     setError(null);
     try {
       await deckService.remove(deckId);
-      invalidateDeckContent();
-      invalidateLearningProgress();
+      void invalidateChangedData(queryClient, ["deck-content", "learning-progress"]);
       // The caller navigates on success, which only makes sense while its screen exists.
       return !signal.aborted;
     } catch (cause) {

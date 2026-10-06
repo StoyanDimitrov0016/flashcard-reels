@@ -1,101 +1,69 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { AppState } from "react-native";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
-import type { StudySession } from "@/features/study/domain/study-session.model";
 
-import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useReels } from "@/features/reels/presentation/dependencies/use-reels";
+import {
+  studyQueries,
+  type FocusedSessionEvaluation,
+} from "@/features/reels/presentation/queries/study-queries";
 
-export type FocusedFeedEvaluation = Readonly<{
-  session: StudySession | null;
-  requestedDeckAvailable: boolean;
-}>;
-type EvaluationRequest = Readonly<{
-  revision: number;
-  progressRevision: number;
-  requestedDeckId: DeckId | null;
-  retryKey: number;
+export type FocusedFeedEvaluation = FocusedSessionEvaluation;
+
+type FocusedFeedLifecycle = Readonly<{
+  /** True until the evaluation for the current deck and data has finished. */
+  evaluating: boolean;
+  retry: () => void;
 }>;
 
+/**
+ * Evaluates whether Focus can resume: on mount, when its requested deck changes, after content or
+ * progress changes (query invalidation), and whenever the app returns to the foreground. A
+ * foreground evaluation keeps showing the current feed; only invalidated data marks it evaluating.
+ */
 export function useFocusedFeedLifecycle(
   onEvaluated: (evaluation: FocusedFeedEvaluation) => void,
   onEvaluationFailed: (error: unknown) => void,
-  retryKey: number,
   requestedDeckId: DeckId | null
-): boolean {
-  const { deckService, studyService } = useReels();
-  const { revision } = useDeckContentRevision();
-  const { revision: progressRevision } = useLearningProgressRevision();
-  const [completedRequest, setCompletedRequest] = useState<EvaluationRequest | null>(null);
+): FocusedFeedLifecycle {
+  const { data, dataUpdatedAt, error, errorUpdatedAt, isFetching, isPending, isStale, refetch } =
+    useQuery(studyQueries.focusedSession(useReels(), requestedDeckId));
 
   useEffect(
-    function synchronizeFocusedFeedLifecycle() {
-      const sessionService = studyService;
-      let disposed = false;
-      let evaluationInFlight = false;
-      let evaluationPending = false;
-
-      const evaluate = async () => {
-        if (disposed) {
-          return;
-        }
-        if (evaluationInFlight) {
-          evaluationPending = true;
-          return;
-        }
-        evaluationInFlight = true;
-        try {
-          const resumed = await sessionService.resumeFocusedSession();
-          const requestedDeckAvailable =
-            requestedDeckId === null || (await deckService.findById(requestedDeckId)) !== null;
-          if (!disposed) {
-            onEvaluated({ session: resumed, requestedDeckAvailable });
-          }
-        } catch (error) {
-          if (!disposed) {
-            onEvaluationFailed(error);
-          }
-        } finally {
-          evaluationInFlight = false;
-          if (!disposed && evaluationPending) {
-            evaluationPending = false;
-            void evaluate();
-          }
-          if (!disposed) {
-            setCompletedRequest({ revision, progressRevision, requestedDeckId, retryKey });
-          }
-        }
-      };
-
-      void evaluate();
-      const subscription = AppState.addEventListener("change", (nextState) => {
-        if (nextState === "active") {
-          void evaluate();
+    function evaluateWhenForegrounded() {
+      const subscription = AppState.addEventListener("change", (state) => {
+        if (state === "active") {
+          // Joins an evaluation that is already running instead of starting another.
+          void refetch({ cancelRefetch: false });
         }
       });
-      return function unsubscribeFromFocusedFeedLifecycle() {
-        disposed = true;
+      return function stopEvaluatingWhenForegrounded() {
         subscription.remove();
       };
     },
-    [
-      deckService,
-      onEvaluationFailed,
-      onEvaluated,
-      requestedDeckId,
-      retryKey,
-      revision,
-      progressRevision,
-      studyService,
-    ]
+    [refetch]
   );
-  return (
-    completedRequest === null ||
-    completedRequest.revision !== revision ||
-    completedRequest.progressRevision !== progressRevision ||
-    completedRequest.requestedDeckId !== requestedDeckId ||
-    completedRequest.retryKey !== retryKey
+  useEffect(
+    function reportEvaluation() {
+      if (data && dataUpdatedAt > 0) {
+        onEvaluated(data);
+      }
+    },
+    [data, dataUpdatedAt, onEvaluated]
   );
+  useEffect(
+    function reportEvaluationFailure() {
+      if (error && errorUpdatedAt > 0) {
+        onEvaluationFailed(error);
+      }
+    },
+    [error, errorUpdatedAt, onEvaluationFailed]
+  );
+
+  return {
+    evaluating: isPending || (isFetching && isStale),
+    retry: () => void refetch(),
+  };
 }

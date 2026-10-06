@@ -10,9 +10,6 @@ import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
-import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { DeckThemeSelectionProvider } from "@/features/decks/presentation/context/deck-theme-selection-context";
-import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import {
   PreferencesProvider,
   usePreferencesContext,
@@ -179,15 +176,9 @@ function RootLayoutContent() {
           onInit={initializeAppDatabase}
         >
           <AppQueryProvider>
-            <DeckContentProvider>
-              <DeckThemeSelectionProvider>
-                <LearningProgressRevisionProvider>
-                  <AppServicesProvider>
-                    <AppPreferences />
-                  </AppServicesProvider>
-                </LearningProgressRevisionProvider>
-              </DeckThemeSelectionProvider>
-            </DeckContentProvider>
+            <AppServicesProvider>
+              <AppPreferences />
+            </AppServicesProvider>
           </AppQueryProvider>
         </SQLiteProvider>
       </View>

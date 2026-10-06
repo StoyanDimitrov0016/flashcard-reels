@@ -1,18 +1,19 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 import type { PreparedProgressRestore } from "@/features/progress-backup/application/progress-backup.service";
 
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useProgressBackup } from "@/features/progress-backup/presentation/dependencies/use-progress-backup";
 import { getProgressBackupErrorFeedback } from "@/features/progress-backup/presentation/progress-backup-error-feedback";
 import { reportError } from "@/shared/errors/report-error";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 export type { PreparedProgressRestore };
 
 export function useProgressBackupController() {
   const { progressBackupService } = useProgressBackup();
-  const { invalidateLearningProgress } = useLearningProgressRevision();
+  const queryClient = useQueryClient();
   const inFlight = useRef(false);
   const [busy, setBusy] = useState(false);
   const [prepared, setPrepared] = useState<PreparedProgressRestore | null>(null);
@@ -50,7 +51,7 @@ export function useProgressBackupController() {
       reportError(cause, "Progress export failure");
       setError(getProgressBackupErrorFeedback(cause, "export"));
     } finally {
-      invalidateLearningProgress();
+      void invalidateChangedData(queryClient, ["learning-progress"]);
       inFlight.current = false;
       setBusy(false);
     }
@@ -94,7 +95,7 @@ export function useProgressBackupController() {
       reportError(cause, "Progress restore failure");
       setError(getProgressBackupErrorFeedback(cause, "restore"));
     } finally {
-      invalidateLearningProgress();
+      void invalidateChangedData(queryClient, ["learning-progress"]);
       inFlight.current = false;
       setBusy(false);
     }

@@ -1,58 +1,28 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 
 import type { ArchivedDeckProgress } from "@/features/decks/domain/archived-deck-progress";
 
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
+import { savedProgressQueries } from "@/features/decks/presentation/queries/saved-progress-queries";
 import { reportError } from "@/shared/errors/report-error";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
+import { useRefreshOnFocus } from "@/shared/presentation/query/use-refresh-on-focus";
+
+const emptyRows: readonly ArchivedDeckProgress[] = [];
 
 export function useArchivedProgress() {
-  const { savedProgressService } = useDecks();
-  const [rows, setRows] = useState<ArchivedDeckProgress[]>([]);
+  const services = useDecks();
+  const { savedProgressService } = services;
+  const queryClient = useQueryClient();
+  const { data, isError, isFetching, refetch } = useQuery(savedProgressQueries.archived(services));
+  const rows = data ?? emptyRows;
   const [selected, setSelected] = useState<ArchivedDeckProgress | null>(null);
-  const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const loadSequence = useRef(0);
   const deleteInFlight = useRef(false);
-
-  const refresh = useCallback(() => {
-    const sequence = ++loadSequence.current;
-    setLoading(true);
-    setLoadError(null);
-    void savedProgressService
-      .listArchivedProgress()
-      .then((progress) => {
-        if (sequence === loadSequence.current) {
-          setRows(progress);
-        }
-      })
-      .catch((cause: unknown) => {
-        if (sequence === loadSequence.current) {
-          reportError(cause, "Archived progress load failure");
-          setLoadError("Could not load archived progress.");
-        }
-      })
-      .finally(() => {
-        if (sequence === loadSequence.current) {
-          setLoading(false);
-        }
-      });
-  }, [savedProgressService]);
-
-  useFocusEffect(
-    useCallback(
-      function refreshArchivedProgressWhenFocused() {
-        refresh();
-        return function cancelArchivedProgressLoad() {
-          loadSequence.current += 1;
-        };
-      },
-      [refresh]
-    )
-  );
+  useRefreshOnFocus(refetch);
 
   const chooseForDeletion = (row: ArchivedDeckProgress) => {
     setDeleteError(null);
@@ -75,10 +45,9 @@ export function useArchivedProgress() {
     setDeleteError(null);
     try {
       await savedProgressService.deleteProgress(selected.deckId);
-      setRows((current) => current.filter((row) => row.deckId !== selected.deckId));
       setSelected(null);
       showSuccessToast("Saved progress deleted.");
-      refresh();
+      void queryClient.invalidateQueries({ queryKey: queryScopes.savedProgress });
     } catch (cause) {
       reportError(cause, "Archived progress deletion failure");
       setDeleteError("Could not delete saved progress. Try again.");
@@ -91,11 +60,11 @@ export function useArchivedProgress() {
   return {
     rows,
     selected,
-    loading,
+    loading: isFetching,
     deleting,
-    loadError,
+    loadError: isError ? "Could not load archived progress." : null,
     deleteError,
-    refresh,
+    refresh: () => void refetch(),
     chooseForDeletion,
     cancelDeletion,
     deleteSelected,

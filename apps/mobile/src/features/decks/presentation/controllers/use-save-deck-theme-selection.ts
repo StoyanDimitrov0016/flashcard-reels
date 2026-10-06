@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
@@ -7,10 +8,10 @@ import {
   type DeckThemeId,
   DeckThemeSelection,
 } from "@/features/decks/domain/deck-theme-selection.model";
-import { useDeckThemeSelectionRevision } from "@/features/decks/presentation/context/deck-theme-selection-context";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { reportError } from "@/shared/errors/report-error";
+import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 /** The deck whose theme the screen shows, and the theme it has loaded for it. */
 type ShownThemeSelection = Readonly<{ deckId: DeckId | null; themeId: DeckThemeId | null }>;
@@ -23,7 +24,7 @@ type ChosenPreset = Readonly<{ deckId: DeckId; preset: DeckTheme; saving: boolea
  */
 export function useSaveDeckThemeSelection(shown: ShownThemeSelection) {
   const { deckService } = useDecks();
-  const { invalidateThemeSelections } = useDeckThemeSelectionRevision();
+  const queryClient = useQueryClient();
   const [chosen, setChosen] = useState<ChosenPreset | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -42,7 +43,7 @@ export function useSaveDeckThemeSelection(shown: ShownThemeSelection) {
     setSaveError(null);
     try {
       await deckService.saveThemeSelection(themeSelection);
-      invalidateThemeSelections();
+      await invalidateChangedData(queryClient, ["theme-selection"]);
       setChosen((current) =>
         current?.preset === preset ? { ...current, saving: false } : current
       );

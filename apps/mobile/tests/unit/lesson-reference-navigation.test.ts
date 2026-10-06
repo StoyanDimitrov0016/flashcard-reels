@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -35,9 +35,6 @@ vi.mock("@/shared/presentation/theme", async () => {
   const { getAppColors } = await import("@/shared/presentation/theme-colors");
   return { useAppTheme: () => ({ colors: getAppColors("dark") }) };
 });
-vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
-  useDeckContentRevision: () => ({ revision: 1 }),
-}));
 vi.mock("@/features/lessons/presentation/dependencies/use-lessons", () => ({
   useLessonsCapability: () => ({
     lessonService: {
@@ -92,22 +89,28 @@ vi.mock("@/features/lessons/presentation/components/sheet-lesson-reader", async 
 import { ReadingButton } from "@/features/lessons/presentation/components/reading-button";
 import { DeckLessonsProvider } from "@/features/lessons/presentation/context/deck-lessons-context";
 
+import { createQueryWrapper } from "../support/query-client";
+
 afterEach(cleanup);
 
 function references() {
   return createElement(
-    DeckLessonsProvider,
+    createQueryWrapper(),
     null,
-    [
-      ["Vertical card", "vertical-scaling"],
-      ["Another vertical card", "vertical-scaling"],
-      ["Limitations card", "vertical-scaling/limitations"],
-      ["Whole lesson card", null],
-    ].map(([name, sectionId]) =>
-      createElement(
-        "div",
-        { role: "group", "aria-label": name, key: name },
-        createElement(ReadingButton, { deckId: "deck", lessonId: "lesson", sectionId })
+    createElement(
+      DeckLessonsProvider,
+      null,
+      [
+        ["Vertical card", "vertical-scaling"],
+        ["Another vertical card", "vertical-scaling"],
+        ["Limitations card", "vertical-scaling/limitations"],
+        ["Whole lesson card", null],
+      ].map(([name, sectionId]) =>
+        createElement(
+          "div",
+          { role: "group", "aria-label": name, key: name },
+          createElement(ReadingButton, { deckId: "deck", lessonId: "lesson", sectionId })
+        )
       )
     )
   );
@@ -117,8 +120,12 @@ async function openCard(name: string) {
   const button = await within(screen.getByRole("group", { name })).findByRole("button", {
     name: "Read connected lesson",
   });
-  fireEvent.click(button);
-  return screen.findByRole("region", { name: "Lesson reader" });
+  // The button is shown before the deck's lessons load; tapping it opens them once they have.
+  await waitFor(() => {
+    fireEvent.click(button);
+    expect(screen.getByRole("region", { name: "Lesson reader" })).toBeTruthy();
+  });
+  return screen.getByRole("region", { name: "Lesson reader" });
 }
 
 async function expectDestination(card: string, destination: string) {

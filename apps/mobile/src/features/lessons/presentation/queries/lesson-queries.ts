@@ -4,20 +4,21 @@ import type { LessonId } from "@/features/lessons/domain/lesson.model";
 import type { LessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
 
 import { loadViewData } from "@/shared/presentation/query/load-view-data";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 /** Lesson reads. `services` are stable dependencies; every other input is part of the key. */
 export const lessonQueries = {
-  readingLists: (services: LessonsCapability, contentRevision: number) =>
+  readingLists: (services: LessonsCapability) =>
     queryOptions({
-      queryKey: ["lessons", "reading-lists", contentRevision],
+      queryKey: [...queryScopes.lessons, "reading-lists"],
       queryFn: () =>
         loadViewData({ operation: "lessons.list", message: "Could not load lessons" }, () =>
           services.lessonService.listReadingLists()
         ),
     }),
-  detail: (services: LessonsCapability, lessonId: LessonId | null, contentRevision: number) =>
+  detail: (services: LessonsCapability, lessonId: LessonId | null) =>
     queryOptions({
-      queryKey: ["lessons", "detail", lessonId, contentRevision],
+      queryKey: [...queryScopes.lessons, "detail", lessonId],
       queryFn:
         lessonId === null
           ? skipToken

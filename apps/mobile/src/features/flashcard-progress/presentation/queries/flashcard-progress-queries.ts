@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { FlashcardProgress } from "@/features/flashcard-progress/domain/flashcard-progress.model";
@@ -10,6 +10,7 @@ import {
   type FlashcardProgressExplanation,
 } from "@/features/flashcard-progress/domain/flashcard-progress-explanation";
 import { loadViewData } from "@/shared/presentation/query/load-view-data";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 export type FlashcardProgressListRow = Readonly<{
   card: Flashcard;
@@ -43,14 +44,13 @@ async function loadProgressList({
 
 /** Learning progress reads. `services` are stable dependencies; other inputs are in the key. */
 export const flashcardProgressQueries = {
-  list: (services: FlashcardProgressCapability, progressRevision: number) =>
+  list: (services: FlashcardProgressCapability) =>
     queryOptions({
-      queryKey: ["learning-progress", "list", progressRevision],
+      queryKey: [...queryScopes.learningProgress, "list"],
       queryFn: () =>
         loadViewData(
           { operation: "flashcard-progress-list.load", message: "Could not load progress" },
           () => loadProgressList(services)
         ),
-      placeholderData: keepPreviousData,
     }),
 };

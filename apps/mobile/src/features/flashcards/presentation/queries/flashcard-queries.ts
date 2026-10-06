@@ -4,13 +4,14 @@ import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { FlashcardsCapability } from "@/features/flashcards/presentation/dependencies/use-flashcards";
 
 import { loadViewData } from "@/shared/presentation/query/load-view-data";
+import { queryScopes } from "@/shared/presentation/query/query-scopes";
 
 /** Flashcard reads. `services` are stable dependencies; every other input is part of the key. */
 export const flashcardQueries = {
   /** A null deck lists every installed card. */
-  list: (services: FlashcardsCapability, deckId: DeckId | null, contentRevision: number) =>
+  list: (services: FlashcardsCapability, deckId: DeckId | null) =>
     queryOptions({
-      queryKey: ["flashcards", "list", deckId, contentRevision],
+      queryKey: [...queryScopes.flashcards, "list", deckId],
       queryFn: () =>
         loadViewData(
           {

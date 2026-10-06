@@ -9,10 +9,9 @@ const harness = vi.hoisted(() => ({
 vi.mock("@/features/decks/presentation/dependencies/use-decks", () => ({
   useDecks: () => ({ deckService: { saveThemeSelection: harness.saveThemeSelection } }),
 }));
-vi.mock("@/features/decks/presentation/context/deck-theme-selection-context", () => ({
-  useDeckThemeSelectionRevision: () => ({
-    invalidateThemeSelections: harness.invalidateThemeSelections,
-  }),
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({}) }));
+vi.mock("@/shared/presentation/query/query-scopes", () => ({
+  invalidateChangedData: harness.invalidateThemeSelections,
 }));
 
 import type { DeckThemeId } from "@/features/decks/domain/deck-theme-selection.model";
@@ -49,7 +48,9 @@ it("keeps the saved choice until the screen shows it, so the old theme never fla
   // Saved, but the screen still shows the old theme while it reloads.
   expect(mounted.result.current.pendingPreset).toBe(chosen);
   expect(mounted.result.current.saving).toBe(false);
-  expect(harness.invalidateThemeSelections).toHaveBeenCalledOnce();
+  expect(harness.invalidateThemeSelections).toHaveBeenCalledExactlyOnceWith({}, [
+    "theme-selection",
+  ]);
 
   mounted.rerender({ deckId: DECK_ID, themeId: chosen.id });
 

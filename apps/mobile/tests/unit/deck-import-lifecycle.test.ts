@@ -18,8 +18,9 @@ vi.mock("@/features/decks/presentation/dependencies/use-decks", () => ({
     deckPackagePicker: { pick: services.pick },
   }),
 }));
-vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
-  useInvalidateDeckContent: () => services.invalidate,
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({}) }));
+vi.mock("@/shared/presentation/query/query-scopes", () => ({
+  invalidateChangedData: services.invalidate,
 }));
 vi.mock("@/shared/errors/report-error", () => ({ reportError: services.report }));
 
