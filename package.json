@@ -37,7 +37,17 @@
   },
   "overrides": {
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "query-string": {
+      "decode-uri-component": "0.5.0"
+    },
+    "solid-js": {
+      "seroval": "1.6.8",
+      "seroval-plugins": "1.6.8"
+    },
+    "xcode": {
+      "uuid": "11.1.1"
+    }
   },
   "engines": {
     "node": ">=24 <25"
