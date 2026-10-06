@@ -4,43 +4,53 @@ import { DECK_SCHEMA_CONSTRAINTS as CONSTRAINTS, DECK_SCHEMA_VERSION } from "./d
 
 const IdSchema = z.uuid();
 const TimestampSchema = z.iso.datetime({ offset: true });
+/** Required text is stored as authored and must contain something a reader can see. */
+const VisibleTextSchema = z
+  .string()
+  .min(CONSTRAINTS.minTextLength)
+  .regex(/\S/, "Must contain visible text");
 
 const FlashcardSchema = z.compile(
   z.strictObject({
     id: IdSchema,
-    question: z.string().min(CONSTRAINTS.minTextLength),
-    answer: z.string().min(CONSTRAINTS.minTextLength),
+    question: VisibleTextSchema,
+    answer: VisibleTextSchema,
     lessonId: IdSchema.nullable(),
-    lessonSectionId: z.string().min(1).max(512).nullable().optional(),
+    lessonSectionId: IdSchema.nullable(),
     audio: z.boolean(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
   })
 );
 
-const LessonSchema = z.compile(
+const LessonSectionManifestSchema = z.strictObject({
+  id: IdSchema,
+  title: VisibleTextSchema,
+});
+
+const LessonManifestSchema = z.compile(
   z.strictObject({
     id: IdSchema,
-    title: z.string().min(CONSTRAINTS.minTextLength),
+    title: VisibleTextSchema,
+    intro: z.boolean(),
+    sections: z.array(LessonSectionManifestSchema).max(CONSTRAINTS.maxSectionsPerLesson),
   })
 );
 
-/** Schema 2 adds optional section references; schema 1 packages remain readable. */
-export const DeckSchema = z.compile(
+export const DeckManifestSchema = z.compile(
   z.strictObject({
-    schema: z.union([z.literal(1), z.literal(DECK_SCHEMA_VERSION)]),
+    schema: z.literal(DECK_SCHEMA_VERSION),
     id: IdSchema,
     authorId: IdSchema,
     revision: z.number().int().min(CONSTRAINTS.minRevision),
-    title: z.string().min(CONSTRAINTS.minTextLength),
+    title: VisibleTextSchema,
     description: z.string(),
     createdAt: TimestampSchema,
     updatedAt: TimestampSchema,
     cards: z.array(FlashcardSchema).min(CONSTRAINTS.minFlashcards).max(CONSTRAINTS.maxFlashcards),
-    lessons: z.array(LessonSchema).max(CONSTRAINTS.maxLessons),
+    lessons: z.array(LessonManifestSchema).max(CONSTRAINTS.maxLessons),
   })
 );
 
 export type Flashcard = z.infer<typeof FlashcardSchema>;
-export type Lesson = z.infer<typeof LessonSchema>;
-export type Deck = z.infer<typeof DeckSchema>;
+export type DeckManifest = z.infer<typeof DeckManifestSchema>;

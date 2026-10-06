@@ -1,5 +1,9 @@
-import { DECK_PACKAGE_LIMITS, DECK_SCHEMA_CONSTRAINTS } from "@flashcard-reels/deck-contract";
-import { inflateSync } from "fflate";
+import {
+  DECK_PACKAGE_LIMITS,
+  DECK_SCHEMA_CONSTRAINTS,
+  DeckPackageParseError,
+} from "@flashcard-reels/deck-contract";
+import { FlateErrorCode, inflateSync } from "fflate";
 
 /**
  * Reads individual ZIP entries through byte-range requests. A deck package is mostly audio, so the
@@ -30,15 +34,23 @@ const MaximumCommentSize = 0xffff;
 const LocalHeaderSize = 30;
 const StoredMethod = 0;
 const DeflatedMethod = 8;
+const InvalidDeflateCodes: ReadonlySet<number> = new Set([
+  FlateErrorCode.UnexpectedEOF,
+  FlateErrorCode.InvalidBlockType,
+  FlateErrorCode.InvalidLengthLiteral,
+  FlateErrorCode.InvalidDistance,
+]);
 const MaximumEntries =
-  1 + DECK_SCHEMA_CONSTRAINTS.maxFlashcards + DECK_SCHEMA_CONSTRAINTS.maxLessons;
+  1 +
+  DECK_SCHEMA_CONSTRAINTS.maxFlashcards +
+  DECK_SCHEMA_CONSTRAINTS.maxLessons * (1 + DECK_SCHEMA_CONSTRAINTS.maxSectionsPerLesson);
 
 function view(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 }
 
 function invalid(message: string): never {
-  throw new Error(`Invalid deck package: ${message}`);
+  throw new DeckPackageParseError([{ path: [], message }]);
 }
 
 function findEndRecord(tail: Uint8Array): number {
@@ -97,7 +109,7 @@ function parseCentralDirectory(directory: Uint8Array, entryCount: number): ZipEn
       expandedSize > DECK_PACKAGE_LIMITS.maxUncompressedBytes ||
       (name === "deck.json" && uncompressedSize > DECK_PACKAGE_LIMITS.maxManifestFileBytes) ||
       (name.startsWith("audio/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxAudioFileBytes) ||
-      (name.startsWith("lessons/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxLessonFileBytes)
+      (name.startsWith("lessons/") && uncompressedSize > DECK_PACKAGE_LIMITS.maxLessonTextFileBytes)
     ) {
       invalid(`entry exceeds size limit: ${name}`);
     }
@@ -205,7 +217,23 @@ export async function openZipRangeReader(
         return compressed;
       }
       if (entry.method === DeflatedMethod) {
-        const expanded = inflateSync(compressed, { out: new Uint8Array(entry.uncompressedSize) });
+        let expanded: Uint8Array;
+        try {
+          expanded = inflateSync(compressed, { out: new Uint8Array(entry.uncompressedSize) });
+        } catch (cause) {
+          if (
+            !(cause instanceof Error) ||
+            !("code" in cause) ||
+            typeof cause.code !== "number" ||
+            !InvalidDeflateCodes.has(cause.code)
+          ) {
+            throw cause;
+          }
+          throw new DeckPackageParseError(
+            [{ path: [name], message: "Could not decompress ZIP entry" }],
+            { cause }
+          );
+        }
         if (expanded.byteLength !== entry.uncompressedSize) {
           invalid(`uncompressed size differs: ${name}`);
         }

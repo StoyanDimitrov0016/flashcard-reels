@@ -23,6 +23,7 @@ import {
   flashcards,
   flashcardProgress,
   lessons,
+  lessonSections,
   flashcardReviewEvents,
   dismissedBundledDecks,
   studySessions,
@@ -190,7 +191,7 @@ export class SQLiteDeckPackageInstallationTransaction<
               hasAudio: card.audio,
               answer: card.answer,
               lessonId: card.lessonId,
-              lessonSectionId: card.lessonSectionId ?? null,
+              lessonSectionId: card.lessonSectionId,
               order,
               question: card.question,
               updatedAt: card.updatedAt,
@@ -205,7 +206,7 @@ export class SQLiteDeckPackageInstallationTransaction<
               hasAudio: card.audio,
               answer: card.answer,
               lessonId: card.lessonId,
-              lessonSectionId: card.lessonSectionId ?? null,
+              lessonSectionId: card.lessonSectionId,
               createdAt: card.createdAt,
               deckId: deck.id,
               id: card.id,
@@ -249,18 +250,49 @@ export class SQLiteDeckPackageInstallationTransaction<
           });
         }
       }
+      const incomingSectionIds = deck.lessons.flatMap((lesson) =>
+        lesson.sections.map((section) => section.id)
+      );
+      if (incomingSectionIds.length > 0) {
+        const sectionOwners = transaction
+          .select({ deckId: lessons.deckId, id: lessonSections.id })
+          .from(lessonSections)
+          .innerJoin(lessons, eq(lessonSections.lessonId, lessons.id))
+          .where(inArray(lessonSections.id, incomingSectionIds))
+          .all();
+        for (const section of sectionOwners) {
+          if (section.deckId !== deck.id) {
+            throw new OperationError({
+              code: "DECK_PACKAGE_ID_CONFLICT",
+              message: `Section ${section.id} already belongs to deck ${section.deckId}`,
+            });
+          }
+        }
+      }
       transaction.delete(lessons).where(eq(lessons.deckId, deck.id)).run();
       for (const [order, lesson] of deck.lessons.entries()) {
         transaction
           .insert(lessons)
           .values({
-            content: deckPackage.lessonFiles.get(lesson.id) ?? "",
+            intro: lesson.intro,
             deckId: deck.id,
             id: lesson.id,
             order,
             title: lesson.title,
           })
           .run();
+        for (const [sectionOrder, section] of lesson.sections.entries()) {
+          transaction
+            .insert(lessonSections)
+            .values({
+              id: section.id,
+              lessonId: lesson.id,
+              order: sectionOrder,
+              title: section.title,
+              body: section.body,
+            })
+            .run();
+        }
       }
 
       if (savedProgress?.status === "archived") {

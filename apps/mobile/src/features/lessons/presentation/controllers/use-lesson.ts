@@ -1,32 +1,21 @@
-import { parseLessonDocument, type LessonSection } from "@flashcard-reels/deck-contract";
 import { useCallback } from "react";
 
-import type { LessonBlock } from "@/features/lessons/domain/lesson-markdown.parser";
 import type { Lesson, LessonId } from "@/features/lessons/domain/lesson.model";
 
 import { useDeckContentRevision } from "@/features/decks/presentation/context/deck-content-context";
 import { useLessonsCapability } from "@/features/lessons/presentation/dependencies/use-lessons";
 import { toOperationError } from "@/shared/errors/normalize-error";
 import { useAsyncLoad } from "@/shared/presentation/hooks/use-async-load";
-type LessonData = Readonly<{
-  blocks: readonly LessonBlock[];
-  sections: readonly LessonSection[];
-  lesson: Lesson | null;
-}>;
-const emptyLesson: LessonData = { blocks: [], sections: [], lesson: null };
 type LessonOptions = Readonly<{ lessonId: LessonId | null }>;
 export function useLesson({ lessonId }: LessonOptions) {
   const { lessonService } = useLessonsCapability();
   const { revision } = useDeckContentRevision();
   const load = useCallback(
-    async (_revision = revision) => {
+    async (_revision = revision): Promise<Lesson | null> => {
       if (lessonId === null) {
-        return emptyLesson;
+        return null;
       }
-      const lesson = await lessonService.findById(lessonId);
-      return lesson
-        ? { ...parseLessonDocument(lesson.content, lesson.title), lesson }
-        : emptyLesson;
+      return lessonService.findById(lessonId);
     },
     [lessonId, lessonService, revision]
   );
@@ -41,17 +30,17 @@ export function useLesson({ lessonId }: LessonOptions) {
   );
   const state = useAsyncLoad({
     load,
-    initialData: emptyLesson,
+    initialData: null,
     onError,
     enabled: lessonId !== null,
     gate: true,
   });
   if (lessonId === null) {
-    return { ...emptyLesson, loading: false };
+    return { lesson: null, loading: false };
   }
   if (state.error) {
     throw state.error;
   }
 
-  return { ...state.data, loading: state.loading };
+  return { lesson: state.data, loading: state.loading };
 }

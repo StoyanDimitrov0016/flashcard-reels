@@ -1,15 +1,18 @@
 import {
-  parseDeck,
-  validateLessonReferences,
-  type Deck,
+  checkDeckPackageEntries,
+  deckLessonTextPaths,
+  parseDeckManifest,
+  readDeckContent as resolveDeckContent,
+  DeckPackageParseError,
+  type DeckManifest,
+  type Lesson,
   type Flashcard,
 } from "@flashcard-reels/deck-contract";
-import { strFromU8 } from "fflate";
 
 import type { ZipRangeReader } from "@/server/decks/zip-range-reader";
 
 export type DeckCard = Flashcard;
-export type DeckLesson = Readonly<{ id: string; title: string; markdown: string }>;
+export type DeckLesson = Lesson;
 
 export type DeckSummary = Readonly<{
   id: string;
@@ -27,27 +30,19 @@ export type DeckSummary = Readonly<{
 export type DeckContent = DeckSummary &
   Readonly<{ cards: readonly DeckCard[]; lessons: readonly DeckLesson[] }>;
 
-async function readDocument(reader: ZipRangeReader): Promise<Deck> {
-  const bytes = await reader.read("deck.json");
-  if (!bytes) {
-    throw new Error("Invalid deck package: missing deck.json");
-  }
-  const document = parseDeck(JSON.parse(strFromU8(bytes)));
-  const expected = new Set([
-    "deck.json",
-    ...document.cards.filter((card) => card.audio).map((card) => `audio/${card.id}.mp3`),
-    ...document.lessons.map((lesson) => `lessons/${lesson.id}.md`),
-  ]);
-  if (
-    reader.entries.length !== expected.size ||
-    reader.entries.some((entry) => !expected.has(entry.name) || entry.uncompressedSize === 0)
-  ) {
-    throw new Error("Invalid deck package: assets do not match deck.json");
-  }
-  return document;
+function entrySizes(reader: ZipRangeReader): ReadonlyMap<string, number> {
+  return new Map(reader.entries.map((entry) => [entry.name, entry.uncompressedSize]));
 }
 
-function summarize(document: Deck, key: string, sizeBytes: number): DeckSummary {
+async function readManifest(reader: ZipRangeReader): Promise<DeckManifest> {
+  const bytes = await reader.read("deck.json");
+  if (!bytes) {
+    throw new DeckPackageParseError([{ path: ["deck.json"], message: "Missing manifest" }]);
+  }
+  return parseDeckManifest(bytes);
+}
+
+function summarize(document: DeckManifest, key: string, sizeBytes: number): DeckSummary {
   return {
     audioCount: document.cards.filter((card) => card.audio).length,
     cardCount: document.cards.length,
@@ -67,7 +62,9 @@ export async function readDeckSummary(
   key: string,
   sizeBytes: number
 ): Promise<DeckSummary> {
-  return summarize(await readDocument(reader), key, sizeBytes);
+  const manifest = await readManifest(reader);
+  checkDeckPackageEntries(manifest, entrySizes(reader));
+  return summarize(manifest, key, sizeBytes);
 }
 
 export async function readDeckContent(
@@ -75,27 +72,22 @@ export async function readDeckContent(
   key: string,
   sizeBytes: number
 ): Promise<DeckContent> {
-  const document = await readDocument(reader);
-  const lessons = await Promise.all(
-    document.lessons.map(async (lesson) => {
-      const bytes = await reader.read(`lessons/${lesson.id}.md`);
-      if (!bytes) {
-        throw new Error(`Invalid deck package: missing lesson ${lesson.id}`);
-      }
-      const markdown = strFromU8(bytes);
-      if (!markdown.trim()) {
-        throw new Error(`Invalid deck package: empty lesson ${lesson.id}`);
-      }
-      return { id: lesson.id, markdown, title: lesson.title };
-    })
+  const manifest = await readManifest(reader);
+  const sizes = entrySizes(reader);
+  // Only lesson text is fetched; audio stays in storage. Missing entries are reported by the contract.
+  const lessonFiles = new Map(
+    await Promise.all(
+      deckLessonTextPaths(manifest)
+        .filter((path) => sizes.get(path))
+        .map(async (path) => {
+          const bytes = await reader.read(path);
+          if (!bytes) {
+            throw new Error(`Listed archive entry could not be read: ${path}`);
+          }
+          return [path, bytes] as const;
+        })
+    )
   );
-  validateLessonReferences(
-    document,
-    new Map(lessons.map((lesson) => [lesson.id, lesson.markdown]))
-  );
-  return {
-    ...summarize(document, key, sizeBytes),
-    cards: document.cards,
-    lessons,
-  };
+  const deck = resolveDeckContent(manifest, sizes, lessonFiles);
+  return { ...summarize(manifest, key, sizeBytes), cards: deck.cards, lessons: deck.lessons };
 }

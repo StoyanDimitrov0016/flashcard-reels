@@ -1,4 +1,9 @@
-import { parseDeck } from "@flashcard-reels/deck-contract";
+import {
+  parseDeckPackage,
+  parseDeckManifest,
+  DECK_SCHEMA_CONSTRAINTS,
+  UnsupportedDeckSchemaError,
+} from "@flashcard-reels/deck-contract";
 import { eq } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +40,6 @@ import type { StudySessionSettlement } from "@/features/study/application/study-
 
 import { FlashcardAudioServiceImpl } from "@/features/audio/application/flashcard-audio.service.impl";
 import { DeckServiceImpl } from "@/features/decks/application/deck.service.impl";
-import { ContractDeckPackageReader } from "@/features/decks/deck-installer/internal/contract-deck-package.reader";
 import { DeckInstallerImpl } from "@/features/decks/deck-installer/internal/deck-installer";
 import { SQLiteDeckPackageInstallationTransaction } from "@/features/decks/deck-installer/internal/sqlite-deck-package-installation.transaction";
 import { SQLiteDeckRemovalTransaction } from "@/features/decks/infrastructure/sqlite-deck-removal.transaction";
@@ -64,7 +68,10 @@ import {
 const timestamp = "2026-01-01T00:00:00.000Z";
 const maximumCardCount = 1_000;
 const maximumAudioFileBytes = 5 * 1024 * 1024;
-const maximumArchiveEntries = 1 + 1_000 + 200;
+const maximumArchiveEntries =
+  1 +
+  DECK_SCHEMA_CONSTRAINTS.maxFlashcards +
+  DECK_SCHEMA_CONSTRAINTS.maxLessons * (1 + DECK_SCHEMA_CONSTRAINTS.maxSectionsPerLesson);
 
 class MemoryAudioStorage implements DeckAudioStorage {
   readonly staged: StagedDeckAudio[] = [];
@@ -198,12 +205,13 @@ function rawDeck(
         question: item.question,
         answer: item.answer,
         lessonId: item.lessonId,
+        lessonSectionId: null,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
         audio: true,
       })),
     authorId: "bf0b5aa7-18d6-4b36-aae9-5aa93f93235e",
-    schema: 1,
+    schema: 4,
     lessons: [],
     createdAt: timestamp,
     description: "Scenario deck",
@@ -215,7 +223,7 @@ function rawDeck(
 }
 
 function deck(version: number, cards: readonly ReturnType<typeof card>[] = [], id = TEST_DECK_ID) {
-  return parseDeck(rawDeck(version, cards, id));
+  return parseDeckManifest(strToU8(JSON.stringify(rawDeck(version, cards, id))));
 }
 
 function card(id: string, order: number, answer = `Answer ${id}`) {
@@ -282,7 +290,6 @@ function createImporter(
   return {
     audio,
     importer: new DeckInstallerImpl(
-      new ContractDeckPackageReader(),
       installation,
       audio,
       clock,
@@ -345,11 +352,10 @@ describe("deck package installation", () => {
       database.drizzle,
       new SequenceIdGenerator()
     );
-    await installation.install(
-      new ContractDeckPackageReader().read(validArchive(1, [card(testId(1), 0)])),
-      timestamp,
-      { theme: "cyan", coverAsset: "react" }
-    );
+    await installation.install(parseDeckPackage(validArchive(1, [card(testId(1), 0)])), timestamp, {
+      theme: "cyan",
+      coverAsset: "react",
+    });
     const theme = await new SQLiteDeckThemeSelectionRepository(
       database.drizzle,
       database.rowIds
@@ -453,7 +459,7 @@ describe("deck package installation", () => {
         "SELECT author_id, package_schema, revision FROM decks WHERE id = ?",
         TEST_DECK_ID
       )
-    ).toEqual({ author_id: manifest.authorId, package_schema: 1, revision: 1 });
+    ).toEqual({ author_id: manifest.authorId, package_schema: 4, revision: 1 });
     expect(
       await database.getAllAsync(
         'SELECT id, "order" AS card_order FROM flashcards WHERE deck_id = ? ORDER BY "order"',
@@ -1066,6 +1072,39 @@ describe("deck package installation", () => {
     expect(completedMixedSession?.completedAt).not.toBeNull();
     expect(activeFocusedSession?.completedAt).toBeNull();
   });
+
+  it.each([1, 2, 3])(
+    "rejects schema %s without changing content, progress, or audio",
+    async (schema) => {
+      database = new NodeSqliteDatabase();
+      const clock = new TestClock();
+      const graph = createScenarioGraph(database, clock, new SequenceIdGenerator());
+      const first = card(testId(31), 0);
+      const { importer, audio } = createImporter(
+        database,
+        clock,
+        undefined,
+        undefined,
+        graph.runtime
+      );
+      await importer.installFromBytes(validArchive(1, [first]));
+      const sessionId = await reviewCard(graph, database, first.id, false);
+      const attempts = await graph.study.listAttemptsInRange(sessionId, 0, 0);
+      const staged = audio.staged.length;
+      const versions = new Set(audio.activeVersions);
+      await expect(
+        importer.installFromBytes(archive({ ...rawDeck(2, [first]), schema }))
+      ).rejects.toBeInstanceOf(UnsupportedDeckSchemaError);
+      expect(
+        await database.getFirstAsync("SELECT revision FROM decks WHERE id = ?", TEST_DECK_ID)
+      ).toEqual({ revision: 1 });
+      expect(await graph.study.listAttemptsInRange(sessionId, 0, 0)).toEqual(attempts);
+      const retainedSession = await graph.sessions.findById(sessionId);
+      expect(retainedSession?.completedAt).toBeNull();
+      expect(audio.staged).toHaveLength(staged);
+      expect(audio.activeVersions).toEqual(versions);
+    }
+  );
 
   it.each([
     ["malformed deck.json", zipSync({ "deck.json": strToU8("{") })],
