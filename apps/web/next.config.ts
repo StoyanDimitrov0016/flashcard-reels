@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     serverFunctions: false,
   },
   outputFileTracingRoot: path.join(import.meta.dirname, "../.."),
+  // Lint bans manual memoization, so the compiler must memoize. Matches the mobile app.
+  reactCompiler: true,
   transpilePackages: ["@flashcard-reels/design-tokens"],
   turbopack: {
     root: path.join(import.meta.dirname, "../.."),
