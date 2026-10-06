@@ -57,8 +57,11 @@ try {
     "archived-progress-start-fresh.yaml",
     "archived-progress-delete.yaml",
     "archived-progress-restart.yaml",
-    "app-data-reset-confirmation.yaml"
-    "progress-backup-transfer.yaml"
+    "app-data-reset-confirmation.yaml",
+    "progress-backup-transfer.yaml",
+    "lesson-section-references.yaml",
+    "focus-resume.yaml",
+    "discover-hold-to-focus.yaml"
   )) {
     & maestro test (Join-Path ".maestro" $flow)
     if ($LASTEXITCODE -ne 0) {

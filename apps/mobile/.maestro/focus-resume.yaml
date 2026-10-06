@@ -1,0 +1,44 @@
+appId: com.flashcardreels.app
+---
+- launchApp:
+    clearState: true
+- tapOn: Decks tab
+- longPressOn: Flashcard Reels Demo
+- assertVisible: "Flashcard question: What is a JavaScript value.*"
+- runFlow: subflows/next-reel.yaml
+- assertVisible: "Flashcard question: What is the difference between a primitive.*"
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: "Recall rating: Good"
+- runFlow: subflows/next-reel.yaml
+- assertVisible: "Flashcard question: What does undefined mean.*"
+# Navigate away, then swipe from Discover to the existing Focus session.
+- tapOn: Decks tab
+- tapOn: Study tab
+- swipe:
+    start: "85%, 45%"
+    end: "15%, 45%"
+    duration: 650
+- assertVisible: "Flashcard question: What does undefined mean.*"
+# Foregrounding must preserve the current card.
+- pressKey: Home
+- launchApp:
+    stopApp: false
+- assertVisible: "Flashcard question: What does undefined mean.*"
+# A cold launch must resume the same persisted Focus position, not its first card.
+- stopApp
+- launchApp
+- tapOn: Study tab
+- swipe:
+    start: "85%, 45%"
+    end: "15%, 45%"
+    duration: 650
+- assertVisible: "Flashcard question: What does undefined mean.*"
+- swipe:
+    start: "50%, 22%"
+    end: "50%, 78%"
+    duration: 650
+- assertVisible: "Flashcard question: What is the difference between a primitive.*"
+- doubleTapOn: "Flashcard question: .*"
+- assertVisible:
+    text: "Recall rating: Good"
+    selected: true

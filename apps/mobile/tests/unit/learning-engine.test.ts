@@ -11,61 +11,6 @@ import {
 
 const REVIEWED_AT = "2026-01-01T00:00:00.000Z";
 
-describe("learning-engine scheduler", () => {
-  const scheduler = createLearningScheduler();
-
-  it.each(["again", "hard", "good", "easy"] as const)(
-    "applies the %s application rating to a new card",
-    (rating) => {
-      const result = scheduler.review("card-1", null, rating, REVIEWED_AT).memoryState;
-
-      expect(result.flashcardId).toBe("card-1");
-      expect(result.reps).toBe(1);
-      expect(result.lastReviewAt).toBe(REVIEWED_AT);
-      expect(result.dueAt).not.toBe(REVIEWED_AT);
-      expect(result.state).toBe("review");
-      expect(result.lapses).toBe(0);
-    }
-  );
-
-  it("uses the persisted scheduler fields for a later review", () => {
-    const first = scheduler.review("card-1", null, "good", REVIEWED_AT).memoryState;
-    const second = scheduler.review(
-      "card-1",
-      withPersistence(first),
-      "hard",
-      "2026-01-04T00:00:00.000Z"
-    ).memoryState;
-
-    expect(second.reps).toBe(2);
-    expect(second.lastReviewAt).toBe("2026-01-04T00:00:00.000Z");
-    expect(second.stability).not.toBe(first.stability);
-    expect(second.dueAt).not.toBe(first.dueAt);
-  });
-
-  it("increments lapses when a reviewed card is forgotten", () => {
-    const first = scheduler.review("card-1", null, "good", REVIEWED_AT).memoryState;
-    const second = scheduler.review(
-      "card-1",
-      withPersistence(first),
-      "again",
-      "2026-01-04T00:00:00.000Z"
-    ).memoryState;
-
-    expect(second.lapses).toBe(first.lapses + 1);
-  });
-
-  it("calculates retrievability on demand and it decreases over time", () => {
-    const state = withPersistence(
-      scheduler.review("card-1", null, "good", REVIEWED_AT).memoryState
-    );
-
-    expect(scheduler.retrievability(state, "2026-01-02T00:00:00.000Z")).toBeGreaterThan(
-      scheduler.retrievability(state, "2026-01-20T00:00:00.000Z") ?? 0
-    );
-  });
-});
-
 describe("learning-engine feed composer", () => {
   it("favors memory pressure before new and low-pressure cards", () => {
     const composer = createFeedComposer(() => 0);

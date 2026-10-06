@@ -26,7 +26,7 @@ $env:MAESTRO_CLI_NO_ANALYTICS = '1'
 ./apps/mobile/scripts/run-maestro.ps1 -ApkPath ./apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-The runner boots the emulator, installs the APK, generates the deck package, copies it and the progress backup fixture to Android Downloads, and runs all six flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
+The runner boots the emulator, installs the APK, generates the deck package, copies it and the progress backup fixture to Android Downloads, and runs the archive, reset, backup, lesson-section, Focus-resume, and Discover-to-Focus flows. It leaves the emulator running. The Android picker interaction uses the known emulator's Downloads drawer location (`30%, 27%`); adjust that selector if the picker layout changes.
 
 ## Findings from the first device runs
 
@@ -41,3 +41,12 @@ All five flows passed on September 24. The native pager dependency had been remo
 ## October 1 integration review
 
 The rating selector is now `Recall rating: Good`, and the runner includes the new cold-launch scenario. These changes need a fresh device run. The review environment could export the Android bundle and pass Expo Doctor, but had no Android SDK, Java, Maestro, or the documented emulator. The September results above describe the earlier five flows only.
+
+## October 6 query lifecycle coverage
+
+The runner now includes the existing `lesson-section-references.yaml` and new
+`focus-resume.yaml` and `discover-hold-to-focus.yaml` scenarios. The new flows check position,
+saved rating, held-card entry, navigation away and back, foregrounding, and cold launch.
+They have not been device-verified in the implementation environment, which has no Android SDK,
+Maestro CLI, or generated native project. See [Study flow testing](study-testing.md) for the
+automated React/SQLite coverage and the remaining native boundary.
