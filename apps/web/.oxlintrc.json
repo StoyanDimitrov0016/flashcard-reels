@@ -1,0 +1,56 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "ignorePatterns": [".next/**", "next-env.d.ts"],
+  "plugins": ["import", "jsx-a11y", "nextjs", "oxc", "react", "typescript", "unicorn", "vitest"],
+  "settings": {
+    "next": {
+      "rootDir": "."
+    }
+  },
+  "rules": {
+    "react/jsx-no-useless-fragment": "error",
+    "react/exhaustive-deps": "error",
+    "react/exhaustive-effect-dependencies": "off",
+    "react/jsx-no-constructed-context-values": "off",
+    "react/no-unstable-nested-components": [
+      "error",
+      {
+        "allowAsProps": true
+      }
+    ],
+    "react/no-array-index-key": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/style-prop-object": "off",
+    "jsx-a11y/control-has-associated-label": "off",
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "rules": {
+        "flashcards/require-react-component-props-type": "error",
+        "flashcards/require-react-hook-options-type": "error"
+      }
+    },
+    {
+      "files": ["tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
+      "env": {
+        "vitest": true
+      },
+      "rules": {
+        "vitest/require-mock-type-parameters": "off",
+        "vitest/require-to-throw-message": "off",
+        "vitest/valid-expect": "off"
+      }
+    },
+    {
+      "files": ["src/components/ui/**/*.tsx"],
+      "rules": {
+        "flashcards/require-react-component-props-type": "off",
+        "no-restricted-imports": "off",
+        "jsx-a11y/label-has-associated-control": "off"
+      }
+    }
+  ]
+}

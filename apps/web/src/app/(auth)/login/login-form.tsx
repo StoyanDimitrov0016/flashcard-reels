@@ -47,6 +47,8 @@ export function LoginForm({ returnTo }: LoginFormProps) {
             aria-describedby={errors.password ? "password-error" : undefined}
             aria-invalid={errors.password ? true : undefined}
             autoComplete="current-password"
+            // The page exists only to enter this password, so focus starts here.
+            // oxlint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             className="pr-10"
             id="password"

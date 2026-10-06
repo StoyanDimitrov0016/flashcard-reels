@@ -95,8 +95,10 @@ import { DeckLessonsProvider } from "@/features/lessons/presentation/context/dec
 afterEach(cleanup);
 
 function references() {
-  return createElement(DeckLessonsProvider, {
-    children: [
+  return createElement(
+    DeckLessonsProvider,
+    null,
+    [
       ["Vertical card", "vertical-scaling"],
       ["Another vertical card", "vertical-scaling"],
       ["Limitations card", "vertical-scaling/limitations"],
@@ -107,8 +109,8 @@ function references() {
         { role: "group", "aria-label": name, key: name },
         createElement(ReadingButton, { deckId: "deck", lessonId: "lesson", sectionId })
       )
-    ),
-  });
+    )
+  );
 }
 
 async function openCard(name: string) {
