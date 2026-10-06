@@ -9,6 +9,8 @@ import { invalidateChangedData } from "@/shared/presentation/query/query-scopes"
 
 type BackupServices = Readonly<{ progressBackupService: ProgressBackupService }>;
 
+export const progressBackupMutationKey = ["progress-backup"] as const;
+
 /**
  * Backup actions. Screens map their failures to messages per action; failures are reported here.
  * Export and restore invalidate progress even when they fail, as either may have written.
@@ -16,7 +18,7 @@ type BackupServices = Readonly<{ progressBackupService: ProgressBackupService }>
 export const progressBackupMutations = {
   export: (services: BackupServices) =>
     mutationOptions({
-      mutationKey: ["progress-backup", "export"],
+      mutationKey: [...progressBackupMutationKey, "export"],
       mutationFn: () => services.progressBackupService.exportProgress(),
       onSettled: (_result, _error, _variables, _onMutateResult, { client }) => {
         void invalidateChangedData(client, ["learning-progress"]);
@@ -25,13 +27,13 @@ export const progressBackupMutations = {
     }),
   prepareRestore: (services: BackupServices) =>
     mutationOptions({
-      mutationKey: ["progress-backup", "prepare-restore"],
+      mutationKey: [...progressBackupMutationKey, "prepare-restore"],
       mutationFn: () => services.progressBackupService.prepareRestore(),
       meta: { errorReport: "Progress backup validation failure" },
     }),
   restore: (services: BackupServices) =>
     mutationOptions({
-      mutationKey: ["progress-backup", "restore"],
+      mutationKey: [...progressBackupMutationKey, "restore"],
       mutationFn: (prepared: PreparedProgressRestore) =>
         services.progressBackupService.restore(prepared),
       onSettled: (_result, _error, _prepared, _onMutateResult, { client }) => {
@@ -41,7 +43,7 @@ export const progressBackupMutations = {
     }),
   shareSafetyCopy: (services: BackupServices) =>
     mutationOptions({
-      mutationKey: ["progress-backup", "share-safety-copy"],
+      mutationKey: [...progressBackupMutationKey, "share-safety-copy"],
       mutationFn: () => services.progressBackupService.shareSafetyCopy(),
       meta: { errorReport: "Previous progress backup sharing failure" },
     }),
