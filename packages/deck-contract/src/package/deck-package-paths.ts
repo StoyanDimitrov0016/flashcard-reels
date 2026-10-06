@@ -7,6 +7,14 @@ export function lessonTextPath(lessonId: string, sectionId: string | null): stri
   return `lessons/${lessonId}/${sectionId === null ? "intro" : sectionId}.md`;
 }
 
+/** Every intro and section file, so a reader can fetch lesson text without audio. */
+export function deckLessonTextPaths(manifest: DeckManifest): readonly string[] {
+  return manifest.lessons.flatMap((lesson) => [
+    ...(lesson.intro ? [lessonTextPath(lesson.id, null)] : []),
+    ...lesson.sections.map((section) => lessonTextPath(lesson.id, section.id)),
+  ]);
+}
+
 export function deckPackagePaths(manifest: DeckManifest): ReadonlySet<string> {
   const paths = new Set(["deck.json"]);
   for (const card of manifest.cards) {

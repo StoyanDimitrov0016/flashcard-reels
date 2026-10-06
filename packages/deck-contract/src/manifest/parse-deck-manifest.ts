@@ -2,7 +2,7 @@ import type { DeckManifest } from "../deck.types.ts";
 import type { DeckPackageParseIssue } from "../errors/deck-parse-issue.ts";
 
 import { decodeUtf8 } from "../content/decode-utf8.ts";
-import { DECK_PACKAGE_LIMITS } from "../deck.constants.ts";
+import { DECK_PACKAGE_LIMITS, DECK_SCHEMA_VERSION } from "../deck.constants.ts";
 import { DeckManifestSchema } from "../deck.schemas.ts";
 import { DeckPackageParseError } from "../errors/deck-package-parse-error.ts";
 import { UnsupportedDeckSchemaError } from "../errors/unsupported-deck-schema-error.ts";
@@ -30,7 +30,7 @@ export function decodeDeckManifest(
     input !== null &&
     "schema" in input &&
     typeof input.schema === "number" &&
-    input.schema !== 4
+    input.schema !== DECK_SCHEMA_VERSION
   ) {
     throw new UnsupportedDeckSchemaError(input.schema);
   }

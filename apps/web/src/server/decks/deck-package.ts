@@ -1,10 +1,10 @@
 import {
+  checkDeckPackageEntries,
+  deckLessonTextPaths,
   parseDeckManifest,
-  deckPackagePaths,
   readDeckContent as resolveDeckContent,
   DeckPackageParseError,
   type DeckManifest,
-  type DeckPackageParseIssue,
   type Lesson,
   type Flashcard,
 } from "@flashcard-reels/deck-contract";
@@ -30,31 +30,16 @@ export type DeckSummary = Readonly<{
 export type DeckContent = DeckSummary &
   Readonly<{ cards: readonly DeckCard[]; lessons: readonly DeckLesson[] }>;
 
-async function readDocument(reader: ZipRangeReader): Promise<DeckManifest> {
+function entrySizes(reader: ZipRangeReader): ReadonlyMap<string, number> {
+  return new Map(reader.entries.map((entry) => [entry.name, entry.uncompressedSize]));
+}
+
+async function readManifest(reader: ZipRangeReader): Promise<DeckManifest> {
   const bytes = await reader.read("deck.json");
   if (!bytes) {
     throw new DeckPackageParseError([{ path: ["deck.json"], message: "Missing manifest" }]);
   }
-  const document = parseDeckManifest(bytes);
-  const expected = deckPackagePaths(document);
-  const present = new Set(reader.entries.map((entry) => entry.name));
-  const issues: DeckPackageParseIssue[] = [];
-  for (const path of expected) {
-    if (!present.has(path)) {
-      issues.push({ path: [path], message: "Missing declared file" });
-    }
-  }
-  for (const entry of reader.entries) {
-    if (!expected.has(entry.name)) {
-      issues.push({ path: [entry.name], message: "Unexpected file" });
-    } else if (entry.uncompressedSize === 0) {
-      issues.push({ path: [entry.name], message: "Empty declared file" });
-    }
-  }
-  if (issues.length > 0) {
-    throw new DeckPackageParseError(issues);
-  }
-  return document;
+  return parseDeckManifest(bytes);
 }
 
 function summarize(document: DeckManifest, key: string, sizeBytes: number): DeckSummary {
@@ -77,7 +62,9 @@ export async function readDeckSummary(
   key: string,
   sizeBytes: number
 ): Promise<DeckSummary> {
-  return summarize(await readDocument(reader), key, sizeBytes);
+  const manifest = await readManifest(reader);
+  checkDeckPackageEntries(manifest, entrySizes(reader));
+  return summarize(manifest, key, sizeBytes);
 }
 
 export async function readDeckContent(
@@ -85,44 +72,22 @@ export async function readDeckContent(
   key: string,
   sizeBytes: number
 ): Promise<DeckContent> {
-  const document = await readDocument(reader);
-  const texts = new Map<string, string>();
-  const issues: DeckPackageParseIssue[] = [];
-  await Promise.all(
-    [...deckPackagePaths(document)]
-      .filter((path) => path.endsWith(".md"))
-      .map(async (path) => {
-        const bytes = await reader.read(path);
-        if (bytes) {
-          try {
-            texts.set(path, new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-          } catch (error) {
-            if (!(error instanceof TypeError)) {
-              throw error;
-            }
-            issues.push({ path: [path], message: "Lesson text is not valid UTF-8" });
+  const manifest = await readManifest(reader);
+  const sizes = entrySizes(reader);
+  // Only lesson text is fetched; audio stays in storage. Missing entries are reported by the contract.
+  const lessonFiles = new Map(
+    await Promise.all(
+      deckLessonTextPaths(manifest)
+        .filter((path) => sizes.get(path))
+        .map(async (path) => {
+          const bytes = await reader.read(path);
+          if (!bytes) {
+            throw new Error(`Listed archive entry could not be read: ${path}`);
           }
-        }
-      })
+          return [path, bytes] as const;
+        })
+    )
   );
-  let resolved;
-  try {
-    resolved = resolveDeckContent(document, (path) => texts.get(path));
-  } catch (error) {
-    if (!(error instanceof DeckPackageParseError)) {
-      throw error;
-    }
-    issues.push(...error.issues);
-  }
-  if (issues.length > 0) {
-    throw new DeckPackageParseError(issues);
-  }
-  if (!resolved) {
-    throw new Error("Content resolution did not produce a deck");
-  }
-  return {
-    ...summarize(document, key, sizeBytes),
-    cards: resolved.cards,
-    lessons: resolved.lessons,
-  };
+  const deck = resolveDeckContent(manifest, sizes, lessonFiles);
+  return { ...summarize(manifest, key, sizeBytes), cards: deck.cards, lessons: deck.lessons };
 }

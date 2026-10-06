@@ -10,7 +10,8 @@ import {
   DeckContractError,
   DeckPackageParseError,
   DECK_PACKAGE_LIMITS,
-  deckPackagePaths,
+  checkDeckPackageEntries,
+  deckLessonTextPaths,
   parseDeckFiles,
   parseDeckManifest,
   parseDeckPackage,
@@ -113,15 +114,54 @@ describe("schema 4 deck contract", () => {
     expect(parseDeckPackage(createDeckPackage(source))).toEqual(source);
     expect(parseDeckFiles(files())).toEqual(source);
     expect(createDeckPackage(source)).toEqual(createDeckPackage(source));
-    const parsedManifest = parseDeckManifest(files()["deck.json"] ?? new Uint8Array());
-    expect([...deckPackagePaths(parsedManifest)].toSorted()).toEqual(
-      Object.keys(files()).toSorted()
+    const archive = files();
+    const parsedManifest = parseDeckManifest(archive["deck.json"] ?? new Uint8Array());
+    const sizes = new Map(Object.entries(archive).map(([file, bytes]) => [file, bytes.length]));
+    expect(() => checkDeckPackageEntries(parsedManifest, sizes)).not.toThrow();
+    const lessonFiles = new Map(
+      deckLessonTextPaths(parsedManifest).map((file) => [file, archive[file] ?? new Uint8Array()])
     );
-    expect(
-      readDeckContent(parsedManifest, (file) =>
-        files()[file] ? new TextDecoder().decode(files()[file]) : undefined
-      )
-    ).toEqual(source.deck);
+    expect(readDeckContent(parsedManifest, sizes, lessonFiles)).toEqual(source.deck);
+  });
+
+  it("reports missing, empty and unreferenced entries once each", () => {
+    const archive = files();
+    delete archive[sectionPath];
+    archive[`lessons/${lessonId}/intro.md`] = new Uint8Array();
+    archive["notes.txt"] = strToU8("stray");
+    expect(() => parseDeckFiles(archive)).toThrow(
+      expect.objectContaining({
+        issues: [
+          { path: [`lessons/${lessonId}/intro.md`], message: "Empty declared file" },
+          { path: [sectionPath], message: "Missing declared file" },
+          { path: ["notes.txt"], message: "Unreferenced archive file" },
+        ],
+      })
+    );
+  });
+
+  it("reports invalid UTF-8 lesson text once", () => {
+    const archive = files();
+    archive[sectionPath] = new Uint8Array([0xff, 0xfe]);
+    expect(() => parseDeckFiles(archive)).toThrow(
+      expect.objectContaining({
+        issues: [
+          expect.objectContaining({
+            path: [sectionPath],
+            message: "Lesson text must be valid UTF-8",
+          }),
+        ],
+      })
+    );
+  });
+
+  it("keeps titles as authored and rejects whitespace-only titles", () => {
+    const input = manifest();
+    const [lesson] = input.lessons;
+    lesson.sections = [{ id: sectionId, title: "  Section  " }];
+    expect(parseManifestInput(input).lessons[0]?.sections[0]?.title).toBe("  Section  ");
+    lesson.title = "   ";
+    expect(() => parseManifestInput(input)).toThrow(DeckPackageParseError);
   });
 
   it.each([1, 2, 3, 5])("rejects schema %i before other manifest problems", (schema) => {

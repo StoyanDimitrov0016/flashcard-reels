@@ -1,3 +1,4 @@
+import { DECK_SCHEMA_VERSION } from "../deck.constants.ts";
 import { DeckContractError } from "./deck-contract-error.ts";
 
 export class UnsupportedDeckSchemaError extends DeckContractError {
@@ -5,7 +6,7 @@ export class UnsupportedDeckSchemaError extends DeckContractError {
     super({
       name: "UnsupportedDeckSchemaError",
       code: "DECK_SCHEMA_UNSUPPORTED",
-      message: `Unsupported deck schema: ${schema}. Expected schema 4.`,
+      message: `Unsupported deck schema: ${schema}. Expected schema ${DECK_SCHEMA_VERSION}.`,
       context: { schema },
     });
   }

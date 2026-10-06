@@ -22,8 +22,13 @@ See [the package format](../../docs/deck-packages.md).
 parseDeckPackage(bytes: Uint8Array): DeckPackage
 parseDeckFiles(files: Readonly<Record<string, Uint8Array>>): DeckPackage
 parseDeckManifest(bytes: Uint8Array): DeckManifest
-readDeckContent(manifest: DeckManifest, readText: (path: string) => string | undefined): Deck
-deckPackagePaths(manifest: DeckManifest): ReadonlySet<string>
+checkDeckPackageEntries(manifest: DeckManifest, entrySizes: ReadonlyMap<string, number>): void
+deckLessonTextPaths(manifest: DeckManifest): readonly string[]
+readDeckContent(
+  manifest: DeckManifest,
+  entrySizes: ReadonlyMap<string, number>,
+  lessonFiles: ReadonlyMap<string, Uint8Array>
+): Deck
 createDeckPackage(deckPackage: DeckPackage): Uint8Array
 compareDeckPackages(published: DeckPackage, candidate: DeckPackage): DeckComparison
 ```
@@ -31,9 +36,11 @@ compareDeckPackages(published: DeckPackage, candidate: DeckPackage): DeckCompari
 `parseDeckPackage` checks ZIP safety and limits, then delegates to `parseDeckFiles`, which
 validates the manifest, exact file set, UTF-8 bodies, allowed Markdown, references, and audio.
 `parseDeckManifest` validates a manifest and its relationships without fetching content.
-`readDeckContent` resolves and validates every intro and section with the supplied text reader;
-the web uses it with byte ranges to avoid audio downloads. Use `deckPackagePaths` to discover
-declared paths instead of constructing them.
+`checkDeckPackageEntries` checks that an archive's entry list (path to uncompressed size) holds
+exactly the declared files, none empty. `readDeckContent` runs that check, then decodes and
+validates every intro and section from the supplied lesson file bytes; the web fetches only the
+`deckLessonTextPaths` entries by byte range, so it never downloads audio. Callers never build
+archive paths themselves.
 
 `createDeckPackage` builds a deterministic ZIP and verifies it through `parseDeckPackage`.
 `compareDeckPackages` compares parsed packages; filesystem and R2 operations belong to scripts.

@@ -28,9 +28,10 @@ export function createDeckPackage({ deck, audio }: DeckPackage): Uint8Array {
     }
   }
   const archive: Zippable = {};
+  // Code-point order keeps archives byte-identical regardless of the machine's locale.
   // oxlint-disable-next-line unicorn/no-array-sort -- Sort a new entries array for native ES2022 runtimes.
   for (const [path, content] of Object.entries(files).sort(([left], [right]) =>
-    left.localeCompare(right)
+    left < right ? -1 : 1
   )) {
     // ZIP records store local wall-clock fields, without a timezone.
     archive[path] = [content, { mtime: new Date(1980, 0, 1, 0, 0, 0) }];
