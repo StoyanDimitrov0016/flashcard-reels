@@ -1,97 +1,158 @@
 # `.fcrdeck` deck packages
 
-`.fcrdeck` is a ZIP archive validated by `@flashcard-reels/deck-contract`. It contains one
-`deck.json` manifest and the assets named by that manifest:
+`.fcrdeck` is a ZIP archive validated by `@flashcard-reels/deck-contract`. Readers accept
+**schema 4 only**. Other numeric schemas produce `UnsupportedDeckSchemaError`; there is no
+legacy reader or Markdown section migration command.
+
+## Manifest and files
+
+A source directory has exactly the same layout as its archive:
 
 ```text
-<deck-id>.fcrdeck
-├── deck.json
-├── audio/
-│   └── <card-id>.mp3
-└── lessons/
-    └── <lesson-id>.md
+deck.json
+audio/<cardId>.mp3                       when card.audio is true
+lessons/<lessonId>/intro.md              when lesson.intro is true
+lessons/<lessonId>/<sectionId>.md        one body per section
 ```
 
-The reader supports `schema: 1` and `schema: 2` for the package format and a positive `revision` for the content
-snapshot. It includes a stable deck UUID, an `authorId` UUID, timestamps, metadata, cards, and
-lessons. A card has a stable ID, question, answer, `lessonId` (UUID or `null`), `audio` flag, and
-timestamps. A lesson has a stable ID and title. **Array position determines card and lesson
-order**; neither object has an `order` property.
+The manifest contains a stable deck UUID, `authorId` UUID, positive `revision`, title,
+description, timestamps, cards, and lessons. Array position determines card, lesson, and section
+order; none has an `order` property. Objects reject unknown fields.
 
-Schema 2 adds an optional nullable `lessonSectionId` on cards. A non-null section reference requires
-a `lessonId`; multiple cards can share the same destination. Existing schema 1 packages remain
-readable by the updated app and portal. Earlier builds cannot read schema 2 packages.
+```jsonc
+{
+  "schema": 4,
+  "id": "<deck UUID>",
+  "authorId": "<author UUID>",
+  "revision": 5,
+  "title": "Example deck",
+  "description": "Example description",
+  "createdAt": "2026-10-05T00:00:00.000Z",
+  "updatedAt": "2026-10-05T00:00:00.000Z",
+  "cards": [
+    {
+      "id": "<card UUID>",
+      "question": "When should a request time out?",
+      "answer": "When its deadline expires.",
+      "audio": true,
+      "lessonId": "<lesson UUID>",
+      "lessonSectionId": "<section UUID>",
+      "createdAt": "2026-10-05T00:00:00.000Z",
+      "updatedAt": "2026-10-05T00:00:00.000Z",
+    },
+  ],
+  "lessons": [
+    {
+      "id": "<lesson UUID>",
+      "title": "Reliable requests",
+      "intro": true,
+      "sections": [{ "id": "<section UUID>", "title": "Timeouts" }],
+    },
+  ],
+}
+```
 
-Sections are derived from ordinary Markdown headings without manual markers. A section includes
-its subsections and ends before the next heading of equal or higher rank. Generated IDs are
-normalized heading paths such as `vertical-scaling/limitations`; duplicate siblings use `~2`,
-`~3`, and so on. See [the section reference spec](specs/4-lesson-section-references.md) for the
-normalization rules and editing limitations. The package inspector lists available section IDs
-and the number of linked cards. Supplied destinations must resolve in the actual packaged lesson.
-Cards without a section destination open their lesson at its beginning.
+Both `lessonId` and `lessonSectionId` are required nullable UUID fields. A section reference
+requires a lesson reference and must resolve within that lesson. Several cards can share a
+destination. Card, lesson, and section IDs must be unique across the deck. A lesson needs an
+intro or at least one section; it can have at most 50 sections. A deck has 1–1,000 cards and
+at most 200 lessons.
 
-Every card with `audio: true` requires exactly one `audio/<card-id>.mp3` file. That file contains
-the spoken question, a short pause, and the spoken answer; its playback control is on the back of the card.
-Cards with `audio: false` have no audio file. Every listed lesson requires a nonempty
-`lessons/<lesson-id>.md` file. Extra files are rejected.
+Sections are flat entities. Keep a section UUID when renaming or moving it within a lesson;
+new or copied sections get new UUIDs. Moving a section to another lesson requires updating the
+cards' `lessonId`. Deleting a referenced section requires deliberately relinking or clearing
+card destinations. Titles live only in the manifest, never as headings or markers in bodies.
 
-Package limits are 64 MiB compressed and 128 MiB expanded. Within a package, `deck.json` may be
-at most 8 MiB, each audio file 5 MiB, and each lesson file 256 KiB. The mobile installer and web
-catalog enforce these shared limits before expanding entries.
+Every declared file must exist and be nonempty; text must remain nonempty after trimming.
+Every other file rejects the package. Audio contains the spoken question, a pause, and the spoken
+answer, and is absent when `audio` is false.
+
+## Lesson Markdown and validation
+
+Intro and section files contain UTF-8 Markdown bodies. Allowed elements are paragraphs,
+bulleted and numbered lists, fenced or indented code, inline code, bold, italic, and line breaks.
+Headings, links, images, raw HTML, tables, blockquotes, horizontal rules, strikethrough,
+task lists, and link definitions are rejected. Heading characters inside code are ordinary code.
+
+The contract validates every block and inline token with the same `marked` version used by
+the mobile `react-native-marked` renderer. The web keeps `react-markdown`; both readers receive
+validated bodies. Lessons read continuously: optional intro, then each section heading and body.
+A linked card highlights only its section.
+
+Invalid manifests, files, relationships, or Markdown produce one `DeckPackageParseError` with
+all applicable issues. Each issue has a path; Markdown issues also identify the lesson, section
+or intro, and one-based line within that file. Full parsing completes before any installation
+write. Numeric unsupported schemas produce the distinct `DECK_SCHEMA_UNSUPPORTED` code.
+
+Limits are 64 MiB compressed and 128 MiB expanded; the manifest limit is 8 MiB, each audio file
+5 MiB, and each intro or section text file 256 KiB. ZIP metadata is checked before decompression.
+The portal reads entries by byte range without downloading audio for previews.
 
 ## Updating a deck
 
 Raise `revision` whenever the content snapshot changes. Importing the installed revision is a
-no-op; importing an older revision is rejected. A higher revision replaces the content while
-keeping learning history for stable card IDs. Removed cards become inactive so their history is
-retained. Keep the deck's `authorId` stable across revisions. Use a new card ID when the learning
-content changes substantially.
+no-op; an older revision is rejected. A higher revision replaces content while keeping learner
+history for stable card IDs. Removed cards become inactive so their history remains. Keep the
+deck's `authorId` stable. Use a new card ID when the learning content changes substantially.
 
 Deleting a downloaded deck archives its learning data. Reinstalling the same deck ID pauses
-study until the learner chooses to continue with saved progress or start fresh.
+study until the learner chooses saved progress or a fresh start. File imports and QR downloads
+use the same installer. The bundled demo is generated from its versioned schema 4 source and
+updates automatically to revision 4 unless previously removed.
 
-File imports and QR downloads feed the same mobile installer. The installer validates the full
-package before changing SQLite or installed audio. The bundled demo is a generated package.
+Mobile uses the fresh `flashcard-reels-v8.db` development database and one generated `0000`
+baseline. Older databases remain separate. To recover v7 progress, export a progress backup on
+the v7 build, install the same decks on v8, and restore the backup keyed by card ID. Phone
+positioning, performance, and the v7-to-v8 restore remain owner acceptance checks.
 
 ## Authoring and checking
 
-Deck sources live under `apps/mobile/data/decks/<deck-name>/`, with `deck.json`, optional
-`audio/<card-id>.mp3` files, and `lessons/<lesson-id>.md` files. The generator can also use
-combined audio from `data/technical_flashcard_library/audio` for matching stable card IDs.
+Curated packages in R2 are their source of record. Extract a schema 4 package into
+`apps/mobile/data/decks/<name>/` for local work. Curated sources, audio, generated packages,
+and aggregate ZIPs stay ignored by Git; a fresh checkout includes only the demo and test fixtures.
+Generators read directory file maps through `parseDeckFiles` and write reproducible archives with
+`createDeckPackage`, which verifies them by parsing.
 
 From `apps/mobile`:
 
 ```powershell
-npm.cmd run decks:generate -- data/decks/system-design-foundations
-npm.cmd run decks:inspect -- build/decks/<deck-id>.fcrdeck
-npm.cmd run decks:curated:prepare
+npm.cmd run decks:generate -- data/decks/<name> build/<deck-id>.fcrdeck
+npm.cmd run decks:inspect -- build/<deck-id>.fcrdeck
+npm.cmd run decks:curated:prepare -- data/decks/<name> data/decks/<another-name>
 npm.cmd run decks:packages
 npm.cmd run decks:check
 ```
 
-`decks:packages` regenerates the bundled demo; `decks:check` validates the runtime package
-against the bundled registry. The web portal reads the same supported manifests and checks the
-archive's asset names with byte ranges, so listing and previewing decks do not download audio.
+`decks:curated:prepare` accepts explicit sources or, without arguments, every directory in
+`data/decks`. All selected sources must be schema 4; exclude predecessor copies. It checks
+identities across decks, writes packages to `build/curated-decks`, and creates
+`flashcard-reels-decks.zip` at the repository root. The inspector lists section IDs, titles,
+and linked-card counts. `decks:packages` regenerates the bundled demo; `decks:check` validates
+its runtime package against the bundled registry.
 
-`decks:curated:prepare` generates every source in `data/decks`, validates each package with the
-shared contract, checks that deck, card, and lesson IDs do not overlap across decks, and writes
-the individual packages to `apps/mobile/build/curated-decks` and `flashcard-reels-decks.zip` at
-the repository root. The ZIP currently contains seven `.fcrdeck` packages
-ready for publication review. Generated packages and the ZIP are ignored by Git; source manifests
-and lessons are versioned. From the repository root, run `npm run r2:push-decks -- --dry-run` to
-compare that ZIP with the R2 catalog before uploading. Uploading requires an interactive `publish`
-confirmation.
+## Development and production publication
 
-Publication matches existing decks by their stable IDs and reuses their current R2 object keys,
-even when a source filename changes. New decks use the candidate filename. A candidate cannot
-overwrite an object key owned by another deck.
+Development uses `dev/decks/`; production uses `decks/`. The publisher requires an explicit
+environment and compares only that catalog. Web `DECK_PREFIX` is required: use `dev/decks/`
+locally and for Preview, and `decks/` for Production. There is no default.
 
-An old-format R2 catalog requires a format cutover before the revision-based publisher can compare
-it. Back up the original packages, preserve deck/card/lesson IDs and content order, raise the
-revision, and validate the converted packages before replacing the objects at their existing keys.
-Keep the backup until device testing passes. Older app and portal builds need updating to read the
-schema 1 catalog.
+After a catalog contains schema 4 packages, review and upload from the repository root:
 
-The section-reference feature uses the fresh `flashcard-reels-v6.db` development database
-and one generated migration baseline. Existing development databases are left separate; the
-new app starts with fresh local study state.
+```powershell
+npm run r2:push-decks -- --environment=dev --dry-run
+npm run r2:push-decks -- --environment=dev
+```
+
+The default input is `flashcard-reels-decks.zip`; explicit package or source-directory paths
+are also accepted. Uploading requires typing `publish` in an interactive terminal. Stable deck
+IDs preserve existing R2 object keys. Comparisons include cards, lesson intro, section identity,
+order, title, body, metadata, and audio. Replacing a section with a same-title new UUID produces
+a warning to keep the original ID so links remain attached.
+
+**The schema 3 catalog needs an owner-controlled format cutover first.** The exclusive schema 4
+publisher cannot compare legacy packages. Keep predecessor backups, verify preserved card and
+section IDs and unchanged audio, then replace packages at their existing keys with schema 4
+versions. The seven converted revision 5 packages are in `apps/mobile/build/` in the implementation
+worktree; predecessor snapshots are in `build/schema-3/`. These artifacts are local, not committed.
+Spec 7 implementation performs no R2 publication. Production cutover and an updated APK are
+owner release steps.

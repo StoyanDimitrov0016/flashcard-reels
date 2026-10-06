@@ -30,6 +30,12 @@ const R2EnvironmentSchema = z.compile(
     R2_BUCKET_NAME: z.string().regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/),
   })
 );
+const DeckPrefixPattern = /^(?:[a-z0-9][a-z0-9_-]*\/)+$/;
+export const DeckCatalogEnvironmentSchema = z.compile(
+  z.object({
+    DECK_PREFIX: z.string().min(1).max(128).regex(DeckPrefixPattern),
+  })
+);
 export const DeckTransferEnvironmentSchema = z.compile(
   z.object({
     DECK_TRANSFER_ORIGIN: z.preprocess(
@@ -75,6 +81,9 @@ export function getSessionEnvironment() {
 }
 export function getR2Environment() {
   return R2EnvironmentSchema.parse(process.env);
+}
+export function getDeckCatalogEnvironment() {
+  return DeckCatalogEnvironmentSchema.parse(process.env);
 }
 export function getDeckTransferEnvironment() {
   return DeckTransferEnvironmentSchema.parse(process.env);

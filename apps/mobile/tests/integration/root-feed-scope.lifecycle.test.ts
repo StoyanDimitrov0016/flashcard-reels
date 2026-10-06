@@ -28,6 +28,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("expo-sqlite", () => ({ SQLiteProvider: Children }));
 vi.mock("expo-status-bar", () => ({ StatusBar: () => null }));
+vi.mock("expo-navigation-bar", () => ({ NavigationBar: () => null }));
 vi.mock("expo-system-ui", () => ({ setBackgroundColorAsync: async () => undefined }));
 vi.mock("@/infrastructure/app-recovery", () => ({
   prepareAppStorage: vi.fn(),

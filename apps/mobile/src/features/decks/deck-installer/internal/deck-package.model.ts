@@ -8,10 +8,6 @@ import type { DeckInstallResult, DeckPackageFile } from "../index";
 
 export type { DeckPackage };
 
-export interface DeckPackageReader {
-  read(bytes: Uint8Array): DeckPackage;
-}
-
 export interface DeckPackageFileReader {
   read(file: DeckPackageFile): Promise<Uint8Array>;
 }

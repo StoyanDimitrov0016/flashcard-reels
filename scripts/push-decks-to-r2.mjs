@@ -5,25 +5,36 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { createDeckPackage, parseDeckFiles } from "@flashcard-reels/deck-contract";
 import { unzipSync } from "fflate";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 
-import { ContractDeckPackageReader } from "../apps/mobile/src/features/decks/deck-installer/internal/contract-deck-package.reader.ts";
+import { readDeckSource } from "../apps/mobile/scripts/read-deck-source.mjs";
+import { getR2Environment } from "../apps/web/src/server/env.ts";
 import {
   canPublish,
   publicationUploads,
   reviewDeckPublication,
-} from "../apps/mobile/src/features/decks/deck-installer/internal/deck-package-publication.ts";
-import { getR2Environment } from "../apps/web/src/server/env.ts";
+} from "./deck-package-publication.ts";
 
 const ConfirmationWord = "publish";
-const PublishedKeyPrefix = "decks/";
 
 const argumentsList = process.argv.slice(2);
 const dryRun = argumentsList.includes("--dry-run");
+const environmentArgument = argumentsList.find((argument) => argument.startsWith("--environment="));
+const publicationEnvironment = environmentArgument?.slice("--environment=".length);
+if (publicationEnvironment !== "dev" && publicationEnvironment !== "prod") {
+  throw new Error("Select --environment=dev (dev/decks/) or --environment=prod (decks/)");
+}
+const PublishedKeyPrefix = publicationEnvironment === "dev" ? "dev/decks/" : "decks/";
+for (const argument of argumentsList) {
+  if (argument.startsWith("--") && argument !== "--dry-run" && argument !== environmentArgument) {
+    throw new Error(`Unknown argument: ${argument}`);
+  }
+}
 const sourcePaths = argumentsList.filter((argument) => !argument.startsWith("--"));
 if (sourcePaths.length === 0) {
   sourcePaths.push("flashcard-reels-decks.zip");
@@ -36,6 +47,13 @@ function sha256(bytes) {
 async function readCandidates(paths) {
   const candidates = [];
   for (const sourcePath of paths) {
+    const sourceStats = await stat(sourcePath);
+    if (sourceStats.isDirectory()) {
+      const source = parseDeckFiles(await readDeckSource(path.resolve(sourcePath)));
+      const bytes = createDeckPackage(source);
+      candidates.push({ bytes, fileName: `${source.deck.id}.fcrdeck`, sha256: sha256(bytes) });
+      continue;
+    }
     const bytes = new Uint8Array(await readFile(path.resolve(sourcePath)));
     if (sourcePath.endsWith(".fcrdeck")) {
       candidates.push({ bytes, fileName: path.basename(sourcePath), sha256: sha256(bytes) });
@@ -188,6 +206,7 @@ async function confirmUpload(uploadCount) {
 }
 
 const candidates = await readCandidates(sourcePaths);
+console.log(`Publication target: ${publicationEnvironment} (${PublishedKeyPrefix})`);
 const environment = getR2Environment();
 const client = new S3Client({
   region: "auto",
@@ -199,8 +218,8 @@ const client = new S3Client({
 });
 const review = await reviewDeckPublication({
   candidates,
-  reader: new ContractDeckPackageReader(),
   store: createPublishedDeckStore(client, environment.R2_BUCKET_NAME),
+  keyPrefix: PublishedKeyPrefix,
 });
 printReview(review);
 
