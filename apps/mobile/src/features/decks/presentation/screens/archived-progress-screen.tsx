@@ -98,7 +98,7 @@ export default function ArchivedProgressScreen() {
         icon={{ android: "delete", ios: "trash.fill", web: "delete" }}
         message="All saved reviews and learning progress for this deck will be permanently deleted."
         onCancel={cancelDeletion}
-        onConfirm={() => void deleteSelected()}
+        onConfirm={deleteSelected}
         title={`Delete ${selected?.title ?? "deck"} progress?`}
         visible={selected !== null}
       />

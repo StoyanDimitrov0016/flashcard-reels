@@ -63,14 +63,14 @@ export default function ProgressBackupScreen() {
             detail="Finishes current study sessions, then shares a progress file"
             disabled={busy}
             icon={{ android: "upload_file", ios: "square.and.arrow.up", web: "upload_file" }}
-            onPress={() => void exportProgress()}
+            onPress={exportProgress}
             title="Export progress"
           />
           <PreferenceRow
             detail="Preview a file before replacing progress on this device"
             disabled={busy}
             icon={{ android: "download", ios: "square.and.arrow.down", web: "download" }}
-            onPress={() => void pickBackup()}
+            onPress={pickBackup}
             title="Import progress"
           />
           {hasSafetyCopy && (
@@ -78,7 +78,7 @@ export default function ProgressBackupScreen() {
               detail="Saved automatically before the last import"
               disabled={busy}
               icon={{ android: "history", ios: "clock.arrow.circlepath", web: "history" }}
-              onPress={() => void shareSafetyCopy()}
+              onPress={shareSafetyCopy}
               title="Share previous progress backup"
             />
           )}
@@ -92,7 +92,7 @@ export default function ProgressBackupScreen() {
         icon={{ android: "restore", ios: "arrow.counterclockwise", web: "restore" }}
         message={prepared ? restorePreview(prepared) : ""}
         onCancel={cancelRestore}
-        onConfirm={() => void restore()}
+        onConfirm={restore}
         title="Replace learning progress?"
         visible={prepared !== null}
       />

@@ -1,46 +1,45 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 import type { DeckDownloadProgress } from "@/features/decks/application/deck-package-downloader";
 import type { DeckPackageSelection } from "@/features/decks/application/deck-package-picker";
 import type { DeckInstallResult } from "@/features/decks/deck-installer";
 
-import { shouldInvalidateDeckContent } from "@/features/decks/presentation/deck-content-invalidation";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { toOperationError } from "@/shared/errors/normalize-error";
+import {
+  deckMutations,
+  type DeckImport,
+} from "@/features/decks/presentation/mutations/deck-mutations";
 import { reportError } from "@/shared/errors/report-error";
-import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
-import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
 
 export type { DeckDownloadProgress };
-
-type ImportState = Readonly<{ error: Error | null; importing: boolean; downloading: boolean }>;
 
 // Progress events arrive far faster than the bar needs to redraw.
 const PROGRESS_INTERVAL_MS = 120;
 
-export function useImportDeckPackage(): ImportState & {
-  downloadProgress: DeckDownloadProgress | null;
-  importFromDevice: () => Promise<DeckInstallResult | null>;
-  importFromUrl: (url: string) => Promise<DeckInstallResult | null>;
-  cancelDownload: () => void;
-  clearImportError: () => void;
-} {
-  const { deckInstaller, deckPackageDownloader, deckPackagePicker } = useDecks();
+/**
+ * Imports a package picked on the device or downloaded from a QR link. One import runs at a time
+ * across the app. A download stops when the learner cancels or the screen unmounts; nothing
+ * installs, and no result is published, once the screen that started the import is gone.
+ */
+export function useImportDeckPackage() {
+  const services = useDecks();
+  const { deckPackageDownloader, deckPackagePicker } = services;
   const queryClient = useQueryClient();
-  const [state, setState] = useState<ImportState>({
-    error: null,
-    importing: false,
-    downloading: false,
-  });
+  const importOptions = deckMutations.import(services);
+  const importer = useMutation(importOptions);
+  const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<DeckDownloadProgress | null>(null);
   const lastProgressAt = useRef(0);
-  const flight = useSingleFlight(installAction);
-  const downloadController = useRef<AbortController | null>(null);
+  const download = useRef<AbortController | null>(null);
+  const screen = useRef<AbortController | null>(null);
 
-  useEffect(function ownDeckDownloadLifetime() {
-    return function cancelDownloadOnUnmount() {
-      downloadController.current?.abort();
+  useEffect(function ownImportLifetime() {
+    const controller = new AbortController();
+    screen.current = controller;
+    return function endImportLifetime() {
+      controller.abort();
+      download.current?.abort();
     };
   }, []);
 
@@ -53,72 +52,95 @@ export function useImportDeckPackage(): ImportState & {
     }
   };
 
-  async function installAction(
-    signal: AbortSignal,
-    getSelection: (signal?: AbortSignal) => Promise<DeckPackageSelection | null>,
-    removeAfterInstall = false
-  ): Promise<DeckInstallResult | null> {
-    setDownloadProgress(null);
-    lastProgressAt.current = 0;
-    const controller = removeAfterInstall ? new AbortController() : null;
-    downloadController.current = controller;
-    setState({ error: null, importing: true, downloading: removeAfterInstall });
-    let selection: DeckPackageSelection | null = null;
+  const releaseDownload = (selection: DeckPackageSelection) => {
     try {
-      selection = await getSelection(controller?.signal);
-      downloadController.current = null;
-      // Nothing installs once the screen that started the import is gone.
-      if (!selection || controller?.signal.aborted || signal.aborted) {
-        setState({ error: null, importing: false, downloading: false });
-        return null;
-      }
-      setState({ error: null, importing: true, downloading: false });
-      const result = await deckInstaller.installFromFile(selection);
-      if (shouldInvalidateDeckContent(result)) {
-        void invalidateChangedData(queryClient, ["deck-content"]);
-      }
-      setState({ error: null, importing: false, downloading: false });
-      return signal.aborted ? null : result;
+      deckPackageDownloader.remove(selection);
     } catch (error) {
-      if (controller?.signal.aborted) {
-        setState({ error: null, importing: false, downloading: false });
-        return null;
-      }
-      const normalized = toOperationError(error, {
-        code: "DECK_OPERATION_FAILED",
-        context: { operation: "deck-import" },
-        message: "Could not import deck package",
-      });
-      reportError(normalized, "Deck import failure");
-      setState({ error: normalized, importing: false, downloading: false });
-      return null;
-    } finally {
-      downloadController.current = null;
-      if (removeAfterInstall && selection) {
-        try {
-          deckPackageDownloader.remove(selection);
-        } catch (error) {
-          // Cache cleanup must not obscure the import result.
-          reportError(error, "Deck import cleanup failure");
-        }
-      }
+      // Cache cleanup must not obscure the import result.
+      reportError(error, "Deck import cleanup failure");
     }
-  }
+  };
 
-  const importFromDevice = async () => (await flight.run(() => deckPackagePicker.pick())) ?? null;
-  const importFromUrl = async (url: string) =>
-    (await flight.run(
-      (signal) => deckPackageDownloader.download(url, signal, reportProgress),
-      true
-    )) ?? null;
+  /** The mutation cache knows synchronously whether an import is running anywhere. */
+  const canImport = () =>
+    screen.current !== null &&
+    !screen.current.signal.aborted &&
+    queryClient.isMutating(importOptions) === 0;
+
+  const runImport = async (deckImport: DeckImport): Promise<DeckInstallResult | null> => {
+    const lifetime = screen.current?.signal;
+    try {
+      const result = await importer.mutateAsync(deckImport);
+      return lifetime?.aborted ? null : result;
+    } catch {
+      // The failure is shown through `error` and reported by the mutation.
+      return null;
+    }
+  };
+
+  const importFromDevice = async () => {
+    if (!canImport()) {
+      return null;
+    }
+    return runImport({
+      select: async () => {
+        const selection = await deckPackagePicker.pick();
+        return screen.current?.signal.aborted ? null : selection;
+      },
+    });
+  };
+
+  const importFromUrl = async (url: string) => {
+    if (!canImport()) {
+      return null;
+    }
+    // Created before the import starts, so a cancel in the same tick still stops the download.
+    const controller = new AbortController();
+    download.current = controller;
+    setDownloadProgress(null);
+    setDownloading(true);
+    lastProgressAt.current = 0;
+    return runImport({
+      select: async () => {
+        try {
+          // Cancelled or unmounted before the download began.
+          if (controller.signal.aborted) {
+            return null;
+          }
+          const selection = await deckPackageDownloader.download(
+            url,
+            controller.signal,
+            reportProgress
+          );
+          if (controller.signal.aborted || screen.current?.signal.aborted) {
+            releaseDownload(selection);
+            return null;
+          }
+          return selection;
+        } catch (error) {
+          if (controller.signal.aborted) {
+            return null;
+          }
+          throw error;
+        } finally {
+          if (download.current === controller) {
+            download.current = null;
+          }
+          setDownloading(false);
+        }
+      },
+      release: releaseDownload,
+    });
+  };
 
   return {
-    ...state,
-    importing: flight.busy,
+    error: importer.error,
+    importing: importer.isPending,
+    downloading,
     downloadProgress,
-    cancelDownload: () => downloadController.current?.abort(),
-    clearImportError: () => setState((current) => ({ ...current, error: null })),
     importFromDevice,
     importFromUrl,
+    cancelDownload: () => download.current?.abort(),
+    clearImportError: importer.reset,
   };
 }

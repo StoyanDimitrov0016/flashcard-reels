@@ -301,7 +301,7 @@ export default function DecksScreen() {
     if (!selectedEntry) {
       return;
     }
-    void savePreset(selectedEntry.deck.id, preset);
+    savePreset(selectedEntry.deck.id, preset);
   };
 
   const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (

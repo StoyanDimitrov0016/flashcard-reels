@@ -65,11 +65,12 @@ describe("paused progress actions", () => {
         hook.result.current.continueProgress();
         hook.result.current.continueProgress();
       });
-      expect(continuation).toHaveBeenCalledOnce();
+      await waitFor(() => expect(continuation).toHaveBeenCalled());
       await act(async () => {
         release.resolve();
       });
       await waitFor(() => expect(hook.result.current.busy).toBe(false));
+      expect(continuation).toHaveBeenCalledOnce();
       expect(hook.result.current.error).toBeNull();
       expect(hook.result.current.selected).toBeNull();
       expect(await service.listPendingProgress()).toEqual([]);

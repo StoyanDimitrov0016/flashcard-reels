@@ -208,6 +208,8 @@
       "files": ["src/features/*/presentation/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}"],
       "excludeFiles": [
         "src/features/*/presentation/controllers/**/*",
+        "src/features/*/presentation/queries/**/*",
+        "src/features/*/presentation/mutations/**/*",
         "src/features/*/presentation/dependencies/**/*",
         "src/app/_layout.tsx"
       ],
@@ -253,7 +255,11 @@
       }
     },
     {
-      "files": ["src/features/*/presentation/controllers/**/*.{ts,tsx}"],
+      "files": [
+        "src/features/*/presentation/controllers/**/*.{ts,tsx}",
+        "src/features/*/presentation/queries/**/*.{ts,tsx}",
+        "src/features/*/presentation/mutations/**/*.{ts,tsx}"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",

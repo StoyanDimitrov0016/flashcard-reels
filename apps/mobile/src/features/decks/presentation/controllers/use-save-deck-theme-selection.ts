@@ -1,75 +1,49 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
+import type { DeckThemeId } from "@/features/decks/domain/deck-theme-selection.model";
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { DeckTheme } from "@/features/decks/presentation/deck-theme-presets";
 
-import {
-  type DeckThemeId,
-  DeckThemeSelection,
-} from "@/features/decks/domain/deck-theme-selection.model";
 import { useDecks } from "@/features/decks/presentation/dependencies/use-decks";
-import { toOperationError } from "@/shared/errors/normalize-error";
-import { reportError } from "@/shared/errors/report-error";
-import { invalidateChangedData } from "@/shared/presentation/query/query-scopes";
+import { deckMutations } from "@/features/decks/presentation/mutations/deck-mutations";
 
 /** The deck whose theme the screen shows, and the theme it has loaded for it. */
 type ShownThemeSelection = Readonly<{ deckId: DeckId | null; themeId: DeckThemeId | null }>;
 
-type ChosenPreset = Readonly<{ deckId: DeckId; preset: DeckTheme; saving: boolean }>;
+type ChosenPreset = Readonly<{ deckId: DeckId; preset: DeckTheme }>;
 
 /**
- * Saves a deck's theme. The save finishes before screens reload the saved theme, so the choice
- * stays pending until `shown` reflects it; otherwise the old theme would flash in between.
+ * Saves a deck's theme. The save stays pending until the reloaded theme reaches the screen, and
+ * the choice stays shown until \`shown\` reflects it, so the old theme never flashes in between.
  */
 export function useSaveDeckThemeSelection(shown: ShownThemeSelection) {
-  const { deckService } = useDecks();
-  const queryClient = useQueryClient();
+  const save = useMutation(deckMutations.saveTheme(useDecks()));
   const [chosen, setChosen] = useState<ChosenPreset | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (
     chosen &&
-    !chosen.saving &&
+    !save.isPending &&
     chosen.deckId === shown.deckId &&
     chosen.preset.id === shown.themeId
   ) {
     setChosen(null);
   }
 
-  const savePreset = async (deckId: DeckId, preset: DeckTheme) => {
-    const themeSelection = new DeckThemeSelection({ deckId, theme: preset.id });
-    setChosen({ deckId, preset, saving: true });
-    setSaveError(null);
-    try {
-      await deckService.saveThemeSelection(themeSelection);
-      await invalidateChangedData(queryClient, ["theme-selection"]);
-      setChosen((current) =>
-        current?.preset === preset ? { ...current, saving: false } : current
-      );
-      return themeSelection;
-    } catch (error) {
-      const normalized = toOperationError(error, {
-        code: "DECK_OPERATION_FAILED",
-        context: { deckId, operation: "deck-theme-selection-save" },
-        message: "Could not save this theme",
-      });
-      reportError(normalized, "Deck theme selection save failure");
-      setSaveError("Could not save this theme. Please try again.");
-      setChosen(null);
-      return null;
-    }
+  const savePreset = (deckId: DeckId, preset: DeckTheme) => {
+    setChosen({ deckId, preset });
+    save.mutate({ deckId, theme: preset.id }, { onError: () => setChosen(null) });
   };
 
   const shownChoice = chosen?.deckId === shown.deckId ? chosen : null;
 
   return {
-    clearSaveError: () => setSaveError(null),
+    clearSaveError: save.reset,
     /** The preset being saved, or saved but not yet shown by the screen. */
     pendingPreset: shownChoice?.preset ?? null,
-    /** Only the write blocks another choice; waiting for the reload does not. */
-    saving: shownChoice?.saving ?? false,
-    saveError,
+    /** Only the write and its reload block another choice. */
+    saving: shownChoice !== null && save.isPending,
+    saveError: save.isError ? "Could not save this theme. Please try again." : null,
     savePreset,
   };
 }

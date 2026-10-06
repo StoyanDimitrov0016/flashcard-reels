@@ -15,14 +15,12 @@ import {
 import { StudyControlsSheet } from "@/features/preferences/presentation/components/study-controls-sheet";
 import { usePreferencesContext } from "@/features/preferences/presentation/controllers/preferences-context";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
-import { reportError } from "@/shared/errors/report-error";
 import { AppResetAction } from "@/shared/presentation/components/app-reset-action";
 import { ScreenHeader } from "@/shared/presentation/components/screen-header";
 import { SuccessSheet } from "@/shared/presentation/components/success-sheet";
 import { useTabBarInset } from "@/shared/presentation/context/tab-bar-inset-context";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showErrorToast } from "@/shared/presentation/flashcard-toast";
-import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -49,26 +47,25 @@ export default function SettingsScreen() {
   } = usePreferencesContext();
   const [studyControlsPresented, setStudyControlsPresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
-  const [resetError, setResetError] = useState<string | null>(null);
   const [resetCompleted, setResetCompleted] = useState(false);
-  const { resetAllProgress } = useResetAllProgress();
+  const resetAllProgress = useResetAllProgress();
   const haptics = useHaptics();
-  const reset = useSingleFlight(async (signal): Promise<void> => {
-    try {
-      await resetAllProgress();
-      if (signal.aborted) {
-        return;
-      }
-      haptics.resetCompleted();
-      setResetPresented(false);
-      setResetCompleted(true);
-    } catch (error) {
-      reportError(error, "Learning progress reset failure");
-      setResetError(getErrorFeedback(error).message);
-      setResetPresented(true);
+  const resetting = resetAllProgress.isPending;
+  const resetError = resetAllProgress.error
+    ? getErrorFeedback(resetAllProgress.error).message
+    : null;
+  const confirmReset = () => {
+    if (resetting) {
+      return;
     }
-  });
-  const resetting = reset.busy;
+    resetAllProgress.mutate(undefined, {
+      onSuccess: () => {
+        haptics.resetCompleted();
+        setResetPresented(false);
+        setResetCompleted(true);
+      },
+    });
+  };
 
   useEffect(
     function announceStorageFailure() {
@@ -137,7 +134,7 @@ export default function SettingsScreen() {
               icon={{ android: "restart_alt", ios: "arrow.counterclockwise", web: "restart_alt" }}
               iconColor={colors.error}
               onPress={() => {
-                setResetError(null);
+                resetAllProgress.reset();
                 setResetPresented(true);
               }}
               title="Reset all learning progress"
@@ -181,7 +178,7 @@ export default function SettingsScreen() {
             setResetPresented(false);
           }
         }}
-        onConfirm={() => void reset.run()}
+        onConfirm={confirmReset}
         scope="all learning progress"
       />
       <SuccessSheet

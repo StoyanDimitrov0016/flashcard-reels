@@ -141,13 +141,13 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
   it("does not prepare a new mixed feed with deleted cards while the reload is pending", async () => {
     harness.mixed = true;
     const prepare = vi.spyOn(graph.feed, "prepareFeed");
-    const { result } = renderHook(() => useDeleteDeck(), { wrapper: Providers });
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck() }), { wrapper: Providers });
     await waitFor(() => expect(observedFeed?.occurrences.length).toBeGreaterThan(0));
     const previousCalls = prepare.mock.calls.length;
     const reload = deferred<Flashcard[]>();
     vi.spyOn(flashcardService, "list").mockImplementationOnce(() => reload.promise);
     await act(async () => {
-      expect(await result.current.deleteDeck(TEST_DECK_ID)).toBe(true);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => expect(observedFeed).toBeNull());
     expect(prepare).toHaveBeenCalledTimes(previousCalls);
@@ -171,7 +171,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       true,
       null
     );
-    const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
     });
     await waitFor(() => {
@@ -179,7 +179,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       expect(result.current.focusedFeed.status).toBe("ready");
     });
     await act(async () => {
-      await result.current.deleteDeck(TEST_DECK_ID);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => {
       expect(result.current.focusRestoring).toBe(false);
@@ -191,7 +191,7 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
   });
 
   it("clears a deleted pending Focus selection even before its first session is confirmed", async () => {
-    const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
@@ -201,21 +201,21 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
       expect(result.current.focusedFeed.status).toBe("ready");
     });
     await act(async () => {
-      await result.current.deleteDeck(TEST_DECK_ID);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => expect(result.current.focusedFeed.status).toBe("empty"));
     expect(harness.errors).toEqual([]);
   });
 
   it("preserves a valid pending Focus selection when a different deck is deleted", async () => {
-    const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
     act(() => result.current.startFocusedFeed(OTHER_DECK_ID, null));
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
     await act(async () => {
-      await result.current.deleteDeck(TEST_DECK_ID);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => expect(result.current.focusRestoring).toBe(false));
     expect(result.current.focusedFeed).toMatchObject({ status: "ready", deckId: OTHER_DECK_ID });
@@ -244,16 +244,16 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
 
   it("handles deleting the last deck without turning an empty feed into a failure", async () => {
     harness.mixed = true;
-    const { result } = renderHook(() => ({ ...useDeleteDeck(), ...useFeedScope() }), {
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck(), ...useFeedScope() }), {
       wrapper: Providers,
     });
     await waitFor(() => expect(observedFeed?.occurrences.length).toBeGreaterThan(0));
     await act(async () => {
-      await result.current.deleteDeck(TEST_DECK_ID);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => expect(observedFeed?.occurrences.length).toBeGreaterThan(0));
     await act(async () => {
-      await result.current.deleteDeck(OTHER_DECK_ID);
+      await result.current.deletion.mutateAsync(OTHER_DECK_ID);
     });
     await waitFor(() => expect(observedFeed?.occurrences).toEqual([]));
     expect(result.current.focusedFeed.status).toBe("empty");
@@ -273,12 +273,12 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
           throw error;
         })
     );
-    const { result } = renderHook(() => useDeleteDeck(), { wrapper: Providers });
+    const { result } = renderHook(() => ({ deletion: useDeleteDeck() }), { wrapper: Providers });
     await waitFor(() => expect(prepare).toHaveBeenCalledOnce());
     const reload = deferred<Flashcard[]>();
     vi.spyOn(flashcardService, "list").mockImplementationOnce(() => reload.promise);
     await act(async () => {
-      await result.current.deleteDeck(TEST_DECK_ID);
+      await result.current.deletion.mutateAsync(TEST_DECK_ID);
     });
     await waitFor(() => expect(observedFeed).toBeNull());
     await act(async () => gate.resolve());
@@ -293,7 +293,10 @@ describe("deck deletion across mounted feeds — real React and SQLite", () => {
   it("deduplicates initial feed preparation under React Strict Mode", async () => {
     harness.mixed = true;
     const prepare = vi.spyOn(graph.feed, "prepareFeed");
-    renderHook(() => useDeleteDeck(), { wrapper: Providers, reactStrictMode: true });
+    renderHook(() => ({ deletion: useDeleteDeck() }), {
+      wrapper: Providers,
+      reactStrictMode: true,
+    });
     await waitFor(() => expect(observedFeed?.occurrences.length).toBeGreaterThan(0));
     expect(prepare).toHaveBeenCalledOnce();
     expect(harness.errors).toEqual([]);
