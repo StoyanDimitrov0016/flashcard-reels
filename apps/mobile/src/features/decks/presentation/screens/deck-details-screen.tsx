@@ -40,7 +40,6 @@ import { useReadingLists } from "@/features/lessons/presentation/controllers/use
 import { getLessonHref } from "@/features/lessons/presentation/lesson-href";
 import { useHaptics } from "@/features/preferences/presentation/controllers/use-haptics";
 import { useOpenFocusedFeed } from "@/features/reels/presentation/hooks/use-open-focused-feed";
-import { reportError } from "@/shared/errors/report-error";
 import { EmptyState } from "@/shared/presentation/components/empty-state";
 import { ErrorState } from "@/shared/presentation/components/error-state";
 import { LoadingState } from "@/shared/presentation/components/loading-state";
@@ -49,7 +48,6 @@ import { SegmentedControl } from "@/shared/presentation/components/segmented-con
 import { SubScreenHeader } from "@/shared/presentation/components/sub-screen-header";
 import { getErrorFeedback } from "@/shared/presentation/errors/get-error-feedback";
 import { showSuccessToast } from "@/shared/presentation/flashcard-toast";
-import { useSingleFlight } from "@/shared/presentation/hooks/use-single-flight";
 import { screenLayout } from "@/shared/presentation/screen-layout";
 import { sizes } from "@/shared/presentation/sizes";
 import { useAppTheme, type AppColors } from "@/shared/presentation/theme";
@@ -140,12 +138,17 @@ export default function DeckDetailsScreen() {
   const router = useRouter();
   const deckId = useDeckRouteId();
   const openFocusedFeed = useOpenFocusedFeed();
-  const { clearDeleteError, deleteDeck, deleting, error: deleteError } = useDeleteDeck();
+  const deleteDeck = useDeleteDeck();
+  const deleting = deleteDeck.isPending;
   const { themeSelection, cards, deck, loading, progress } = useDeckDetails(deckId, !deleting);
   const { readingLists } = useReadingLists();
   const { clearSaveError, pendingPreset, saveError, savePreset, saving } =
     useSaveDeckThemeSelection({ deckId, themeId: themeSelection?.theme ?? null });
   const resetDeckProgress = useResetDeckProgress();
+  const resetting = resetDeckProgress.isPending;
+  const resetError = resetDeckProgress.error
+    ? getErrorFeedback(resetDeckProgress.error).message
+    : null;
   const haptics = useHaptics();
   const [tab, setTab] = useState<DeckPageTab>("lessons");
   const [query, setQuery] = useState("");
@@ -157,7 +160,6 @@ export default function DeckDetailsScreen() {
   const [showDeckInfo, setShowDeckInfo] = useState(false);
   const [deletePresented, setDeletePresented] = useState(false);
   const [resetPresented, setResetPresented] = useState(false);
-  const [resetError, setResetError] = useState<string | null>(null);
   const lessons = readingLists.find((list) => list.deckId === deckId)?.lessons ?? [];
   const activeTab: DeckPageTab = lessons.length > 0 ? tab : "cards";
   const visibleCards = cards.filter((card) => matchesFlashcardSearch(card, query));
@@ -173,25 +175,17 @@ export default function DeckDetailsScreen() {
     />
   );
   const audioSource = useFlashcardAudioSource(deck, selectedCard);
-  const reset = useSingleFlight(async (): Promise<void> => {
-    if (deckId === null) {
+  const confirmReset = () => {
+    if (deckId === null || resetting) {
       return;
     }
-    setResetError(null);
-    try {
-      await resetDeckProgress(deckId);
-      if (!reset.isActive()) {
-        return;
-      }
-      haptics.resetCompleted();
-      setResetPresented(false);
-    } catch (error) {
-      reportError(error, "Deck progress reset failure");
-      setResetError(getErrorFeedback(error).message);
-    }
-  });
-  const resetting = reset.busy;
-  const confirmReset = () => void reset.run();
+    resetDeckProgress.mutate(deckId, {
+      onSuccess: () => {
+        haptics.resetCompleted();
+        setResetPresented(false);
+      },
+    });
+  };
   const openAction = (action: DeckAction) => {
     switch (action) {
       case "theme":
@@ -202,7 +196,7 @@ export default function DeckDetailsScreen() {
         setShowDeckInfo(true);
         break;
       case "reset":
-        setResetError(null);
+        resetDeckProgress.reset();
         setResetPresented(true);
         break;
       case "delete":
@@ -212,7 +206,7 @@ export default function DeckDetailsScreen() {
   };
   const selectTheme = (preset: DeckTheme) => {
     if (deckId !== null) {
-      void savePreset(deckId, preset);
+      savePreset(deckId, preset);
     }
   };
 
@@ -362,23 +356,23 @@ export default function DeckDetailsScreen() {
       <DeleteDeckSheet
         busy={deleting}
         deck={deletePresented ? deck : null}
-        error={deleteError}
+        error={deleteDeck.error}
         onCancel={() => {
           if (!deleting) {
-            clearDeleteError();
+            deleteDeck.reset();
             setDeletePresented(false);
           }
         }}
         onConfirm={() => {
-          if (!deck) {
+          if (!deck || deleting) {
             return;
           }
-          void deleteDeck(deck.id).then((deleted) => {
-            if (deleted) {
+          deleteDeck.mutate(deck.id, {
+            onSuccess: () => {
               setDeletePresented(false);
               router.dismissTo("/(tabs)/decks");
               showSuccessToast("Deck deleted.");
-            }
+            },
           });
         }}
       />

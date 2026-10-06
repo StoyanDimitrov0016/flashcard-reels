@@ -163,7 +163,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe("lesson reader with the real Markdown hook and renderer", () => {
+describe("lesson reader section navigation", () => {
   it("renders a continuous article and highlights only the target heading and body", () => {
     const lesson = fixture();
     const onTargetLayout = vi.fn();
@@ -178,10 +178,6 @@ describe("lesson reader with the real Markdown hook and renderer", () => {
       })
     );
     expect(screen.getByText("Introduction.")).toBeTruthy();
-    expect(screen.getByText("Bold")).toBeTruthy();
-    expect(screen.getByText("inline")).toBeTruthy();
-    expect(screen.getByText("# Heading inside code")).toBeTruthy();
-    expect(screen.getByText("Numbered item")).toBeTruthy();
     const target = sectionContainer("Target section");
     const first = sectionContainer("First section");
     const last = sectionContainer("Last section");

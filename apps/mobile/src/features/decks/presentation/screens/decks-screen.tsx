@@ -1,6 +1,6 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItem } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -257,20 +257,10 @@ export default function DecksScreen() {
   const tabBarInset = useTabBarInset();
   const router = useRouter();
   const openFocusedFeed = useOpenFocusedFeed();
-  const { entries, loading, refresh } = useDeckCatalog();
-  const { refresh: refreshProgress, rows: progressRows } = useFlashcardProgressList();
-  const { refresh: refreshArchived, rows: archivedRows } = useArchivedProgress();
+  const { entries, loading } = useDeckCatalog();
+  const { rows: progressRows } = useFlashcardProgressList();
+  const { rows: archivedRows } = useArchivedProgress();
   const reviewSummary = summarizeReviews(progressRows);
-
-  useFocusEffect(
-    useCallback(
-      function refreshProgressWhenFocused() {
-        refreshProgress();
-        refreshArchived();
-      },
-      [refreshArchived, refreshProgress]
-    )
-  );
   const {
     cancelDownload,
     clearImportError,
@@ -302,8 +292,6 @@ export default function DecksScreen() {
     const result = await importDeck();
     if (result) {
       showSuccessToast(getDeckImportResultFeedback(result).message);
-      refresh();
-      pausedProgress.refresh();
       return true;
     }
     return false;
@@ -313,7 +301,7 @@ export default function DecksScreen() {
     if (!selectedEntry) {
       return;
     }
-    void savePreset(selectedEntry.deck.id, preset);
+    savePreset(selectedEntry.deck.id, preset);
   };
 
   const renderItem: ListRenderItem<CatalogEntry> = ({ item }) => (

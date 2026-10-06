@@ -1,32 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+/** @vitest-environment jsdom */
+import { cleanup, renderHook, waitFor } from "@testing-library/react";
+import { Component, createElement, type ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { DeckThemeSelection } from "@/features/decks/domain/deck-theme-selection.model";
 import type { Deck } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
 
-// Unit harness for the loader effect and its state transitions, not a React renderer.
 const harness = vi.hoisted(() => ({
-  state: undefined as unknown,
-  effect: undefined as (() => void | (() => void)) | undefined,
+  boundaryError: null as Error | null,
   findDeck: vi.fn<(id: string) => Promise<Deck | null>>(),
   cards: vi.fn<(id: string) => Promise<Flashcard[]>>(),
   themeSelection: vi.fn<(id: string) => Promise<DeckThemeSelection | null>>(),
   progress: vi.fn(),
-}));
-vi.mock("react", () => ({
-  useCallback: (callback: unknown) => callback,
-  useEffect: (effect: () => void | (() => void)) => {
-    harness.effect = effect;
-  },
-  useState: (initial: unknown) =>
-    typeof initial === "number"
-      ? [initial, () => undefined]
-      : [
-          harness.state ?? initial,
-          (next: unknown) => {
-            harness.state = next;
-          },
-        ],
 }));
 vi.mock("@/infrastructure/app-services", () => ({
   useAppServices: () => ({
@@ -40,7 +26,6 @@ vi.mock("@/infrastructure/app-services", () => ({
         return { deck, cards, themeSelection };
       },
     },
-    flashcardService: { listByDeckId: harness.cards },
     flashcardProgressService: { findByFlashcardIds: harness.progress },
   }),
 }));
@@ -52,18 +37,46 @@ vi.mock("@/features/decks/presentation/context/deck-theme-selection-context", ()
 }));
 vi.mock(
   "@/features/flashcard-progress/presentation/context/learning-progress-revision-context",
-  () => ({
-    useLearningProgressRevision: () => ({ revision: 1 }),
-  })
+  () => ({ useLearningProgressRevision: () => ({ revision: 1 }) })
 );
 
 import { useDeckDetails } from "@/features/decks/presentation/controllers/use-deck-details";
 
-describe("deck detail loading after content changes", () => {
+import { createQueryWrapper } from "../support/query-client";
+
+type BoundaryProps = Readonly<{ children: ReactNode }>;
+
+/** Stands in for the route boundary that receives load failures. */
+class RouteBoundary extends Component<BoundaryProps, { failed: boolean }> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  override componentDidCatch(error: Error) {
+    harness.boundaryError = error;
+  }
+
+  override render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function renderDetails(deckId: string, enabled = true) {
+  const QueryWrapper = createQueryWrapper();
+  return renderHook(() => useDeckDetails(deckId, enabled), {
+    wrapper: ({ children }: BoundaryProps) =>
+      createElement(RouteBoundary, null, createElement(QueryWrapper, null, children)),
+  });
+}
+
+afterEach(cleanup);
+describe("deck detail loading", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    harness.state = undefined;
-    harness.effect = undefined;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    harness.boundaryError = null;
     harness.findDeck.mockResolvedValue(null);
     harness.cards.mockResolvedValue([]);
     harness.themeSelection.mockResolvedValue(null);
@@ -71,49 +84,28 @@ describe("deck detail loading after content changes", () => {
   });
 
   it("returns an expected missing-deck state instead of throwing into a route boundary", async () => {
-    useDeckDetails("deleted-deck");
-    harness.effect?.();
-    await vi.waitFor(() =>
-      expect(harness.state).toMatchObject({ loading: false, data: { deck: null }, error: null })
-    );
-    expect(() => useDeckDetails("deleted-deck")).not.toThrow();
+    const hook = renderDetails("deleted-deck");
+    await waitFor(() => expect(hook.result.current.loading).toBe(false));
+    expect(hook.result.current).toMatchObject({ deck: null, cards: [] });
     expect(harness.progress).not.toHaveBeenCalled();
+    expect(harness.boundaryError).toBeNull();
   });
 
-  it("pauses detail reloads while deletion is running", () => {
-    useDeckDetails("deleting-deck", false);
-    harness.effect?.();
+  it("does not read storage while deletion is running", async () => {
+    renderDetails("deleting-deck", false);
+    await Promise.resolve();
     expect(harness.findDeck).not.toHaveBeenCalled();
     expect(harness.cards).not.toHaveBeenCalled();
   });
 
-  it("still raises genuine storage failures to the boundary", async () => {
+  it("raises genuine storage failures to the route boundary", async () => {
     harness.findDeck.mockRejectedValue(new Error("database unavailable"));
-    useDeckDetails("deck");
-    harness.effect?.();
-    await vi.waitFor(() =>
-      expect(harness.state).toMatchObject({ loading: false, error: { code: "VIEW_LOAD_FAILED" } })
+    renderDetails("deck");
+    await waitFor(() =>
+      expect(harness.boundaryError).toMatchObject({
+        code: "VIEW_LOAD_FAILED",
+        message: "Could not load deck cards",
+      })
     );
-    expect(() => useDeckDetails("deck")).toThrow("Could not load deck cards");
-  });
-
-  it("ignores a pending detail response after the effect is cancelled", async () => {
-    let resolveDeck: ((deck: null) => void) | undefined;
-    harness.findDeck.mockImplementation(
-      () =>
-        new Promise<null>((resolve) => {
-          resolveDeck = resolve;
-        })
-    );
-    useDeckDetails("deleting-deck");
-    const cleanup = harness.effect?.();
-    if (cleanup) {
-      cleanup();
-    }
-    resolveDeck?.(null);
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(harness.state).toBeUndefined();
   });
 });

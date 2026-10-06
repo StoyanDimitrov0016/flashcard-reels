@@ -87,7 +87,9 @@ CI uses `.github/actions/setup-workspace` in every job to install the Node versi
 Tests are organized by execution boundary: `tests/unit` holds pure deterministic logic,
 `tests/integration` exercises real SQLite, filesystem, and application boundaries, and
 `tests/architecture` protects static module and runtime-resource invariants. Native gestures and
-presentation remain in the manual device checklist.
+presentation are covered by Maestro scenarios and the manual device checklist. See
+[Study flow testing](study-testing.md) for the scenario matrix, test boundaries, and query
+lifecycle regressions.
 
 ## Database changes
 

@@ -126,8 +126,8 @@ export async function submitOrder(order: Order) {
 **Incorrect**
 
 ```tsx
-import { sqlOrderRepository } from "../infrastructure/sql-order-repository";
 import { paymentClient } from "../infrastructure/payment-client";
+import { sqlOrderRepository } from "../infrastructure/sql-order-repository";
 
 export function CheckoutScreen() {
   async function submitOrder(order: Order) {
@@ -533,6 +533,10 @@ restore.
 For each new test, ask: "Which plausible bug would make this fail?" If the answer is only a rename
 or an intentional implementation change with no behavior change, revise or omit the test.
 
+Do not test a library's own mechanics, such as TanStack Query's caching, deduplication, or
+cancellation. Test what the app decides: which writes invalidate which reads, which failures reach
+a boundary, and what a screen does after a write.
+
 ## 13. Service composition
 
 **Preference**
@@ -545,3 +549,62 @@ top-level `createAppServices` function assembles these results in dependency ord
 Use named options for factories with several inputs. Avoid mutable registration containers and
 service locators: explicit inputs and return types make the dependency graph easier to inspect.
 Keep startup-only wiring distinct when it has different dependencies from normal runtime wiring.
+
+## 14. Data access with TanStack Query
+
+**Preference**
+
+Read and write app data through TanStack Query, also for local SQLite services in the mobile app.
+
+- Declare reads in a feature's `presentation/queries` folder as `queryOptions` factories and writes
+  in `presentation/mutations` as `mutationOptions` factories. A factory takes `services` first and
+  every other input after; every input except `services` belongs in the key.
+- Build keys from `queryScopes`. After a write, call `invalidateChangedData` once with all of the
+  write's changes, from the mutation's `onSuccess` through the callback context's `client`.
+- Map load failures to view errors inside the query function. Queries throw to the route boundary
+  by default; a query whose failure the screen shows in place sets `throwOnError: false` and
+  `meta.errorReport`. Mutations report through `meta.errorReport`.
+- Hooks stay thin: a `useQuery` call with defaults, or the `useMutation` result itself.
+- Put screen-only effects, such as navigation, haptics, and toasts, in `mutate`'s callbacks; they
+  do not run after the screen unmounts. When two calls in one tick must not both run, check
+  `queryClient.isMutating(options)` rather than `isPending`.
+
+`@tanstack/eslint-plugin-query` enforces the key and option rules in both apps.
+
+**Correct**
+
+```ts
+export const lessonQueries = {
+  detail: (services: LessonsCapability, lessonId: LessonId | null) =>
+    queryOptions({
+      queryKey: [...queryScopes.lessons, "detail", lessonId],
+      queryFn: lessonId === null ? skipToken : () => services.lessonService.findById(lessonId),
+    }),
+};
+
+export const deckMutations = {
+  remove: (services: Pick<DecksCapability, "deckService">) =>
+    mutationOptions({
+      mutationKey: ["decks", "remove"],
+      mutationFn: (deckId: DeckId) => services.deckService.remove(deckId),
+      onSuccess: (_result, _deckId, _onMutateResult, { client }) => {
+        void invalidateChangedData(client, ["deck-content", "learning-progress"]);
+      },
+      meta: { errorReport: "Deck delete failure" },
+    }),
+};
+```
+
+**Incorrect**
+
+```ts
+// Hand-written loading state, cancellation, and revision counters duplicate the library.
+const [lesson, setLesson] = useState<Lesson | null>(null);
+useEffect(() => {
+  let active = true;
+  void lessonService.findById(lessonId).then((found) => active && setLesson(found));
+  return () => {
+    active = false;
+  };
+}, [lessonId, contentRevision]);
+```

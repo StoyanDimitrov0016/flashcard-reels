@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
+import type { ReactNode } from "react";
+
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("react-native", async () => {
@@ -43,10 +44,9 @@ describe("AppResetAction recovery capability", () => {
   it("invokes the injected request after confirmation", () => {
     const requestAppDataReset = vi.fn();
     render(
-      createElement(AppRecoveryProvider, {
-        capability: { requestAppDataReset },
-        children: createElement(AppResetAction),
-      })
+      <AppRecoveryProvider capability={{ requestAppDataReset }}>
+        <AppResetAction />
+      </AppRecoveryProvider>
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
@@ -59,10 +59,9 @@ describe("AppResetAction recovery capability", () => {
   it("keeps the action after scheduling and reminds how to finish the reset", () => {
     const requestAppDataReset = vi.fn();
     render(
-      createElement(AppRecoveryProvider, {
-        capability: { requestAppDataReset },
-        children: createElement(AppResetAction),
-      })
+      <AppRecoveryProvider capability={{ requestAppDataReset }}>
+        <AppResetAction />
+      </AppRecoveryProvider>
     );
     fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));
     fireEvent.click(screen.getByRole("button", { name: "Reset app data" }));
@@ -80,10 +79,9 @@ describe("AppResetAction recovery capability", () => {
       throw new Error("reset unavailable");
     });
     render(
-      createElement(AppRecoveryProvider, {
-        capability: { requestAppDataReset },
-        children: createElement(AppResetAction),
-      })
+      <AppRecoveryProvider capability={{ requestAppDataReset }}>
+        <AppResetAction />
+      </AppRecoveryProvider>
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Reset all app data" }));

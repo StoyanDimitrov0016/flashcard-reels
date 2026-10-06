@@ -149,3 +149,11 @@ export async function seedDeck(
     }))
   );
 }
+
+/** The flashcard reads a feed query uses, over the scenario database. */
+export function createFlashcardService(database: NodeSqliteDatabase): FlashcardServiceImpl {
+  return new FlashcardServiceImpl(
+    new SQLiteFlashcardRepository(database.drizzle),
+    new SQLiteFlashcardAvailabilityQuery(database.drizzle)
+  );
+}

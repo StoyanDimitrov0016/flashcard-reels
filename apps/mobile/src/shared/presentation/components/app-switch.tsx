@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, StyleSheet } from "react-native";
+import { useEffect } from "react";
+import { Animated, Easing, Pressable, StyleSheet, useAnimatedValue } from "react-native";
 
 import { useAppTheme } from "@/shared/presentation/theme";
 
@@ -20,7 +20,7 @@ type AppSwitchProps = Readonly<{
  */
 export function AppSwitch({ accessibilityLabel, onValueChange, value }: AppSwitchProps) {
   const { colors } = useAppTheme();
-  const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const progress = useAnimatedValue(value ? 1 : 0);
 
   useEffect(
     function slideThumb() {

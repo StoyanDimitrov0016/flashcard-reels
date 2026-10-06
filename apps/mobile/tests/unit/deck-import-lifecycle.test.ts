@@ -18,12 +18,18 @@ vi.mock("@/features/decks/presentation/dependencies/use-decks", () => ({
     deckPackagePicker: { pick: services.pick },
   }),
 }));
-vi.mock("@/features/decks/presentation/context/deck-content-context", () => ({
-  useInvalidateDeckContent: () => services.invalidate,
+vi.mock("@/shared/presentation/query/query-scopes", () => ({
+  invalidateChangedData: services.invalidate,
 }));
 vi.mock("@/shared/errors/report-error", () => ({ reportError: services.report }));
 
 import { useImportDeckPackage } from "@/features/decks/presentation/controllers/use-import-deck-package";
+
+import { createQueryWrapper } from "../support/query-client";
+
+function renderImport() {
+  return renderHook(useImportDeckPackage, { wrapper: createQueryWrapper() });
+}
 
 const downloadedFile = { uri: "file:///cache/deck.fcrdeck" };
 const installedDeck = { deckId: "deck", status: "installed", revision: 1 };
@@ -48,7 +54,7 @@ describe("deck import lifetime", () => {
   });
 
   it("installs a download, refreshes deck content, and removes the temporary file", async () => {
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     let imported;
     await act(async () => {
       imported = await hook.result.current.importFromUrl("https://example.com/deck");
@@ -67,12 +73,13 @@ describe("deck import lifetime", () => {
   it("treats cancellation as a normal result and cleans a late download", async () => {
     const download = deferred<typeof downloadedFile>();
     services.download.mockReturnValue(download.promise);
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
     act(() => {
       pending = hook.result.current.importFromUrl("https://example.com/deck");
-      hook.result.current.cancelDownload();
     });
+    await waitFor(() => expect(services.download).toHaveBeenCalledOnce());
+    act(() => hook.result.current.cancelDownload());
     await act(async () => {
       download.resolve(downloadedFile);
       expect(await pending).toBeNull();
@@ -87,7 +94,7 @@ describe("deck import lifetime", () => {
   it("prevents a second import while the first is pending", async () => {
     const download = deferred<typeof downloadedFile>();
     services.download.mockReturnValue(download.promise);
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     let first!: ReturnType<typeof hook.result.current.importFromUrl>;
     act(() => {
       first = hook.result.current.importFromUrl("https://example.com/deck");
@@ -109,7 +116,7 @@ describe("deck import lifetime", () => {
           signal.addEventListener("abort", () => reject(new Error("aborted")));
         })
     );
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
     act(() => {
       pending = hook.result.current.importFromUrl("https://example.com/deck");
@@ -122,20 +129,20 @@ describe("deck import lifetime", () => {
 
   it("shows failed-import feedback until the learner clears it", async () => {
     services.download.mockRejectedValue(new Error("offline"));
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     await act(async () => {
       await hook.result.current.importFromUrl("https://example.com/deck");
     });
     expect(hook.result.current.error).toMatchObject({ code: "DECK_OPERATION_FAILED" });
 
     act(() => hook.result.current.clearImportError());
-    expect(hook.result.current.error).toBeNull();
+    await waitFor(() => expect(hook.result.current.error).toBeNull());
   });
 
   it("does not cancel installation after the download has completed", async () => {
     const installation = deferred<typeof installedDeck>();
     services.install.mockReturnValue(installation.promise);
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     let pending!: ReturnType<typeof hook.result.current.importFromUrl>;
     act(() => {
       pending = hook.result.current.importFromUrl("https://example.com/deck");
@@ -152,7 +159,7 @@ describe("deck import lifetime", () => {
   it("ignores a file-picker result delivered after the screen unmounts", async () => {
     const picker = deferred<{ uri: string }>();
     services.pick.mockReturnValue(picker.promise);
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     const pending = hook.result.current.importFromDevice();
     hook.unmount();
     picker.resolve({ uri: "file:///documents/deck.fcrdeck" });
@@ -164,7 +171,7 @@ describe("deck import lifetime", () => {
   it("finishes an in-flight installation after unmount without publishing stale success", async () => {
     const installation = deferred<typeof installedDeck>();
     services.install.mockReturnValue(installation.promise);
-    const hook = renderHook(useImportDeckPackage);
+    const hook = renderImport();
     const pending = hook.result.current.importFromUrl("https://example.com/deck");
     await waitFor(() => expect(services.install).toHaveBeenCalledOnce());
     hook.unmount();

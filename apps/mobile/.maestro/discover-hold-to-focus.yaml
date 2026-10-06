@@ -1,0 +1,26 @@
+appId: com.flashcardreels.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Flashcard question: .*"
+- runFlow: subflows/next-reel.yaml
+- copyTextFrom: "Flashcard question: .*"
+- evalScript: ${output.question = maestro.copiedText.replace(/[.*+?^$(){}|[\]\\]/g, '\\$&')}
+# Holding a Discover card must enter Focus at that same question.
+- longPressOn: "Flashcard question: .*"
+- assertVisible: ${output.question}
+- doubleTapOn: "Flashcard question: .*"
+- tapOn: "Recall rating: Good"
+- tapOn: Read connected lesson
+- tapOn: Close lesson
+- assertVisible: "Flashcard answer: .*"
+- assertVisible:
+    text: "Recall rating: Good"
+    selected: true
+# Study selects Discover; its current card must be independent of the Focus lifecycle.
+- tapOn: Decks tab
+- tapOn: Study tab
+- assertVisible: ${output.question}
+- stopApp
+- launchApp
+- assertVisible: ${output.question}

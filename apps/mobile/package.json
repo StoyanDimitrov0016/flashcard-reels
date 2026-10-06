@@ -39,6 +39,7 @@
     "@flashcard-reels/deck-contract": "*",
     "@flashcard-reels/design-tokens": "*",
     "@shopify/flash-list": "2.0.2",
+    "@tanstack/react-query": "^5.104.1",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.27",
     "expo-asset": "~57.0.19",

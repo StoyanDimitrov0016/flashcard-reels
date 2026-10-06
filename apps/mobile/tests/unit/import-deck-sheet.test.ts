@@ -36,19 +36,18 @@ vi.mock("react", async () => ({
 vi.mock("react-native", async () => {
   const { createElement: element } = await import("react");
   const component = ({ children }: { children?: ReactNode }) => element("div", null, children);
+  class AnimatedValue {
+    interpolate() {
+      return 0;
+    }
+  }
   return {
     Text: component,
     View: component,
     Pressable: component,
     ActivityIndicator: component,
-    Animated: {
-      View: component,
-      Value: class {
-        interpolate() {
-          return 0;
-        }
-      },
-    },
+    Animated: { View: component, Value: AnimatedValue },
+    useAnimatedValue: () => new AnimatedValue(),
     Easing: { inOut: vi.fn(), cubic: vi.fn() },
     StyleSheet: { create: (styles: unknown) => styles },
     Linking: { openSettings: vi.fn() },

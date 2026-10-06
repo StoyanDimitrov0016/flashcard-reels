@@ -90,16 +90,19 @@ describe("built-in demo package", () => {
     await Promise.all(
       parsed.deck.cards.map(async (card) => {
         const installedCard = await flashcards.findById(card.id);
-        expect(installedCard?.lessonSectionId).toBe(card.lessonSectionId ?? null);
-        if (installedCard?.lessonId && installedCard.lessonSectionId) {
-          const lesson = await lessons.findById(installedCard.lessonId);
-          if (!lesson) {
-            throw new Error("Referenced demo lesson was not installed");
-          }
-          expect(lesson.sections.map((section) => section.id)).toContain(
-            installedCard.lessonSectionId
-          );
-        }
+        expect(installedCard?.lessonSectionId).toBe(card.lessonSectionId);
+      })
+    );
+    const linkedCards = parsed.deck.cards.flatMap((card) =>
+      card.lessonId && card.lessonSectionId
+        ? [{ lessonId: card.lessonId, sectionId: card.lessonSectionId }]
+        : []
+    );
+    expect(linkedCards.length).toBeGreaterThan(0);
+    await Promise.all(
+      linkedCards.map(async ({ lessonId, sectionId }) => {
+        const lesson = await lessons.findById(lessonId);
+        expect(lesson?.sections.map((section) => section.id)).toContain(sectionId);
       })
     );
 

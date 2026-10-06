@@ -81,11 +81,13 @@ describe("SQLite study sessions", () => {
       expect(await graph.recurrences.listBySessionId(session.id)).toEqual([]);
       await graph.study.commitAttempt(attemptId);
       const scheduled = await graph.recurrences.listBySessionId(session.id);
-      expect(scheduled).toHaveLength(rating === "again" || rating === "hard" ? 1 : 0);
-      if (scheduled[0]) {
-        expect(scheduled[0].targetReelPosition).toBe(rating === "again" ? 6 : 12);
-        expect(scheduled[0].targetReelPosition).toBeGreaterThan(session.furthestReelPosition);
-      }
+      const expectedTargets = { again: [6], hard: [12], good: [], easy: [] }[rating];
+      expect(scheduled.map((recurrence) => recurrence.targetReelPosition)).toEqual(expectedTargets);
+      expect(
+        scheduled.every(
+          (recurrence) => recurrence.targetReelPosition > session.furthestReelPosition
+        )
+      ).toBe(true);
       await graph.study.commitAttempt(attemptId);
       expect(await graph.recurrences.listBySessionId(session.id)).toEqual(scheduled);
     }

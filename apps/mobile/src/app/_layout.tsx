@@ -10,9 +10,6 @@ import * as SystemUI from "expo-system-ui";
 import { useCallback, useEffect, useState } from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
-import { DeckContentProvider } from "@/features/decks/presentation/context/deck-content-context";
-import { DeckThemeSelectionProvider } from "@/features/decks/presentation/context/deck-theme-selection-context";
-import { LearningProgressRevisionProvider } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import {
   PreferencesProvider,
   usePreferencesContext,
@@ -34,6 +31,8 @@ import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 // Must run before the first render, so it is imported for its side effect here.
 import { revealApp } from "@/shared/presentation/native-splash";
+import { AppQueryProvider } from "@/shared/presentation/query/app-query-provider";
+import { useQueryAwareRetry } from "@/shared/presentation/query/use-query-aware-retry";
 import { AppThemeProvider, getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 
 import "../../global.css";
@@ -44,6 +43,7 @@ type ErrorBoundaryProps = Readonly<ExpoErrorBoundaryProps>;
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const resolvedScheme = useColorScheme() === "dark" ? "dark" : "light";
+  const retryApp = useQueryAwareRetry(retry);
   useEffect(function revealErrorState() {
     revealApp();
   }, []);
@@ -51,7 +51,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <AppRecoveryProvider capability={appRecoveryCapability}>
       <AppThemeProvider resolvedScheme={resolvedScheme}>
-        <GlobalErrorState error={error} retry={retry} />
+        <GlobalErrorState error={error} retry={retryApp} />
       </AppThemeProvider>
     </AppRecoveryProvider>
   );
@@ -144,33 +144,26 @@ function AppPreferences() {
   );
 }
 
+/** Synchronous and idempotent, so it runs once while the root first renders. */
+function prepareLocalStorage(): Error | null {
+  try {
+    prepareAppStorage();
+    return null;
+  } catch (error) {
+    return toError(error, "Could not prepare app storage");
+  }
+}
+
 function RootLayoutContent() {
-  const [prepared, setPrepared] = useState(false);
+  const [preparationError] = useState(prepareLocalStorage);
   const [databaseReady, setDatabaseReady] = useState(false);
-  const [preparationError, setPreparationError] = useState<Error | null>(null);
   const initializeAppDatabase = useCallback(async (database: SQLiteDatabase) => {
     await initializeDatabase(database);
     setDatabaseReady(true);
   }, []);
 
-  useEffect(function prepareLocalStorage() {
-    try {
-      prepareAppStorage();
-      setPrepared(true);
-    } catch (error) {
-      setPreparationError(toError(error, "Could not prepare app storage"));
-    }
-  }, []);
-
   if (preparationError) {
     throw preparationError;
-  }
-  if (!prepared) {
-    return (
-      <AppRecoveryProvider capability={appRecoveryCapability}>
-        <StartupLoadingState />
-      </AppRecoveryProvider>
-    );
   }
 
   return (
@@ -182,15 +175,11 @@ function RootLayoutContent() {
           onError={handleSQLiteProviderError}
           onInit={initializeAppDatabase}
         >
-          <DeckContentProvider>
-            <DeckThemeSelectionProvider>
-              <LearningProgressRevisionProvider>
-                <AppServicesProvider>
-                  <AppPreferences />
-                </AppServicesProvider>
-              </LearningProgressRevisionProvider>
-            </DeckThemeSelectionProvider>
-          </DeckContentProvider>
+          <AppQueryProvider>
+            <AppServicesProvider>
+              <AppPreferences />
+            </AppServicesProvider>
+          </AppQueryProvider>
         </SQLiteProvider>
       </View>
     </AppRecoveryProvider>

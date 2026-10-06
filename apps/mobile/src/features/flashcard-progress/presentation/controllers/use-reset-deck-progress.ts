@@ -1,19 +1,8 @@
-import { useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 
-import type { DeckId } from "@/features/decks/domain/deck.model";
-
-import { useLearningProgressRevision } from "@/features/flashcard-progress/presentation/context/learning-progress-revision-context";
 import { useFlashcardProgress } from "@/features/flashcard-progress/presentation/dependencies/use-flashcard-progress";
+import { learningProgressMutations } from "@/features/flashcard-progress/presentation/mutations/learning-progress-mutations";
 
-export function useResetDeckProgress(): (deckId: DeckId) => Promise<void> {
-  const { flashcardProgressService } = useFlashcardProgress();
-  const { invalidateLearningProgress } = useLearningProgressRevision();
-
-  return useCallback(
-    async (deckId: DeckId) => {
-      await flashcardProgressService.resetDeckProgress(deckId);
-      invalidateLearningProgress();
-    },
-    [invalidateLearningProgress, flashcardProgressService]
-  );
+export function useResetDeckProgress() {
+  return useMutation(learningProgressMutations.resetDeck(useFlashcardProgress()));
 }

@@ -1,11 +1,10 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import type { DeckId } from "@/features/decks/domain/deck.model";
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
-import type { PreparedReelFeed } from "@/features/study/domain/study-feed";
 
 import { useFlashcards } from "@/features/flashcards/presentation/controllers/use-flashcards";
 import { EmptyFocusedFeed } from "@/features/reels/presentation/components/empty-focused-feed";
@@ -45,18 +44,11 @@ function ReadyFocusedFeedContent({
   const [entryTransition] = useState(() => transition);
   const [replacesSession] = useState(() => replaceSession);
   const consumed = useRef(false);
-  const { shareFocusStart } = useFeedScope();
-  const shareStart = useCallback(
-    (prepare: () => Promise<PreparedReelFeed>) => shareFocusStart(expectedRevision, prepare),
-    [expectedRevision, shareFocusStart]
-  );
   const preparedFeed = usePreparedReelFeed({
-    cards,
     scope: "focus",
     deckId,
-    replaceExistingSession: replacesSession,
     anchorFlashcardId: entryTransition?.anchorFlashcardId ?? null,
-    shareRequest: replacesSession ? shareStart : undefined,
+    focusStartRevision: replacesSession ? expectedRevision : null,
   });
 
   useEffect(

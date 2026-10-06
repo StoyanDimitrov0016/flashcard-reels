@@ -81,9 +81,11 @@ function controls(
   ratingEnabled: boolean,
   selectedRating: "hard" | null = null
 ) {
-  return createElement(StudyControlLayoutProvider, {
-    children: createElement(RecallControls, { onSelect, ratingEnabled, selectedRating }),
-  });
+  return createElement(
+    StudyControlLayoutProvider,
+    null,
+    createElement(RecallControls, { onSelect, ratingEnabled, selectedRating })
+  );
 }
 
 describe.each(["left", "bottom", "right"] as const)("recall controls at %s", (position) => {
