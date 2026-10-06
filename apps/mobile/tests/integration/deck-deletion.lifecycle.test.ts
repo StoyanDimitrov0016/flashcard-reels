@@ -1,6 +1,7 @@
-import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 /** @vitest-environment jsdom */
-import { Component, createElement, useEffect, type ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { Component, createElement, useEffect, useState, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const harness = vi.hoisted(() => ({
@@ -38,6 +39,7 @@ import {
   useFeedScope,
 } from "@/features/reels/presentation/context/feed-scope-context";
 import { usePreparedReelFeed } from "@/features/reels/presentation/controllers/use-prepared-reel-feed";
+import { createQueryClient } from "@/shared/presentation/query-client";
 
 import { deferred } from "../support/deferred";
 import { NodeSqliteDatabase } from "../support/node-sqlite-database";
@@ -102,20 +104,25 @@ function MixedScreenProbe() {
   return createElement(MixedFeedProbe, { cards });
 }
 function Providers({ children }: Readonly<{ children: ReactNode }>) {
+  const [queryClient] = useState(createQueryClient);
   return createElement(
     Boundary,
     null,
     createElement(
-      DeckContentProvider,
-      null,
+      QueryClientProvider,
+      { client: queryClient },
       createElement(
-        LearningProgressRevisionProvider,
+        DeckContentProvider,
         null,
         createElement(
-          FeedScopeProvider,
+          LearningProgressRevisionProvider,
           null,
-          children,
-          harness.mixed && createElement(MixedScreenProbe)
+          createElement(
+            FeedScopeProvider,
+            null,
+            children,
+            harness.mixed && createElement(MixedScreenProbe)
+          )
         )
       )
     )

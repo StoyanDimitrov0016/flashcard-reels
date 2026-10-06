@@ -33,11 +33,13 @@ vi.mock(
 import { useDeckCatalog } from "@/features/decks/presentation/controllers/use-deck-catalog";
 import { useFlashcardProgressList } from "@/features/flashcard-progress/presentation/controllers/use-flashcard-progress-list";
 
+import { createQueryWrapper } from "../support/query-client";
+
 it.each([
   ["useDeckCatalog", useDeckCatalog],
   ["useFlashcardProgressList", useFlashcardProgressList],
 ] as const)("%s keeps one refresh identity across renders", (_name, useHook) => {
-  const mounted = renderHook(() => useHook());
+  const mounted = renderHook(() => useHook(), { wrapper: createQueryWrapper() });
   const first = mounted.result.current.refresh;
 
   mounted.rerender();

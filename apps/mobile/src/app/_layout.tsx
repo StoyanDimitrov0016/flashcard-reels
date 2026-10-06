@@ -1,3 +1,4 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import { NavigationBar } from "expo-navigation-bar";
 import {
   Stack,
@@ -34,6 +35,7 @@ import { AppRecoveryProvider } from "@/shared/presentation/context/app-recovery-
 import { FlashcardToastHost } from "@/shared/presentation/flashcard-toast";
 // Must run before the first render, so it is imported for its side effect here.
 import { revealApp } from "@/shared/presentation/native-splash";
+import { createQueryClient } from "@/shared/presentation/query-client";
 import { AppThemeProvider, getRouterTheme, useAppTheme } from "@/shared/presentation/theme";
 
 import "../../global.css";
@@ -156,6 +158,7 @@ function prepareLocalStorage(): Error | null {
 
 function RootLayoutContent() {
   const [preparationError] = useState(prepareLocalStorage);
+  const [queryClient] = useState(createQueryClient);
   const [databaseReady, setDatabaseReady] = useState(false);
   const initializeAppDatabase = useCallback(async (database: SQLiteDatabase) => {
     await initializeDatabase(database);
@@ -175,15 +178,17 @@ function RootLayoutContent() {
           onError={handleSQLiteProviderError}
           onInit={initializeAppDatabase}
         >
-          <DeckContentProvider>
-            <DeckThemeSelectionProvider>
-              <LearningProgressRevisionProvider>
-                <AppServicesProvider>
-                  <AppPreferences />
-                </AppServicesProvider>
-              </LearningProgressRevisionProvider>
-            </DeckThemeSelectionProvider>
-          </DeckContentProvider>
+          <QueryClientProvider client={queryClient}>
+            <DeckContentProvider>
+              <DeckThemeSelectionProvider>
+                <LearningProgressRevisionProvider>
+                  <AppServicesProvider>
+                    <AppPreferences />
+                  </AppServicesProvider>
+                </LearningProgressRevisionProvider>
+              </DeckThemeSelectionProvider>
+            </DeckContentProvider>
+          </QueryClientProvider>
         </SQLiteProvider>
       </View>
     </AppRecoveryProvider>
