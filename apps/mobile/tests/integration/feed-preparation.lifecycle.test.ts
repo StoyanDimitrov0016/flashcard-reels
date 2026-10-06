@@ -44,6 +44,9 @@ function Providers({ children }: ProvidersProps) {
     createElement(LearningProgressRevisionProvider, null, children)
   );
 }
+function StrictProviders({ children }: ProvidersProps) {
+  return createElement(StrictMode, null, createElement(Providers, null, children));
+}
 
 let database: NodeSqliteDatabase;
 beforeEach(() => {
@@ -141,9 +144,6 @@ it("opens a replacing Focus session only once during StrictMode replay", async (
   const graph = createScenarioGraph(database, new TestClock(), new SequenceIdGenerator());
   harness.services = { studyService: graph.runtime };
   const open = vi.spyOn(graph.runtime, "openFeed");
-  function StrictProviders({ children }: ProvidersProps) {
-    return createElement(StrictMode, null, createElement(Providers, null, children));
-  }
   const mounted = renderHook(
     () =>
       usePreparedReelFeed({

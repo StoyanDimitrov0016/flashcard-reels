@@ -126,8 +126,8 @@ export async function submitOrder(order: Order) {
 **Incorrect**
 
 ```tsx
-import { sqlOrderRepository } from "../infrastructure/sql-order-repository";
 import { paymentClient } from "../infrastructure/payment-client";
+import { sqlOrderRepository } from "../infrastructure/sql-order-repository";
 
 export function CheckoutScreen() {
   async function submitOrder(order: Order) {

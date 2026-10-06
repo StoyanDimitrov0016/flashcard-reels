@@ -24,8 +24,6 @@ export function DeckActions({ className, deck }: DeckActionsProps) {
         className="flex-1"
         variant="outline"
         nativeButton={false}
-        // Base UI renders the Button children inside this anchor.
-        // oxlint-disable-next-line jsx-a11y/anchor-has-content
         render={<a download href={`/decks/${deck.id}/download`} />}
       >
         <Download />
