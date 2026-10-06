@@ -1,5 +1,6 @@
-import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
-import { useCallback, useEffect, useRef } from "react";
+import type { ListRenderItem } from "@shopify/flash-list";
+
+import { useCallback, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Flashcard } from "@/features/flashcards/domain/flashcard.model";
@@ -8,6 +9,7 @@ import type { PreparedReelFeed, PreparedReelOccurrence } from "@/features/study/
 
 import { useDeckMetadata } from "@/features/decks/presentation/controllers/use-deck-metadata";
 import { ReelCard } from "@/features/reels/presentation/components/reel-card";
+import { ReelPager } from "@/features/reels/presentation/components/reel-pager";
 import { useReelController } from "@/features/reels/presentation/controllers/use-reel-controller";
 import { useReelFeed } from "@/features/reels/presentation/hooks/use-reel-feed";
 import { useReelViewport } from "@/features/reels/presentation/hooks/use-reel-viewport";
@@ -44,7 +46,6 @@ export function ReelFeed({
   const { feed, cardState, activate, rate, toggle, extend, retryExtension, feedback } = controller;
   const { fatal: fatalError, extension: extensionError, refresh: refreshError } = feedback;
   const { handleLayout, viewport } = useReelViewport();
-  const feedListReference = useRef<FlashListRef<PreparedReelOccurrence>>(null);
   const { height, width } = viewport;
   const {
     activeIndex,
@@ -126,7 +127,6 @@ export function ReelFeed({
   const handleEndReached = useCallback(() => {
     void extend().catch(() => undefined);
   }, [extend]);
-  const keyExtractor = useCallback((occurrence: PreparedReelOccurrence) => occurrence.key, []);
   if (fatalError) {
     throw fatalError;
   }
@@ -145,21 +145,16 @@ export function ReelFeed({
       )}
       {!metadataReady && <LoadingState accessibilityLabel="Preparing cards" />}
       {metadataReady && height > 0 && width > 0 && (
-        <FlashList
-          data={feed.occurrences}
-          decelerationRate="fast"
+        <ReelPager
+          occurrences={feed.occurrences}
+          height={height}
+          width={width}
           extraData={extraData}
-          initialScrollIndex={feed.occurrences.length > 0 ? activeIndex : undefined}
+          initialIndex={activeIndex}
           key={`reel-feed-${height}-${width}`}
-          keyExtractor={keyExtractor}
-          maintainVisibleContentPosition={{ disabled: false }}
           onEndReached={handleEndReached}
-          onEndReachedThreshold={1}
           onMomentumScrollEnd={handleFeedMomentumScrollEnd}
-          pagingEnabled
-          ref={feedListReference}
           renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
