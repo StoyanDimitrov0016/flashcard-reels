@@ -18,7 +18,7 @@ if (-not (Test-Path -LiteralPath $adbPath)) {
   throw "adb was not found at '$adbPath'."
 }
 if (-not (Get-Command maestro -ErrorAction SilentlyContinue)) {
-  throw "Maestro CLI is not installed or is not on PATH. See docs/development.md."
+  throw "Maestro CLI is not installed or is not on PATH. See docs/guides/testing.md."
 }
 
 & (Join-Path $PSScriptRoot "android-machine.ps1") -Action Ready

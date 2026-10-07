@@ -2,7 +2,7 @@
 
 This package owns schema 4 manifests, paths, lesson validation, reproducible archives, and
 content comparison. Import only from `@flashcard-reels/deck-contract`; submodules are private.
-See [the package format](../../docs/deck-packages.md).
+See [the package format](../../docs/guides/decks.md).
 
 ## Public types
 

@@ -56,4 +56,4 @@ For local development without R2, set `LOCAL_DECKS_DIR` to a folder of
 Run `npm test -w @flashcard-reels/web` from the repository root to exercise the
 deck library, authentication, transfer-token, origin-validation, and server-only
 boundary tests. For the complete user workflow and Vercel setup, see
-[../../docs/web-portal.md](../../docs/web-portal.md).
+[../../docs/guides/web-portal.md](../../docs/guides/web-portal.md).

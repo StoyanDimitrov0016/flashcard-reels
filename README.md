@@ -24,7 +24,7 @@ The Vercel site is currently for internal use and requires the shared team passw
 
 ## Run locally
 
-You need Node.js 24, npm 11+, and the Expo Go app or a supported simulator.
+You need Node.js 24, npm 12, and the Expo Go app or a supported simulator.
 
 ```bash
 npm install
@@ -39,12 +39,13 @@ To run the Vercel portal locally, configure its server-only environment variable
 npm run dev:web
 ```
 
-See [Web portal](docs/web-portal.md) for deployment, authentication, R2, and phone-transfer details.
+See the [web portal guide](docs/guides/web-portal.md) for deployment, authentication, R2, and
+phone-transfer details.
 
 For focused work, change to the relevant workspace and use its local scripts, such
 as `npm run check`, `npm test`, or `npm run doctor`. Root scripts are reserved
 for repository-wide orchestration and validation. See the
-[monorepo guide](docs/monorepo.md) for command and configuration ownership.
+[development guide](docs/guides/development.md).
 
 ## Test
 
@@ -55,12 +56,12 @@ manual device checklist.
 
 ## Documentation
 
-- [Product guide](docs/product-guide.md)
-- [Web portal](docs/web-portal.md)
-- [Architecture](docs/architecture.md)
-- [Deck package format](docs/deck-packages.md)
-- [Development guide](docs/development.md)
-- [Audio generation](docs/audio-generation.md)
-- [Android manual testing](docs/manual-device-testing.md)
+Start at [docs/README.md](docs/README.md). The most-used pages:
+
+- [Product](docs/product.md), [principles](docs/principles.md), and
+  [architecture](docs/architecture.md)
+- [Specs dashboard](docs/specs/README.md): what is being built and what is waiting
+- [Development](docs/guides/development.md), [decks](docs/guides/decks.md), and
+  [testing](docs/guides/testing.md) guides
 
 Built with Expo, React Native, TypeScript, SQLite, Drizzle ORM, Next.js, Tailwind CSS, and Cloudflare R2.
