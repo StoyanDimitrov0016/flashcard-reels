@@ -20,6 +20,9 @@ export function getProgressBackupErrorFeedback(error: unknown, action: BackupAct
         return getErrorFeedback(error).message;
       case "PROGRESS_BACKUP_RESTORE_FAILED":
         return getErrorFeedback(error).message;
+      default:
+        // Other app errors get the action's generic message below.
+        break;
     }
   }
 

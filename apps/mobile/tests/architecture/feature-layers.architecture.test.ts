@@ -1,14 +1,15 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import ts from "typescript";
+import { parseSync, Visitor } from "oxc-parser";
+import { ResolverFactory } from "oxc-resolver";
 import { describe, expect, it } from "vitest";
 
 const sourceRoot = path.join(process.cwd(), "src");
-const config = ts.readConfigFile(path.join(process.cwd(), "tsconfig.json"), (file) =>
-  ts.sys.readFile(file)
-);
-const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd());
-const resolutionCache = ts.createModuleResolutionCache(process.cwd(), (file) => file, options);
+const resolver = new ResolverFactory({
+  tsconfig: { configFile: path.join(process.cwd(), "tsconfig.json") },
+  extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+  conditionNames: ["react-native", "import", "require", "default"],
+});
 const CoreLayerPattern = /\/(domain|application)\//;
 const AdapterLayerPattern = /\/(infrastructure|internal|presentation)\//;
 const NativeDependencyPattern =
@@ -29,44 +30,31 @@ function relative(file: string): string {
 }
 
 function imports(file: string): string[] {
-  const source = ts.createSourceFile(
-    file,
-    readFileSync(file, "utf8"),
-    ts.ScriptTarget.Latest,
-    true
-  );
+  const { program } = parseSync(file, readFileSync(file, "utf8"));
   const result: string[] = [];
-  function visit(node: ts.Node): void {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      result.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isImportTypeNode(node) &&
-      ts.isLiteralTypeNode(node.argument) &&
-      ts.isStringLiteral(node.argument.literal)
-    ) {
-      result.push(node.argument.literal.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === "require")) &&
-      node.arguments[0] &&
-      ts.isStringLiteral(node.arguments[0])
-    ) {
-      result.push(node.arguments[0].text);
+  function addLiteral(node: { type: string; value?: unknown } | null | undefined): void {
+    if (node?.type === "Literal" && typeof node.value === "string") {
+      result.push(node.value);
     }
-    ts.forEachChild(node, visit);
   }
-  visit(source);
+  new Visitor({
+    ImportDeclaration: (node) => addLiteral(node.source),
+    ExportAllDeclaration: (node) => addLiteral(node.source),
+    ExportNamedDeclaration: (node) => addLiteral(node.source),
+    ImportExpression: (node) => addLiteral(node.source),
+    TSImportType: (node) => addLiteral(node.source),
+    CallExpression(node) {
+      if (node.callee.type === "Identifier" && node.callee.name === "require") {
+        const [argument] = node.arguments;
+        addLiteral(argument?.type === "Literal" ? argument : null);
+      }
+    },
+  }).visit(program);
   return result;
 }
 
 function resolveLocal(file: string, specifier: string): string | undefined {
-  const resolved = ts.resolveModuleName(specifier, file, options, ts.sys, resolutionCache)
-    .resolvedModule?.resolvedFileName;
+  const resolved = resolver.resolveFileSync(file, specifier).path;
   if (!resolved) {
     return undefined;
   }

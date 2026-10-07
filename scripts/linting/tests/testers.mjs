@@ -1,27 +1,8 @@
-import tsParser from "@typescript-eslint/parser";
-import { RuleTester } from "eslint";
+import { RuleTester } from "oxlint/plugins-dev";
 
 /**
- * Exercises parser-neutral rules with ESLint's default JavaScript/JSX parser.
- * This keeps accidental dependencies on TypeScript-only AST shapes visible.
- */
-export const javascriptTester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
-});
-
-/**
- * Exercises TypeScript syntax and node shapes with the TypeScript-ESTree parser.
- * Production execution still uses Oxlint's AST visitor implementation.
+ * Runs rules on Oxlint's own parser, the same AST the rules see in production.
  */
 export const typescriptTester = new RuleTester({
-  languageOptions: {
-    ecmaVersion: 2022,
-    sourceType: "module",
-    parser: tsParser,
-    parserOptions: { ecmaFeatures: { jsx: true } },
-  },
+  languageOptions: { parserOptions: { lang: "tsx" } },
 });

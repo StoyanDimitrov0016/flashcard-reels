@@ -29,7 +29,7 @@ function CardFace({ children, footer, hidden, label, position, side }: CardFaceP
         <span className="tracking-wide uppercase">{label}</span>
         <span className="tabular-nums">{position}</span>
       </span>
-      <span className="-mr-3 flex min-h-0 flex-1 flex-col justify-center-safe overflow-y-auto py-6 pr-3 [scrollbar-width:thin]">
+      <span className="-mr-3 flex min-h-0 flex-1 [scrollbar-width:thin] flex-col justify-center-safe overflow-y-auto py-6 pr-3">
         {children}
       </span>
       <span className="flex items-center justify-center gap-1.5 text-xs text-subtle-foreground">

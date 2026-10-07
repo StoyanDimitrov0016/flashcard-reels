@@ -4,7 +4,7 @@ export function audioPath(cardId: string): string {
   return `audio/${cardId}.mp3`;
 }
 export function lessonTextPath(lessonId: string, sectionId: string | null): string {
-  return `lessons/${lessonId}/${sectionId === null ? "intro" : sectionId}.md`;
+  return `lessons/${lessonId}/${sectionId ?? "intro"}.md`;
 }
 
 /** Every intro and section file, so a reader can fetch lesson text without audio. */
