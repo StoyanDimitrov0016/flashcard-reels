@@ -72,9 +72,10 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
           message: "The current study position could not be saved",
         });
       }
-      const consumed = occurrence.recurrenceId
-        ? await recurrences.markConsumed(occurrence.recurrenceId, clock.now())
-        : false;
+      let consumed = false;
+      if (occurrence.recurrenceId) {
+        consumed = await recurrences.markConsumed(occurrence.recurrenceId, clock.now());
+      }
       await materializer.recordVisibleCard(input.sessionId, occurrence.cardId);
       const pending = await attempts.listUncommittedBeforeReelPosition(
         input.sessionId,
@@ -100,16 +101,17 @@ export class StudyServiceImpl implements StudyFeedService, StudySessionSettlemen
       try {
         return { snapshot: await this.extendFeed(input), extensionError: null };
       } catch (error) {
-        return {
-          snapshot: changed.snapshotNeeded ? await this.refreshFeed(input) : null,
-          extensionError: error instanceof Error ? error : new Error(String(error)),
-        };
+        const extensionError = error instanceof Error ? error : new Error(String(error));
+        if (!changed.snapshotNeeded) {
+          return { snapshot: null, extensionError };
+        }
+        return { snapshot: await this.refreshFeed(input), extensionError };
       }
     }
-    return {
-      snapshot: changed.snapshotNeeded ? await this.refreshFeed(input) : null,
-      extensionError: null,
-    };
+    if (!changed.snapshotNeeded) {
+      return { snapshot: null, extensionError: null };
+    }
+    return { snapshot: await this.refreshFeed(input), extensionError: null };
   }
 
   async rateCard(

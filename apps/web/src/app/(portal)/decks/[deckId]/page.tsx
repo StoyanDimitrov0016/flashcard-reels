@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/page-container";
-import { getDeckLibrary } from "@/server/decks";
+import { type DeckSummary, getDeckLibrary } from "@/server/decks";
 
 import { CardBrowser } from "./_components/card-browser";
 import { DeckActions } from "./_components/deck-actions";
@@ -23,29 +23,22 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
   if (!deck) {
     notFound();
   }
-  const showLessons = view === "lessons" && deck.lessons.length > 0;
-
-  const header = <DeckHeader deck={deck} />;
-  const details = (
-    <section aria-label="Deck package" className="flex flex-col gap-3">
-      <DeckActions deck={deck} />
-      <DeckFacts className="text-xs lg:justify-center" deck={deck} />
-    </section>
-  );
-  const sectionNav =
-    deck.lessons.length > 0 ? (
-      <DeckSectionNav active={showLessons ? "lessons" : "cards"} deckId={deck.id} />
-    ) : undefined;
+  const hasLessons = deck.lessons.length > 0;
+  const showLessons = view === "lessons" && hasLessons;
 
   return (
     <PageContainer className="py-4 sm:py-5">
       {showLessons ? (
         <>
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-10">
-            {header}
-            <div className="md:w-80 md:shrink-0">{details}</div>
+            <DeckHeader deck={deck} />
+            <div className="md:w-80 md:shrink-0">
+              <DeckDetails deck={deck} />
+            </div>
           </div>
-          <div className="mt-5">{sectionNav}</div>
+          <div className="mt-5">
+            <DeckSectionNav active="lessons" deckId={deck.id} />
+          </div>
           <div className="mt-6">
             <LessonsView
               deckId={deck.id}
@@ -57,13 +50,24 @@ export default async function DeckPage({ params, searchParams }: DeckPageProps) 
       ) : (
         <CardBrowser
           cards={deck.cards}
-          details={details}
-          header={header}
+          details={<DeckDetails deck={deck} />}
+          header={<DeckHeader deck={deck} />}
           key={deck.id}
-          sectionNav={sectionNav}
+          sectionNav={hasLessons ? <DeckSectionNav active="cards" deckId={deck.id} /> : undefined}
         />
       )}
     </PageContainer>
+  );
+}
+
+type DeckDetailsProps = Readonly<{ deck: DeckSummary }>;
+
+function DeckDetails({ deck }: DeckDetailsProps) {
+  return (
+    <section aria-label="Deck package" className="flex flex-col gap-3">
+      <DeckActions deck={deck} />
+      <DeckFacts className="text-xs lg:justify-center" deck={deck} />
+    </section>
   );
 }
 

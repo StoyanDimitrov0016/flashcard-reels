@@ -46,8 +46,39 @@ export function deriveControlPlacement(
   return side === "primary" ? "above" : "below";
 }
 
-export function isBeforeRatings(placement: StudyControlPlacement): boolean {
+function isBeforeRatings(placement: StudyControlPlacement): boolean {
   return placement === "left" || placement === "above";
+}
+
+export type StudyTool = "audio" | "reading";
+
+type StudyToolPlacements = Readonly<{
+  audio: StudyControlPlacement | null;
+  reading: StudyControlPlacement | null;
+}>;
+
+/**
+ * Splits the shown tools around the ratings. When both share a side, reading sits outside audio,
+ * so audio stays next to the ratings. A null placement hides that tool.
+ */
+export function arrangeStudyTools({
+  audio,
+  reading,
+}: StudyToolPlacements): Readonly<{ before: StudyTool[]; after: StudyTool[] }> {
+  const before: StudyTool[] = [];
+  const after: StudyTool[] = [];
+  if (audio !== null) {
+    (isBeforeRatings(audio) ? before : after).push("audio");
+  }
+  if (reading !== null) {
+    if (isBeforeRatings(reading)) {
+      before.unshift("reading");
+    } else {
+      after.push("reading");
+    }
+  }
+
+  return { before, after };
 }
 
 export function resolveStudyControlLayout(

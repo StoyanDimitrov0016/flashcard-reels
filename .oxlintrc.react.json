@@ -6,14 +6,26 @@
     "react/jsx-boolean-value": "error",
     "react/jsx-curly-brace-presence": "error",
     "react/jsx-no-useless-fragment": "error",
-    "react/no-unstable-nested-components": ["error", { "allowAsProps": true }],
+    "react/no-unstable-nested-components": [
+      "error",
+      {
+        "allowAsProps": true
+      }
+    ],
     "react/rules-of-hooks": "error",
     "react/self-closing-comp": "error",
     "react/exhaustive-effect-dependencies": "off",
     "react/jsx-no-constructed-context-values": "off",
     "react/react-in-jsx-scope": "off",
     "react/style-prop-object": "off",
-    "@tanstack/query/exhaustive-deps": ["error", { "allowlist": { "variables": ["services"] } }],
+    "@tanstack/query/exhaustive-deps": [
+      "error",
+      {
+        "allowlist": {
+          "variables": ["services"]
+        }
+      }
+    ],
     "@tanstack/query/infinite-query-property-order": "error",
     "@tanstack/query/mutation-property-order": "error",
     "@tanstack/query/no-rest-destructuring": "error",
@@ -27,12 +39,16 @@
       "files": ["**/src/**/*.{ts,tsx}"],
       "rules": {
         "flashcards/require-react-component-props-type": "error",
-        "flashcards/require-react-hook-options-type": "error"
+        "flashcards/require-react-hook-options-type": "error",
+        "flashcards/no-jsx-in-variables": "error",
+        "flashcards/require-named-effect-callback": "error"
       }
     },
     {
       "files": ["**/tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
-      "env": { "vitest": true },
+      "env": {
+        "vitest": true
+      },
       "rules": {
         "vitest/require-mock-type-parameters": "off",
         "vitest/require-to-throw-message": "off",

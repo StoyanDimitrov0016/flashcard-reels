@@ -1,5 +1,3 @@
-import type { ReactElement } from "react";
-
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -15,9 +13,10 @@ import {
   deriveControlPlacement,
   getControlSideLabel,
   getRatingDirectionLabel,
-  isBeforeRatings,
+  arrangeStudyTools,
   resolveStudyControlLayout,
   type ResolvedStudyControlLayout,
+  type StudyTool,
 } from "@/features/reels/presentation/study-control-layout";
 import { AppBottomSheet } from "@/shared/presentation/components/app-bottom-sheet";
 import { SheetHeader } from "@/shared/presentation/components/sheet-header";
@@ -51,60 +50,10 @@ function StudyIslandPreview({ layout }: StudyIslandPreviewProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const horizontal = layout.orientation === "horizontal";
-  const before: ReactElement[] = [];
-  const after: ReactElement[] = [];
-  if (layout.audioEnabled) {
-    (isBeforeRatings(layout.audioPosition) ? before : after).push(
-      <PreviewTool
-        key="audio"
-        symbol={{ android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" }}
-      />
-    );
-  }
-  if (layout.readingEnabled) {
-    const reading = (
-      <PreviewTool
-        key="reading"
-        symbol={{ android: "menu_book", ios: "book.fill", web: "menu_book" }}
-      />
-    );
-    if (isBeforeRatings(layout.readingPosition)) {
-      before.unshift(reading);
-    } else {
-      after.push(reading);
-    }
-  }
-  const toolGroup = (tools: ReactElement[]) =>
-    tools.length > 0 && (
-      <View style={[styles.previewTools, horizontal && styles.previewToolsHorizontal]}>
-        {tools}
-      </View>
-    );
-
-  const cluster = (
-    <View style={[styles.previewCluster, horizontal && styles.previewClusterHorizontal]}>
-      {toolGroup(before)}
-      <View style={[styles.previewIsland, horizontal && styles.previewIslandHorizontal]}>
-        {layout.ratingOrder.map((rating) => {
-          const option = recallOptions.find((current) => current.rating === rating);
-          if (!option) {
-            return null;
-          }
-          return (
-            <View key={rating} style={[styles.previewAction, horizontal && styles.flexOne]}>
-              <View style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}>
-                <SymbolView name={option.symbol} size={13} tintColor={colors.actionPrimaryText} />
-              </View>
-              <Text numberOfLines={1} style={styles.previewLabel}>
-                {option.label}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-      {toolGroup(after)}
-    </View>
-  );
+  const { before, after } = arrangeStudyTools({
+    audio: layout.audioEnabled ? layout.audioPosition : null,
+    reading: layout.readingEnabled ? layout.readingPosition : null,
+  });
 
   return (
     <View
@@ -121,7 +70,66 @@ function StudyIslandPreview({ layout }: StudyIslandPreviewProps) {
         <View style={styles.previewLine} />
         <View style={[styles.previewLine, styles.previewLineMedium]} />
       </View>
-      {cluster}
+      <View style={[styles.previewCluster, horizontal && styles.previewClusterHorizontal]}>
+        <PreviewToolGroup horizontal={horizontal} tools={before} />
+        <PreviewIsland horizontal={horizontal} ratingOrder={layout.ratingOrder} />
+        <PreviewToolGroup horizontal={horizontal} tools={after} />
+      </View>
+    </View>
+  );
+}
+
+const previewToolSymbols: Record<StudyTool, SymbolViewProps["name"]> = {
+  audio: { android: "volume_up", ios: "speaker.wave.2.fill", web: "volume_up" },
+  reading: { android: "menu_book", ios: "book.fill", web: "menu_book" },
+};
+
+type PreviewToolGroupProps = Readonly<{ horizontal: boolean; tools: readonly StudyTool[] }>;
+
+function PreviewToolGroup({ horizontal, tools }: PreviewToolGroupProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
+  if (tools.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={[styles.previewTools, horizontal && styles.previewToolsHorizontal]}>
+      {tools.map((tool) => (
+        <PreviewTool key={tool} symbol={previewToolSymbols[tool]} />
+      ))}
+    </View>
+  );
+}
+
+type PreviewIslandProps = Readonly<{
+  horizontal: boolean;
+  ratingOrder: ResolvedStudyControlLayout["ratingOrder"];
+}>;
+
+function PreviewIsland({ horizontal, ratingOrder }: PreviewIslandProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
+
+  return (
+    <View style={[styles.previewIsland, horizontal && styles.previewIslandHorizontal]}>
+      {ratingOrder.map((rating) => {
+        const option = recallOptions.find((current) => current.rating === rating);
+        if (!option) {
+          return null;
+        }
+        return (
+          <View key={rating} style={[styles.previewAction, horizontal && styles.flexOne]}>
+            <View style={[styles.previewMarker, { backgroundColor: colors[option.color] }]}>
+              <SymbolView name={option.symbol} size={13} tintColor={colors.actionPrimaryText} />
+            </View>
+            <Text numberOfLines={1} style={styles.previewLabel}>
+              {option.label}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }

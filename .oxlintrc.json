@@ -33,6 +33,7 @@
         ]
       }
     ],
+    "flashcards/no-await-in-ternary": "error",
     "import/no-cycle": "error",
     "import/no-unassigned-import": [
       "error",
