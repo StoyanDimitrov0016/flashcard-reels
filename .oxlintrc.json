@@ -54,7 +54,6 @@
       "env": {
         "node": true
       },
-      "plugins": ["import", "node", "oxc", "unicorn"],
       "rules": {
         "no-await-in-loop": "off",
         "no-console": "off",
