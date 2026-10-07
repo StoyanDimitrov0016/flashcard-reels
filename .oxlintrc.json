@@ -14,20 +14,13 @@
   "plugins": ["import", "oxc", "typescript", "unicorn"],
   "jsPlugins": ["./scripts/linting/index.mjs"],
   "rules": {
-    "eqeqeq": "error",
     "curly": ["error", "all"],
+    "eqeqeq": "error",
     "no-console": "error",
     "no-debugger": "error",
     "no-duplicate-imports": "error",
     "no-nested-ternary": "error",
-    "import/no-unassigned-import": [
-      "error",
-      {
-        "allow": ["**/*.css", "server-only"]
-      }
-    ],
-    "unicorn/custom-error-definition": "off",
-    "unicorn/no-await-expression-member": "error",
+    "no-param-reassign": "error",
     "no-restricted-imports": [
       "error",
       {
@@ -40,21 +33,49 @@
         ]
       }
     ],
+    "flashcards/no-await-in-ternary": "error",
+    "import/no-cycle": "error",
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css", "server-only"]
+      }
+    ],
+    "typescript/consistent-type-exports": "error",
     "typescript/consistent-type-imports": "error",
-    "typescript/no-explicit-any": "error",
     "typescript/no-deprecated": "error",
+    "typescript/no-explicit-any": "error",
     "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": [
+      "error",
+      {
+        "checksVoidReturn": {
+          "attributes": false
+        }
+      }
+    ],
     "typescript/no-non-null-assertion": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
     "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unused-vars": "error"
+    "typescript/no-unused-vars": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/return-await": "error",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      {
+        "considerDefaultExhaustiveForUnions": true
+      }
+    ],
+    "unicorn/custom-error-definition": "off",
+    "unicorn/no-await-expression-member": "error"
   },
   "overrides": [
     {
-      "files": ["scripts/**/*.{js,cjs,mjs}"],
+      "files": ["**/scripts/**/*.{js,cjs,mjs}"],
       "env": {
         "node": true
       },
-      "plugins": ["import", "node", "oxc", "unicorn"],
       "rules": {
         "no-await-in-loop": "off",
         "no-console": "off",

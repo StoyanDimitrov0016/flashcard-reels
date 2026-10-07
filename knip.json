@@ -6,7 +6,7 @@
   "workspaces": {
     ".": {
       "entry": ["scripts/**/*.mjs"],
-      "project": ["scripts/**/*.mjs"]
+      "project": ["scripts/**/*.{mjs,ts}"]
     },
     "apps/mobile": {
       "entry": ["scripts/recreate-r2-decks.mjs"],

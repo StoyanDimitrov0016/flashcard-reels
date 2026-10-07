@@ -27,7 +27,7 @@ export function LessonList({ activeLessonId, children }: LessonListProps) {
 
   return (
     <ol
-      className="scrollbar-none relative -mx-4 flex gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0"
+      className="relative -mx-4 scrollbar-none flex gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0"
       ref={listRef}
     >
       {children}

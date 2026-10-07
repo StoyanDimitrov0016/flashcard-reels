@@ -49,10 +49,17 @@ Do not run unrelated workspace validation for routine app-local changes.
 ## Configuration ownership
 
 - `.oxlintrc.json` and `.oxfmtrc.json` own repository-wide lint and formatting
-  policy. Each app's `.oxlintrc.json` extends the root config and adds its
-  framework plugins and app-specific rules. Oxlint applies rule categories only
-  to plugins listed at a config's top level, never to plugins enabled inside
-  `overrides`.
+  policy. `.oxlintrc.react.json` owns the React, TanStack Query, Vitest, and
+  custom-rule policy both apps share. Each app's `.oxlintrc.json` extends both
+  and adds only app-specific plugins, rules, and boundary restrictions.
+- Oxlint `extends` merges only `rules`, `plugins`, and `overrides`, so each app
+  still declares its own `jsPlugins` and `settings`. Override globs in shared
+  configs start with `**/` so they match from any workspace. Oxlint applies rule
+  categories only to plugins listed at a config's top level (including through
+  `extends`), never to plugins enabled inside `overrides`.
+- Custom lint rules live in `scripts/linting` and are tested with Oxlint's
+  `RuleTester` (`npm run test:custom-rules`). Add one only for a convention that
+  no built-in rule can enforce.
 - `tsconfig.base.json` owns shared TypeScript strictness.
 - Workspace TypeScript and framework configuration stays local to each app.
 - `turbo.json` owns task dependencies and caching.

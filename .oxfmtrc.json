@@ -28,5 +28,16 @@
     ]
   },
   "tabWidth": 2,
-  "trailingComma": "es5"
+  "trailingComma": "es5",
+  "overrides": [
+    {
+      "files": ["apps/web/**/*.{ts,tsx}"],
+      "options": {
+        "sortTailwindcss": {
+          "stylesheet": "./apps/web/src/app/globals.css",
+          "functions": ["cn", "cva"]
+        }
+      }
+    }
+  ]
 }

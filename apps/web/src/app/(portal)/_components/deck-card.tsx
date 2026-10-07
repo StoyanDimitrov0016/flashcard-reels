@@ -34,7 +34,7 @@ export function DeckCard({ deck }: DeckCardProps) {
         {deck.description}
       </p>
       {/* The negative margins cancel the icon buttons' inner space, so the icons line up with the text. */}
-      <div className="-mr-2 -mb-2 mt-auto flex items-center justify-between gap-3 pt-4">
+      <div className="mt-auto -mr-2 -mb-2 flex items-center justify-between gap-3 pt-4">
         <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-subtle-foreground [&_svg]:size-3.5">
           <li className="flex items-center gap-1">
             <Layers aria-hidden />

@@ -1,5 +1,3 @@
-import type { ReactElement } from "react";
-
 import { StyleSheet, View } from "react-native";
 
 import type { AudioReference } from "@/features/audio/domain/audio-reference";
@@ -12,7 +10,10 @@ import { ReadingButton } from "@/features/lessons/presentation/components/readin
 import { useDeckLessons } from "@/features/lessons/presentation/context/deck-lessons-context";
 import { RecallControls } from "@/features/reels/presentation/components/recall-controls";
 import { useStudyControlLayout } from "@/features/reels/presentation/context/study-control-layout-context";
-import { isBeforeRatings } from "@/features/reels/presentation/study-control-layout";
+import {
+  arrangeStudyTools,
+  type StudyTool,
+} from "@/features/reels/presentation/study-control-layout";
 import { sizes } from "@/shared/presentation/sizes";
 
 type StudyControlClusterProps = Readonly<{
@@ -41,43 +42,89 @@ export function StudyControlCluster({
     useStudyControlLayout();
   const { hasLesson } = useDeckLessons();
   const styles = createStyles(orientation);
-  const before: ReactElement[] = [];
-  const after: ReactElement[] = [];
-  if (audioEnabled && audioSource !== null) {
-    (isBeforeRatings(audioPosition) ? before : after).push(
-      <FlashcardAudioPlayer isActive={isActive} key="audio" source={audioSource} />
-    );
-  }
-  if (readingEnabled && lessonId && hasLesson(deckId, lessonId)) {
-    // Reading sits outside audio when both share a side, so audio stays next to the ratings.
-    const reading = (
-      <ReadingButton
-        deckId={deckId}
-        key="reading"
-        lessonId={lessonId}
-        sectionId={lessonSectionId}
-      />
-    );
-    if (isBeforeRatings(readingPosition)) {
-      before.unshift(reading);
-    } else {
-      after.push(reading);
-    }
-  }
-
+  const readingLessonId =
+    readingEnabled && lessonId && hasLesson(deckId, lessonId) ? lessonId : null;
+  const { before, after } = arrangeStudyTools({
+    audio: audioEnabled && audioSource !== null ? audioPosition : null,
+    reading: readingLessonId === null ? null : readingPosition,
+  });
   // An empty spacer mirrors the busier side, so the ratings stay centered on the card.
   const spacerCount = Math.max(before.length, after.length);
-  const spacer = <View style={getSpacerStyle(orientation, spacerCount)} />;
+  const side = {
+    audioSource,
+    deckId,
+    isActive,
+    lessonId: readingLessonId,
+    lessonSectionId,
+    orientation,
+    spacerCount,
+  };
 
   return (
     <View style={styles.cluster}>
-      {before.length > 0 ? <View style={styles.tools}>{before}</View> : spacerCount > 0 && spacer}
+      <ClusterSide {...side} tools={before} />
       <RecallControls
         onSelect={onRate}
         ratingEnabled={ratingEnabled}
         selectedRating={selectedRating}
       />
-      {after.length > 0 ? <View style={styles.tools}>{after}</View> : spacerCount > 0 && spacer}
+      <ClusterSide {...side} tools={after} />
+    </View>
+  );
+}
+
+type ClusterSideProps = Readonly<{
+  audioSource: AudioReference;
+  deckId: DeckId;
+  isActive: boolean;
+  lessonId: LessonId | null;
+  lessonSectionId?: string | null;
+  orientation: "horizontal" | "vertical";
+  spacerCount: number;
+  tools: readonly StudyTool[];
+}>;
+
+/** One side of the ratings: its tools, or a spacer matching the busier side. */
+function ClusterSide({
+  audioSource,
+  deckId,
+  isActive,
+  lessonId,
+  lessonSectionId,
+  orientation,
+  spacerCount,
+  tools,
+}: ClusterSideProps) {
+  const styles = createStyles(orientation);
+
+  if (tools.length === 0 && spacerCount === 0) {
+    return null;
+  }
+  if (tools.length === 0) {
+    return <View style={getSpacerStyle(orientation, spacerCount)} />;
+  }
+
+  return (
+    <View style={styles.tools}>
+      {tools.map((tool) => {
+        if (tool === "audio") {
+          return (
+            audioSource !== null && (
+              <FlashcardAudioPlayer isActive={isActive} key="audio" source={audioSource} />
+            )
+          );
+        }
+        return (
+          lessonId !== null && (
+            <ReadingButton
+              deckId={deckId}
+              key="reading"
+              lessonId={lessonId}
+              sectionId={lessonSectionId}
+            />
+          )
+        );
+      })}
     </View>
   );
 }

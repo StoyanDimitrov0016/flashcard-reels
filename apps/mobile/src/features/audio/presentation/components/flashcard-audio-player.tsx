@@ -62,7 +62,7 @@ export function FlashcardAudioPlayer({ isActive, source }: FlashcardAudioPlayerP
           />
         )}
       </Pressable>
-      {!!(status.error || playbackError) && (
+      {(Boolean(status.error) || Boolean(playbackError)) && (
         <Text accessibilityRole="alert" style={styles.errorText}>
           Audio unavailable
         </Text>

@@ -1,4 +1,7 @@
 /* oxlint-disable import/no-unassigned-import -- Importing each RuleTester module executes its focused suite. */
+import "./await-in-ternary.test.mjs";
+import "./jsx-in-variables.test.mjs";
+import "./named-effect-callback.test.mjs";
 import "./react-component-props.test.mjs";
 import "./react-hook-options.test.mjs";
 /* oxlint-enable import/no-unassigned-import */

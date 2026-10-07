@@ -165,10 +165,15 @@ export async function openZipRangeReader(
     invalid("central directory bounds are inconsistent");
   }
 
-  const directory =
-    directoryOffset >= tailStart
-      ? tail.subarray(directoryOffset - tailStart, directoryOffset - tailStart + directorySize)
-      : await readExact(directoryOffset, directoryOffset + directorySize);
+  let directory: Uint8Array;
+  if (directoryOffset >= tailStart) {
+    directory = tail.subarray(
+      directoryOffset - tailStart,
+      directoryOffset - tailStart + directorySize
+    );
+  } else {
+    directory = await readExact(directoryOffset, directoryOffset + directorySize);
+  }
   const entries = parseCentralDirectory(directory, entryCount);
   const entriesByName = new Map(entries.map((entry) => [entry.name, entry]));
 

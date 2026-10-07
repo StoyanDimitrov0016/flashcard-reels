@@ -1,8 +1,8 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  "extends": ["../../.oxlintrc.json"],
+  "extends": ["../../.oxlintrc.json", "../../.oxlintrc.react.json"],
   "ignorePatterns": [".next/**", "next-env.d.ts"],
-  "plugins": ["import", "jsx-a11y", "nextjs", "oxc", "react", "typescript", "unicorn", "vitest"],
+  "plugins": ["jsx-a11y", "nextjs"],
   "jsPlugins": ["../../scripts/linting/index.mjs", "@tanstack/eslint-plugin-query"],
   "settings": {
     "next": {
@@ -10,56 +10,10 @@
     }
   },
   "rules": {
-    "react/jsx-no-useless-fragment": "error",
-    "react/exhaustive-deps": "error",
-    "react/exhaustive-effect-dependencies": "off",
-    "react/jsx-no-constructed-context-values": "off",
-    "react/no-unstable-nested-components": [
-      "error",
-      {
-        "allowAsProps": true
-      }
-    ],
-    "react/no-array-index-key": "error",
-    "react/react-in-jsx-scope": "off",
-    "react/style-prop-object": "off",
     "jsx-a11y/control-has-associated-label": "off",
-    "jsx-a11y/prefer-tag-over-role": "off",
-    "@tanstack/query/exhaustive-deps": [
-      "error",
-      {
-        "allowlist": {
-          "variables": ["services"]
-        }
-      }
-    ],
-    "@tanstack/query/no-rest-destructuring": "error",
-    "@tanstack/query/stable-query-client": "error",
-    "@tanstack/query/no-unstable-deps": "error",
-    "@tanstack/query/infinite-query-property-order": "error",
-    "@tanstack/query/no-void-query-fn": "error",
-    "@tanstack/query/mutation-property-order": "error",
-    "@tanstack/query/prefer-query-options": "error"
+    "jsx-a11y/prefer-tag-over-role": "off"
   },
   "overrides": [
-    {
-      "files": ["src/**/*.ts", "src/**/*.tsx"],
-      "rules": {
-        "flashcards/require-react-component-props-type": "error",
-        "flashcards/require-react-hook-options-type": "error"
-      }
-    },
-    {
-      "files": ["tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
-      "env": {
-        "vitest": true
-      },
-      "rules": {
-        "vitest/require-mock-type-parameters": "off",
-        "vitest/require-to-throw-message": "off",
-        "vitest/valid-expect": "off"
-      }
-    },
     {
       "files": ["src/components/ui/**/*.tsx"],
       "rules": {

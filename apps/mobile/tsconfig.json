@@ -3,8 +3,6 @@
   "compilerOptions": {
     "lib": ["ES2022"],
     "types": ["node", "react"],
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"]

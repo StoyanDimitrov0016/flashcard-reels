@@ -336,10 +336,9 @@ describe("deck publication review", () => {
           }),
           "Other.fcrdeck"
         );
-        const result =
-          source === "candidate"
-            ? await review(storeWith(), first, second)
-            : await review(storeWith(first), second);
+        const result = await (source === "candidate"
+          ? review(storeWith(), first, second)
+          : review(storeWith(first), second));
         expect(result.blocks).toContain(
           `Section ${verticalId} appears in more than one deck: ${source === "candidate" ? `${deckId}, ${otherDeckId}` : `${otherDeckId}, ${deckId}`}.`
         );
