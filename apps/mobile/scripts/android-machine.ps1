@@ -64,7 +64,7 @@ if ($Action -eq "Stop") {
 }
 
 if (-not (Test-Path -LiteralPath $emulatorPath)) {
-  throw "Working emulator not found at '$emulatorPath'. See docs/development.md."
+  throw "Working emulator not found at '$emulatorPath'. See docs/guides/development.md."
 }
 
 & $adbPath start-server | Out-Null
