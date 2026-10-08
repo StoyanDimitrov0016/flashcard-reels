@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Deck } from "@/features/decks/domain/deck.model";
@@ -9,6 +11,8 @@ import { sizes } from "@/shared/presentation/sizes";
 import { fontSize, fontWeight, letterSpacing } from "@/shared/presentation/typography";
 
 type ReelHeaderProps = Readonly<{
+  /** Shown at the trailing edge, such as a tag naming the kind of card. */
+  accessory?: ReactNode;
   theme: Readonly<Pick<DeckThemeVariant, "accent">>;
   card: Flashcard;
   deck: Deck;
@@ -18,6 +22,7 @@ type ReelHeaderProps = Readonly<{
 }>;
 
 export function ReelHeader({
+  accessory,
   theme,
   card,
   deck,
@@ -46,6 +51,7 @@ export function ReelHeader({
           <View style={[styles.accentLine, { backgroundColor: theme.accent }]} />
         </Pressable>
       )}
+      {accessory}
     </View>
   );
 }
@@ -65,6 +71,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     flexDirection: "row",
+    justifyContent: "space-between",
     height: screenLayout.headerHeight,
   },
   labelStack: { alignItems: "center", paddingVertical: sizes.spacing.xSmall },

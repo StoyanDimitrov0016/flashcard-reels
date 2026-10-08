@@ -22,9 +22,13 @@ function GestureHint({ label, symbol }: GestureHintProps) {
   );
 }
 
-type GestureFooterProps = Readonly<{ showHoldHint: boolean }>;
+type GestureFooterProps = Readonly<{
+  showHoldHint: boolean;
+  /** Off for cards that answer in place and have nothing to reveal. */
+  showRevealHint?: boolean;
+}>;
 
-export function GestureFooter({ showHoldHint }: GestureFooterProps) {
+export function GestureFooter({ showHoldHint, showRevealHint = true }: GestureFooterProps) {
   const styles = createStyles(useAppTheme().colors);
 
   return (
@@ -33,10 +37,12 @@ export function GestureFooter({ showHoldHint }: GestureFooterProps) {
         label="Swipe up"
         symbol={{ android: "arrow_upward", ios: "arrow.up", web: "arrow_upward" }}
       />
-      <GestureHint
-        label="Double tap"
-        symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
-      />
+      {showRevealHint && (
+        <GestureHint
+          label="Double tap"
+          symbol={{ android: "touch_app", ios: "hand.tap.fill", web: "touch_app" }}
+        />
+      )}
       {showHoldHint && (
         <GestureHint
           label="Hold"

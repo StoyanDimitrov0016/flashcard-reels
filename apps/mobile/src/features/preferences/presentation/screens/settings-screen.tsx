@@ -152,6 +152,14 @@ export default function SettingsScreen() {
               )}
             />
           </PreferenceSection>
+          <PreferenceSection title="Experiments">
+            <PreferenceRow
+              detail="Ideas with paced challenges"
+              icon={{ android: "science", ios: "flask", web: "science" }}
+              onPress={() => router.push("../challenge-lab")}
+              title="Challenge lab"
+            />
+          </PreferenceSection>
           <PreferenceSection title="About">
             <View style={styles.aboutRow}>
               <Image accessibilityIgnoresInvertColors source={appIcon} style={styles.aboutIcon} />

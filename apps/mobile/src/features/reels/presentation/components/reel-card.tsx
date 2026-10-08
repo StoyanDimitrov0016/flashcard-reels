@@ -51,7 +51,13 @@ type CardPageProps = Readonly<{
   width: number;
 }>;
 
-function CardPage({ backgroundColor, children, contentInsetTop, height, width }: CardPageProps) {
+export function CardPage({
+  backgroundColor,
+  children,
+  contentInsetTop,
+  height,
+  width,
+}: CardPageProps) {
   const styles = createStyles();
   const tabBarInset = useTabBarInset();
 
